@@ -14,14 +14,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { 
-  Building2, 
-  Users, 
-  Mail, 
-  Phone, 
-  MapPin, 
-  Globe, 
-  User, 
+import {
+  Building2,
+  Users,
+  Mail,
+  Phone,
+  MapPin,
+  Globe,
+  User,
   Search,
   CheckCircle,
   Star,
@@ -47,25 +47,25 @@ export default function EmployerRegister() {
     companySize: '',
     website: '',
     description: '',
-    
+
     // Contact Information
     contactPersonName: '',
     designation: '',
     email: '',
     phone: '',
     alternatePhone: '',
-    
+
     // Address Information
     address: '',
     city: '',
     state: '',
     country: '',
     pincode: '',
-    
+
     // Account Information
     password: '',
     confirmPassword: '',
-    
+
     // Agreements
     agreeTerms: false,
     agreeMarketing: false
@@ -150,7 +150,7 @@ export default function EmployerRegister() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (formData.password !== formData.confirmPassword) {
       alert('Passwords do not match');
       return;

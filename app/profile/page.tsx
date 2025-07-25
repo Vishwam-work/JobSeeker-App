@@ -62,10 +62,12 @@ export default function Profile() {
       fullName: "",
       email: "",
       phone: "",
+      phoneCode: "",
       countryId: "",
       stateId: "",
       cityId: "",
-      currency: "",
+      currentcurrency: "",
+      expectedCurrency: "",
       experience: "",
       currentSalary: "",
       expectedSalary: "",
@@ -154,6 +156,7 @@ export default function Profile() {
 
   const getJobTitleName = (id) =>
     jobTitles.find((t) => t.id === id)?.title || "";
+
 
   const resetExperienceForm = () => {
     setExperienceForm({
@@ -442,13 +445,15 @@ export default function Profile() {
               fullName: data.full_name || "",
               email: data.email || "",
               phone: data.phone || "",
+              phoneCode: data.phone_code || "",
               countryId: data.country.id?.toString() || "",
               stateId: data.state.id?.toString() || "",
               cityId: data.city.id?.toString() || "",
-              currency: data.currency.id || "",
               experience: data.experience || "",
               currentSalary: data.current_salary || "",
               expectedSalary: data.expected_salary || "",
+              currentcurrency: data.current_currency.id?.toString() || "",
+              expectedCurrency: data.expected_currency.id?.toString() || "",
               noticePeriod: data.notice_period || "",
               resume: data.resume,
             },
@@ -471,16 +476,18 @@ export default function Profile() {
 
   useEffect(() => {
     fetch("http://localhost:8000/master/api/currencies/")
-    .then((res) => res.json())
-    .then((data) => {
-      setCurrency(data);
-    })
+      .then((res) => res.json())
+      .then((data) => {
+        console.log("Currency data:", data);
+        setCurrency(data);
+      });
   }, []);
-
+  console.log("Currency", currency);
   useEffect(() => {
     fetch("http://localhost:8000/master/api/countries/")
       .then((res) => res.json())
       .then((data) => {
+        console.log("Country data:", data);
         setCountries(data);
       })
       .catch((err) => console.error(err));
@@ -579,9 +586,12 @@ export default function Profile() {
       full_name: profileData.personalInfo.fullName,
       email: profileData.personalInfo.email,
       phone: profileData.personalInfo.phone,
+      phone_code: profileData.personalInfo.phoneCode,
       experience: profileData.personalInfo.experience,
       current_salary: profileData.personalInfo.currentSalary,
       expected_salary: profileData.personalInfo.expectedSalary,
+      current_currency: profileData.personalInfo.currentcurrency,
+      expected_currency: profileData.personalInfo.expectedCurrency,
       notice_period: profileData.personalInfo.noticePeriod,
       country: profileData.personalInfo.countryId,
       state: profileData.personalInfo.stateId,
@@ -752,7 +762,9 @@ export default function Profile() {
                             <p className="text-sm font-medium text-green-600 truncate">
                               Current Resume:{" "}
                               <span className="text-gray-700">
-                                {profileData?.personalInfo?.resume.split("/").pop()}
+                                {profileData?.personalInfo?.resume
+                                  .split("/")
+                                  .pop()}
                               </span>
                             </p>
                           )}
@@ -788,7 +800,11 @@ export default function Profile() {
                     </Dialog>
 
                     {/* DOWNLOAD BUTTON */}
-                    <a href={profileData?.personalInfo?.resume || "#"} download className="block">
+                    <a
+                      href={profileData?.personalInfo?.resume || "#"}
+                      download
+                      className="block"
+                    >
                       <Button
                         variant="outline"
                         className="w-full text-sm lg:text-base h-10 lg:h-11"
@@ -954,7 +970,7 @@ export default function Profile() {
                           required={true}
                         />
                       </div>
-                      <div>
+                      {/* <div>
                         <Label htmlFor="phone" className="text-sm font-medium">
                           Phone Number *
                         </Label>
@@ -973,6 +989,55 @@ export default function Profile() {
                           className="mt-1 h-10 lg:h-11"
                           required={true}
                         />
+                      </div> */}
+                      <div>
+                        <Label htmlFor="phone" className="text-sm font-medium">
+                          Phone Number *
+                        </Label>
+                        <div className="flex gap-2 mt-1">
+                          <Select
+                            value={profileData.personalInfo.phoneCode || "+91"}
+                            onValueChange={(value) =>
+                              setProfileData((prev) => ({
+                                ...prev,
+                                personalInfo: {
+                                  ...prev.personalInfo,
+                                  phoneCode: value,
+                                },
+                              }))
+                            }
+                          >
+                            <SelectTrigger className="w-20 h-10 lg:h-11">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {countries.map((country) => (
+                                <SelectItem
+                                  key={country.id}
+                                  value={country.phonecode}
+                                >
+                                  +{country.phonecode}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <Input
+                            id="phone"
+                            value={profileData.personalInfo.phone}
+                            onChange={(e) =>
+                              setProfileData((prev) => ({
+                                ...prev,
+                                personalInfo: {
+                                  ...prev.personalInfo,
+                                  phone: e.target.value,
+                                },
+                              }))
+                            }
+                            className="flex-1 h-10 lg:h-11"
+                            placeholder="Enter phone number"
+                            required={true}
+                          />
+                        </div>
                       </div>
                       <div>
                         <Label className="text-sm font-medium">Country *</Label>
@@ -1138,20 +1203,52 @@ export default function Profile() {
                         >
                           Current Salary (LPA)
                         </Label>
-                        <Input
-                          id="currentSalary"
-                          value={profileData.personalInfo.currentSalary}
-                          onChange={(e) =>
-                            setProfileData((prev) => ({
-                              ...prev,
-                              personalInfo: {
-                                ...prev.personalInfo,
-                                currentSalary: e.target.value,
-                              },
-                            }))
-                          }
-                          className="mt-1 h-10 lg:h-11"
-                        />
+                        <div className="flex gap-2 mt-1">
+                          <Select
+                            value={
+                              profileData.personalInfo.currentcurrency || ""
+                            }
+                            onValueChange={(value) =>
+                              setProfileData((prev) => ({
+                                ...prev,
+                                personalInfo: {
+                                  ...prev.personalInfo,
+                                  currentcurrency: value,
+                                },
+                              }))
+                            }
+                            required={true}
+                          >
+                            <SelectTrigger className="w-20 h-10 lg:h-11">
+                              <SelectValue placeholder="INR" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {currency.map((curr) => (
+                                <SelectItem
+                                  key={curr.id}
+                                  value={curr.id.toString()}
+                                >
+                                  {curr.symbol}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <Input
+                            id="currentSalary"
+                            value={profileData.personalInfo.currentSalary}
+                            onChange={(e) =>
+                              setProfileData((prev) => ({
+                                ...prev,
+                                personalInfo: {
+                                  ...prev.personalInfo,
+                                  currentSalary: e.target.value,
+                                },
+                              }))
+                            }
+                            className="flex-1 h-10 lg:h-11"
+                            placeholder="Enter amount"
+                          />
+                        </div>
                       </div>
                       <div>
                         <Label
@@ -1160,52 +1257,51 @@ export default function Profile() {
                         >
                           Expected Salary (LPA)
                         </Label>
-                        <Input
-                          id="expectedSalary"
-                          value={profileData.personalInfo.expectedSalary}
-                          onChange={(e) =>
-                            setProfileData((prev) => ({
-                              ...prev,
-                              personalInfo: {
-                                ...prev.personalInfo,
-                                expectedSalary: e.target.value,
-                              },
-                            }))
-                          }
-                          className="mt-1 h-10 lg:h-11"
-                        />
-                      </div>
-                      <div>
-                        <Label className="text-sm font-medium">Currency</Label>
-                        <Select
-                          value={profileData.personalInfo.currency || ""}
-                          onValueChange={(value) =>
-                            setCurrency((prev) => ({
-                              ...prev,
-                              personalInfo: {
-                                ...prev.personalInfo,
-                                currency: value,
-                              },
-                            }))
-                          }
-                          required={true}
-                        >
-                          <SelectTrigger className="mt-1 h-10 lg:h-11">
-                            <SelectValue placeholder="Select Currency" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {currency.map((currency) => (
-                              <SelectItem
-                                key={currency.id}
-                                value={currency.id.toString()}
-                              >
-                                {currency.symbol}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
+                        <div className="flex gap-2 mt-1">
+                          <Select
+                            value={
+                              profileData.personalInfo.expectedCurrency || ""
+                            }
+                            onValueChange={(value) =>
+                              setProfileData((prev) => ({
+                                ...prev,
+                                personalInfo: {
+                                  ...prev.personalInfo,
+                                  expectedCurrency: value,
+                                },
+                              }))
+                            }
+                            required={true}
+                          >
+                            <SelectTrigger className="w-20 h-10 lg:h-11">
+                              <SelectValue placeholder="Select Currency" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {currency.map((curr) => (
+                                <SelectItem
+                                  key={curr.id}
+                                  value={curr.id.toString()}
+                                >
+                                  {curr.symbol}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <Input
+                            id="expectedSalary"
+                            value={profileData.personalInfo.expectedSalary}
+                            onChange={(e) =>
+                              setProfileData((prev) => ({
+                                ...prev,
+                                personalInfo: {
+                                  ...prev.personalInfo,
+                                  expectedSalary: e.target.value,
+                                },
+                              }))
+                            }
+                            className="flex-1 h-10 lg:h-11"
+                          />
+                        </div>
                       </div>
                     </div>
                     <Button
