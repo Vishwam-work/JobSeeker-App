@@ -1,50 +1,95 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent } from '@/components/ui/card';
-import { Eye, EyeOff, Search, Building2, Users, Briefcase, CheckCircle, Star, TrendingUp } from 'lucide-react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Eye,
+  EyeOff,
+  Search,
+  Building2,
+  Users,
+  Briefcase,
+  CheckCircle,
+  Star,
+  TrendingUp,
+} from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function EmployerLogin() {
+  const [alertMessage, setAlertMessage] = useState("");
+  const [alertOpen, setAlertOpen] = useState(false);
+  const [alertType, setAlertType] = useState<"success" | "error">("success");
   const [showPassword, setShowPassword] = useState(false);
   const [loginForm, setLoginForm] = useState({
-    email: '',
-    password: ''
+    email: "",
+    password: "",
   });
   const router = useRouter();
 
-  const handleLogin = async (e) => {
+  // const handleLogin = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   // Simulate login - in real app, make API call
+  //   localStorage.setItem('employer_token', 'dummy_employer_token');
+  //   router.push('/employer/dashboard');
+  // };
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulate login - in real app, make API call
-    localStorage.setItem('employer_token', 'dummy_employer_token');
-    router.push('/employer/dashboard');
+    try {
+      const response = await fetch("http://localhost:8000/employeer/api/employeer_login/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: loginForm.email,
+          password: loginForm.password,
+        }),
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        localStorage.setItem("auth_token", data.access || data.token);
+        setAlertType("success");
+        setAlertMessage("Login Successful!");
+        setAlertOpen(true);
+        setTimeout(() => {
+          router.push("/employer/dashboard");
+        }, 2000);
+      } else {
+        setAlertType("error");
+        setAlertMessage(data.error || "Login Failed");
+        setAlertOpen(true);
+      }
+    } catch (error) {
+      setAlertType("error");
+      setAlertMessage("Network Error!");
+      setAlertOpen(true);
+    }
   };
 
   const benefits = [
     {
       icon: Users,
       title: "Access to 10 Crore+ candidates",
-      description: "Reach the largest talent pool in India"
+      description: "Reach the largest talent pool in India",
     },
     {
       icon: TrendingUp,
       title: "Faster hiring with AI",
-      description: "Get relevant candidate matches instantly"
+      description: "Get relevant candidate matches instantly",
     },
     {
       icon: Briefcase,
       title: "End-to-end recruitment",
-      description: "From job posting to candidate onboarding"
+      description: "From job posting to candidate onboarding",
     },
     {
       icon: Star,
       title: "Trusted by 1 Lakh+ companies",
-      description: "Join India's leading recruitment platform"
-    }
+      description: "Join India's leading recruitment platform",
+    },
   ];
 
   return (
@@ -65,8 +110,11 @@ export default function EmployerLogin() {
               </span>
             </Link>
             <div className="text-sm text-gray-600 text-center sm:text-right">
-              New to JobSeeker?{' '}
-              <Link href="/employer/register" className="text-blue-600 hover:underline font-medium">
+              New to JobSeeker?{" "}
+              <Link
+                href="/employer/register"
+                className="text-blue-600 hover:underline font-medium"
+              >
                 Register here
               </Link>
             </div>
@@ -96,8 +144,12 @@ export default function EmployerLogin() {
                       <IconComponent className="w-6 h-6 text-blue-600" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-gray-900 mb-1">{benefit.title}</h3>
-                      <p className="text-gray-600 text-sm">{benefit.description}</p>
+                      <h3 className="font-semibold text-gray-900 mb-1">
+                        {benefit.title}
+                      </h3>
+                      <p className="text-gray-600 text-sm">
+                        {benefit.description}
+                      </p>
                     </div>
                   </div>
                 );
@@ -139,14 +191,22 @@ export default function EmployerLogin() {
 
                 <form onSubmit={handleLogin} className="space-y-6">
                   <div>
-                    <Label htmlFor="email" className="text-sm font-medium text-gray-700">
+                    <Label
+                      htmlFor="email"
+                      className="text-sm font-medium text-gray-700"
+                    >
                       Email ID *
                     </Label>
                     <Input
                       id="email"
                       type="email"
                       value={loginForm.email}
-                      onChange={(e) => setLoginForm(prev => ({ ...prev, email: e.target.value }))}
+                      onChange={(e) =>
+                        setLoginForm((prev) => ({
+                          ...prev,
+                          email: e.target.value,
+                        }))
+                      }
                       placeholder="Enter your email address"
                       className="mt-1 h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
                       required
@@ -154,15 +214,23 @@ export default function EmployerLogin() {
                   </div>
 
                   <div>
-                    <Label htmlFor="password" className="text-sm font-medium text-gray-700">
+                    <Label
+                      htmlFor="password"
+                      className="text-sm font-medium text-gray-700"
+                    >
                       Password *
                     </Label>
                     <div className="mt-1 relative">
                       <Input
                         id="password"
-                        type={showPassword ? 'text' : 'password'}
+                        type={showPassword ? "text" : "password"}
                         value={loginForm.password}
-                        onChange={(e) => setLoginForm(prev => ({ ...prev, password: e.target.value }))}
+                        onChange={(e) =>
+                          setLoginForm((prev) => ({
+                            ...prev,
+                            password: e.target.value,
+                          }))
+                        }
                         placeholder="Enter your password"
                         className="pr-10 h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
                         required
@@ -180,13 +248,16 @@ export default function EmployerLogin() {
                       </button>
                     </div>
                     <div className="text-right mt-2">
-                      <Link href="#" className="text-sm text-blue-600 hover:underline">
+                      <Link
+                        href="#"
+                        className="text-sm text-blue-600 hover:underline"
+                      >
                         Forgot Password?
                       </Link>
                     </div>
                   </div>
 
-                  <Button 
+                  <Button
                     type="submit"
                     className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 h-12 shadow-lg hover:shadow-xl transition-all duration-200"
                   >
@@ -198,14 +269,16 @@ export default function EmployerLogin() {
                       <div className="w-full border-t border-gray-300" />
                     </div>
                     <div className="relative flex justify-center text-sm">
-                      <span className="px-2 bg-white text-gray-500">New to JobSeeker?</span>
+                      <span className="px-2 bg-white text-gray-500">
+                        New to JobSeeker?
+                      </span>
                     </div>
                   </div>
 
                   <Link href="/employer/register">
-                    <Button 
-                      variant="outline" 
-                      className="w-full h-12 border-blue-200 text-blue-600 hover:bg-blue-50" 
+                    <Button
+                      variant="outline"
+                      className="w-full h-12 border-blue-200 text-blue-600 hover:bg-blue-50"
                       type="button"
                     >
                       Register Your Company

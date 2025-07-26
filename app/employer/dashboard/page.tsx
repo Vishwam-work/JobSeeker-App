@@ -45,6 +45,8 @@ import {
   XCircle
 } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from "next/navigation";
+
 
 export default function EmployerDashboard() {
   const [activeTab, setActiveTab] = useState('post-job');
@@ -53,6 +55,7 @@ export default function EmployerDashboard() {
   const [cities, setCities] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedCandidate, setSelectedCandidate] = useState(null);
+  const router = useRouter();
 
   // Sample data for posted jobs
   const [postedJobs] = useState([
@@ -242,6 +245,10 @@ export default function EmployerDashboard() {
   });
 
   const [newSkill, setNewSkill] = useState('');
+    useEffect(() => {
+    const token = localStorage.getItem('auth_token');
+    console.log("LOG TOKEN:", token);
+  }, []);
 
   // Fetch data from APIs
   useEffect(() => {
@@ -291,6 +298,11 @@ export default function EmployerDashboard() {
     alert('Job posted successfully!');
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('auth_token');
+    router.push('/employeer/login');
+  };
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'Active':
@@ -333,7 +345,7 @@ export default function EmployerDashboard() {
               </span>
             </Link>
             <div className="flex items-center space-x-4">
-              <Button variant="outline" className="border-red-600 text-red-600 hover:bg-red-50">
+              <Button variant="outline" className="border-red-600 text-red-600 hover:bg-red-50" onClick={handleLogout}>
                 Logout
               </Button>
             </div>
