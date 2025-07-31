@@ -1,20 +1,26 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Badge } from '@/components/ui/badge';
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Building2,
   MapPin,
@@ -42,289 +48,466 @@ import {
   ExternalLink,
   Star,
   CheckCircle,
-  XCircle
-} from 'lucide-react';
-import Link from 'next/link';
-import { useRouter } from "next/navigation";
-
+  XCircle,
+} from "lucide-react";
+import Link from "next/link";
 
 export default function EmployerDashboard() {
-  const [activeTab, setActiveTab] = useState('post-job');
+  const [activeTab, setActiveTab] = useState("post-job");
   const [jobCategories, setJobCategories] = useState([]);
   const [jobTitles, setJobTitles] = useState([]);
   const [cities, setCities] = useState([]);
-  const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedCandidate, setSelectedCandidate] = useState(null);
-  const router = useRouter();
+  const [jobFilter, setJobFilter] = useState("all");
+  const [searchTerm, setSearchTerm] = useState("");
 
   // Sample data for posted jobs
-  const [postedJobs] = useState([
-    {
-      id: 1,
-      title: 'Senior Software Developer',
-      company: 'Tech Solutions Pvt Ltd',
-      location: 'Mumbai',
-      experience: '3-5 years',
-      salary: '8-12 LPA',
-      jobType: 'Full Time',
-      postedDate: '2024-01-15',
-      applications: 45,
-      status: 'Active',
-      views: 234
-    },
-    {
-      id: 2,
-      title: 'Frontend Developer',
-      company: 'Digital Innovations Inc',
-      location: 'Bangalore',
-      experience: '2-4 years',
-      salary: '6-10 LPA',
-      jobType: 'Full Time',
-      postedDate: '2024-01-10',
-      applications: 32,
-      status: 'Active',
-      views: 189
-    },
-    {
-      id: 3,
-      title: 'Product Manager',
-      company: 'StartupXYZ',
-      location: 'Delhi',
-      experience: '5-8 years',
-      salary: '15-20 LPA',
-      jobType: 'Full Time',
-      postedDate: '2024-01-08',
-      applications: 28,
-      status: 'Closed',
-      views: 156
-    }
-  ]);
+  // const [postedJobs] = useState([
+  //   {
+  //     id: 1,
+  //     title: "Senior Software Developer",
+  //     company: "Tech Solutions Pvt Ltd",
+  //     location: "Mumbai",
+  //     experience: "3-5 years",
+  //     salary: "8-12 LPA",
+  //     jobType: "Full Time",
+  //     postedDate: "2024-01-15",
+  //     applications: 45,
+  //     status: "Active",
+  //     views: 234,
+  //   },
+  //   {
+  //     id: 2,
+  //     title: "Frontend Developer",
+  //     company: "Digital Innovations Inc",
+  //     location: "Bangalore",
+  //     experience: "2-4 years",
+  //     salary: "6-10 LPA",
+  //     jobType: "Full Time",
+  //     postedDate: "2024-01-10",
+  //     applications: 32,
+  //     status: "Active",
+  //     views: 189,
+  //   },
+  //   {
+  //     id: 3,
+  //     title: "Product Manager",
+  //     company: "StartupXYZ",
+  //     location: "Delhi",
+  //     experience: "5-8 years",
+  //     salary: "15-20 LPA",
+  //     jobType: "Full Time",
+  //     postedDate: "2024-01-08",
+  //     applications: 28,
+  //     status: "Closed",
+  //     views: 156,
+  //   },
+  // ]);
+  const [postedJobs, setPostedJobs] = useState([]);
 
   // Sample data for candidates
   const [candidates] = useState([
     {
       id: 1,
-      name: 'Rahul Sharma',
-      email: 'rahul.sharma@email.com',
-      phone: '+91 9876543210',
-      location: 'Mumbai, Maharashtra',
-      experience: '4 years',
-      currentRole: 'Senior Software Developer',
-      currentCompany: 'TCS',
-      skills: ['React', 'Node.js', 'JavaScript', 'Python', 'AWS'],
-      education: 'B.Tech Computer Science',
-      appliedFor: 'Senior Software Developer',
-      appliedDate: '2024-01-16',
-      status: 'Under Review',
-      resumeUrl: '#',
+      name: "Rahul Sharma",
+      email: "rahul.sharma@email.com",
+      phone: "+91 9876543210",
+      location: "Mumbai, Maharashtra",
+      experience: "4 years",
+      currentRole: "Senior Software Developer",
+      currentCompany: "TCS",
+      skills: ["React", "Node.js", "JavaScript", "Python", "AWS"],
+      education: "B.Tech Computer Science",
+      appliedFor: "Senior Software Developer",
+      appliedDate: "2024-01-16",
+      status: "Under Review",
+      resumeUrl: "#",
       profileImage: null,
-      summary: 'Experienced software developer with 4+ years of expertise in full-stack development. Proven track record in React, Node.js, and cloud technologies.',
+      summary:
+        "Experienced software developer with 4+ years of expertise in full-stack development. Proven track record in React, Node.js, and cloud technologies.",
       workExperience: [
         {
-          company: 'TCS',
-          role: 'Senior Software Developer',
-          duration: 'Jan 2022 - Present',
-          description: 'Led development of multiple web applications using React and Node.js.'
+          company: "TCS",
+          role: "Senior Software Developer",
+          duration: "Jan 2022 - Present",
+          description:
+            "Led development of multiple web applications using React and Node.js.",
         },
         {
-          company: 'Infosys',
-          role: 'Software Developer',
-          duration: 'Jun 2020 - Dec 2021',
-          description: 'Developed and maintained e-commerce platforms.'
-        }
+          company: "Infosys",
+          role: "Software Developer",
+          duration: "Jun 2020 - Dec 2021",
+          description: "Developed and maintained e-commerce platforms.",
+        },
       ],
       educationDetails: [
         {
-          degree: 'B.Tech',
-          field: 'Computer Science',
-          institution: 'Mumbai University',
-          year: '2020',
-          grade: '8.5 CGPA'
-        }
+          degree: "B.Tech",
+          field: "Computer Science",
+          institution: "Mumbai University",
+          year: "2020",
+          grade: "8.5 CGPA",
+        },
       ],
       certifications: [
         {
-          name: 'AWS Certified Developer',
-          issuer: 'Amazon Web Services',
-          year: '2023'
-        }
-      ]
+          name: "AWS Certified Developer",
+          issuer: "Amazon Web Services",
+          year: "2023",
+        },
+      ],
     },
     {
       id: 2,
-      name: 'Priya Patel',
-      email: 'priya.patel@email.com',
-      phone: '+91 9876543211',
-      location: 'Bangalore, Karnataka',
-      experience: '3 years',
-      currentRole: 'Frontend Developer',
-      currentCompany: 'Wipro',
-      skills: ['React', 'Vue.js', 'JavaScript', 'CSS', 'HTML'],
-      education: 'B.Tech Information Technology',
-      appliedFor: 'Frontend Developer',
-      appliedDate: '2024-01-15',
-      status: 'Shortlisted',
-      resumeUrl: '#',
+      name: "Priya Patel",
+      email: "priya.patel@email.com",
+      phone: "+91 9876543211",
+      location: "Bangalore, Karnataka",
+      experience: "3 years",
+      currentRole: "Frontend Developer",
+      currentCompany: "Wipro",
+      skills: ["React", "Vue.js", "JavaScript", "CSS", "HTML"],
+      education: "B.Tech Information Technology",
+      appliedFor: "Frontend Developer",
+      appliedDate: "2024-01-15",
+      status: "Shortlisted",
+      resumeUrl: "#",
       profileImage: null,
-      summary: 'Creative frontend developer with strong expertise in modern JavaScript frameworks and responsive design.',
+      summary:
+        "Creative frontend developer with strong expertise in modern JavaScript frameworks and responsive design.",
       workExperience: [
         {
-          company: 'Wipro',
-          role: 'Frontend Developer',
-          duration: 'Mar 2021 - Present',
-          description: 'Developed responsive web applications using React and Vue.js.'
-        }
+          company: "Wipro",
+          role: "Frontend Developer",
+          duration: "Mar 2021 - Present",
+          description:
+            "Developed responsive web applications using React and Vue.js.",
+        },
       ],
       educationDetails: [
         {
-          degree: 'B.Tech',
-          field: 'Information Technology',
-          institution: 'VTU',
-          year: '2021',
-          grade: '8.2 CGPA'
-        }
+          degree: "B.Tech",
+          field: "Information Technology",
+          institution: "VTU",
+          year: "2021",
+          grade: "8.2 CGPA",
+        },
       ],
-      certifications: []
+      certifications: [],
     },
     {
       id: 3,
-      name: 'Amit Kumar',
-      email: 'amit.kumar@email.com',
-      phone: '+91 9876543212',
-      location: 'Delhi, India',
-      experience: '6 years',
-      currentRole: 'Product Manager',
-      currentCompany: 'Amazon',
-      skills: ['Product Management', 'Analytics', 'Strategy', 'Leadership'],
-      education: 'MBA Marketing',
-      appliedFor: 'Product Manager',
-      appliedDate: '2024-01-14',
-      status: 'Rejected',
-      resumeUrl: '#',
+      name: "Amit Kumar",
+      email: "amit.kumar@email.com",
+      phone: "+91 9876543212",
+      location: "Delhi, India",
+      experience: "6 years",
+      currentRole: "Product Manager",
+      currentCompany: "Amazon",
+      skills: ["Product Management", "Analytics", "Strategy", "Leadership"],
+      education: "MBA Marketing",
+      appliedFor: "Product Manager",
+      appliedDate: "2024-01-14",
+      status: "Rejected",
+      resumeUrl: "#",
       profileImage: null,
-      summary: 'Experienced product manager with 6+ years in leading cross-functional teams and driving product strategy.',
+      summary:
+        "Experienced product manager with 6+ years in leading cross-functional teams and driving product strategy.",
       workExperience: [
         {
-          company: 'Amazon',
-          role: 'Senior Product Manager',
-          duration: 'Jan 2020 - Present',
-          description: 'Led product development for e-commerce platform features.'
-        }
+          company: "Amazon",
+          role: "Senior Product Manager",
+          duration: "Jan 2020 - Present",
+          description:
+            "Led product development for e-commerce platform features.",
+        },
       ],
       educationDetails: [
         {
-          degree: 'MBA',
-          field: 'Marketing',
-          institution: 'IIM Bangalore',
-          year: '2018',
-          grade: '8.8 CGPA'
-        }
+          degree: "MBA",
+          field: "Marketing",
+          institution: "IIM Bangalore",
+          year: "2018",
+          grade: "8.8 CGPA",
+        },
       ],
-      certifications: []
-    }
+      certifications: [],
+    },
   ]);
 
   const [jobForm, setJobForm] = useState({
-    title: '',
-    category: '',
-    jobTitle: '',
-    company: '',
-    location: '',
-    experience: '',
-    salary: '',
-    jobType: '',
-    workMode: '',
-    description: '',
-    requirements: '',
-    benefits: '',
+    title: "",
+    category: "",
+    jobTitle: "",
+    company: "",
+    location: "",
+    experience: "",
+    salary: "",
+    currency:"",
+    jobType: "",
+    workMode: "",
+    description: "",
+    requirements: "",
+    benefits: "",
     skills: [],
-    applicationDeadline: '',
-    vacancies: '',
+    applicationDeadline: "",
+    vacancies: "",
     isUrgent: false,
-    isRemote: false
+    isRemote: false,
   });
 
-  const [newSkill, setNewSkill] = useState('');
-    useEffect(() => {
-    const token = localStorage.getItem('auth_token');
-    console.log("LOG TOKEN:", token);
-  }, []);
+  const [newSkill, setNewSkill] = useState("");
+  const [currency, setCurrency] = useState([]);
+  
 
   // Fetch data from APIs
   useEffect(() => {
+  const fetchPostedJobs = async () => {
+    try {
+      const token = localStorage.getItem("auth_token");
+      if (!token) return;
+
+      const response = await fetch("http://localhost:8000/employeer/api/job-list-view/", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        console.error("Failed to fetch jobs");
+        return;
+      }
+
+      const data = await response.json();
+      setPostedJobs(data); // Set jobs into state
+    } catch (error) {
+      console.error("Error fetching jobs:", error);
+    }
+  };
+
+  fetchPostedJobs();
+}, []);
+console.log("Posted Jobs:", postedJobs);
+
+
+  useEffect(() => {
+      fetch("http://localhost:8000/master/api/currencies/")
+        .then((res) => res.json())
+        .then((data) => {
+          console.log("Currency data:", data);
+          setCurrency(data);
+        });
+    }, []);
+
+  useEffect(() => {
     // Fetch job categories
     fetch("http://localhost:8000/master/api/jobs_category/")
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        return res.json();
+      })
       .then((data) => setJobCategories(data))
-      .catch((err) => console.error(err));
+      .catch((err) => {
+        console.error("Failed to fetch job categories:", err);
+        setJobCategories([]);
+      });
 
-    // Fetch cities
-    fetch("http://localhost:8000/master/api/cities/")
-      .then((res) => res.json())
+    // Fetch country
+    fetch("http://localhost:8000/master/api/countries/")
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        return res.json();
+      })
       .then((data) => setCities(data))
-      .catch((err) => console.error(err));
+      .catch((err) => {
+        console.error("Failed to fetch cities:", err);
+        setCities([]);
+      });
   }, []);
 
   // Fetch job titles when category changes
   useEffect(() => {
     if (selectedCategory) {
-      fetch(`http://localhost:8000/master/api/jobs_title/?category=${selectedCategory}`)
-        .then((res) => res.json())
+      fetch(
+        `http://localhost:8000/master/api/jobs_title/?category=${selectedCategory}`
+      )
+        .then((res) => {
+          if (!res.ok) {
+            throw new Error(`HTTP error! status: ${res.status}`);
+          }
+          return res.json();
+        })
         .then((data) => setJobTitles(data))
-        .catch((err) => console.error(err));
+        .catch((err) => {
+          console.error("Failed to fetch job titles:", err);
+          setJobTitles([]);
+        });
+    } else {
+      setJobTitles([]);
     }
   }, [selectedCategory]);
 
   const handleAddSkill = () => {
     if (newSkill.trim() && !jobForm.skills.includes(newSkill.trim())) {
-      setJobForm(prev => ({
+      setJobForm((prev) => ({
         ...prev,
-        skills: [...prev.skills, newSkill.trim()]
+        skills: [...prev.skills, newSkill.trim()],
       }));
-      setNewSkill('');
+      setNewSkill("");
     }
   };
 
   const handleRemoveSkill = (skillToRemove) => {
-    setJobForm(prev => ({
+    setJobForm((prev) => ({
       ...prev,
-      skills: prev.skills.filter(skill => skill !== skillToRemove)
+      skills: prev.skills.filter((skill) => skill !== skillToRemove),
     }));
   };
 
-  const handleSubmitJob = async (e) => {
-    e.preventDefault();
-    console.log('Job form submitted:', jobForm);
-    alert('Job posted successfully!');
-  };
+const handleSubmitJob = async (e) => {
+  e.preventDefault();
+  try {
+    const token = localStorage.getItem("auth_token");
+    if (!token) {
+      alert("You must be logged in to post a job.");
+      return;
+    }
+    const payload = {
+      title: jobForm.title,
+      category: jobForm.category,
+      job_title: jobForm.jobTitle,
+      company: jobForm.company,
+      location: jobForm.location,
+      experience: jobForm.experience,
+      salary: jobForm.salary,
+      job_type: jobForm.jobType,
+      work_mode: jobForm.workMode,
+      vacancies: jobForm.vacancies || 1,
+      application_deadline: jobForm.applicationDeadline,
+      description: jobForm.description,
+      requirements: jobForm.requirements,
+      benefits: jobForm.benefits,
+      skills: jobForm.skills,
+      is_urgent: jobForm.isUrgent,
+      is_remote: jobForm.isRemote,
+      status: "active",
+    };
+    console.log("Payload:", payload);
+    const response = await fetch("http://localhost:8000/employeer/api/job-postings/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`, // Send JWT token
+      },
+      body: JSON.stringify(payload),
+    });
 
-  const handleLogout = () => {
-    localStorage.removeItem('auth_token');
-    router.push('/employeer/login');
-  };
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("Error posting job:", errorData);
+      alert(`Failed to post job: ${errorData.detail || "Unknown error"}`);
+      return;
+    }
+
+    const data = await response.json();
+    console.log("Job posted successfully:", data);
+    alert("Job posted successfully!");
+
+    // Reset form
+    setJobForm({
+      title: "",
+      category: "",
+      jobTitle: "",
+      company: "",
+      location: "",
+      experience: "",
+      salary: "",
+      currency: "",
+      jobType: "",
+      workMode: "",
+      description: "",
+      requirements: "",
+      benefits: "",
+      skills: [],
+      applicationDeadline: "",
+      vacancies: "",
+      isUrgent: false,
+      isRemote: false,
+    });
+
+  } catch (error) {
+    console.error("Error submitting job:", error);
+    alert("An error occurred while posting the job.");
+  }
+};
+
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'Active':
-        return 'bg-green-100 text-green-800';
-      case 'Closed':
-        return 'bg-red-100 text-red-800';
-      case 'Under Review':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'Shortlisted':
-        return 'bg-blue-100 text-blue-800';
-      case 'Rejected':
-        return 'bg-red-100 text-red-800';
+      case "active":
+        return "bg-green-100 text-green-800";
+      case "closed":
+        return "bg-red-100 text-red-800";
+      case "Under Review":
+        return "bg-yellow-100 text-yellow-800";
+      case "Shortlisted":
+        return "bg-blue-100 text-blue-800";
+      case "Rejected":
+        return "bg-red-100 text-red-800";
       default:
-        return 'bg-gray-100 text-gray-800';
+        return "bg-gray-100 text-gray-800";
     }
   };
 
+  // Filter jobs based on status and search term
+  const filteredJobs = postedJobs.filter((job) => {
+    const matchesFilter =
+      jobFilter === "all" ||
+      job.status.toLowerCase() === jobFilter.toLowerCase();
+    const matchesSearch =
+      job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      job.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      job.location?.name.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesFilter && matchesSearch;
+  });
+
+  const handleViewJob = (job) => {
+    console.log("Viewing job:", job);
+    alert(`Viewing job: ${job.title}`);
+  };
+
+  const handleEditJob = (job) => {
+    console.log("Editing job:", job);
+    alert(`Editing job: ${job.title}`);
+  };
+
+  const handleDeleteJob = (job) => {
+    if (
+      window.confirm(`Are you sure you want to delete the job: ${job.title}?`)
+    ) {
+      console.log("Deleting job:", job);
+      // Implement delete job functionality
+      alert(`Job deleted: ${job.title}`);
+    }
+  };
+
+  const handleToggleJobStatus = (job) => {
+    const newStatus = job.status === "Active" ? "Closed" : "Active";
+    console.log(`Changing job status from ${job.status} to ${newStatus}`);
+    // Implement status toggle functionality
+    alert(`Job status changed to: ${newStatus}`);
+  };
   const tabs = [
-    { id: 'post-job', label: 'Post a Job', icon: Plus },
-    { id: 'manage-jobs', label: 'Manage Jobs', icon: Briefcase },
-    { id: 'candidates', label: 'Candidates', icon: Users },
-    { id: 'analytics', label: 'Analytics', icon: TrendingUp }
+    { id: "post-job", label: "Post a Job", icon: Plus },
+    { id: "manage-jobs", label: "Manage Jobs", icon: Briefcase },
+    { id: "candidates", label: "Candidates", icon: Users },
+    // { id: 'analytics', label: 'Analytics', icon: TrendingUp }
   ];
 
   return (
@@ -345,7 +528,10 @@ export default function EmployerDashboard() {
               </span>
             </Link>
             <div className="flex items-center space-x-4">
-              <Button variant="outline" className="border-red-600 text-red-600 hover:bg-red-50" onClick={handleLogout}>
+              <Button
+                variant="outline"
+                className="border-red-600 text-red-600 hover:bg-red-50"
+              >
                 Logout
               </Button>
             </div>
@@ -356,8 +542,12 @@ export default function EmployerDashboard() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Welcome Section */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome to your Dashboard</h1>
-          <p className="text-gray-600">Manage your job postings and find the perfect candidates</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Welcome to your Dashboard
+          </h1>
+          <p className="text-gray-600">
+            Manage your job postings and find the perfect candidates
+          </p>
         </div>
 
         {/* Navigation Tabs */}
@@ -384,7 +574,7 @@ export default function EmployerDashboard() {
         </div>
 
         {/* Post Job Tab */}
-        {activeTab === 'post-job' && (
+        {activeTab === "post-job" && (
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
@@ -403,7 +593,12 @@ export default function EmployerDashboard() {
                     <Input
                       id="title"
                       value={jobForm.title}
-                      onChange={(e) => setJobForm(prev => ({ ...prev, title: e.target.value }))}
+                      onChange={(e) =>
+                        setJobForm((prev) => ({
+                          ...prev,
+                          title: e.target.value,
+                        }))
+                      }
                       placeholder="e.g., Senior Software Developer"
                       className="mt-1"
                       required
@@ -411,12 +606,18 @@ export default function EmployerDashboard() {
                   </div>
 
                   <div>
-                    <Label className="text-sm font-medium">Job Category *</Label>
+                    <Label className="text-sm font-medium">
+                      Job Category *
+                    </Label>
                     <Select
                       value={selectedCategory}
                       onValueChange={(value) => {
                         setSelectedCategory(value);
-                        setJobForm(prev => ({ ...prev, category: value, jobTitle: '' }));
+                        setJobForm((prev) => ({
+                          ...prev,
+                          category: value,
+                          jobTitle: "",
+                        }));
                       }}
                     >
                       <SelectTrigger className="mt-1">
@@ -424,7 +625,10 @@ export default function EmployerDashboard() {
                       </SelectTrigger>
                       <SelectContent>
                         {jobCategories.map((category) => (
-                          <SelectItem key={category.id} value={category.id.toString()}>
+                          <SelectItem
+                            key={category.id}
+                            value={category.id.toString()}
+                          >
                             {category.name}
                           </SelectItem>
                         ))}
@@ -433,19 +637,29 @@ export default function EmployerDashboard() {
                   </div>
 
                   <div>
-                    <Label className="text-sm font-medium">Specific Job Title *</Label>
+                    <Label className="text-sm font-medium">
+                      Specific Job Title *
+                    </Label>
                     <Select
                       value={jobForm.jobTitle}
-                      onValueChange={(value) => setJobForm(prev => ({ ...prev, jobTitle: value }))}
+                      onValueChange={(value) =>
+                        setJobForm((prev) => ({ ...prev, jobTitle: value }))
+                      }
                       disabled={!selectedCategory}
                     >
                       <SelectTrigger className="mt-1">
-                        <SelectValue placeholder={selectedCategory ? "Select job title" : "Select category first"} />
+                        <SelectValue
+                          placeholder={
+                            selectedCategory
+                              ? "Select job title"
+                              : "Select category first"
+                          }
+                        />
                       </SelectTrigger>
                       <SelectContent>
                         {jobTitles.map((title) => (
-                          <SelectItem key={title.id} value={title.name}>
-                            {title.name}
+                          <SelectItem key={title.id} value={title.id.toString()}>
+                            {title.title}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -459,7 +673,12 @@ export default function EmployerDashboard() {
                     <Input
                       id="company"
                       value={jobForm.company}
-                      onChange={(e) => setJobForm(prev => ({ ...prev, company: e.target.value }))}
+                      onChange={(e) =>
+                        setJobForm((prev) => ({
+                          ...prev,
+                          company: e.target.value,
+                        }))
+                      }
                       placeholder="Enter company name"
                       className="mt-1"
                       required
@@ -470,14 +689,16 @@ export default function EmployerDashboard() {
                     <Label className="text-sm font-medium">Location *</Label>
                     <Select
                       value={jobForm.location}
-                      onValueChange={(value) => setJobForm(prev => ({ ...prev, location: value }))}
+                      onValueChange={(value) =>
+                        setJobForm((prev) => ({ ...prev, location: value }))
+                      }
                     >
                       <SelectTrigger className="mt-1">
                         <SelectValue placeholder="Select location" />
                       </SelectTrigger>
                       <SelectContent>
                         {cities.map((city) => (
-                          <SelectItem key={city.id} value={city.name}>
+                          <SelectItem key={city.id} value={city.id.toString()}>
                             {city.name}
                           </SelectItem>
                         ))}
@@ -486,10 +707,14 @@ export default function EmployerDashboard() {
                   </div>
 
                   <div>
-                    <Label className="text-sm font-medium">Experience Required *</Label>
+                    <Label className="text-sm font-medium">
+                      Experience Required *
+                    </Label>
                     <Select
                       value={jobForm.experience}
-                      onValueChange={(value) => setJobForm(prev => ({ ...prev, experience: value }))}
+                      onValueChange={(value) =>
+                        setJobForm((prev) => ({ ...prev, experience: value }))
+                      }
                     >
                       <SelectTrigger className="mt-1">
                         <SelectValue placeholder="Select experience level" />
@@ -508,20 +733,59 @@ export default function EmployerDashboard() {
                     <Label htmlFor="salary" className="text-sm font-medium">
                       Salary Range (LPA)
                     </Label>
-                    <Input
-                      id="salary"
-                      value={jobForm.salary}
-                      onChange={(e) => setJobForm(prev => ({ ...prev, salary: e.target.value }))}
-                      placeholder="e.g., 5-8 LPA"
-                      className="mt-1"
-                    />
+                    {/* <div className="flex gap-2 mt-1">
+                      <Select defaultValue="INR">
+                        <SelectTrigger className="w-20">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="INR">₹</SelectItem>
+                          <SelectItem value="USD">$</SelectItem>
+                          <SelectItem value="EUR">€</SelectItem>
+                          <SelectItem value="GBP">£</SelectItem>
+                        </SelectContent>
+                      </Select>
+                     
+                    </div> */}
+                    <div className="flex gap-2 mt-1">
+                      <Select
+                        value={jobForm.currency || ""}
+                        onValueChange={(value) =>
+                       setJobForm((prev) => ({ ...prev, currency: value }))
+                        }
+                        required={true}
+                      >
+                        <SelectTrigger className="w-20 h-10 lg:h-11">
+                          <SelectValue placeholder="Select Currency" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {currency.map((curr) => (
+                            <SelectItem
+                              key={curr.id}
+                              value={curr.id.toString()}
+                            >
+                              {curr.symbol}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                       <Input
+                        id="salary"
+                        value={jobForm.salary}
+                        onChange={(e) => setJobForm(prev => ({ ...prev, salary: e.target.value }))}
+                        placeholder="e.g., 5-8 LPA"
+                        className="flex-1"
+                      />
+                    </div>
                   </div>
 
                   <div>
                     <Label className="text-sm font-medium">Job Type *</Label>
                     <Select
                       value={jobForm.jobType}
-                      onValueChange={(value) => setJobForm(prev => ({ ...prev, jobType: value }))}
+                      onValueChange={(value) =>
+                        setJobForm((prev) => ({ ...prev, jobType: value }))
+                      }
                     >
                       <SelectTrigger className="mt-1">
                         <SelectValue placeholder="Select job type" />
@@ -539,7 +803,9 @@ export default function EmployerDashboard() {
                     <Label className="text-sm font-medium">Work Mode</Label>
                     <Select
                       value={jobForm.workMode}
-                      onValueChange={(value) => setJobForm(prev => ({ ...prev, workMode: value }))}
+                      onValueChange={(value) =>
+                        setJobForm((prev) => ({ ...prev, workMode: value }))
+                      }
                     >
                       <SelectTrigger className="mt-1">
                         <SelectValue placeholder="Select work mode" />
@@ -560,7 +826,12 @@ export default function EmployerDashboard() {
                       id="vacancies"
                       type="number"
                       value={jobForm.vacancies}
-                      onChange={(e) => setJobForm(prev => ({ ...prev, vacancies: e.target.value }))}
+                      onChange={(e) =>
+                        setJobForm((prev) => ({
+                          ...prev,
+                          vacancies: e.target.value,
+                        }))
+                      }
                       placeholder="e.g., 5"
                       className="mt-1"
                     />
@@ -574,7 +845,12 @@ export default function EmployerDashboard() {
                       id="deadline"
                       type="date"
                       value={jobForm.applicationDeadline}
-                      onChange={(e) => setJobForm(prev => ({ ...prev, applicationDeadline: e.target.value }))}
+                      onChange={(e) =>
+                        setJobForm((prev) => ({
+                          ...prev,
+                          applicationDeadline: e.target.value,
+                        }))
+                      }
                       className="mt-1"
                     />
                   </div>
@@ -588,7 +864,12 @@ export default function EmployerDashboard() {
                   <Textarea
                     id="description"
                     value={jobForm.description}
-                    onChange={(e) => setJobForm(prev => ({ ...prev, description: e.target.value }))}
+                    onChange={(e) =>
+                      setJobForm((prev) => ({
+                        ...prev,
+                        description: e.target.value,
+                      }))
+                    }
                     rows={6}
                     placeholder="Describe the role, responsibilities, and what you're looking for..."
                     className="mt-1"
@@ -604,7 +885,12 @@ export default function EmployerDashboard() {
                   <Textarea
                     id="requirements"
                     value={jobForm.requirements}
-                    onChange={(e) => setJobForm(prev => ({ ...prev, requirements: e.target.value }))}
+                    onChange={(e) =>
+                      setJobForm((prev) => ({
+                        ...prev,
+                        requirements: e.target.value,
+                      }))
+                    }
                     rows={4}
                     placeholder="List the required skills, qualifications, and experience..."
                     className="mt-1"
@@ -622,13 +908,17 @@ export default function EmployerDashboard() {
                         placeholder="Add a skill"
                         className="flex-1"
                         onKeyPress={(e) => {
-                          if (e.key === 'Enter') {
+                          if (e.key === "Enter") {
                             e.preventDefault();
                             handleAddSkill();
                           }
                         }}
                       />
-                      <Button type="button" onClick={handleAddSkill} variant="outline">
+                      <Button
+                        type="button"
+                        onClick={handleAddSkill}
+                        variant="outline"
+                      >
                         <Plus className="w-4 h-4" />
                       </Button>
                     </div>
@@ -660,7 +950,12 @@ export default function EmployerDashboard() {
                   <Textarea
                     id="benefits"
                     value={jobForm.benefits}
-                    onChange={(e) => setJobForm(prev => ({ ...prev, benefits: e.target.value }))}
+                    onChange={(e) =>
+                      setJobForm((prev) => ({
+                        ...prev,
+                        benefits: e.target.value,
+                      }))
+                    }
                     rows={3}
                     placeholder="List the benefits, perks, and company culture highlights..."
                     className="mt-1"
@@ -673,7 +968,9 @@ export default function EmployerDashboard() {
                     <Checkbox
                       id="urgent"
                       checked={jobForm.isUrgent}
-                      onCheckedChange={(checked) => setJobForm(prev => ({ ...prev, isUrgent: checked }))}
+                      onCheckedChange={(checked) =>
+                        setJobForm((prev) => ({ ...prev, isUrgent: checked }))
+                      }
                     />
                     <Label htmlFor="urgent" className="text-sm">
                       Mark as urgent hiring
@@ -683,7 +980,9 @@ export default function EmployerDashboard() {
                     <Checkbox
                       id="remote"
                       checked={jobForm.isRemote}
-                      onCheckedChange={(checked) => setJobForm(prev => ({ ...prev, isRemote: checked }))}
+                      onCheckedChange={(checked) =>
+                        setJobForm((prev) => ({ ...prev, isRemote: checked }))
+                      }
                     />
                     <Label htmlFor="remote" className="text-sm">
                       Remote work available
@@ -696,7 +995,10 @@ export default function EmployerDashboard() {
                   <Button type="button" variant="outline">
                     Save as Draft
                   </Button>
-                  <Button type="submit" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+                  <Button
+                    type="submit"
+                    className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                  >
                     <Save className="w-4 h-4 mr-2" />
                     Post Job
                   </Button>
@@ -707,12 +1009,31 @@ export default function EmployerDashboard() {
         )}
 
         {/* Manage Jobs Tab */}
-        {activeTab === 'manage-jobs' && (
+        {activeTab === "manage-jobs" && (
           <Card>
             <CardHeader>
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <CardTitle>Manage Your Jobs</CardTitle>
                 <div className="flex items-center space-x-2">
+                  <Select value={jobFilter} onValueChange={setJobFilter}>
+                    <SelectTrigger className="w-32">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Jobs</SelectItem>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="closed">Closed</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <Input
+                      placeholder="Search jobs..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10 w-48"
+                    />
+                  </div>
                   <Button variant="outline" size="sm">
                     <Filter className="w-4 h-4 mr-2" />
                     Filter
@@ -726,69 +1047,141 @@ export default function EmployerDashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {postedJobs.map((job) => (
-                  <div key={job.id} className="border rounded-lg p-6 hover:shadow-md transition-shadow">
-                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                      <div className="flex-1">
-                        <div className="flex items-start justify-between mb-2">
-                          <h3 className="text-lg font-semibold text-gray-900">{job.title}</h3>
-                          <Badge className={getStatusColor(job.status)}>
-                            {job.status}
-                          </Badge>
+                {filteredJobs.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Briefcase className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">
+                      No jobs found
+                    </h3>
+                    <p className="text-gray-600">
+                      {searchTerm || jobFilter !== "all"
+                        ? "Try adjusting your search or filter criteria."
+                        : "Start by posting your first job."}
+                    </p>
+                  </div>
+                ) : (
+                  filteredJobs.map((job) => (
+                    <div
+                      key={job.id}
+                      className="border rounded-lg p-6 hover:shadow-md transition-shadow"
+                    >
+                      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                        <div className="flex-1">
+                          <div className="flex items-start justify-between mb-2">
+                            <h3 className="text-lg font-semibold text-gray-900">
+                              {job.title}
+                            </h3>
+                            <Badge className={getStatusColor(job.status)}>
+                              {job.status}
+                            </Badge>
+                          </div>
+                          <p className="text-purple-600 font-medium mb-2">
+                            {job.company}
+                          </p>
+                          <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 mb-3">
+                            <div className="flex items-center">
+                              <MapPin className="w-4 h-4 mr-1" />
+                              <span>{job.location?.name}</span>
+                            </div>
+                            <div className="flex items-center">
+                              <Briefcase className="w-4 h-4 mr-1" />
+                              <span>{job.experience}</span>
+                            </div>
+                            <div className="flex items-center">
+                              <DollarSign className="w-4 h-4 mr-1" />
+                              <span>{job.salary}</span>
+                            </div>
+                            <div className="flex items-center">
+                              <Calendar className="w-4 h-4 mr-1" />
+                              <span>
+                                Posted:{" "}
+                                {new Date(job.postedDate).toLocaleDateString()}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-6 text-sm">
+                            <div className="flex items-center text-blue-600">
+                              <Users className="w-4 h-4 mr-1" />
+                              <span>{job.applications} Applications</span>
+                            </div>
+                            <div className="flex items-center text-green-600">
+                              <Eye className="w-4 h-4 mr-1" />
+                              <span>{job.views} Views</span>
+                            </div>
+                          </div>
                         </div>
-                        <p className="text-purple-600 font-medium mb-2">{job.company}</p>
-                        <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 mb-3">
-                          <div className="flex items-center">
-                            <MapPin className="w-4 h-4 mr-1" />
-                            <span>{job.location}</span>
-                          </div>
-                          <div className="flex items-center">
-                            <Briefcase className="w-4 h-4 mr-1" />
-                            <span>{job.experience}</span>
-                          </div>
-                          <div className="flex items-center">
-                            <DollarSign className="w-4 h-4 mr-1" />
-                            <span>{job.salary}</span>
-                          </div>
-                          <div className="flex items-center">
-                            <Calendar className="w-4 h-4 mr-1" />
-                            <span>Posted: {new Date(job.postedDate).toLocaleDateString()}</span>
-                          </div>
+                        <div className="flex items-center space-x-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleViewJob(job)}
+                          >
+                            <Eye className="w-4 h-4 mr-2" />
+                            View
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEditJob(job)}
+                          >
+                            <Edit className="w-4 h-4 mr-2" />
+                            Edit
+                          </Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="outline" size="sm">
+                                <MoreVertical className="w-4 h-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                onClick={() => handleViewJob(job)}
+                              >
+                                <Eye className="w-4 h-4 mr-2" />
+                                View Details
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleEditJob(job)}
+                              >
+                                <Edit className="w-4 h-4 mr-2" />
+                                Edit Job
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleToggleJobStatus(job)}
+                              >
+                                {job.status === "Active" ? (
+                                  <>
+                                    <XCircle className="w-4 h-4 mr-2" />
+                                    Close Job
+                                  </>
+                                ) : (
+                                  <>
+                                    <CheckCircle className="w-4 h-4 mr-2" />
+                                    Activate Job
+                                  </>
+                                )}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleDeleteJob(job)}
+                                className="text-red-600 focus:text-red-600"
+                              >
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                Delete Job
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
-                        <div className="flex items-center space-x-6 text-sm">
-                          <div className="flex items-center text-blue-600">
-                            <Users className="w-4 h-4 mr-1" />
-                            <span>{job.applications} Applications</span>
-                          </div>
-                          <div className="flex items-center text-green-600">
-                            <Eye className="w-4 h-4 mr-1" />
-                            <span>{job.views} Views</span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Button variant="outline" size="sm">
-                          <Eye className="w-4 h-4 mr-2" />
-                          View
-                        </Button>
-                        <Button variant="outline" size="sm">
-                          <Edit className="w-4 h-4 mr-2" />
-                          Edit
-                        </Button>
-                        <Button variant="outline" size="sm">
-                          <MoreVertical className="w-4 h-4" />
-                        </Button>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </CardContent>
           </Card>
         )}
 
         {/* Candidates Tab */}
-        {activeTab === 'candidates' && (
+        {activeTab === "candidates" && (
           <div className="grid lg:grid-cols-3 gap-6">
             {/* Candidates List */}
             <div className="lg:col-span-1">
@@ -814,8 +1207,8 @@ export default function EmployerDashboard() {
                         onClick={() => setSelectedCandidate(candidate)}
                         className={`p-4 cursor-pointer hover:bg-gray-50 border-l-4 transition-colors ${
                           selectedCandidate?.id === candidate.id
-                            ? 'border-l-blue-500 bg-blue-50'
-                            : 'border-l-transparent'
+                            ? "border-l-blue-500 bg-blue-50"
+                            : "border-l-transparent"
                         }`}
                       >
                         <div className="flex items-start space-x-3">
@@ -823,15 +1216,27 @@ export default function EmployerDashboard() {
                             <Users className="w-5 h-5 text-purple-600" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h4 className="font-medium text-gray-900 truncate">{candidate.name}</h4>
-                            <p className="text-sm text-gray-600 truncate">{candidate.currentRole}</p>
-                            <p className="text-sm text-gray-500 truncate">{candidate.appliedFor}</p>
+                            <h4 className="font-medium text-gray-900 truncate">
+                              {candidate.name}
+                            </h4>
+                            <p className="text-sm text-gray-600 truncate">
+                              {candidate.currentRole}
+                            </p>
+                            <p className="text-sm text-gray-500 truncate">
+                              {candidate.appliedFor}
+                            </p>
                             <div className="flex items-center justify-between mt-2">
-                              <Badge className={`text-xs ${getStatusColor(candidate.status)}`}>
+                              <Badge
+                                className={`text-xs ${getStatusColor(
+                                  candidate.status
+                                )}`}
+                              >
                                 {candidate.status}
                               </Badge>
                               <span className="text-xs text-gray-500">
-                                {new Date(candidate.appliedDate).toLocaleDateString()}
+                                {new Date(
+                                  candidate.appliedDate
+                                ).toLocaleDateString()}
                               </span>
                             </div>
                           </div>
@@ -854,9 +1259,15 @@ export default function EmployerDashboard() {
                           <Users className="w-8 h-8 text-purple-600" />
                         </div>
                         <div>
-                          <h2 className="text-2xl font-bold text-gray-900">{selectedCandidate.name}</h2>
-                          <p className="text-purple-600 font-medium">{selectedCandidate.currentRole}</p>
-                          <p className="text-gray-600">{selectedCandidate.currentCompany}</p>
+                          <h2 className="text-2xl font-bold text-gray-900">
+                            {selectedCandidate.name}
+                          </h2>
+                          <p className="text-purple-600 font-medium">
+                            {selectedCandidate.currentRole}
+                          </p>
+                          <p className="text-gray-600">
+                            {selectedCandidate.currentCompany}
+                          </p>
                           <div className="flex items-center space-x-4 mt-2 text-sm text-gray-600">
                             <div className="flex items-center">
                               <MapPin className="w-4 h-4 mr-1" />
@@ -888,7 +1299,9 @@ export default function EmployerDashboard() {
                   <CardContent className="space-y-6">
                     {/* Contact Information */}
                     <div>
-                      <h3 className="font-semibold text-gray-900 mb-3">Contact Information</h3>
+                      <h3 className="font-semibold text-gray-900 mb-3">
+                        Contact Information
+                      </h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                         <div className="flex items-center">
                           <Mail className="w-4 h-4 mr-2 text-gray-400" />
@@ -903,20 +1316,34 @@ export default function EmployerDashboard() {
 
                     {/* Application Details */}
                     <div>
-                      <h3 className="font-semibold text-gray-900 mb-3">Application Details</h3>
+                      <h3 className="font-semibold text-gray-900 mb-3">
+                        Application Details
+                      </h3>
                       <div className="bg-gray-50 rounded-lg p-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                           <div>
                             <span className="text-gray-600">Applied for:</span>
-                            <p className="font-medium">{selectedCandidate.appliedFor}</p>
+                            <p className="font-medium">
+                              {selectedCandidate.appliedFor}
+                            </p>
                           </div>
                           <div>
-                            <span className="text-gray-600">Application Date:</span>
-                            <p className="font-medium">{new Date(selectedCandidate.appliedDate).toLocaleDateString()}</p>
+                            <span className="text-gray-600">
+                              Application Date:
+                            </span>
+                            <p className="font-medium">
+                              {new Date(
+                                selectedCandidate.appliedDate
+                              ).toLocaleDateString()}
+                            </p>
                           </div>
                           <div>
                             <span className="text-gray-600">Status:</span>
-                            <Badge className={`ml-2 ${getStatusColor(selectedCandidate.status)}`}>
+                            <Badge
+                              className={`ml-2 ${getStatusColor(
+                                selectedCandidate.status
+                              )}`}
+                            >
                               {selectedCandidate.status}
                             </Badge>
                           </div>
@@ -926,16 +1353,26 @@ export default function EmployerDashboard() {
 
                     {/* Summary */}
                     <div>
-                      <h3 className="font-semibold text-gray-900 mb-3">Professional Summary</h3>
-                      <p className="text-gray-700 leading-relaxed">{selectedCandidate.summary}</p>
+                      <h3 className="font-semibold text-gray-900 mb-3">
+                        Professional Summary
+                      </h3>
+                      <p className="text-gray-700 leading-relaxed">
+                        {selectedCandidate.summary}
+                      </p>
                     </div>
 
                     {/* Skills */}
                     <div>
-                      <h3 className="font-semibold text-gray-900 mb-3">Skills</h3>
+                      <h3 className="font-semibold text-gray-900 mb-3">
+                        Skills
+                      </h3>
                       <div className="flex flex-wrap gap-2">
                         {selectedCandidate.skills.map((skill, index) => (
-                          <Badge key={index} variant="secondary" className="bg-purple-100 text-purple-800">
+                          <Badge
+                            key={index}
+                            variant="secondary"
+                            className="bg-purple-100 text-purple-800"
+                          >
                             {skill}
                           </Badge>
                         ))}
@@ -944,14 +1381,27 @@ export default function EmployerDashboard() {
 
                     {/* Work Experience */}
                     <div>
-                      <h3 className="font-semibold text-gray-900 mb-3">Work Experience</h3>
+                      <h3 className="font-semibold text-gray-900 mb-3">
+                        Work Experience
+                      </h3>
                       <div className="space-y-4">
                         {selectedCandidate.workExperience.map((exp, index) => (
-                          <div key={index} className="border-l-2 border-purple-200 pl-4">
-                            <h4 className="font-medium text-gray-900">{exp.role}</h4>
-                            <p className="text-purple-600 font-medium">{exp.company}</p>
-                            <p className="text-sm text-gray-600 mb-2">{exp.duration}</p>
-                            <p className="text-gray-700 text-sm">{exp.description}</p>
+                          <div
+                            key={index}
+                            className="border-l-2 border-purple-200 pl-4"
+                          >
+                            <h4 className="font-medium text-gray-900">
+                              {exp.role}
+                            </h4>
+                            <p className="text-purple-600 font-medium">
+                              {exp.company}
+                            </p>
+                            <p className="text-sm text-gray-600 mb-2">
+                              {exp.duration}
+                            </p>
+                            <p className="text-gray-700 text-sm">
+                              {exp.description}
+                            </p>
                           </div>
                         ))}
                       </div>
@@ -959,37 +1409,61 @@ export default function EmployerDashboard() {
 
                     {/* Education */}
                     <div>
-                      <h3 className="font-semibold text-gray-900 mb-3">Education</h3>
+                      <h3 className="font-semibold text-gray-900 mb-3">
+                        Education
+                      </h3>
                       <div className="space-y-4">
-                        {selectedCandidate.educationDetails.map((edu, index) => (
-                          <div key={index} className="border-l-2 border-green-200 pl-4">
-                            <h4 className="font-medium text-gray-900">{edu.degree}</h4>
-                            <p className="text-green-600 font-medium">{edu.field}</p>
-                            <p className="text-gray-600">{edu.institution}</p>
-                            <div className="flex items-center space-x-4 text-sm text-gray-600 mt-1">
-                              <span>Year: {edu.year}</span>
-                              <span>Grade: {edu.grade}</span>
+                        {selectedCandidate.educationDetails.map(
+                          (edu, index) => (
+                            <div
+                              key={index}
+                              className="border-l-2 border-green-200 pl-4"
+                            >
+                              <h4 className="font-medium text-gray-900">
+                                {edu.degree}
+                              </h4>
+                              <p className="text-green-600 font-medium">
+                                {edu.field}
+                              </p>
+                              <p className="text-gray-600">{edu.institution}</p>
+                              <div className="flex items-center space-x-4 text-sm text-gray-600 mt-1">
+                                <span>Year: {edu.year}</span>
+                                <span>Grade: {edu.grade}</span>
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          )
+                        )}
                       </div>
                     </div>
 
                     {/* Certifications */}
                     {selectedCandidate.certifications.length > 0 && (
                       <div>
-                        <h3 className="font-semibold text-gray-900 mb-3">Certifications</h3>
+                        <h3 className="font-semibold text-gray-900 mb-3">
+                          Certifications
+                        </h3>
                         <div className="space-y-3">
-                          {selectedCandidate.certifications.map((cert, index) => (
-                            <div key={index} className="flex items-start space-x-3 p-3 bg-yellow-50 rounded-lg">
-                              <Award className="w-5 h-5 text-yellow-600 mt-0.5" />
-                              <div>
-                                <h4 className="font-medium text-gray-900">{cert.name}</h4>
-                                <p className="text-yellow-600 font-medium">{cert.issuer}</p>
-                                <p className="text-sm text-gray-600">Issued: {cert.year}</p>
+                          {selectedCandidate.certifications.map(
+                            (cert, index) => (
+                              <div
+                                key={index}
+                                className="flex items-start space-x-3 p-3 bg-yellow-50 rounded-lg"
+                              >
+                                <Award className="w-5 h-5 text-yellow-600 mt-0.5" />
+                                <div>
+                                  <h4 className="font-medium text-gray-900">
+                                    {cert.name}
+                                  </h4>
+                                  <p className="text-yellow-600 font-medium">
+                                    {cert.issuer}
+                                  </p>
+                                  <p className="text-sm text-gray-600">
+                                    Issued: {cert.year}
+                                  </p>
+                                </div>
                               </div>
-                            </div>
-                          ))}
+                            )
+                          )}
                         </div>
                       </div>
                     )}
@@ -1000,7 +1474,10 @@ export default function EmployerDashboard() {
                         <CheckCircle className="w-4 h-4 mr-2" />
                         Shortlist Candidate
                       </Button>
-                      <Button variant="outline" className="border-red-600 text-red-600 hover:bg-red-50 flex-1">
+                      <Button
+                        variant="outline"
+                        className="border-red-600 text-red-600 hover:bg-red-50 flex-1"
+                      >
                         <XCircle className="w-4 h-4 mr-2" />
                         Reject Application
                       </Button>
@@ -1015,8 +1492,13 @@ export default function EmployerDashboard() {
                 <Card className="h-full flex items-center justify-center">
                   <CardContent className="text-center">
                     <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">Select a Candidate</h3>
-                    <p className="text-gray-600">Choose a candidate from the list to view their detailed profile</p>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">
+                      Select a Candidate
+                    </h3>
+                    <p className="text-gray-600">
+                      Choose a candidate from the list to view their detailed
+                      profile
+                    </p>
                   </CardContent>
                 </Card>
               )}
@@ -1025,13 +1507,15 @@ export default function EmployerDashboard() {
         )}
 
         {/* Analytics Tab */}
-        {activeTab === 'analytics' && (
+        {activeTab === "analytics" && (
           <Card>
             <CardHeader>
               <CardTitle>Recruitment Analytics</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-gray-600">Analytics dashboard coming soon...</p>
+              <p className="text-gray-600">
+                Analytics dashboard coming soon...
+              </p>
             </CardContent>
           </Card>
         )}
