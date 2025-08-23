@@ -133,7 +133,7 @@ export default function EmployerRegister() {
 
   // Fetch the Data from the MASTER DB
   useEffect(() => {
-    fetch("http://localhost:8000/master/api/countries/")
+    fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/countries/")
       .then((res) => res.json())
       .then((data) => {
         setCountries(data);
@@ -144,7 +144,7 @@ export default function EmployerRegister() {
   useEffect(() => {
     if (formData.countryId) {
       fetch(
-        `http://localhost:8000/master/api/states/?country_id=${formData.countryId}`
+        `https://jobseeker-backend-jy1y.onrender.com/master/api/states/?country_id=${formData.countryId}`
       )
         .then((res) => res.json())
         .then(setStates)
@@ -155,7 +155,7 @@ export default function EmployerRegister() {
   useEffect(() => {
     if (formData.stateId) {
       fetch(
-        `http://localhost:8000/master/api/cities/?state=${formData.stateId}`
+        `https://jobseeker-backend-jy1y.onrender.com/master/api/cities/?state=${formData.stateId}`
       )
         .then((res) => res.json())
         .then(setCities)
@@ -220,7 +220,7 @@ export default function EmployerRegister() {
     console.log("Payload:", payload);
     try {
       const response = await fetch(
-        "http://localhost:8000/employeer/api/employeer_register/",
+        "https://jobseeker-backend-jy1y.onrender.com/employeer/api/employeer_register/",
         {
           method: "POST",
           headers: {

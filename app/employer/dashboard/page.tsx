@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useRouter } from 'next/navigation';
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -52,6 +53,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
+
 export default function EmployerDashboard() {
   const [activeTab, setActiveTab] = useState("post-job");
   const [jobCategories, setJobCategories] = useState([]);
@@ -62,6 +64,11 @@ export default function EmployerDashboard() {
   const [jobFilter, setJobFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
 
+  // The Dialog box
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedJob, setSelectedJob] = useState(null);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const router = useRouter();
   // Sample data for posted jobs
   // const [postedJobs] = useState([
   //   {
@@ -244,7 +251,7 @@ export default function EmployerDashboard() {
     location: "",
     experience: "",
     salary: "",
-    currency:"",
+    currency: "",
     jobType: "",
     workMode: "",
     description: "",
@@ -259,51 +266,60 @@ export default function EmployerDashboard() {
 
   const [newSkill, setNewSkill] = useState("");
   const [currency, setCurrency] = useState([]);
-  
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    const token = localStorage.getItem('auth_token');
+    console.log("LOG TOKEN:", token);
+    setIsAuthenticated(!!token);
+  }, []);
+
 
   // Fetch data from APIs
   useEffect(() => {
-  const fetchPostedJobs = async () => {
-    try {
-      const token = localStorage.getItem("auth_token");
-      if (!token) return;
+    const fetchPostedJobs = async () => {
+      try {
+        const token = localStorage.getItem("auth_token");
+        if (!token) return;
 
-      const response = await fetch("http://localhost:8000/employeer/api/job-list-view/", {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+        const response = await fetch(
+          "https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-list-view/",
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
-      if (!response.ok) {
-        console.error("Failed to fetch jobs");
-        return;
+        if (!response.ok) {
+          console.error("Failed to fetch jobs");
+          return;
+        }
+
+        const data = await response.json();
+        setPostedJobs(data); // Set jobs into state
+      } catch (error) {
+        console.error("Error fetching jobs:", error);
       }
+    };
 
-      const data = await response.json();
-      setPostedJobs(data); // Set jobs into state
-    } catch (error) {
-      console.error("Error fetching jobs:", error);
-    }
-  };
-
-  fetchPostedJobs();
-}, []);
-console.log("Posted Jobs:", postedJobs);
-
+    fetchPostedJobs();
+  }, []);
+  console.log("Posted Jobs:", postedJobs);
 
   useEffect(() => {
-      fetch("http://localhost:8000/master/api/currencies/")
-        .then((res) => res.json())
-        .then((data) => {
-          console.log("Currency data:", data);
-          setCurrency(data);
-        });
-    }, []);
+    fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/currencies/")
+      .then((res) => res.json())
+      .then((data) => {
+        console.log("Currency data:", data);
+        setCurrency(data);
+      });
+  }, []);
 
   useEffect(() => {
     // Fetch job categories
-    fetch("http://localhost:8000/master/api/jobs_category/")
+    fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_category/")
       .then((res) => {
         if (!res.ok) {
           throw new Error(`HTTP error! status: ${res.status}`);
@@ -317,7 +333,7 @@ console.log("Posted Jobs:", postedJobs);
       });
 
     // Fetch country
-    fetch("http://localhost:8000/master/api/countries/")
+    fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/countries/")
       .then((res) => {
         if (!res.ok) {
           throw new Error(`HTTP error! status: ${res.status}`);
@@ -335,7 +351,7 @@ console.log("Posted Jobs:", postedJobs);
   useEffect(() => {
     if (selectedCategory) {
       fetch(
-        `http://localhost:8000/master/api/jobs_title/?category=${selectedCategory}`
+        `https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_title/?category=${selectedCategory}`
       )
         .then((res) => {
           if (!res.ok) {
@@ -370,83 +386,84 @@ console.log("Posted Jobs:", postedJobs);
     }));
   };
 
-const handleSubmitJob = async (e) => {
-  e.preventDefault();
-  try {
-    const token = localStorage.getItem("auth_token");
-    if (!token) {
-      alert("You must be logged in to post a job.");
-      return;
+  const handleSubmitJob = async (e) => {
+    e.preventDefault();
+    try {
+      const token = localStorage.getItem("auth_token");
+      if (!token) {
+        alert("You must be logged in to post a job.");
+        return;
+      }
+      const payload = {
+        title: jobForm.title,
+        category: jobForm.category,
+        job_title: jobForm.jobTitle,
+        company: jobForm.company,
+        location: jobForm.location,
+        experience: jobForm.experience,
+        salary: jobForm.salary,
+        job_type: jobForm.jobType,
+        work_mode: jobForm.workMode,
+        vacancies: jobForm.vacancies || 1,
+        application_deadline: jobForm.applicationDeadline,
+        description: jobForm.description,
+        requirements: jobForm.requirements,
+        benefits: jobForm.benefits,
+        skills: jobForm.skills,
+        is_urgent: jobForm.isUrgent,
+        is_remote: jobForm.isRemote,
+        status: "active",
+      };
+      console.log("Payload:", payload);
+      const response = await fetch(
+        "https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-postings/",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`, // Send JWT token
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Error posting job:", errorData);
+        alert(`Failed to post job: ${errorData.detail || "Unknown error"}`);
+        return;
+      }
+
+      const data = await response.json();
+      console.log("Job posted successfully:", data);
+      alert("Job posted successfully!");
+
+      // Reset form
+      setJobForm({
+        title: "",
+        category: "",
+        jobTitle: "",
+        company: "",
+        location: "",
+        experience: "",
+        salary: "",
+        currency: "",
+        jobType: "",
+        workMode: "",
+        description: "",
+        requirements: "",
+        benefits: "",
+        skills: [],
+        applicationDeadline: "",
+        vacancies: "",
+        isUrgent: false,
+        isRemote: false,
+      });
+    } catch (error) {
+      console.error("Error submitting job:", error);
+      alert("An error occurred while posting the job.");
     }
-    const payload = {
-      title: jobForm.title,
-      category: jobForm.category,
-      job_title: jobForm.jobTitle,
-      company: jobForm.company,
-      location: jobForm.location,
-      experience: jobForm.experience,
-      salary: jobForm.salary,
-      job_type: jobForm.jobType,
-      work_mode: jobForm.workMode,
-      vacancies: jobForm.vacancies || 1,
-      application_deadline: jobForm.applicationDeadline,
-      description: jobForm.description,
-      requirements: jobForm.requirements,
-      benefits: jobForm.benefits,
-      skills: jobForm.skills,
-      is_urgent: jobForm.isUrgent,
-      is_remote: jobForm.isRemote,
-      status: "active",
-    };
-    console.log("Payload:", payload);
-    const response = await fetch("http://localhost:8000/employeer/api/job-postings/", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`, // Send JWT token
-      },
-      body: JSON.stringify(payload),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error("Error posting job:", errorData);
-      alert(`Failed to post job: ${errorData.detail || "Unknown error"}`);
-      return;
-    }
-
-    const data = await response.json();
-    console.log("Job posted successfully:", data);
-    alert("Job posted successfully!");
-
-    // Reset form
-    setJobForm({
-      title: "",
-      category: "",
-      jobTitle: "",
-      company: "",
-      location: "",
-      experience: "",
-      salary: "",
-      currency: "",
-      jobType: "",
-      workMode: "",
-      description: "",
-      requirements: "",
-      benefits: "",
-      skills: [],
-      applicationDeadline: "",
-      vacancies: "",
-      isUrgent: false,
-      isRemote: false,
-    });
-
-  } catch (error) {
-    console.error("Error submitting job:", error);
-    alert("An error occurred while posting the job.");
-  }
-};
-
+  };
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -477,14 +494,63 @@ const handleSubmitJob = async (e) => {
     return matchesFilter && matchesSearch;
   });
 
-  const handleViewJob = (job) => {
-    console.log("Viewing job:", job);
-    alert(`Viewing job: ${job.title}`);
+  const handleViewJob = async (job) => {
+    try {
+      const token = localStorage.getItem("auth_token");
+      const response = await fetch(
+        ` /employeer/api/job-postings/${job.id}/`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      const data = await response.json();
+      setSelectedJob(data);
+      setIsEditMode(false);
+      setIsModalOpen(true);
+    } catch (err) {
+      console.error("Error fetching job details", err);
+    }
   };
 
-  const handleEditJob = (job) => {
-    console.log("Editing job:", job);
-    alert(`Editing job: ${job.title}`);
+  const handleEditJob = async (job) => {
+    try {
+      const token = localStorage.getItem("auth_token");
+      const response = await fetch(
+        `https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-postings/${job.id}/`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      const data = await response.json();
+
+      // Prefill the form
+      setJobForm({
+        title: data.title,
+        category: data.category,
+        jobTitle: data.job_title,
+        company: data.company,
+        location: data.location,
+        experience: data.experience,
+        salary: data.salary,
+        currency: data.currency,
+        jobType: data.job_type,
+        workMode: data.work_mode,
+        description: data.description,
+        requirements: data.requirements,
+        benefits: data.benefits,
+        skills: data.skills,
+        applicationDeadline: data.application_deadline,
+        vacancies: data.vacancies,
+        isUrgent: data.is_urgent,
+        isRemote: data.is_remote,
+      });
+
+      setSelectedJob(data);
+      setIsEditMode(true);
+      setIsModalOpen(true);
+    } catch (err) {
+      console.error("Error fetching job details for edit", err);
+    }
   };
 
   const handleDeleteJob = (job) => {
@@ -503,6 +569,43 @@ const handleSubmitJob = async (e) => {
     // Implement status toggle functionality
     alert(`Job status changed to: ${newStatus}`);
   };
+
+  const handleUpdateJob = async () => {
+    try {
+      const token = localStorage.getItem("auth_token");
+      const response = await fetch(`https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-postings/${selectedJob.id}/`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(jobForm),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update job");
+      }
+
+      const updatedJob = await response.json();
+
+      // Update local state
+      setPostedJobs((prev) =>
+        prev.map((job) => (job.id === updatedJob.id ? updatedJob : job))
+      );
+
+      setIsModalOpen(false);
+      alert("Job updated successfully");
+    } catch (err) {
+      console.error(err);
+      alert("Failed to update job");
+    }
+  };
+  const handleLogout = () => {
+    localStorage.removeItem('auth_token');
+    setIsAuthenticated(false);
+    router.push('/employer/login');
+  };
+
   const tabs = [
     { id: "post-job", label: "Post a Job", icon: Plus },
     { id: "manage-jobs", label: "Manage Jobs", icon: Briefcase },
@@ -531,6 +634,7 @@ const handleSubmitJob = async (e) => {
               <Button
                 variant="outline"
                 className="border-red-600 text-red-600 hover:bg-red-50"
+                onClick={handleLogout}
               >
                 Logout
               </Button>
@@ -658,7 +762,10 @@ const handleSubmitJob = async (e) => {
                       </SelectTrigger>
                       <SelectContent>
                         {jobTitles.map((title) => (
-                          <SelectItem key={title.id} value={title.id.toString()}>
+                          <SelectItem
+                            key={title.id}
+                            value={title.id.toString()}
+                          >
                             {title.title}
                           </SelectItem>
                         ))}
@@ -751,7 +858,7 @@ const handleSubmitJob = async (e) => {
                       <Select
                         value={jobForm.currency || ""}
                         onValueChange={(value) =>
-                       setJobForm((prev) => ({ ...prev, currency: value }))
+                          setJobForm((prev) => ({ ...prev, currency: value }))
                         }
                         required={true}
                       >
@@ -769,10 +876,15 @@ const handleSubmitJob = async (e) => {
                           ))}
                         </SelectContent>
                       </Select>
-                       <Input
+                      <Input
                         id="salary"
                         value={jobForm.salary}
-                        onChange={(e) => setJobForm(prev => ({ ...prev, salary: e.target.value }))}
+                        onChange={(e) =>
+                          setJobForm((prev) => ({
+                            ...prev,
+                            salary: e.target.value,
+                          }))
+                        }
                         placeholder="e.g., 5-8 LPA"
                         className="flex-1"
                       />
@@ -1520,6 +1632,95 @@ const handleSubmitJob = async (e) => {
           </Card>
         )}
       </div>
+      {isModalOpen && (
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="bg-white rounded-lg w-full max-w-3xl p-6 relative">
+      {/* Close Button */}
+      <button
+        className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
+        onClick={() => setIsModalOpen(false)}
+      >
+        ✕
+      </button>
+
+      {isEditMode ? (
+        <>
+          <h2 className="text-xl font-bold mb-4">Edit Job</h2>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleUpdateJob();
+            }}
+            className="space-y-4"
+          >
+            {/* Title */}
+            <div>
+              <Label>Job Title</Label>
+              <Input
+                value={jobForm.title}
+                onChange={(e) =>
+                  setJobForm((prev) => ({ ...prev, title: e.target.value }))
+                }
+              />
+            </div>
+            {/* Company */}
+            <div>
+              <Label>Company</Label>
+              <Input
+                value={jobForm.company}
+                onChange={(e) =>
+                  setJobForm((prev) => ({ ...prev, company: e.target.value }))
+                }
+              />
+            </div>
+            {/* Salary */}
+            <div>
+              <Label>Salary</Label>
+              <Input
+                value={jobForm.salary}
+                onChange={(e) =>
+                  setJobForm((prev) => ({ ...prev, salary: e.target.value }))
+                }
+              />
+            </div>
+            {/* Description */}
+            <div>
+              <Label>Description</Label>
+              <Textarea
+                value={jobForm.description}
+                onChange={(e) =>
+                  setJobForm((prev) => ({ ...prev, description: e.target.value }))
+                }
+              />
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsModalOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button type="submit">Update Job</Button>
+            </div>
+          </form>
+        </>
+      ) : (
+        <>
+          <h2 className="text-xl font-bold mb-4">{selectedJob?.title}</h2>
+          <p className="text-gray-600 mb-2">Company: {selectedJob?.company}</p>
+          <p className="text-gray-600 mb-2">Salary: {selectedJob?.salary}</p>
+          <p className="text-gray-600 mb-2">
+            Description: {selectedJob?.description}
+          </p>
+          <p className="text-gray-600 mb-2">Status: {selectedJob?.status}</p>
+        </>
+      )}
+    </div>
+  </div>
+)}
+
     </div>
   );
 }
