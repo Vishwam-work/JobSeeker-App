@@ -388,21 +388,21 @@ export default function JobListings() {
     }
 
     // Experience filter
-    if (filters.experience) {
+    if (filters.experience && filters.experience !== "All") {
       filtered = filtered.filter(job =>
         job.experience.includes(filters.experience)
       );
     }
 
     // Job type filter
-    if (filters.jobType) {
+    if (filters.jobType && filters.experience !== "All") {
       filtered = filtered.filter(job =>
         job.jobType === filters.jobType
       );
     }
 
     // Work mode filter
-    if (filters.workMode) {
+    if (filters.workMode && filters.experience !== "All") {
       filtered = filtered.filter(job =>
         job.workMode === filters.workMode
       );
@@ -435,7 +435,7 @@ export default function JobListings() {
     });
 
     // Posted within filter
-    if (filters.postedWithin) {
+    if (filters.postedWithin && filters.experience !== "All") {
       const now = new Date();
       filtered = filtered.filter(job => {
         const postedDate = new Date(job.postedDate);
@@ -661,7 +661,7 @@ export default function JobListings() {
                         <SelectValue placeholder="Select experience" />
                       </SelectTrigger>
                       <SelectContent>
-                        {/* <SelectItem value="">All Experience</SelectItem> */}
+                        <SelectItem value="All">All Experience</SelectItem>
                         <SelectItem value="0-1">0-1 years</SelectItem>
                         <SelectItem value="2-4">2-4 years</SelectItem>
                         <SelectItem value="3-5">3-5 years</SelectItem>
@@ -684,7 +684,7 @@ export default function JobListings() {
                         <SelectValue placeholder="Select job type" />
                       </SelectTrigger>
                       <SelectContent>
-                        {/* <SelectItem value="">All Types</SelectItem> */}
+                        <SelectItem value="All">All Types</SelectItem>
                         <SelectItem value="Full Time">Full Time</SelectItem>
                         <SelectItem value="Part Time">Part Time</SelectItem>
                         <SelectItem value="Contract">Contract</SelectItem>
@@ -706,7 +706,7 @@ export default function JobListings() {
                         <SelectValue placeholder="Select work mode" />
                       </SelectTrigger>
                       <SelectContent>
-                        {/* <SelectItem value="">All Modes</SelectItem> */}
+                        <SelectItem value="All">All Modes</SelectItem>
                         <SelectItem value="Remote">Remote</SelectItem>
                         <SelectItem value="Hybrid">Hybrid</SelectItem>
                         <SelectItem value="Office">Office</SelectItem>
@@ -748,7 +748,7 @@ export default function JobListings() {
                         <SelectValue placeholder="Any time" />
                       </SelectTrigger>
                       <SelectContent>
-                        {/* <SelectItem value="">Any time</SelectItem> */}
+                        <SelectItem value="All">Any time</SelectItem>
                         <SelectItem value="1">Last 24 hours</SelectItem>
                         <SelectItem value="3">Last 3 days</SelectItem>
                         <SelectItem value="7">Last week</SelectItem>
