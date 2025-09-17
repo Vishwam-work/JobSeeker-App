@@ -350,7 +350,7 @@ export default function JobListings() {
     'Delhi',
     'Pune',
     'Hyderabad',
-    'Chennai'
+    'Chennai',
   ]);
 
   const [skillsList] = useState([
@@ -381,7 +381,7 @@ export default function JobListings() {
     }
 
     // Location filter
-    if (filters.location) {
+    if (filters.location && filters.location !== "All") {
       filtered = filtered.filter(job =>
         job.location.toLowerCase().includes(filters.location.toLowerCase())
       );
@@ -638,7 +638,7 @@ export default function JobListings() {
                         <SelectValue placeholder="Select location" />
                       </SelectTrigger>
                       <SelectContent>
-                        {/* <SelectItem value="">All Locations</SelectItem> */}
+                        <SelectItem value="All">All Locations</SelectItem>
                         {locations.map((location) => (
                           <SelectItem key={location} value={location}>
                             {location}
