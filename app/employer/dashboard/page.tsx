@@ -53,6 +53,13 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 
 export default function EmployerDashboard() {
   const [activeTab, setActiveTab] = useState("post-job");
@@ -68,6 +75,8 @@ export default function EmployerDashboard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState(null);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
   const router = useRouter();
   // Sample data for posted jobs
   // const [postedJobs] = useState([
@@ -552,7 +561,7 @@ export default function EmployerDashboard() {
 
       setSelectedJob(data);
       setIsEditMode(true);
-      setIsModalOpen(true);
+      setIsEditModalOpen(true);
     } catch (err) {
       console.error("Error fetching job details for edit", err);
     }
@@ -618,6 +627,41 @@ export default function EmployerDashboard() {
     // { id: 'analytics', label: 'Analytics', icon: TrendingUp }
   ];
 
+  const getWorkModeColor = (workMode) => {
+    switch (workMode) {
+      case 'Remote':
+        return 'bg-green-100 text-green-800';
+      case 'Hybrid':
+        return 'bg-blue-100 text-blue-800';
+      case 'Office':
+        return 'bg-gray-100 text-gray-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getTimeSincePosted = (postedDate) => {
+    const now = new Date();
+    const posted = new Date(postedDate);
+    const diffTime = Math.abs(now - posted);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 1) return '1 day ago';
+    if (diffDays < 7) return `${diffDays} days ago`;
+    if (diffDays < 30) return `${Math.ceil(diffDays / 7)} weeks ago`;
+    return `${Math.ceil(diffDays / 30)} months ago`;
+  };
+
+
+  
+  
+
+  // let companyInfoSize;
+  // if(typeof selectedJob ==="object" && selectedJob?.companyInfo.size){
+  //  selectedJob.requirements.map((req, index) => (
+  //                        )
+  // }
+     
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -1212,7 +1256,7 @@ export default function EmployerDashboard() {
                               <Calendar className="w-4 h-4 mr-1" />
                               <span>
                                 Posted:{" "}
-                                {new Date(job.postedDate).toLocaleDateString()}
+                                {new Date(job.created_at).toLocaleDateString()}
                               </span>
                             </div>
                           </div>
@@ -1296,6 +1340,294 @@ export default function EmployerDashboard() {
             </CardContent>
           </Card>
         )}
+
+          <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                    {selectedJob && (
+                      <>
+                        <DialogHeader>
+                          <DialogTitle className="text-2xl font-bold text-gray-900">
+                            {selectedJob.title}
+                          </DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-6">
+                          {/* Company Info */}
+                          <div className="flex items-start space-x-4 p-4 bg-gray-50 rounded-lg">
+                            <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-blue-100 rounded-lg flex items-center justify-center">
+                              <Building2 className="w-8 h-8 text-purple-600" />
+                            </div>
+                            <div className="flex-1">
+                              <h3 className="text-xl font-semibold text-purple-600 mb-1">
+                                {selectedJob.company}
+                              </h3>
+                              {/* <p className="text-gray-600 mb-2">{selectedJob.companyInfo.about}</p> */}
+                              <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                                <div className="flex items-center">
+                                  <Users className="w-4 h-4 mr-1" />
+                                  {/* <span>{selectedJob.companyInfo.size}</span> */}
+                                </div>
+                                {/* <div className="flex items-center">
+                                  <Building2 className="w-4 h-4 mr-1" />
+                                  <span>{selectedJob.companyInfo.industry}</span>
+                                </div>
+                                <div className="flex items-center">
+                                  <Globe className="w-4 h-4 mr-1" />
+                                  <a href={selectedJob.companyInfo.website} className="text-purple-600 hover:underline">
+                                    Website
+                                  </a> */}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+        
+                          {/* Job Details */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <div className="flex items-center text-gray-600">
+                                <MapPin className="w-4 h-4 mr-2" />
+                                <span>{selectedJob.location.name}</span>
+                              </div>
+                              <div className="flex items-center text-gray-600">
+                                <Briefcase className="w-4 h-4 mr-2" />
+                                <span>{selectedJob.experience}</span>
+                              </div>
+                              <div className="flex items-center text-gray-600">
+                                <DollarSign className="w-4 h-4 mr-2" />
+                                <span>{selectedJob.salary}</span>
+                              </div>
+                            </div>
+                            <div className="space-y-2">
+                              <div className="flex items-center text-gray-600">
+                                <Clock className="w-4 h-4 mr-2" />
+                                <span>{selectedJob.job_type}</span>
+                              </div>
+                              <div className="flex items-center text-gray-600">
+                                <Building2 className="w-4 h-4 mr-2" />
+                                <Badge className={getWorkModeColor(selectedJob.workMode)}>
+                                  {selectedJob.work_mode}
+                                </Badge>
+                              </div>
+                              <div className="flex items-center text-gray-600">
+                                <Calendar className="w-4 h-4 mr-2" />
+                                <span>Posted {getTimeSincePosted(selectedJob.created_at)}</span>
+                              </div>
+                            </div>
+                          </div>
+        
+                          {/* Job Description */}
+                          <div>
+                            <h4 className="text-lg font-semibold text-gray-900 mb-3">Job Description</h4>
+                            <p className="text-gray-700 leading-relaxed">{selectedJob.description}</p>
+                          </div>
+        
+                          {/* Requirements */}
+                          <div>
+                            <h4 className="text-lg font-semibold text-gray-900 mb-3">Requirements</h4>
+                            <ul className="space-y-2">
+                              {selectedJob.requirements}
+                            </ul>
+                          </div>
+        
+                          {/* Responsibilities */}
+                          {/* <div>
+                            <h4 className="text-lg font-semibold text-gray-900 mb-3">Responsibilities</h4>
+                            <ul className="space-y-2">
+                              {selectedJob.responsibilities.map((resp, index) => (
+                                <li key={index} className="flex items-start">
+                                  <Star className="w-4 h-4 text-purple-500 mr-2 mt-0.5 flex-shrink-0" />
+                                  <span className="text-gray-700">{resp}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                          */}
+                          {/* Benefits */}
+                          <div>
+                            <h4 className="text-lg font-semibold text-gray-900 mb-3">Benefits</h4>
+                            <ul className="space-y-2">
+                              {selectedJob.benefits}
+                            </ul>
+                          </div>
+        
+                          {/* Skills */}
+                          <div>
+                            <h4 className="text-lg font-semibold text-gray-900 mb-3">Required Skills</h4>
+                            <div className="flex flex-wrap gap-2">
+                              {selectedJob.skills.map((skill, index) => (
+                                <Badge key={index} variant="secondary" className="bg-purple-100 text-purple-800">
+                                  {skill}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+        
+                          {/* Action Buttons */}
+                          {/* <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t">
+                            <Button
+                              onClick={() => {
+                                setIsJobDetailOpen(false);
+                                handleApply(selectedJob);
+                              }}
+                              className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 flex-1"
+                            >
+                              <Send className="w-4 h-4 mr-2" />
+                              Apply Now
+                            </Button>
+                            <Button
+                              variant="outline"
+                              onClick={() => handleBookmark(selectedJob.id)}
+                              className={`flex-1 ${selectedJob.isBookmarked ? 'border-purple-600 text-purple-600' : ''}`}
+                            >
+                              <Bookmark className={`w-4 h-4 mr-2 ${selectedJob.isBookmarked ? 'fill-current' : ''}`} />
+                              {selectedJob.isBookmarked ? 'Bookmarked' : 'Bookmark'}
+                            </Button>
+                            <Button
+                              variant="outline"
+                              onClick={() => handleShare(selectedJob)}
+                              className="flex-1"
+                            >
+                              <Share2 className="w-4 h-4 mr-2" />
+                              Share
+                            </Button>
+                          </div> */}
+                        {/* </div> */}
+                      </>
+                    )}
+                  </DialogContent>
+                </Dialog>
+
+
+    <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-xl">
+        <DialogHeader>
+          <DialogTitle className="text-2xl font-bold">Edit Job Profile</DialogTitle>
+        </DialogHeader>
+
+        <div className="grid grid-cols-2 gap-4 py-4">
+          {/* Left Column */}
+          <div className="space-y-3">
+            <div>
+              <Label>Title</Label>
+              <Input name="title" />
+            </div>
+            <div>
+              <Label>Category</Label>
+              <Input name="category"  />
+            </div>
+            <div>
+              <Label>Job Title</Label>
+              <Input name="jobTitle"  />
+            </div>
+            <div>
+              <Label>Company</Label>
+              <Input name="company"  />
+            </div>
+            <div>
+              <Label>Location</Label>
+              <Input name="location"  />
+            </div>
+            <div>
+              <Label>Experience</Label>
+              <Input name="experience"  />
+            </div>
+            <div>
+              <Label>Salary</Label>
+              <Input name="salary"  />
+            </div>
+            <div>
+              <Label>Currency</Label>
+              <Input name="currency"  />
+            </div>
+          </div>
+
+          {/* Right Column */}
+          <div className="space-y-3">
+            <div>
+              <Label>Job Type</Label>
+              <Input name="jobType"  />
+            </div>
+            <div>
+              <Label>Work Mode</Label>
+              <Input name="workMode"  />
+            </div>
+            <div>
+              <Label>Description</Label>
+              <Textarea
+                name="description"
+                
+                rows={3}
+              />
+            </div>
+            <div>
+              <Label>Requirements</Label>
+              <Textarea
+                name="requirements"
+                
+                rows={3}
+              />
+            </div>
+            <div>
+              <Label>Benefits</Label>
+              <Textarea
+                name="benefits"
+                
+                rows={3}
+              />
+            </div>
+            <div>
+              <Label>Skills</Label>
+              <Textarea
+                name="skills"
+                
+                rows={2}
+              />
+            </div>
+            <div>
+              <Label>Application Deadline</Label>
+              <Input
+                type="date"
+                name="applicationDeadline"
+                
+              />
+            </div>
+            <div>
+              <Label>Vacancies</Label>
+              <Input
+                type="number"
+                name="vacancies"
+                
+              />
+            </div>
+
+            {/* Checkboxes */}
+            <div className="flex items-center gap-4 mt-2">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                 
+                />
+                <Label>Urgent</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  
+                  
+                />
+                <Label>Remote</Label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="flex justify-end gap-2 mt-4">
+          <Button variant="ghost" >
+            Cancel
+          </Button>
+          <Button >Save Changes</Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+
 
         {/* Candidates Tab */}
         {activeTab === "candidates" && (
@@ -1414,6 +1746,8 @@ export default function EmployerDashboard() {
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-6">
+
+
                     {/* Contact Information */}
                     <div>
                       <h3 className="font-semibold text-gray-900 mb-3">
