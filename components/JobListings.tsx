@@ -332,7 +332,95 @@ export default function JobListings() {
         website: 'https://cloudsystems.com',
         about: 'Premier cloud services provider helping enterprises migrate and scale their infrastructure.'
       }
-    }
+    },
+    {
+      id: 7,
+      title: 'MLOps Engineer',
+      company: 'Cloud Systems Ltd',
+      location: 'Chennai, Tamil Nadu',
+      experience: '4-6 years',
+      salary: '12-18 LPA',
+      jobType: 'Contract',
+      workMode: 'Office',
+      postedDate: '2024-01-10',
+      applications: 23,
+      description: 'Manage cloud infrastructure and deployment pipelines. Ensure system reliability and scalability.',
+      requirements: [
+        '4+ years of DevOps experience',
+        'Strong knowledge of AWS/Azure',
+        'Experience with Docker and Kubernetes',
+        'CI/CD pipeline expertise',
+        'Infrastructure as Code experience'
+      ],
+      responsibilities: [
+        'Manage cloud infrastructure',
+        'Build and maintain CI/CD pipelines',
+        'Monitor system performance',
+        'Implement security best practices',
+        'Automate deployment processes'
+      ],
+      benefits: [
+        'Cloud certification support',
+        'Technical training budget',
+        'Health insurance',
+        'Performance bonuses',
+        'Work-life balance'
+      ],
+      skills: ['AWS', 'Docker', 'Kubernetes', 'Jenkins', 'Terraform'],
+      companyLogo: null,
+      isBookmarked: false,
+      urgentHiring: true,
+      companyInfo: {
+        size: '100-200 employees',
+        industry: 'Cloud Services',
+        website: 'https://cloudsystems.com',
+        about: 'Premier cloud services provider helping enterprises migrate and scale their infrastructure.'
+      }
+    },
+    {
+      id: 8,
+      title: 'Senior Software Engineer',
+      company: 'Oracle Systems Ltd',
+      location: 'Chennai, Tamil Nadu',
+      experience: '3-7 years',
+      salary: '12-18 LPA',
+      jobType: 'Part Time',
+      workMode: 'Remote',
+      postedDate: '2025-09-09',
+      applications: 23,
+      description: 'Manage cloud infrastructure and deployment pipelines. Ensure system reliability and scalability.',
+      requirements: [
+        '4+ years of DevOps experience',
+        'Strong knowledge of AWS/Azure',
+        'Experience with Docker and Kubernetes',
+        'CI/CD pipeline expertise',
+        'Infrastructure as Code experience'
+      ],
+      responsibilities: [
+        'Manage cloud infrastructure',
+        'Build and maintain CI/CD pipelines',
+        'Monitor system performance',
+        'Implement security best practices',
+        'Automate deployment processes'
+      ],
+      benefits: [
+        'Cloud certification support',
+        'Technical training budget',
+        'Health insurance',
+        'Performance bonuses',
+        'Work-life balance'
+      ],
+      skills: ['AWS', 'Docker', 'Kubernetes', 'Jenkins', 'Terraform'],
+      companyLogo: null,
+      isBookmarked: false,
+      urgentHiring: true,
+      companyInfo: {
+        size: '100-200 employees',
+        industry: 'Cloud Services',
+        website: 'https://cloudsystems.com',
+        about: 'Premier cloud services provider helping enterprises migrate and scale their infrastructure.'
+      }
+    },
   ];
 
   const [companies] = useState([
@@ -350,7 +438,7 @@ export default function JobListings() {
     'Delhi',
     'Pune',
     'Hyderabad',
-    'Chennai'
+    'Chennai',
   ]);
 
   const [skillsList] = useState([
@@ -381,28 +469,28 @@ export default function JobListings() {
     }
 
     // Location filter
-    if (filters.location) {
+    if (filters.location && filters.location !== "All") {
       filtered = filtered.filter(job =>
         job.location.toLowerCase().includes(filters.location.toLowerCase())
       );
     }
 
     // Experience filter
-    if (filters.experience) {
+    if (filters.experience && filters.experience !== "All") {
       filtered = filtered.filter(job =>
         job.experience.includes(filters.experience)
       );
     }
 
     // Job type filter
-    if (filters.jobType) {
+    if (filters.jobType && filters.jobType !== "All") {
       filtered = filtered.filter(job =>
         job.jobType === filters.jobType
       );
     }
 
     // Work mode filter
-    if (filters.workMode) {
+    if (filters.workMode && filters.workMode !== "All") {
       filtered = filtered.filter(job =>
         job.workMode === filters.workMode
       );
@@ -435,7 +523,7 @@ export default function JobListings() {
     });
 
     // Posted within filter
-    if (filters.postedWithin) {
+    if (filters.postedWithin && filters.postedWithin !== "All") {
       const now = new Date();
       filtered = filtered.filter(job => {
         const postedDate = new Date(job.postedDate);
@@ -638,7 +726,7 @@ export default function JobListings() {
                         <SelectValue placeholder="Select location" />
                       </SelectTrigger>
                       <SelectContent>
-                        {/* <SelectItem value="">All Locations</SelectItem> */}
+                        <SelectItem value="All">All Locations</SelectItem>
                         {locations.map((location) => (
                           <SelectItem key={location} value={location}>
                             {location}
@@ -661,7 +749,7 @@ export default function JobListings() {
                         <SelectValue placeholder="Select experience" />
                       </SelectTrigger>
                       <SelectContent>
-                        {/* <SelectItem value="">All Experience</SelectItem> */}
+                        <SelectItem value="All">All Experience</SelectItem>
                         <SelectItem value="0-1">0-1 years</SelectItem>
                         <SelectItem value="2-4">2-4 years</SelectItem>
                         <SelectItem value="3-5">3-5 years</SelectItem>
@@ -684,7 +772,7 @@ export default function JobListings() {
                         <SelectValue placeholder="Select job type" />
                       </SelectTrigger>
                       <SelectContent>
-                        {/* <SelectItem value="">All Types</SelectItem> */}
+                        <SelectItem value="All">All Types</SelectItem>
                         <SelectItem value="Full Time">Full Time</SelectItem>
                         <SelectItem value="Part Time">Part Time</SelectItem>
                         <SelectItem value="Contract">Contract</SelectItem>
@@ -706,7 +794,7 @@ export default function JobListings() {
                         <SelectValue placeholder="Select work mode" />
                       </SelectTrigger>
                       <SelectContent>
-                        {/* <SelectItem value="">All Modes</SelectItem> */}
+                        <SelectItem value="All">All Modes</SelectItem>
                         <SelectItem value="Remote">Remote</SelectItem>
                         <SelectItem value="Hybrid">Hybrid</SelectItem>
                         <SelectItem value="Office">Office</SelectItem>
@@ -748,7 +836,7 @@ export default function JobListings() {
                         <SelectValue placeholder="Any time" />
                       </SelectTrigger>
                       <SelectContent>
-                        {/* <SelectItem value="">Any time</SelectItem> */}
+                        <SelectItem value="All">Any time</SelectItem>
                         <SelectItem value="1">Last 24 hours</SelectItem>
                         <SelectItem value="3">Last 3 days</SelectItem>
                         <SelectItem value="7">Last week</SelectItem>
