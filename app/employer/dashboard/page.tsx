@@ -498,12 +498,17 @@ export default function EmployerDashboard() {
     try {
       const token = localStorage.getItem("auth_token");
       const response = await fetch(
-        ` /employeer/api/job-postings/${job.id}/`,
+        `https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-list-view/${job.id}/`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
+      
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
       const data = await response.json();
+      console.log("Job details:", data);
       setSelectedJob(data);
       setIsEditMode(false);
       setIsModalOpen(true);
@@ -516,7 +521,7 @@ export default function EmployerDashboard() {
     try {
       const token = localStorage.getItem("auth_token");
       const response = await fetch(
-        `https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-postings/${job.id}/`,
+        `https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-list-view/${job.id}/`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
