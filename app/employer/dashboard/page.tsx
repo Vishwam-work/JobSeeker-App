@@ -75,7 +75,6 @@ export default function EmployerDashboard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState(null);
   const [isEditMode, setIsEditMode] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const router = useRouter();
   // Sample data for posted jobs
@@ -261,7 +260,7 @@ export default function EmployerDashboard() {
     experience: "",
     salary: "",
     currency: "",
-    jobType: "",
+    job_type: "",
     workMode: "",
     description: "",
     requirements: "",
@@ -358,7 +357,7 @@ export default function EmployerDashboard() {
 
   // Fetch job titles when category changes
   useEffect(() => {
-    if (selectedCategory) {
+    if (selectedCategory){
       fetch(
         `https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_title/?category=${selectedCategory}`
       )
@@ -411,7 +410,7 @@ export default function EmployerDashboard() {
         location: jobForm.location,
         experience: jobForm.experience,
         salary: jobForm.salary,
-        job_type: jobForm.jobType,
+        job_type: jobForm.job_type,
         work_mode: jobForm.workMode,
         vacancies: jobForm.vacancies || 1,
         application_deadline: jobForm.applicationDeadline,
@@ -457,7 +456,7 @@ export default function EmployerDashboard() {
         experience: "",
         salary: "",
         currency: "",
-        jobType: "",
+        job_type: "",
         workMode: "",
         description: "",
         requirements: "",
@@ -547,7 +546,7 @@ export default function EmployerDashboard() {
         experience: data.experience,
         salary: data.salary,
         currency: data.currency,
-        jobType: data.job_type,
+        job_type: data.job_type,
         workMode: data.work_mode,
         description: data.description,
         requirements: data.requirements,
@@ -561,7 +560,7 @@ export default function EmployerDashboard() {
 
       setSelectedJob(data);
       setIsEditMode(true);
-      setIsEditModalOpen(true);
+      
     } catch (err) {
       console.error("Error fetching job details for edit", err);
     }
@@ -628,7 +627,7 @@ export default function EmployerDashboard() {
       }
   
       const response = await fetch(
-        `https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-postings/${selectedJob.id}/update/`,
+        `https://jobseeker-backend-jy1y.onrender.com/employeer/job-postings/${selectedJob.id}/update/`,
         {
           method: "PUT",
           headers: {
@@ -638,24 +637,24 @@ export default function EmployerDashboard() {
           body: JSON.stringify(jobForm),
         }
       );
-  
+
       if (!response.ok) {
         const errorData = await response.json();
         console.error("Failed to update job:", errorData);
         alert(`Error: ${errorData.detail || "Unable to update job"}`);
         return;
       }
-  
+
       const updatedJob = await response.json();
-  
+
       // Update the state with the new job data
       setPostedJobs((prevJobs) =>
         prevJobs.map((job) =>
           job.id === updatedJob.id ? updatedJob : job
         )
       );
-  
-      setIsEditModalOpen(false); // Close the dialog
+
+      setIsEditMode(false); // Close the dialog
       alert("Job updated successfully!");
     } catch (err) {
       console.error("Update job error:", err);
@@ -950,7 +949,7 @@ export default function EmployerDashboard() {
                           <SelectItem value="GBP">£</SelectItem>
                         </SelectContent>
                       </Select>
-                     
+
                     </div> */}
                     <div className="flex gap-2 mt-1">
                       <Select
@@ -1428,7 +1427,7 @@ export default function EmployerDashboard() {
                               </div>
                             </div>
                           </div>
-        
+
                           {/* Job Details */}
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
@@ -1462,13 +1461,13 @@ export default function EmployerDashboard() {
                               </div>
                             </div>
                           </div>
-        
+
                           {/* Job Description */}
                           <div>
                             <h4 className="text-lg font-semibold text-gray-900 mb-3">Job Description</h4>
                             <p className="text-gray-700 leading-relaxed">{selectedJob.description}</p>
                           </div>
-        
+
                           {/* Requirements */}
                           <div>
                             <h4 className="text-lg font-semibold text-gray-900 mb-3">Requirements</h4>
@@ -1476,7 +1475,7 @@ export default function EmployerDashboard() {
                               {selectedJob.requirements}
                             </ul>
                           </div>
-        
+
                           {/* Responsibilities */}
                           {/* <div>
                             <h4 className="text-lg font-semibold text-gray-900 mb-3">Responsibilities</h4>
@@ -1546,7 +1545,7 @@ export default function EmployerDashboard() {
                 </Dialog>
 
 {/* FIX: THE Values are not showing, Preset the Value */}
-    <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+    <Dialog open={isEditMode} onOpenChange={setIsEditMode}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-xl">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold">Edit Job Profile</DialogTitle>
@@ -1557,35 +1556,35 @@ export default function EmployerDashboard() {
           <div className="space-y-3">
             <div>
               <Label>Title</Label>
-              <Input name="title" />
+              <Input name="title" value={jobForm.title || ""} onChange={(e) => setJobForm({ ...jobForm, [e.target.name]: e.target.value })}/>
             </div>
             <div>
               <Label>Category</Label>
-              <Input name="category"  />
+              <Input name="category" value={jobForm.category || ""} onChange={(e) => setJobForm({ ...jobForm, [e.target.name]: e.target.value })} />
             </div>
             <div>
               <Label>Job Title</Label>
-              <Input name="jobTitle"  />
+              <Input name="jobTitle" value={jobForm.jobTitle || ""} onChange={(e) => setJobForm({ ...jobForm, [e.target.name]: e.target.value })} />
             </div>
             <div>
               <Label>Company</Label>
-              <Input name="company"  />
+              <Input name="company"  value={jobForm.company || ""} onChange={(e) => setJobForm({ ...jobForm, [e.target.name]: e.target.value })}/>
             </div>
             <div>
               <Label>Location</Label>
-              <Input name="location"  />
+              <Input name="location" value={jobForm.location?.name || ""} onChange={(e) => setJobForm({ ...jobForm, [e.target.name]: e.target.value })} />
             </div>
             <div>
               <Label>Experience</Label>
-              <Input name="experience"  />
+              <Input name="experience" value={jobForm.experience || ""} onChange={(e) => setJobForm({ ...jobForm, [e.target.name]: e.target.value })} />
             </div>
             <div>
               <Label>Salary</Label>
-              <Input name="salary"  />
+              <Input name="salary" value={jobForm.salary || ""} onChange={(e) => setJobForm({ ...jobForm, [e.target.name]: e.target.value })} />
             </div>
             <div>
               <Label>Currency</Label>
-              <Input name="currency"  />
+              <Input name="currency" value={jobForm.currency || ""} onChange={(e) => setJobForm({ ...jobForm, [e.target.name]: e.target.value })} />
             </div>
           </div>
 
@@ -1593,17 +1592,17 @@ export default function EmployerDashboard() {
           <div className="space-y-3">
             <div>
               <Label>Job Type</Label>
-              <Input name="jobType"  />
+              <Input name="job_type" value={jobForm.job_type|| ""} onChange={(e) => setJobForm({ ...jobForm, [e.target.name]: e.target.value })} />
             </div>
             <div>
               <Label>Work Mode</Label>
-              <Input name="workMode"  />
+              <Input name="workMode" value={jobForm.workMode || ""} onChange={(e) => setJobForm({ ...jobForm, [e.target.name]: e.target.value })} />
             </div>
             <div>
               <Label>Description</Label>
               <Textarea
                 name="description"
-                
+                value={jobForm.description || ""} onChange={(e) => setJobForm({ ...jobForm, [e.target.name]: e.target.value })}
                 rows={3}
               />
             </div>
@@ -1611,7 +1610,7 @@ export default function EmployerDashboard() {
               <Label>Requirements</Label>
               <Textarea
                 name="requirements"
-                
+                value={jobForm.requirements || ""} onChange={(e) => setJobForm({ ...jobForm, [e.target.name]: e.target.value })}
                 rows={3}
               />
             </div>
@@ -1619,7 +1618,7 @@ export default function EmployerDashboard() {
               <Label>Benefits</Label>
               <Textarea
                 name="benefits"
-                
+                value={jobForm.benefits || ""} onChange={(e) => setJobForm({ ...jobForm, [e.target.name]: e.target.value })}
                 rows={3}
               />
             </div>
@@ -1627,7 +1626,7 @@ export default function EmployerDashboard() {
               <Label>Skills</Label>
               <Textarea
                 name="skills"
-                
+                value={jobForm.skills || ""} onChange={(e) => setJobForm({ ...jobForm, [e.target.name]: e.target.value })}
                 rows={2}
               />
             </div>
@@ -1636,7 +1635,7 @@ export default function EmployerDashboard() {
               <Input
                 type="date"
                 name="applicationDeadline"
-                
+                value={jobForm.applicationDeadline || ""} onChange={(e) => setJobForm({ ...jobForm, [e.target.name]: e.target.value })}
               />
             </div>
             <div>
@@ -1644,7 +1643,7 @@ export default function EmployerDashboard() {
               <Input
                 type="number"
                 name="vacancies"
-                
+                value={jobForm.vacancies || ""} onChange={(e) => setJobForm({ ...jobForm, [e.target.name]: e.target.value })}
               />
             </div>
 
@@ -1652,13 +1651,13 @@ export default function EmployerDashboard() {
             <div className="flex items-center gap-4 mt-2">
               <div className="flex items-center space-x-2">
                 <Checkbox
-                 
+                 checked={jobForm.isUrgent === true} onCheckedChange={(checked) => setJobForm({ ...jobForm, isUrgent: !!checked })}
                 />
                 <Label>Urgent</Label>
               </div>
               <div className="flex items-center space-x-2">
                 <Checkbox
-                  
+                  checked={jobForm.isRemote === true} onCheckedChange={(remote) => setJobForm({ ...jobForm, isUrgent: !!remote })}
                   
                 />
                 <Label>Remote</Label>
@@ -1669,11 +1668,11 @@ export default function EmployerDashboard() {
 
         {/* Footer */}
         <div className="flex justify-end gap-2 mt-4">
-          <Button variant="ghost" >
+          <Button variant="ghost">
             Cancel
           </Button>
           {/* FIX : Put the Onclick handle update method */}
-          <Button >Save Changes</Button>
+          <Button onClick={handleUpdateJob} >Save Changes</Button>
         </div>
       </DialogContent>
     </Dialog>
