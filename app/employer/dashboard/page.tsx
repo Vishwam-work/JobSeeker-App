@@ -536,7 +536,7 @@ export default function EmployerDashboard() {
         }
       );
       const data = await response.json();
-
+      console.log("Data is prefill")
       // Prefill the form
       setJobForm({
         title: data.title,
@@ -583,37 +583,86 @@ export default function EmployerDashboard() {
     // Implement status toggle functionality
     alert(`Job status changed to: ${newStatus}`);
   };
+// OLD handleUpdateJOB
+  // const handleUpdateJob = async () => {
+  //   try {
+  //     const token = localStorage.getItem("auth_token");
+  //     const response = await fetch(`https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-postings/${selectedJob.id}/`, {
+  //       method: "PUT",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //         Authorization: `Bearer ${token}`,
+  //       },
+  //       body: JSON.stringify(jobForm),
+  //     });
 
+  //     if (!response.ok) {
+  //       throw new Error("Failed to update job");
+  //     }
+
+  //     const updatedJob = await response.json();
+  //     setPostedJobs((prev) =>
+  //       prev.map((job) => (job.id === updatedJob.id ? updatedJob : job))
+  //     );
+
+  //     setIsModalOpen(false);
+  //     alert("Job updated successfully");
+  //   } catch (err) {
+  //     console.error(err);
+  //     alert("Failed to update job");
+  //   }
+  // };
+
+  // Added the New Handle UpdateJob
   const handleUpdateJob = async () => {
+    if (!selectedJob?.id) {
+      alert("No job selected for update");
+      return;
+    }
+  
     try {
       const token = localStorage.getItem("auth_token");
-      const response = await fetch(`https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-postings/${selectedJob.id}/`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(jobForm),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to update job");
+      if (!token) {
+        alert("You must be logged in to update a job.");
+        return;
       }
-
-      const updatedJob = await response.json();
-
-      // Update local state
-      setPostedJobs((prev) =>
-        prev.map((job) => (job.id === updatedJob.id ? updatedJob : job))
+  
+      const response = await fetch(
+        `https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-postings/${selectedJob.id}/update/`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(jobForm),
+        }
       );
-
-      setIsModalOpen(false);
-      alert("Job updated successfully");
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Failed to update job:", errorData);
+        alert(`Error: ${errorData.detail || "Unable to update job"}`);
+        return;
+      }
+  
+      const updatedJob = await response.json();
+  
+      // Update the state with the new job data
+      setPostedJobs((prevJobs) =>
+        prevJobs.map((job) =>
+          job.id === updatedJob.id ? updatedJob : job
+        )
+      );
+  
+      setIsEditModalOpen(false); // Close the dialog
+      alert("Job updated successfully!");
     } catch (err) {
-      console.error(err);
-      alert("Failed to update job");
+      console.error("Update job error:", err);
+      alert("An error occurred while updating the job.");
     }
   };
+
   const handleLogout = () => {
     localStorage.removeItem('auth_token');
     setIsAuthenticated(false);
@@ -1496,7 +1545,7 @@ export default function EmployerDashboard() {
                   </DialogContent>
                 </Dialog>
 
-
+{/* FIX: THE Values are not showing, Preset the Value */}
     <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-xl">
         <DialogHeader>
@@ -1623,6 +1672,7 @@ export default function EmployerDashboard() {
           <Button variant="ghost" >
             Cancel
           </Button>
+          {/* FIX : Put the Onclick handle update method */}
           <Button >Save Changes</Button>
         </div>
       </DialogContent>
