@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
+import { Snackbar, Alert } from '@mui/material';
 import {
   Eye,
   EyeOff,
@@ -121,6 +122,12 @@ export default function EmployerLogin() {
           </div>
         </div>
       </div>
+
+      <Snackbar open={alertOpen} autoHideDuration={3000} onClose={() => setAlertOpen(false)} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
+          <Alert severity={alertType} onClose={() => setAlertOpen(false)}>
+            {alertMessage}
+          </Alert>
+        </Snackbar>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
         <div className="grid lg:grid-cols-2 gap-8 md:gap-12 items-center">
