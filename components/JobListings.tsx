@@ -68,360 +68,6 @@ export default function JobListings() {
   });
 
   // Sample job data - in real app, this would come from API
-  const sampleJobs = [
-    {
-      id: 1,
-      title: 'Senior Software Developer',
-      company: 'Tech Solutions Pvt Ltd',
-      location: 'Mumbai, Maharashtra',
-      experience: '3-5 years',
-      salary: '8-12 LPA',
-      jobType: 'Full Time',
-      workMode: 'Hybrid',
-      postedDate: '2024-01-15',
-      applications: 45,
-      description: 'We are looking for a Senior Software Developer to join our dynamic team. The ideal candidate should have strong experience in React, Node.js, and cloud technologies. You will be responsible for developing scalable web applications and mentoring junior developers.',
-      requirements: [
-        '3+ years of experience in software development',
-        'Strong proficiency in React.js and Node.js',
-        'Experience with cloud platforms (AWS/Azure)',
-        'Knowledge of database systems (MongoDB, PostgreSQL)',
-        'Excellent problem-solving skills'
-      ],
-      responsibilities: [
-        'Develop and maintain web applications',
-        'Collaborate with cross-functional teams',
-        'Code review and mentoring',
-        'Participate in architectural decisions',
-        'Ensure code quality and best practices'
-      ],
-      benefits: [
-        'Competitive salary and benefits',
-        'Health insurance coverage',
-        'Flexible working hours',
-        'Professional development opportunities',
-        'Work from home options'
-      ],
-      skills: ['React', 'Node.js', 'JavaScript', 'AWS', 'MongoDB'],
-      companyLogo: null,
-      isBookmarked: false,
-      urgentHiring: false,
-      companyInfo: {
-        size: '500-1000 employees',
-        industry: 'Information Technology',
-        website: 'https://techsolutions.com',
-        about: 'Leading technology solutions provider with 15+ years of experience in delivering innovative software solutions.'
-      }
-    },
-    {
-      id: 2,
-      title: 'Frontend Developer',
-      company: 'Digital Innovations Inc',
-      location: 'Bangalore, Karnataka',
-      experience: '2-4 years',
-      salary: '6-10 LPA',
-      jobType: 'Full Time',
-      workMode: 'Remote',
-      postedDate: '2024-01-14',
-      applications: 32,
-      description: 'Join our frontend team to build amazing user experiences. We work with modern technologies and follow best practices in UI/UX development.',
-      requirements: [
-        '2+ years of frontend development experience',
-        'Proficiency in React.js and Vue.js',
-        'Strong CSS and HTML skills',
-        'Experience with responsive design',
-        'Knowledge of modern build tools'
-      ],
-      responsibilities: [
-        'Build responsive web interfaces',
-        'Collaborate with designers',
-        'Optimize application performance',
-        'Write clean, maintainable code',
-        'Stay updated with latest technologies'
-      ],
-      benefits: [
-        'Remote work flexibility',
-        'Learning and development budget',
-        'Health and wellness programs',
-        'Stock options',
-        'Flexible PTO policy'
-      ],
-      skills: ['React', 'Vue.js', 'TypeScript', 'CSS', 'HTML'],
-      companyLogo: null,
-      isBookmarked: true,
-      urgentHiring: true,
-      companyInfo: {
-        size: '100-500 employees',
-        industry: 'Digital Marketing',
-        website: 'https://digitalinnovations.com',
-        about: 'Innovative digital marketing agency helping businesses grow through technology.'
-      }
-    },
-    {
-      id: 3,
-      title: 'Product Manager',
-      company: 'StartupXYZ',
-      location: 'Delhi, India',
-      experience: '5-8 years',
-      salary: '15-20 LPA',
-      jobType: 'Full Time',
-      workMode: 'Office',
-      postedDate: '2024-01-13',
-      applications: 28,
-      description: 'Lead product strategy and development for our innovative platform. Work closely with engineering and design teams to deliver exceptional user experiences.',
-      requirements: [
-        '5+ years of product management experience',
-        'Strong analytical and strategic thinking',
-        'Experience with agile methodologies',
-        'Excellent communication skills',
-        'Technical background preferred'
-      ],
-      responsibilities: [
-        'Define product roadmap and strategy',
-        'Work with cross-functional teams',
-        'Analyze market trends and user feedback',
-        'Manage product lifecycle',
-        'Drive product launches'
-      ],
-      benefits: [
-        'Equity participation',
-        'Comprehensive health coverage',
-        'Professional growth opportunities',
-        'Flexible work arrangements',
-        'Team building activities'
-      ],
-      skills: ['Product Management', 'Analytics', 'Strategy', 'Leadership'],
-      companyLogo: null,
-      isBookmarked: false,
-      urgentHiring: false,
-      companyInfo: {
-        size: '50-100 employees',
-        industry: 'Technology Startup',
-        website: 'https://startupxyz.com',
-        about: 'Fast-growing startup revolutionizing the e-commerce space with AI-powered solutions.'
-      }
-    },
-    {
-      id: 4,
-      title: 'Data Scientist',
-      company: 'Analytics Corp',
-      location: 'Pune, Maharashtra',
-      experience: '3-6 years',
-      salary: '10-15 LPA',
-      jobType: 'Full Time',
-      workMode: 'Hybrid',
-      postedDate: '2024-01-12',
-      applications: 67,
-      description: 'Analyze complex datasets and build machine learning models to drive business insights and decision making.',
-      requirements: [
-        '3+ years in data science',
-        'Strong Python and R skills',
-        'Experience with ML frameworks',
-        'Statistical analysis expertise',
-        'Business acumen'
-      ],
-      responsibilities: [
-        'Build predictive models',
-        'Analyze large datasets',
-        'Create data visualizations',
-        'Collaborate with business teams',
-        'Present insights to stakeholders'
-      ],
-      benefits: [
-        'Competitive compensation',
-        'Learning opportunities',
-        'Conference attendance',
-        'Health benefits',
-        'Flexible schedule'
-      ],
-      skills: ['Python', 'Machine Learning', 'SQL', 'Tableau', 'Statistics'],
-      companyLogo: null,
-      isBookmarked: false,
-      urgentHiring: true,
-      companyInfo: {
-        size: '200-500 employees',
-        industry: 'Data Analytics',
-        website: 'https://analyticscorp.com',
-        about: 'Leading data analytics company providing insights to Fortune 500 companies.'
-      }
-    },
-    {
-      id: 5,
-      title: 'UI/UX Designer',
-      company: 'Design Studio',
-      location: 'Hyderabad, Telangana',
-      experience: '2-5 years',
-      salary: '5-9 LPA',
-      jobType: 'Full Time',
-      workMode: 'Remote',
-      postedDate: '2024-01-11',
-      applications: 89,
-      description: 'Create beautiful and intuitive user interfaces. Work on web and mobile applications with a focus on user experience.',
-      requirements: [
-        '2+ years of UI/UX design experience',
-        'Proficiency in Figma and Adobe Creative Suite',
-        'Strong portfolio showcasing design skills',
-        'Understanding of user-centered design',
-        'Knowledge of design systems'
-      ],
-      responsibilities: [
-        'Design user interfaces and experiences',
-        'Create wireframes and prototypes',
-        'Conduct user research',
-        'Collaborate with development teams',
-        'Maintain design systems'
-      ],
-      benefits: [
-        'Creative freedom',
-        'Remote work options',
-        'Design tool subscriptions',
-        'Portfolio development support',
-        'Collaborative environment'
-      ],
-      skills: ['Figma', 'Adobe XD', 'Sketch', 'Prototyping', 'User Research'],
-      companyLogo: null,
-      isBookmarked: true,
-      urgentHiring: false,
-      companyInfo: {
-        size: '20-50 employees',
-        industry: 'Design Agency',
-        website: 'https://designstudio.com',
-        about: 'Award-winning design studio creating exceptional digital experiences for global brands.'
-      }
-    },
-    {
-      id: 6,
-      title: 'DevOps Engineer',
-      company: 'Cloud Systems Ltd',
-      location: 'Chennai, Tamil Nadu',
-      experience: '4-7 years',
-      salary: '12-18 LPA',
-      jobType: 'Full Time',
-      workMode: 'Hybrid',
-      postedDate: '2024-01-10',
-      applications: 23,
-      description: 'Manage cloud infrastructure and deployment pipelines. Ensure system reliability and scalability.',
-      requirements: [
-        '4+ years of DevOps experience',
-        'Strong knowledge of AWS/Azure',
-        'Experience with Docker and Kubernetes',
-        'CI/CD pipeline expertise',
-        'Infrastructure as Code experience'
-      ],
-      responsibilities: [
-        'Manage cloud infrastructure',
-        'Build and maintain CI/CD pipelines',
-        'Monitor system performance',
-        'Implement security best practices',
-        'Automate deployment processes'
-      ],
-      benefits: [
-        'Cloud certification support',
-        'Technical training budget',
-        'Health insurance',
-        'Performance bonuses',
-        'Work-life balance'
-      ],
-      skills: ['AWS', 'Docker', 'Kubernetes', 'Jenkins', 'Terraform'],
-      companyLogo: null,
-      isBookmarked: false,
-      urgentHiring: true,
-      companyInfo: {
-        size: '100-200 employees',
-        industry: 'Cloud Services',
-        website: 'https://cloudsystems.com',
-        about: 'Premier cloud services provider helping enterprises migrate and scale their infrastructure.'
-      }
-    },
-    {
-      id: 7,
-      title: 'MLOps Engineer',
-      company: 'Cloud Systems Ltd',
-      location: 'Chennai, Tamil Nadu',
-      experience: '4-6 years',
-      salary: '12-18 LPA',
-      jobType: 'Contract',
-      workMode: 'Office',
-      postedDate: '2024-01-10',
-      applications: 23,
-      description: 'Manage cloud infrastructure and deployment pipelines. Ensure system reliability and scalability.',
-      requirements: [
-        '4+ years of DevOps experience',
-        'Strong knowledge of AWS/Azure',
-        'Experience with Docker and Kubernetes',
-        'CI/CD pipeline expertise',
-        'Infrastructure as Code experience'
-      ],
-      responsibilities: [
-        'Manage cloud infrastructure',
-        'Build and maintain CI/CD pipelines',
-        'Monitor system performance',
-        'Implement security best practices',
-        'Automate deployment processes'
-      ],
-      benefits: [
-        'Cloud certification support',
-        'Technical training budget',
-        'Health insurance',
-        'Performance bonuses',
-        'Work-life balance'
-      ],
-      skills: ['AWS', 'Docker', 'Kubernetes', 'Jenkins', 'Terraform'],
-      companyLogo: null,
-      isBookmarked: false,
-      urgentHiring: true,
-      companyInfo: {
-        size: '100-200 employees',
-        industry: 'Cloud Services',
-        website: 'https://cloudsystems.com',
-        about: 'Premier cloud services provider helping enterprises migrate and scale their infrastructure.'
-      }
-    },
-    {
-      id: 8,
-      title: 'Senior Software Engineer',
-      company: 'Oracle Systems Ltd',
-      location: 'Chennai, Tamil Nadu',
-      experience: '3-7 years',
-      salary: '12-18 LPA',
-      jobType: 'Part Time',
-      workMode: 'Remote',
-      postedDate: '2025-09-09',
-      applications: 23,
-      description: 'Manage cloud infrastructure and deployment pipelines. Ensure system reliability and scalability.',
-      requirements: [
-        '4+ years of DevOps experience',
-        'Strong knowledge of AWS/Azure',
-        'Experience with Docker and Kubernetes',
-        'CI/CD pipeline expertise',
-        'Infrastructure as Code experience'
-      ],
-      responsibilities: [
-        'Manage cloud infrastructure',
-        'Build and maintain CI/CD pipelines',
-        'Monitor system performance',
-        'Implement security best practices',
-        'Automate deployment processes'
-      ],
-      benefits: [
-        'Cloud certification support',
-        'Technical training budget',
-        'Health insurance',
-        'Performance bonuses',
-        'Work-life balance'
-      ],
-      skills: ['AWS', 'Docker', 'Kubernetes', 'Jenkins', 'Terraform'],
-      companyLogo: null,
-      isBookmarked: false,
-      urgentHiring: true,
-      companyInfo: {
-        size: '100-200 employees',
-        industry: 'Cloud Services',
-        website: 'https://cloudsystems.com',
-        about: 'Premier cloud services provider helping enterprises migrate and scale their infrastructure.'
-      }
-    },
-  ];
 
   const [companies] = useState([
     'Tech Solutions Pvt Ltd',
@@ -449,9 +95,11 @@ export default function JobListings() {
 
   useEffect(() => {
     // Simulate API call
-    setTimeout(() => {
-      setJobs(sampleJobs);
-      setFilteredJobs(sampleJobs);
+    setTimeout(async() => {
+      const response = await fetch('https://jobseeker-backend-jy1y.onrender.com/employeer/api/all-jobs/')
+      const data = await response.json()
+      setJobs(data);
+      setFilteredJobs(data);
       setLoading(false);
     }, 1000);
   }, []);
@@ -471,7 +119,7 @@ export default function JobListings() {
     // Location filter
     if (filters.location && filters.location !== "All") {
       filtered = filtered.filter(job =>
-        job.location.toLowerCase().includes(filters.location.toLowerCase())
+        job.location.name.toLowerCase().includes(filters.location.name.toLowerCase())
       );
     }
 
@@ -947,7 +595,7 @@ export default function JobListings() {
                                 <div className="flex flex-wrap items-center gap-3 md:gap-4 text-sm text-gray-600 mb-3">
                                   <div className="flex items-center">
                                     <MapPin className="w-4 h-4 mr-1 flex-shrink-0" />
-                                    <span>{job.location}</span>
+                                    <span>{job.location?.name ?? "N/A"}</span>
                                   </div>
                                   <div className="flex items-center">
                                     <Briefcase className="w-4 h-4 mr-1 flex-shrink-0" />
@@ -1072,21 +720,10 @@ export default function JobListings() {
                       <h3 className="text-xl font-semibold text-purple-600 mb-1">
                         {selectedJob.company}
                       </h3>
-                      <p className="text-gray-600 mb-2">{selectedJob.companyInfo.about}</p>
                       <div className="flex flex-wrap gap-4 text-sm text-gray-600">
                         <div className="flex items-center">
                           <Users className="w-4 h-4 mr-1" />
-                          <span>{selectedJob.companyInfo.size}</span>
-                        </div>
-                        <div className="flex items-center">
-                          <Building2 className="w-4 h-4 mr-1" />
-                          <span>{selectedJob.companyInfo.industry}</span>
-                        </div>
-                        <div className="flex items-center">
-                          <Globe className="w-4 h-4 mr-1" />
-                          <a href={selectedJob.companyInfo.website} className="text-purple-600 hover:underline">
-                            Website
-                          </a>
+                          <span>openings : {selectedJob.vacancies}</span>
                         </div>
                       </div>
                     </div>
@@ -1097,7 +734,7 @@ export default function JobListings() {
                     <div className="space-y-2">
                       <div className="flex items-center text-gray-600">
                         <MapPin className="w-4 h-4 mr-2" />
-                        <span>{selectedJob.location}</span>
+                        <span>{selectedJob.location?.name ?? "N/A"}</span>
                       </div>
                       <div className="flex items-center text-gray-600">
                         <Briefcase className="w-4 h-4 mr-2" />
@@ -1111,12 +748,12 @@ export default function JobListings() {
                     <div className="space-y-2">
                       <div className="flex items-center text-gray-600">
                         <Clock className="w-4 h-4 mr-2" />
-                        <span>{selectedJob.jobType}</span>
+                        <span>{selectedJob.job_type}</span>
                       </div>
                       <div className="flex items-center text-gray-600">
                         <Building2 className="w-4 h-4 mr-2" />
                         <Badge className={getWorkModeColor(selectedJob.workMode)}>
-                          {selectedJob.workMode}
+                          {selectedJob.work_mode}
                         </Badge>
                       </div>
                       <div className="flex items-center text-gray-600">
@@ -1136,12 +773,16 @@ export default function JobListings() {
                   <div>
                     <h4 className="text-lg font-semibold text-gray-900 mb-3">Requirements</h4>
                     <ul className="space-y-2">
-                      {selectedJob.requirements.map((req, index) => (
-                        <li key={index} className="flex items-start">
-                          <CheckCircle className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                          <span className="text-gray-700">{req}</span>
-                        </li>
-                      ))}
+                          {Array.isArray(selectedJob?.requirements) && selectedJob.requirements.length > 0 ? (
+                                        selectedJob.requirements.map((req, index) => (
+                                            <li key={index} className="flex items-start">
+                                                <CheckCircle className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                                                <span className="text-gray-700">{req}</span>
+                                            </li>
+                                        ))
+                                    ) : (
+                                  <p className="text-gray-500 italic">{selectedJob.requirements}</p>
+                            )}
                     </ul>
                   </div>
 
@@ -1149,25 +790,42 @@ export default function JobListings() {
                   <div>
                     <h4 className="text-lg font-semibold text-gray-900 mb-3">Responsibilities</h4>
                     <ul className="space-y-2">
-                      {selectedJob.responsibilities.map((resp, index) => (
-                        <li key={index} className="flex items-start">
-                          <Star className="w-4 h-4 text-purple-500 mr-2 mt-0.5 flex-shrink-0" />
-                          <span className="text-gray-700">{resp}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+                       
+                      {Array.isArray(selectedJob?.responsibilities) && selectedJob.responsibilities.length > 0 ? (
+                              selectedJob.responsibilities.map((req, index) => (
+                                  <li key={index} className="flex items-start">
+                                      <CheckCircle className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                                      <span className="text-gray-700">{req}</span>
+                                  </li>
+                              ))
+                          ) : (
+                              <p className="text-gray-500 italic">{selectedJob.responsibilities}</p>
+                          )}
+
+                         {/* {selectedJob.responsibilities.map((resp, index) => (
+                          <li key={index} className="flex items-start">
+                            <Star className="w-4 h-4 text-purple-500 mr-2 mt-0.5 flex-shrink-0" />
+                            <span className="text-gray-700">{resp}</span>
+                          </li>
+                        ))} */}
+                      </ul>
+                    </div> 
 
                   {/* Benefits */}
                   <div>
                     <h4 className="text-lg font-semibold text-gray-900 mb-3">Benefits</h4>
                     <ul className="space-y-2">
-                      {selectedJob.benefits.map((benefit, index) => (
-                        <li key={index} className="flex items-start">
-                          <Award className="w-4 h-4 text-blue-500 mr-2 mt-0.5 flex-shrink-0" />
-                          <span className="text-gray-700">{benefit}</span>
-                        </li>
-                      ))}
+                      {Array.isArray(selectedJob?.benifits) && selectedJob.benifits.length > 0 ? (
+                            selectedJob.benifits.map((req, index) => (
+                                <li key={index} className="flex items-start">
+                                    <CheckCircle className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                                    <span className="text-gray-700">{req}</span>
+                                </li>
+                            ))
+                        ) : (
+                            <p className="text-gray-500 italic">{selectedJob.benifits}</p>
+                        )}
+
                     </ul>
                   </div>
 
@@ -1175,11 +833,16 @@ export default function JobListings() {
                   <div>
                     <h4 className="text-lg font-semibold text-gray-900 mb-3">Required Skills</h4>
                     <div className="flex flex-wrap gap-2">
-                      {selectedJob.skills.map((skill, index) => (
-                        <Badge key={index} variant="secondary" className="bg-purple-100 text-purple-800">
-                          {skill}
-                        </Badge>
-                      ))}
+                       {Array.isArray(selectedJob?.skills) && selectedJob.skills.length > 0 ? (
+                            selectedJob.skills.map((req, index) => (
+                                <li key={index} className="flex items-start">
+                                    <CheckCircle className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                                    <span className="text-gray-700">{req}</span>
+                                </li>
+                            ))
+                        ) : (
+                            <p className="text-gray-500 italic">{selectedJob.skills}</p>
+                        )}
                     </div>
                   </div>
 
