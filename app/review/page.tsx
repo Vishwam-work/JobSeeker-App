@@ -39,7 +39,7 @@ export default function ProfileReview() {
     jobTitles.find((t) => t.id === id)?.title || "";
   useEffect(() => {
     const loadProfile = async () => {
-      const res = await fetch("https://jobseeker-backend-jy1y.onrender.com/api/profile/", {
+      const res = await fetch("http://127.0.0.1:8010/https://jobseeker-backend-jy1y.onrender.com/api/profile/", {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
