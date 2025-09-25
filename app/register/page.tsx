@@ -34,7 +34,7 @@ export default function Register() {
   console.log("DATA",data)
 
   try {
-    const response = await fetch('https://jobseeker-backend-jy1y.onrender.com/api/register/', {
+    const response = await fetch('http://127.0.0.1:8010/https://jobseeker-backend-jy1y.onrender.com/api/register/', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
