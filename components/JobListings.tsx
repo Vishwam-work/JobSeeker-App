@@ -96,7 +96,7 @@ export default function JobListings() {
   useEffect(() => {
     // Simulate API call
     setTimeout(async() => {
-      const response = await fetch('http://127.0.0.1:8010/https://jobseeker-backend-jy1y.onrender.com/employeer/api/all-jobs/')
+      const response = await fetch('https://jobseeker-backend-jy1y.onrender.com/employeer/api/all-jobs/')
       const data = await response.json()
       setJobs(data);
       setFilteredJobs(data);
@@ -210,7 +210,7 @@ export default function JobListings() {
   const handleSkillFilter = (skill, checked) => {
     setFilters(prev => ({
       ...prev,
-      skills: checked 
+      skills: checked
         ? [...prev.skills, skill]
         : prev.skills.filter(s => s !== skill)
     }));
