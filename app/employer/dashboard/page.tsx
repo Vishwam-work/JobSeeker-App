@@ -569,7 +569,6 @@ export default function EmployerDashboard() {
 
   const handleDeleteJob = async(job) => {
     const token = localStorage.getItem("auth_token");
-
     try{
       if (
       window.confirm(`Are you sure you want to delete the job: ${job.title}?`)
