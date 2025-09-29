@@ -12,95 +12,105 @@ import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
 import SearchSection from "@/components/SearchSection";
 
+import Image from "next/image";
+
 
 // Mock dataset
 const allCompanies = [
   // same dataset as before (omitted for brevity in this editor) -- ensure to paste full data in your file
   {
+    id: 1,
     name: "Simplilearn",
     rating: 3.1,
     reviews: 727,
     category: "e-Learning / EdTech",
     founded: 2010,
-    logo: "https://via.placeholder.com/40",
+    logo: "/companies_logos/simplilearn.png",
     type: "Foreign MNC",
     industry: "Education / Training",
     locations: ["Bengaluru", "Delhi / NCR"],
   },
   {
+     id: 2,
     name: "Ganesh Grains",
     rating: 3.0,
     reviews: 182,
     category: "FMCG",
     founded: 1936,
-    logo: "https://via.placeholder.com/40",
+    logo: "/companies_logos/ganesh_grains.png",
     type: "Corporate",
     industry: "Food Processing",
     locations: ["Kolkata"],
   },
   {
+     id: 3,
     name: "Cyber Managers Software Services",
     rating: 3.0,
     reviews: 35,
     category: "IT Services & Consulting",
     founded: 2000,
-    logo: "https://via.placeholder.com/40",
+    logo: "/companies_logos/cyber_managers.png",
     type: "Corporate",
     industry: "IT Services & Consulting",
     locations: ["Hyderabad", "Pune"],
   },
   {
+     id: 4,
     name: "Infinity Data Technologies",
     rating: 3.7,
     reviews: 158,
     category: "IT Services & Consulting",
     founded: 2012,
-    logo: "https://via.placeholder.com/40",
+    logo: "/companies_logos/infinity_data.png",
     type: "Corporate",
     industry: "IT Services & Consulting",
     locations: ["Mumbai", "Delhi / NCR"],
   },
   {
+     id: 5,
     name: "Topsource Infotech Solutions",
     rating: 3.2,
     reviews: 38,
     category: "IT Services & Consulting",
     founded: 2004,
     employees: "51-200 emp.",
-    logo: "https://via.placeholder.com/40",
+    logo: "/companies_logos/topsource.png",
     type: "Foreign MNC",
     industry: "IT Services & Consulting",
     locations: ["Pune", "Chennai"],
   },
   {
+      id: 6,
     name: "Torrent Pharmaceuticals",
     rating: 3.9,
     reviews: 2800,
     category: "Pharmaceutical & Life Sciences",
     founded: 1959,
-    logo: "https://via.placeholder.com/40",
+    logo: "/companies_logos/torrent.png",
     type: "Indian MNC",
     industry: "Pharmaceuticals",
     locations: ["Ahmedabad", "Mumbai"],
   },
   {
+      id: 7,
     name: "Anytime Fitness (AF)",
     rating: 3.5,
     reviews: 167,
     category: "Fitness & Wellness",
     founded: 2001,
-    logo: "https://via.placeholder.com/40",
+    logo: "/companies_logos/anytime_fitness.png",
     type: "Corporate",
     industry: "Fitness & Wellness",
     locations: ["Delhi / NCR", "Bengaluru"],
   },
   {
+      id: 8,
     name: "Zenoti",
     rating: 2.9,
     reviews: 167,
     category: "IT Services & Consulting",
     founded: 2010,
-    logo: "https://via.placeholder.com/40",
+    logo: "/companies_logos/zenoti.png",
     type: "Foreign MNC",
     industry: "IT Services & Consulting",
     locations: ["Hyderabad", "Bengaluru"],
@@ -354,12 +364,19 @@ export default function CompaniesPage() {
            <Card
              key={i}
              className="p-4 cursor-pointer hover:shadow-md transition"
-             onClick={() => router.push("/companies/details")}
+              onClick={() => router.push(`/companies/${company.id}`)}
              >
 
 
                 <CardContent className="flex items-center gap-4 p-0">
-                  <img src={company.logo} alt={company.name} className="w-14 h-14 rounded" />
+                   <Image
+  src={company.logo}
+  alt={company.name}
+  width={76}
+  height={76}
+  className="w-14 h-14 rounded object-contain bg-white p-1"
+></Image>
+
                   <div className="flex-1">
                     <div className="flex items-start justify-between">
                       <h2 className="font-semibold text-base">{company.name}</h2>
