@@ -6,17 +6,14 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-
 import { useRouter } from "next/navigation";
-
 import Header from "@/components/Header";
 import SearchSection from "@/components/SearchSection";
-
 import Image from "next/image";
-
-
 import allCompanies from "@/data/companies.json";
 import  Link  from "next/link";
+
+import Footer from "@/components/Footer";
 
 export default function CompaniesPage() {
   const [filters, setFilters] = useState({ types: [], locations: [], industries: [] });
@@ -325,6 +322,7 @@ export default function CompaniesPage() {
           )}
         </main>
       </div>
+      <Footer/>
     </div>
   );
 }

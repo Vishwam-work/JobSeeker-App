@@ -5,7 +5,7 @@ import Image from "next/image";
 import Header from "@/components/Header";
 import { useSearchParams } from "next/navigation";
 import  allCompanies  from "@/data/companies.json";
-
+import Footer from "@/components/Footer";
 export default function CompanyDetailPage() {
   const searchParams = useSearchParams();
   const id = searchParams.get("id");
@@ -98,7 +98,11 @@ export default function CompanyDetailPage() {
             ))}
           </div>
         </div>
+
+        {/* Footer */}
+        <Footer />  
       </div>
+      
     </div>
   );
 }

@@ -42,20 +42,24 @@ export default function Header() {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
+            <Link href="/">
             <div className="flex items-center space-x-1 text-gray-700 hover:text-purple-600 cursor-pointer transition-colors">
               <Briefcase className="w-4 h-4" />
               <span>Jobs</span>
             </div>
+            </Link>
             <Link href="/companies">
             <div className="flex items-center space-x-1 text-gray-700 hover:text-purple-600 cursor-pointer transition-colors">
               <Building2 className="w-4 h-4" />
               <span>Companies</span>
             </div>
             </Link>
+               <Link href="/service">
             <div className="flex items-center space-x-1 text-gray-700 hover:text-purple-600 cursor-pointer transition-colors">
               <Users className="w-4 h-4" />
               <span>Services</span>
             </div>
+            </Link>
           </nav>
 
           {/* Desktop Auth Buttons */}
