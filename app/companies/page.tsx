@@ -15,107 +15,8 @@ import SearchSection from "@/components/SearchSection";
 import Image from "next/image";
 
 
-// Mock dataset
-const allCompanies = [
-  // same dataset as before (omitted for brevity in this editor) -- ensure to paste full data in your file
-  {
-    id: 1,
-    name: "Simplilearn",
-    rating: 3.1,
-    reviews: 727,
-    category: "e-Learning / EdTech",
-    founded: 2010,
-    logo: "/companies_logos/simplilearn.png",
-    type: "Foreign MNC",
-    industry: "Education / Training",
-    locations: ["Bengaluru", "Delhi / NCR"],
-  },
-  {
-     id: 2,
-    name: "Ganesh Grains",
-    rating: 3.0,
-    reviews: 182,
-    category: "FMCG",
-    founded: 1936,
-    logo: "/companies_logos/ganesh_grains.png",
-    type: "Corporate",
-    industry: "Food Processing",
-    locations: ["Kolkata"],
-  },
-  {
-     id: 3,
-    name: "Cyber Managers Software Services",
-    rating: 3.0,
-    reviews: 35,
-    category: "IT Services & Consulting",
-    founded: 2000,
-    logo: "/companies_logos/cyber_managers.png",
-    type: "Corporate",
-    industry: "IT Services & Consulting",
-    locations: ["Hyderabad", "Pune"],
-  },
-  {
-     id: 4,
-    name: "Infinity Data Technologies",
-    rating: 3.7,
-    reviews: 158,
-    category: "IT Services & Consulting",
-    founded: 2012,
-    logo: "/companies_logos/infinity_data.png",
-    type: "Corporate",
-    industry: "IT Services & Consulting",
-    locations: ["Mumbai", "Delhi / NCR"],
-  },
-  {
-     id: 5,
-    name: "Topsource Infotech Solutions",
-    rating: 3.2,
-    reviews: 38,
-    category: "IT Services & Consulting",
-    founded: 2004,
-    employees: "51-200 emp.",
-    logo: "/companies_logos/topsource.png",
-    type: "Foreign MNC",
-    industry: "IT Services & Consulting",
-    locations: ["Pune", "Chennai"],
-  },
-  {
-      id: 6,
-    name: "Torrent Pharmaceuticals",
-    rating: 3.9,
-    reviews: 2800,
-    category: "Pharmaceutical & Life Sciences",
-    founded: 1959,
-    logo: "/companies_logos/torrent.png",
-    type: "Indian MNC",
-    industry: "Pharmaceuticals",
-    locations: ["Ahmedabad", "Mumbai"],
-  },
-  {
-      id: 7,
-    name: "Anytime Fitness (AF)",
-    rating: 3.5,
-    reviews: 167,
-    category: "Fitness & Wellness",
-    founded: 2001,
-    logo: "/companies_logos/anytime_fitness.png",
-    type: "Corporate",
-    industry: "Fitness & Wellness",
-    locations: ["Delhi / NCR", "Bengaluru"],
-  },
-  {
-      id: 8,
-    name: "Zenoti",
-    rating: 2.9,
-    reviews: 167,
-    category: "IT Services & Consulting",
-    founded: 2010,
-    logo: "/companies_logos/zenoti.png",
-    type: "Foreign MNC",
-    industry: "IT Services & Consulting",
-    locations: ["Hyderabad", "Bengaluru"],
-  },
-];
+import allCompanies from "@/data/companies.json";
+import  Link  from "next/link";
 
 export default function CompaniesPage() {
   const [filters, setFilters] = useState({ types: [], locations: [], industries: [] });
@@ -359,49 +260,67 @@ export default function CompaniesPage() {
 
           {/* Responsive grid: 1 column on small, 2 on md, 3 on lg */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredCompanies.slice(0, visibleCount).map((company, i) => (
-  
-           <Card
-             key={i}
-             className="p-4 cursor-pointer hover:shadow-md transition"
-              onClick={() => router.push(`/companies/${company.id}`)}
-             >
+{filteredCompanies.slice(0, visibleCount).map((company, i) => (
+  <Link
+    key={i}
+    href={`/companies/detail?id=${company.id}`}
+    target="_blank"
+    rel="noopener noreferrer"
+    className="block"
+  >
+    <Card className="p-4 cursor-pointer hover:shadow-md transition">
+      <CardContent className="flex items-center gap-4 p-0">
+        <Image
+          src={company.logo}
+          alt={company.name}
+          width={76}
+          height={76}
+          className="w-14 h-14 rounded object-contain bg-white p-1"
+        />
 
+        <div className="flex-1">
+          <div className="flex items-start justify-between">
+            <h2 className="font-semibold text-base">{company.name}</h2>
+            <div className="text-sm text-gray-600">›</div>
+          </div>
 
-                <CardContent className="flex items-center gap-4 p-0">
-                   <Image
-  src={company.logo}
-  alt={company.name}
-  width={76}
-  height={76}
-  className="w-14 h-14 rounded object-contain bg-white p-1"
-></Image>
+          <p className="text-sm text-gray-600 mt-1">
+            ⭐ {company.rating} ({company.reviews} reviews)
+          </p>
+          <div className="flex flex-wrap gap-2 mt-2">
+            <span className="text-xs bg-gray-100 px-2 py-1 rounded">
+              {company.type}
+            </span>
+            <span className="text-xs bg-gray-100 px-2 py-1 rounded">
+              {company.industry}
+            </span>
+            {company.employees && (
+              <span className="text-xs bg-gray-100 px-2 py-1 rounded">
+                {company.employees}
+              </span>
+            )}
+            {company.founded && (
+              <span className="text-xs bg-gray-100 px-2 py-1 rounded">
+                Founded: {company.founded}
+              </span>
+            )}
+          </div>
 
-                  <div className="flex-1">
-                    <div className="flex items-start justify-between">
-                      <h2 className="font-semibold text-base">{company.name}</h2>
-                      <div className="text-sm text-gray-600">›</div>
-                    </div>
+          <p className="text-xs text-gray-500 mt-2">
+            {company.locations.join(", ")}
+          </p>
+        </div>
+      </CardContent>
+    </Card>
+  </Link>
+))}
 
-                    <p className="text-sm text-gray-600 mt-1">⭐ {company.rating} ({company.reviews} reviews)</p>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      <span className="text-xs bg-gray-100 px-2 py-1 rounded">{company.type}</span>
-                      <span className="text-xs bg-gray-100 px-2 py-1 rounded">{company.industry}</span>
-                      {company.employees && <span className="text-xs bg-gray-100 px-2 py-1 rounded">{company.employees}</span>}
-                      {company.founded && <span className="text-xs bg-gray-100 px-2 py-1 rounded">Founded: {company.founded}</span>}
-                    </div>
-
-                    <p className="text-xs text-gray-500 mt-2">{company.locations.join(", ")}</p>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
           </div>
 
           {/* Load More */}
           {visibleCount < filteredCompanies.length && (
             <div className="flex justify-center mt-6">
-              <Button onClick={() => setVisibleCount((prev) => prev + 6)}>Load More</Button>
+              <Button onClick={() => setVisibleCount((prev) => prev + 9)}>Load More</Button>
             </div>
           )}
         </main>
@@ -409,3 +328,7 @@ export default function CompaniesPage() {
     </div>
   );
 }
+
+
+
+
