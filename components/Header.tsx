@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 
+
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -45,10 +46,12 @@ export default function Header() {
               <Briefcase className="w-4 h-4" />
               <span>Jobs</span>
             </div>
+            <Link href="/companies">
             <div className="flex items-center space-x-1 text-gray-700 hover:text-purple-600 cursor-pointer transition-colors">
               <Building2 className="w-4 h-4" />
               <span>Companies</span>
             </div>
+            </Link>
             <div className="flex items-center space-x-1 text-gray-700 hover:text-purple-600 cursor-pointer transition-colors">
               <Users className="w-4 h-4" />
               <span>Services</span>
@@ -127,6 +130,7 @@ export default function Header() {
                 <Briefcase className="w-4 h-4" />
                 <span>Jobs</span>
               </div>
+              
               <div className="flex items-center space-x-2 text-gray-700 hover:text-purple-600 cursor-pointer transition-colors px-2 py-1">
                 <Building2 className="w-4 h-4" />
                 <span>Companies</span>
