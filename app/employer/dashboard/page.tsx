@@ -70,7 +70,9 @@ export default function EmployerDashboard() {
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [jobFilter, setJobFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
-
+  const [askQuestionEnabled, setAskQuestionEnabled] = useState(false);
+  const [newQuestion, setNewQuestion] = useState("");
+  const [questions, setQuestions] = useState<string[]>([]);
   // The Dialog box
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState(null);
@@ -270,6 +272,7 @@ export default function EmployerDashboard() {
     vacancies: "",
     isUrgent: false,
     isRemote: false,
+    questions: [],
   });
 
   const [newSkill, setNewSkill] = useState("");
@@ -420,6 +423,7 @@ export default function EmployerDashboard() {
         skills: jobForm.skills,
         is_urgent: jobForm.isUrgent,
         is_remote: jobForm.isRemote,
+        questions: jobForm.questions,
         status: "active",
       };
       console.log("Payload:", payload);
@@ -466,6 +470,7 @@ export default function EmployerDashboard() {
         vacancies: "",
         isUrgent: false,
         isRemote: false,
+        questions: [],
       });
     } catch (error) {
       console.error("Error submitting job:", error);
@@ -1198,6 +1203,67 @@ export default function EmployerDashboard() {
                     </Label>
                   </div>
                 </div>
+
+                {/* Ask Question Feature */}
+                <div className="flex flex-col gap-2 mt-4">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="ask-question"
+                          checked={askQuestionEnabled}
+                          onCheckedChange={(checked) => setAskQuestionEnabled(!!checked)}
+                        />
+                        <Label htmlFor="ask-question" className="text-sm">
+                          Ask Question
+                        </Label>
+                      </div>
+
+                      {askQuestionEnabled && (
+                        <div className="space-y-2">
+                          <div className="flex gap-2">
+                            <Input
+                              value={newQuestion}
+                              onChange={(e) => setNewQuestion(e.target.value)}
+                              placeholder="Enter a question..."
+                              className="flex-1"
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => {
+                                if (newQuestion.trim()) {
+                                  setQuestions((prev) => [...prev, newQuestion.trim()]);
+                                  setNewQuestion("");
+                                }
+                              }}
+                            >
+                              Add Question
+                            </Button>
+                          </div>
+
+                          {/* Show added questions */}
+                          <div className="flex flex-wrap gap-2">
+                            {questions.map((q, index) => (
+                              <span
+                                key={index}
+                                className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 text-green-800"
+                              >
+                                {q}
+                                <button
+                                  type="button"
+                                  className="ml-2 text-red-600 hover:text-red-800"
+                                  onClick={() =>
+                                    setQuestions((prev) => prev.filter((_, i) => i !== index))
+                                  }
+                                >
+                                  ×
+                                </button>
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
 
                 {/* Submit Button */}
                 <div className="flex justify-end space-x-4">
