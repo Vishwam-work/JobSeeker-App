@@ -1,7 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { Search, Building2, Users, Briefcase, ChevronDown, Menu, X } from 'lucide-react';
+import { Search, Building2, Users,Phone, Briefcase, ChevronDown, Menu, X } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
@@ -60,6 +60,13 @@ export default function Header() {
               <span>Services</span>
             </div>
             </Link>
+            <Link href="/contact">
+            <div className="flex items-center space-x-1 text-gray-700 hover:text-purple-600 cursor-pointer transition-colors">
+            <Phone className="w-4 h-4" />
+            <span>Contact</span>
+           </div>
+           </Link>
+
           </nav>
 
           {/* Desktop Auth Buttons */}
@@ -130,19 +137,30 @@ export default function Header() {
         {isMobileMenuOpen && (
           <div className="md:hidden border-t bg-white py-4">
             <nav className="flex flex-col space-y-4">
+              <Link href="/">
               <div className="flex items-center space-x-2 text-gray-700 hover:text-purple-600 cursor-pointer transition-colors px-2 py-1">
                 <Briefcase className="w-4 h-4" />
                 <span>Jobs</span>
               </div>
-              
+              </Link>
+              <Link href="/companies">
               <div className="flex items-center space-x-2 text-gray-700 hover:text-purple-600 cursor-pointer transition-colors px-2 py-1">
                 <Building2 className="w-4 h-4" />
                 <span>Companies</span>
               </div>
+              </Link>
+              <Link href="/service">
               <div className="flex items-center space-x-2 text-gray-700 hover:text-purple-600 cursor-pointer transition-colors px-2 py-1">
                 <Users className="w-4 h-4" />
                 <span>Services</span>
               </div>
+              </Link>
+              <Link href="/contact">
+            <div className="flex items-center space-x-1 text-gray-700 hover:text-purple-600 cursor-pointer transition-colors">
+            <Phone className="w-4 h-4" />
+            <span>Contact</span>
+           </div>
+           </Link>
               {/* Mobile Employer Menu */}
               <div className="border-t pt-4">
                 <p className="text-sm font-medium text-gray-500 px-2 mb-2">For Employers</p>
