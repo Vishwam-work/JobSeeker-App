@@ -53,6 +53,9 @@ export default function JobListings() {
   const [selectedJob, setSelectedJob] = useState(null);
   const [isJobDetailOpen, setIsJobDetailOpen] = useState(false);
   const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
+  const [userProfile, setUserProfile] = useState<any | null>(null);
+  const [coverLetter, setCoverLetter] = useState("");
+  const [Resume, setResume] = useState<File | null>(null);
 
   // Filter states
   const [filters, setFilters] = useState({
@@ -230,17 +233,32 @@ export default function JobListings() {
     });
   };
 
-  const handleApply = (job) => {
-    const token = localStorage.getItem('auth_token');
-    if (!token) {
-      alert('Please login to apply for jobs');
-      window.location.href = '/login';
-      return;
-    }
-    
+  const handleApply = async (job: any) => {
+  const token = localStorage.getItem("auth_token");
+
+  if (!token) {
+    alert("Please login to apply for jobs");
+    window.location.href = "/login";
+    return;
+  }
+
+  try {
+    // fetch user profile
+    const res = await fetch("http://127.0.0.1:8000/api/profile", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (!res.ok) throw new Error("Failed to fetch user profile");
+    const profile = await res.json();
+
     setSelectedJob(job);
+    setUserProfile(profile);
     setIsApplyModalOpen(true);
-  };
+  } catch (error) {
+    console.error(error);
+    alert("Error fetching user profile. Please try again.");
+  }
+};
 
   const handleViewDetails = (job) => {
     setSelectedJob(job);
@@ -269,7 +287,6 @@ export default function JobListings() {
   };
 
   const submitApplication = () => {
-    // Simulate application submission
     console.log('Applying for job:', selectedJob);
     alert(`Application submitted for ${selectedJob.title} at ${selectedJob.company}!`);
     setIsApplyModalOpen(false);
@@ -836,7 +853,7 @@ export default function JobListings() {
                        {Array.isArray(selectedJob?.skills) && selectedJob.skills.length > 0 ? (
                             selectedJob.skills.map((req, index) => (
                                 <li key={index} className="flex items-start">
-                                    <CheckCircle className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                                    <CheckCircle className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0"/>
                                     <span className="text-gray-700">{req}</span>
                                 </li>
                             ))
@@ -844,6 +861,17 @@ export default function JobListings() {
                             <p className="text-gray-500 italic">{selectedJob.skills}</p>
                         )}
                     </div>
+                  </div>
+
+                  <div className="p-4 bg-gray-100 rounded shadow">
+                    <h2 className="text-xl font-bold mb-2">Questions:</h2>
+                    <ul className="list-disc list-inside">
+                      {questions.map((question, index) => (
+                        <li key={index} className="text-gray-700">
+                          {question}
+                        </li>
+                      ))}
+                    </ul>
                   </div>
 
                   {/* Action Buttons */}
