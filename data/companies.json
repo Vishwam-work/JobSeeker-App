@@ -300,5 +300,37 @@
         "posted": "6 Days Ago"
       }
     ]
+  },
+  {
+    "id": 9,
+    "name": "Cognizant",
+    "rating": 3.9,
+    "reviews": 167,
+    "category": "IT Services & Consulting",
+    "founded": 2010,
+    "logo": "/companies_logos/cognizant.png",
+    "type": "Foreign MNC",
+    "industry": "IT Services & Consulting",
+    "locations": ["Hyderabad", "Bengaluru"],
+    "jobs": [
+      {
+        "title": "Software Engineer Intern",
+        "duration": "No fixed duration",
+        "salary": "Unpaid",
+        "location": "Bengaluru, Delhi / NCR",
+        "type": "Internship",
+        "start": "Starts in 1-3 months",
+        "posted": "2 Days Ago"
+      },
+      {
+        "title": "QA Engineer",
+        "experience": "1-3 Yrs",
+        "salary": "Not disclosed",
+        "location": "Bengaluru",
+        "description": "Responsible for automation and manual testing of products...",
+        "skills": ["Selenium", "Java", "API Testing", "Postman"],
+        "posted": "6 Days Ago"
+      }
+    ]
   }
 ]

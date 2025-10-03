@@ -3,6 +3,7 @@ import SearchSection from '@/components/SearchSection';
 import JobCategories from '@/components/JobCategories';
 import TopCompanies from '@/components/TopCompanies';
 import JobListings from '@/components/JobListings';
+import Footer from '@/components/Footer';
 export default function Home() {
   return (
     <div className="min-h-screen bg-white">
@@ -11,6 +12,7 @@ export default function Home() {
       <JobListings />
       {/* <JobCategories /> */}
       <TopCompanies />
+      <Footer />
     </div>
   );
 }

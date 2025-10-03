@@ -1,11 +1,10 @@
-
 "use client";
 
 import Image from "next/image";
 import Header from "@/components/Header";
 import { useSearchParams } from "next/navigation";
-import  allCompanies  from "@/data/companies.json";
-
+import allCompanies from "@/data/companies.json";
+import Footer from "@/components/Footer";
 export default function CompanyDetailPage() {
   const searchParams = useSearchParams();
   const id = searchParams.get("id");
@@ -15,7 +14,7 @@ export default function CompanyDetailPage() {
     return <div className="p-6">Company not found</div>;
   }
 
- return (
+  return (
     <div className="w-full min-h-screen bg-gray-50">
       {/* Header */}
       <Header />
@@ -32,7 +31,9 @@ export default function CompanyDetailPage() {
           />
           <div className="flex-1">
             <h1 className="text-2xl sm:text-3xl font-bold">{company.name}</h1>
-            <p className="text-gray-600 text-sm sm:text-base">{company.industry}</p>
+            <p className="text-gray-600 text-sm sm:text-base">
+              {company.industry}
+            </p>
           </div>
         </div>
 
@@ -77,7 +78,9 @@ export default function CompanyDetailPage() {
                 )}
 
                 {job.description && (
-                  <p className="text-sm text-gray-700 mt-3">{job.description}</p>
+                  <p className="text-sm text-gray-700 mt-3">
+                    {job.description}
+                  </p>
                 )}
 
                 {job.skills && (
@@ -98,6 +101,9 @@ export default function CompanyDetailPage() {
             ))}
           </div>
         </div>
+
+        {/* Footer */}
+        <Footer />
       </div>
     </div>
   );

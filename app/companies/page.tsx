@@ -6,27 +6,27 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-
 import { useRouter } from "next/navigation";
-
 import Header from "@/components/Header";
 import SearchSection from "@/components/SearchSection";
-
 import Image from "next/image";
-
-
 import allCompanies from "@/data/companies.json";
-import  Link  from "next/link";
+import Link from "next/link";
+
+import Footer from "@/components/Footer";
 
 export default function CompaniesPage() {
-  const [filters, setFilters] = useState({ types: [], locations: [], industries: [] });
+  const [filters, setFilters] = useState({
+    types: [],
+    locations: [],
+    industries: [],
+  });
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState("rating");
   const [visibleCount, setVisibleCount] = useState(6);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   const router = useRouter();
-
 
   const toggleFilter = (filterType, value) => {
     setFilters((prev) => {
@@ -48,7 +48,8 @@ export default function CompaniesPage() {
         filters.locations.length === 0 ||
         company.locations.some((loc) => filters.locations.includes(loc));
       const matchIndustry =
-        filters.industries.length === 0 || filters.industries.includes(company.industry);
+        filters.industries.length === 0 ||
+        filters.industries.includes(company.industry);
       const matchSearch =
         company.name.toLowerCase().includes(search.toLowerCase()) ||
         company.category.toLowerCase().includes(search.toLowerCase()) ||
@@ -84,11 +85,9 @@ export default function CompaniesPage() {
   ];
 
   return (
-    
-
     <div className="min-h-screen bg-gray-50">
-      <Header/>
-      <SearchSection/>
+      <Header />
+      <SearchSection />
       {/* Topbar for mobile: search + filters toggle */}
       <div className="bg-white border-b p-3 md:hidden flex items-center justify-between">
         <Input
@@ -108,16 +107,18 @@ export default function CompaniesPage() {
           <div className="mb-6">
             <h3 className="text-sm font-medium mb-2">Company type</h3>
             <div className="space-y-2">
-              {["Corporate", "Foreign MNC", "Startup", "Indian MNC"].map((type) => (
-                <div key={type} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={type}
-                    checked={filters.types.includes(type)}
-                    onCheckedChange={() => toggleFilter("types", type)}
-                  />
-                  <label htmlFor={type}>{type}</label>
-                </div>
-              ))}
+              {["Corporate", "Foreign MNC", "Startup", "Indian MNC"].map(
+                (type) => (
+                  <div key={type} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={type}
+                      checked={filters.types.includes(type)}
+                      onCheckedChange={() => toggleFilter("types", type)}
+                    />
+                    <label htmlFor={type}>{type}</label>
+                  </div>
+                )
+              )}
             </div>
           </div>
 
@@ -163,11 +164,17 @@ export default function CompaniesPage() {
         {/* Mobile filter drawer */}
         {mobileFiltersOpen && (
           <div className="fixed inset-0 z-40 md:hidden">
-            <div className="absolute inset-0 bg-black opacity-40" onClick={() => setMobileFiltersOpen(false)} />
+            <div
+              className="absolute inset-0 bg-black opacity-40"
+              onClick={() => setMobileFiltersOpen(false)}
+            />
             <div className="absolute left-0 top-0 bottom-0 w-80 bg-white p-4 overflow-y-auto">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="font-semibold">Filters</h2>
-                <Button variant="ghost" onClick={() => setMobileFiltersOpen(false)}>
+                <Button
+                  variant="ghost"
+                  onClick={() => setMobileFiltersOpen(false)}
+                >
                   Close
                 </Button>
               </div>
@@ -176,16 +183,18 @@ export default function CompaniesPage() {
               <div className="mb-6">
                 <h3 className="text-sm font-medium mb-2">Company type</h3>
                 <div className="space-y-2">
-                  {["Corporate", "Foreign MNC", "Startup", "Indian MNC"].map((type) => (
-                    <div key={type} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`m-${type}`}
-                        checked={filters.types.includes(type)}
-                        onCheckedChange={() => toggleFilter("types", type)}
-                      />
-                      <label htmlFor={`m-${type}`}>{type}</label>
-                    </div>
-                  ))}
+                  {["Corporate", "Foreign MNC", "Startup", "Indian MNC"].map(
+                    (type) => (
+                      <div key={type} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`m-${type}`}
+                          checked={filters.types.includes(type)}
+                          onCheckedChange={() => toggleFilter("types", type)}
+                        />
+                        <label htmlFor={`m-${type}`}>{type}</label>
+                      </div>
+                    )
+                  )}
                 </div>
               </div>
 
@@ -224,8 +233,15 @@ export default function CompaniesPage() {
               </div>
 
               <div className="mt-6 flex gap-2">
-                <Button onClick={() => setMobileFiltersOpen(false)}>Apply</Button>
-                <Button variant="ghost" onClick={() => setFilters({ types: [], locations: [], industries: [] })}>
+                <Button onClick={() => setMobileFiltersOpen(false)}>
+                  Apply
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={() =>
+                    setFilters({ types: [], locations: [], industries: [] })
+                  }
+                >
                   Clear
                 </Button>
               </div>
@@ -256,79 +272,81 @@ export default function CompaniesPage() {
             </div>
           </div>
 
-          <h1 className="text-lg font-semibold mb-4">Showing {filteredCompanies.length} companies</h1>
+          <h1 className="text-lg font-semibold mb-4">
+            Showing {filteredCompanies.length} companies
+          </h1>
 
           {/* Responsive grid: 1 column on small, 2 on md, 3 on lg */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-{filteredCompanies.slice(0, visibleCount).map((company, i) => (
-  <Link
-    key={i}
-    href={`/companies/detail?id=${company.id}`}
-    target="_blank"
-    rel="noopener noreferrer"
-    className="block"
-  >
-    <Card className="p-4 cursor-pointer hover:shadow-md transition">
-      <CardContent className="flex items-center gap-4 p-0">
-        <Image
-          src={company.logo}
-          alt={company.name}
-          width={76}
-          height={76}
-          className="w-14 h-14 rounded object-contain bg-white p-1"
-        />
+            {filteredCompanies.slice(0, visibleCount).map((company, i) => (
+              <Link
+                key={i}
+                href={`/companies/detail?id=${company.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block"
+              >
+                <Card className="p-4 cursor-pointer hover:shadow-md transition">
+                  <CardContent className="flex items-center gap-4 p-0">
+                    <Image
+                      src={company.logo}
+                      alt={company.name}
+                      width={76}
+                      height={76}
+                      className="w-14 h-14 rounded object-contain bg-white p-1"
+                    />
 
-        <div className="flex-1">
-          <div className="flex items-start justify-between">
-            <h2 className="font-semibold text-base">{company.name}</h2>
-            <div className="text-sm text-gray-600">›</div>
-          </div>
+                    <div className="flex-1">
+                      <div className="flex items-start justify-between">
+                        <h2 className="font-semibold text-base">
+                          {company.name}
+                        </h2>
+                        <div className="text-sm text-gray-600">›</div>
+                      </div>
 
-          <p className="text-sm text-gray-600 mt-1">
-            ⭐ {company.rating} ({company.reviews} reviews)
-          </p>
-          <div className="flex flex-wrap gap-2 mt-2">
-            <span className="text-xs bg-gray-100 px-2 py-1 rounded">
-              {company.type}
-            </span>
-            <span className="text-xs bg-gray-100 px-2 py-1 rounded">
-              {company.industry}
-            </span>
-            {company.employees && (
-              <span className="text-xs bg-gray-100 px-2 py-1 rounded">
-                {company.employees}
-              </span>
-            )}
-            {company.founded && (
-              <span className="text-xs bg-gray-100 px-2 py-1 rounded">
-                Founded: {company.founded}
-              </span>
-            )}
-          </div>
+                      <p className="text-sm text-gray-600 mt-1">
+                        ⭐ {company.rating} ({company.reviews} reviews)
+                      </p>
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        <span className="text-xs bg-gray-100 px-2 py-1 rounded">
+                          {company.type}
+                        </span>
+                        <span className="text-xs bg-gray-100 px-2 py-1 rounded">
+                          {company.industry}
+                        </span>
+                        {company.employees && (
+                          <span className="text-xs bg-gray-100 px-2 py-1 rounded">
+                            {company.employees}
+                          </span>
+                        )}
+                        {company.founded && (
+                          <span className="text-xs bg-gray-100 px-2 py-1 rounded">
+                            Founded: {company.founded}
+                          </span>
+                        )}
+                      </div>
 
-          <p className="text-xs text-gray-500 mt-2">
-            {company.locations.join(", ")}
-          </p>
-        </div>
-      </CardContent>
-    </Card>
-  </Link>
-))}
-
+                      <p className="text-xs text-gray-500 mt-2">
+                        {company.locations.join(", ")}
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
           </div>
 
           {/* Load More */}
           {visibleCount < filteredCompanies.length && (
             <div className="flex justify-center mt-6">
-              <Button onClick={() => setVisibleCount((prev) => prev + 9)}>Load More</Button>
+              <Button onClick={() => setVisibleCount((prev) => prev + 9)}>
+                Load More
+              </Button>
             </div>
           )}
         </main>
       </div>
+      <Footer />
     </div>
   );
 }
-
-
-
-
