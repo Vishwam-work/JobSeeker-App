@@ -71,17 +71,6 @@ export default function Footer() {
             <li>Address: Ahmedabad, India</li>
           </ul>
         </div>
-        <button
-  onClick={() => {
-    localStorage.removeItem("cookieConsent");
-    localStorage.removeItem("auth_token"); 
-    window.location.reload();
-  }}
-  className="text-sm text-gray-600 hover:underline"
->
-  Manage Cookies
-</button>
-
       </div>
 
       {/* Bottom Bar */}

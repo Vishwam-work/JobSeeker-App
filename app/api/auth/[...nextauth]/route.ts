@@ -10,11 +10,11 @@ const handler = NextAuth({
   ],
   secret: process.env.NEXTAUTH_SECRET,
   session: {
-    strategy: "jwt", // or "database" if you want persistent sessions
+    strategy: "jwt", 
   },
   callbacks: {
     async jwt({ token, account }) {
-      // Store access token from Google if needed
+      
       if (account) {
         token.accessToken = account.access_token;
       }
