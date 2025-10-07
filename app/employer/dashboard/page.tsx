@@ -70,7 +70,9 @@ export default function EmployerDashboard() {
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [jobFilter, setJobFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
-
+  const [questions, setQuestions] = useState<string[]>([]);
+  const [askQuestionEnabled, setAskQuestionEnabled] = useState(false);
+  const [newQuestion, setNewQuestion] = useState("");
   // The Dialog box
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState(null);
@@ -270,6 +272,7 @@ export default function EmployerDashboard() {
     vacancies: "",
     isUrgent: false,
     isRemote: false,
+    questions: [],
   });
 
   const [newSkill, setNewSkill] = useState("");
@@ -387,6 +390,21 @@ export default function EmployerDashboard() {
     }
   };
 
+  const handleAddQuestion = () => {
+  if (newQuestion.trim() && !jobForm.questions.includes(newQuestion.trim())) {
+    const updated = [...jobForm.questions, newQuestion.trim()];
+    setJobForm((prev) => ({ ...prev, questions: updated }));
+    setQuestions(updated); // ✅ keep them in sync
+    setNewQuestion("");
+  }
+};
+
+  const handleRemoveQuestion = (indexToRemove) => {
+  const updated = jobForm.questions.filter((_, index) => index !== indexToRemove);
+  setJobForm((prev) => ({ ...prev, questions: updated }));
+  setQuestions(updated);
+};
+
   const handleRemoveSkill = (skillToRemove) => {
     setJobForm((prev) => ({
       ...prev,
@@ -404,15 +422,15 @@ export default function EmployerDashboard() {
       }
       const payload = {
         title: jobForm.title,
-        category: jobForm.category,
-        job_title: jobForm.jobTitle,
+        category: parseInt(jobForm.category),       // Convert string ID to integer
+        job_title: parseInt(jobForm.jobTitle),     // Convert string ID to integer
         company: jobForm.company,
-        location: jobForm.location,
+        location: parseInt(jobForm.location),      // Convert string ID to integer
         experience: jobForm.experience,
         salary: jobForm.salary,
         job_type: jobForm.job_type,
         work_mode: jobForm.workMode,
-        vacancies: jobForm.vacancies || 1,
+        vacancies: parseInt(jobForm.vacancies) || 1,  // Ensure integer
         application_deadline: jobForm.applicationDeadline,
         description: jobForm.description,
         requirements: jobForm.requirements,
@@ -421,15 +439,16 @@ export default function EmployerDashboard() {
         is_urgent: jobForm.isUrgent,
         is_remote: jobForm.isRemote,
         status: "active",
+        questions: Array.isArray(jobForm.questions) ? jobForm.questions : [],
       };
       console.log("Payload:", payload);
       const response = await fetch(
-        "https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-postings/",
+        "http://127.0.0.1:8010/employeer/api/job-postings/",
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`, // Send JWT token
+             Authorization: `Bearer ${token}`, // Send JWT token
           },
           body: JSON.stringify(payload),
         }
@@ -466,6 +485,7 @@ export default function EmployerDashboard() {
         vacancies: "",
         isUrgent: false,
         isRemote: false,
+        questions: [],
       });
     } catch (error) {
       console.error("Error submitting job:", error);
@@ -538,25 +558,28 @@ export default function EmployerDashboard() {
       console.log("Data is prefill")
       // Prefill the form
       setJobForm({
-        title: data.title,
-        category: data.category,
-        jobTitle: data.job_title,
-        company: data.company,
-        location: data.location,
-        experience: data.experience,
-        salary: data.salary,
-        currency: data.currency,
-        job_type: data.job_type,
-        workMode: data.work_mode,
-        description: data.description,
-        requirements: data.requirements,
-        benefits: data.benefits,
-        skills: data.skills,
-        applicationDeadline: data.application_deadline,
-        vacancies: data.vacancies,
-        isUrgent: data.is_urgent,
-        isRemote: data.is_remote,
+          title: data.title || "",
+          category: data.category?.id?.toString() || data.category || "",
+          jobTitle: data.job_title?.id?.toString() || data.job_title || "",
+          company: data.company || "",
+          location: data.location?.id?.toString() || data.location || "",
+          experience: data.experience || "",
+          salary: data.salary || "",
+          currency: data.currency?.id?.toString() || data.currency || "",
+          job_type: data.job_type || "",
+          workMode: data.work_mode || "",
+          description: data.description || "",
+          requirements: data.requirements || "",
+          benefits: data.benefits || "",
+          skills: data.skills || [],
+          applicationDeadline: data.application_deadline || "",
+          vacancies: data.vacancies || "",
+          isUrgent: data.is_urgent || false,
+          isRemote: data.is_remote || false,
+          questions: data.questions || [],
       });
+      setQuestions(data.questions || []);
+      setAskQuestionEnabled(data.questions && data.questions.length > 0);
 
       setSelectedJob(data);
       setIsEditMode(true);
@@ -991,9 +1014,9 @@ export default function EmployerDashboard() {
                   <div>
                     <Label className="text-sm font-medium">Job Type *</Label>
                     <Select
-                      value={jobForm.jobType}
+                      value={jobForm.job_type}
                       onValueChange={(value) =>
-                        setJobForm((prev) => ({ ...prev, jobType: value }))
+                        setJobForm((prev) => ({ ...prev, job_type: value }))
                       }
                     >
                       <SelectTrigger className="mt-1">
@@ -1197,7 +1220,55 @@ export default function EmployerDashboard() {
                       Remote work available
                     </Label>
                   </div>
-                </div>
+                  
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="ask-question"
+                          checked={askQuestionEnabled}
+                          onCheckedChange={(checked) => setAskQuestionEnabled(!!checked)}
+                        />
+                        <Label htmlFor="ask-question" className="text-sm">
+                          Ask Question
+                        </Label>
+                      </div>
+
+                      {askQuestionEnabled && (
+                        <div className="space-y-2">
+                          <div className="flex gap-2">
+                            <Input
+                              value={newQuestion}
+                              onChange={(e) => setNewQuestion(e.target.value)}
+                              placeholder="Enter a question..."
+                              className="flex-1"
+                            />
+                            <Button type="button" onClick={handleAddQuestion} variant="outline">
+                                Add Question
+                            </Button>
+                          </div>
+
+                          {/* Show added questions */}
+                          <div className="flex flex-wrap gap-2">
+                            {questions.map((q, index) => (
+                             
+                              <span
+                                key={index}
+                                  className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 text-green-800"
+                                >
+                                  {q}
+                                  <button
+                                    type="button"
+                                    className="ml-2 text-red-600 hover:text-red-800"
+                                    onClick={() => handleRemoveQuestion(index)}
+                                  >
+                                    ×
+                                  </button>
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                
 
                 {/* Submit Button */}
                 <div className="flex justify-end space-x-4">
@@ -1433,7 +1504,7 @@ export default function EmployerDashboard() {
                             <div className="space-y-2">
                               <div className="flex items-center text-gray-600">
                                 <MapPin className="w-4 h-4 mr-2" />
-                                <span>{selectedJob.location.name}</span>
+                                <span>{selectedJob.location?.name}</span>
                               </div>
                               <div className="flex items-center text-gray-600">
                                 <Briefcase className="w-4 h-4 mr-2" />
@@ -1451,7 +1522,7 @@ export default function EmployerDashboard() {
                               </div>
                               <div className="flex items-center text-gray-600">
                                 <Building2 className="w-4 h-4 mr-2" />
-                                <Badge className={getWorkModeColor(selectedJob.workMode)}>
+                                <Badge className={getWorkModeColor(selectedJob.work_mode)}>
                                   {selectedJob.work_mode}
                                 </Badge>
                               </div>
@@ -1508,6 +1579,26 @@ export default function EmployerDashboard() {
                               ))}
                             </div>
                           </div>
+
+                         {/* questions */}
+                          <div>
+                            <h4 className="text-lg font-semibold text-gray-900 mb-3">Questions</h4>
+                            <div className="flex flex-wrap gap-2">
+                              {selectedJob.questions && selectedJob.questions.length > 0 ? (
+                                selectedJob.questions.map((question, index) => (
+                                  <Badge
+                                    key={index}
+                                    variant="secondary"
+                                    className="bg-green-100 text-green-800"
+                                  >
+                                    {question}
+                                  </Badge>
+                                ))
+                              ) : (
+                                <p className="text-gray-500 text-sm">No questions added</p>
+                              )}
+                            </div>
+                          </div>
         
                           {/* Action Buttons */}
                           {/* <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t">
@@ -1560,7 +1651,7 @@ export default function EmployerDashboard() {
             </div>
             <div>
               <Label>Category</Label>
-              <Input name="category" value={jobForm.category.name || ""} onChange={(e) => setJobForm({ ...jobForm, [e.target.name]: e.target.value })} />
+              <Input name="category" value={jobForm.category?.name || ""} onChange={(e) => setJobForm({ ...jobForm, [e.target.name]: e.target.value })} />
             </div>
             <div>
               <Label>Job Title</Label>
