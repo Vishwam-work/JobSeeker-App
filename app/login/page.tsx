@@ -23,52 +23,80 @@ export default function Login() {
   const router = useRouter();
 
   // Email/Password login
+  // const handleLogin = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   try {
+  //     const response = await fetch(
+  //       "https://jobseeker-backend-jy1y.onrender.com/api/login/",
+  //       {
+  //         method: "POST",
+  //         headers: { "Content-Type": "application/json" },
+  //         body: JSON.stringify({ email, password }),
+  //       }
+  //     );
+
+  //     const data = await response.json();
+
+  //     if (response.ok) {
+  //       const consentRaw = localStorage.getItem("cookieConsent");
+  //       const consent = consentRaw ? JSON.parse(consentRaw) : null;
+
+  //       if (consent && consent.essential) {
+  //         localStorage.setItem("auth_token", data.access);
+  //       } else {
+  //         console.log("Consent not given: token not persisted");
+  //       }
+
+  //       setAlertType("success");
+  //       setAlertMessage("Login Successful!");
+  //       setAlertOpen(true);
+
+  //       setTimeout(() => {
+  //         router.push("/");
+  //       }, 2000);
+  //     } else {
+  //       setAlertType("error");
+  //       setAlertMessage(data.error || "Login Failed");
+  //       setAlertOpen(true);
+  //     }
+  //   } catch (error) {
+  //     setAlertType("error");
+  //     setAlertMessage("Network Error!");
+  //     setAlertOpen(true);
+  //   }
+  // };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      const response = await fetch(
-        "https://jobseeker-backend-jy1y.onrender.com/api/login/",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password }),
-        }
-      );
 
-      const data = await response.json();
+    const result = await signIn("credentials", {
+      redirect: false, // don't navigate automatically
+      email,
+      password,
+    });
 
-      if (response.ok) {
-        const consentRaw = localStorage.getItem("cookieConsent");
-        const consent = consentRaw ? JSON.parse(consentRaw) : null;
-
-        if (consent && consent.essential) {
-          localStorage.setItem("auth_token", data.access);
-        } else {
-          console.log("Consent not given: token not persisted");
-        }
-
-        setAlertType("success");
-        setAlertMessage("Login Successful!");
-        setAlertOpen(true);
-
-        setTimeout(() => {
-          router.push("/");
-        }, 2000);
-      } else {
-        setAlertType("error");
-        setAlertMessage(data.error || "Login Failed");
-        setAlertOpen(true);
-      }
-    } catch (error) {
+    if (result?.error) {
       setAlertType("error");
-      setAlertMessage("Network Error!");
+      setAlertMessage("Invalid email or password");
       setAlertOpen(true);
+    } else {
+      setAlertType("success");
+      setAlertMessage("Login Successful!");
+      setAlertOpen(true);
+
+      setTimeout(() => {
+        router.push("/");
+      }, 2000);
     }
   };
 
   // Google Login
-  const handleGoogleLogin = () => {
-    signIn("google", { callbackUrl: "/", prompt: "select_account" });
+  const handleGoogleLogin = async () => {
+    await signIn("google", {
+      redirect: false,
+      callbackUrl: "/",
+      prompt: "select_account",
+    });
   };
 
   return (
@@ -229,16 +257,20 @@ export default function Login() {
                     </div>
                   </div>
 
-                  
                   {/* Google Login */}
                   <Button
-                    variant="outline"
-                    className="w-full h-12 border-gray-200 hover:bg-gray-50 flex items-center justify-center"
                     type="button"
-                    onClick={handleGoogleLogin} 
+                    onClick={handleGoogleLogin}
+                    className="w-full h-12 bg-white border border-gray-300 rounded-lg flex items-center justify-center shadow-sm hover:bg-gray-50 transition-all duration-200"
                   >
-                    <Chrome className="w-5 h-5 mr-2" />
-                    Sign in with Google
+                    <img
+                      src="https://www.svgrepo.com/show/475656/google-color.svg"
+                      alt="Google Logo"
+                      className="w-5 h-5 mr-3"
+                    />
+                    <span className="text-gray-700 font-medium">
+                      Sign in with Google
+                    </span>
                   </Button>
                 </form>
               </CardContent>

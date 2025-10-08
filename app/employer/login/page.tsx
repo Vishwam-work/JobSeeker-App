@@ -280,13 +280,18 @@ export default function EmployerLogin() {
                     </div>
                   </div>
                   <Button
-                    variant="outline"
-                    className="w-full h-12 border-gray-200 hover:bg-gray-50 flex items-center justify-center"
                     type="button"
                     onClick={handleGoogleLogin}
+                    className="w-full h-12 bg-white border border-gray-300 rounded-lg flex items-center justify-center shadow-sm hover:bg-gray-50 transition-all duration-200"
                   >
-                    <Chrome className="w-5 h-5 mr-2" />
-                    Sign in with Google
+                    <img
+                      src="https://www.svgrepo.com/show/475656/google-color.svg"
+                      alt="Google Logo"
+                      className="w-5 h-5 mr-3"
+                    />
+                    <span className="text-gray-700 font-medium">
+                      Sign in with Google
+                    </span>
                   </Button>
 
                   <div className="relative">
