@@ -5,13 +5,13 @@ import CredentialsProvider from "next-auth/providers/credentials";
 
 const handler = NextAuth({
   providers: [
-    // 🌐 Google Login
+    //  Google Login
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
 
-    // 💼 Normal Login via API
+    
     CredentialsProvider({
       name: "Credentials",
       credentials: {
@@ -35,7 +35,7 @@ const handler = NextAuth({
           const data = await res.json();
 
           if (res.ok && data.access) {
-            // ✅ Return all available user info
+            //  Return all available user info
             return {
               id: data.user?.id || credentials?.email,
               name: data.user?.name || "User",
@@ -61,12 +61,12 @@ const handler = NextAuth({
   },
 
   callbacks: {
-    // 🔐 Store tokens and user info
+    //  Store tokens and user info
     async jwt({ token, user }) {
       if (user) {
         token.accessToken = user.token;
         token.email = user.email;
-        token.name = user.name; // ✅ store name
+        token.name = user.name; 
       }
       return token;
     },
@@ -74,7 +74,7 @@ const handler = NextAuth({
       session.accessToken = token.accessToken;
       session.user = {
         email: token.email,
-        name: token.name, // ✅ pass name to session
+        name: token.name, 
       };
       return session;
     },

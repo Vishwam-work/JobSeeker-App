@@ -70,7 +70,7 @@ export default function Login() {
     e.preventDefault();
 
     const result = await signIn("credentials", {
-      redirect: false, // don't navigate automatically
+      redirect: false, 
       email,
       password,
     });

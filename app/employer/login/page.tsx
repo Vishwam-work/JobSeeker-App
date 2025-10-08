@@ -33,14 +33,7 @@ export default function EmployerLogin() {
     email: "",
     password: "",
   });
-  const router = useRouter();
-
-  // const handleLogin = async (e: React.FormEvent) => {
-  //   e.preventDefault();
-  //   // Simulate login - in real app, make API call
-  //   localStorage.setItem('employer_token', 'dummy_employer_token');
-  //   router.push('/employer/dashboard');
-  // };
+  const router = useRouter(); 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
