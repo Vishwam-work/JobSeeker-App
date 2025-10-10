@@ -103,6 +103,7 @@ export default function JobListings() {
       setJobs(data);
       setFilteredJobs(data);
       setLoading(false);
+      fetchUserData();
     }, 1000);
   }, []);
 
@@ -285,6 +286,7 @@ const fetchUserData = async () => {
     
     if (response.ok) {
       const data = await response.json();
+      console.log("Data here:",data)
       setUserData(data);
     } else {
       console.error('Failed to fetch user data');
@@ -305,8 +307,8 @@ const handleAnswerChange = (questionIndex, value) => {
 
 const submitApplication = async() => {
      try {
-    const token = localStorage.getItem('auth_token');
-    
+     const token = localStorage.getItem('auth_token');
+
     if (!token) {
       alert('Please login to apply');
       return;
@@ -329,7 +331,7 @@ const submitApplication = async() => {
       })) || []
     };
 
-    const response = await fetch('http://127.0.0.1:8010/api/applications/submit/', {
+    const response = await fetch('http://127.0.0.1:8010/employeer/api/applications/submit/', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,

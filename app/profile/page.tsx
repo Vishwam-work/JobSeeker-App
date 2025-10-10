@@ -605,12 +605,12 @@ export default function Profile() {
       experience: profileData.personalInfo.experience,
       current_salary: profileData.personalInfo.currentSalary,
       expected_salary: profileData.personalInfo.expectedSalary,
-      current_currency: profileData.personalInfo.currentcurrency,
-      expected_currency: profileData.personalInfo.expectedCurrency,
+      current_currency_id: profileData.personalInfo.currentcurrency || null,
+      expected_currency_id: profileData.personalInfo.expectedCurrency || null,
       notice_period: profileData.personalInfo.noticePeriod,
-      country: profileData.personalInfo.countryId,
-      state: profileData.personalInfo.stateId,
-      city: profileData.personalInfo.cityId,
+      country_id: profileData.personalInfo.countryId || null,
+      state_id: profileData.personalInfo.stateId || null,
+      city_id: profileData.personalInfo.cityId || null,
       experiences: profileData.experience,
       educations: profileData.education,
       certifications: profileData.certifications,
@@ -629,9 +629,41 @@ export default function Profile() {
     });
     console.log("Response:", res);
     if (res.ok) {
+      try {
+        const data = await res.json();
+        // Normalize and set freshly returned data so the UI reflects what is persisted
+        setProfileData({
+          personalInfo: {
+            fullName: data.full_name || "",
+            email: data.email || "",
+            phone: data.phone || "",
+            phoneCode: data.phone_code || "",
+            countryId: data.country?.id?.toString() || "",
+            stateId: data.state?.id?.toString() || "",
+            cityId: data.city?.id?.toString() || "",
+            experience: data.experience || "",
+            currentSalary: data.current_salary || "",
+            expectedSalary: data.expected_salary || "",
+            currentcurrency: data.current_currency?.id?.toString() || "",
+            expectedCurrency: data.expected_currency?.id?.toString() || "",
+            noticePeriod: data.notice_period || "",
+            resume: data.resume || profileData.personalInfo.resume,
+          },
+          experience: data.experiences || [],
+          education: data.educations || [],
+          skills: (data.skills || []).map((s) => s.name),
+          certifications: data.certifications || [],
+          summary: profileData.summary,
+        });
+      } catch (e) {
+        // If response has no JSON body, silently skip state update
+        console.warn("Profile saved; response body parse skipped", e);
+      }
       alert("Profile saved successfully!");
     } else {
-      alert("Error saving profile.");
+      const errText = await res.text();
+      console.error("Save profile failed:", errText);
+      alert(`Error saving profile. ${errText}`);
     }
   };
 

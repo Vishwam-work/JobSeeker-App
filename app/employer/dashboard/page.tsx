@@ -68,6 +68,7 @@ export default function EmployerDashboard() {
   const [cities, setCities] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedCandidate, setSelectedCandidate] = useState(null);
+  const [isCandidateModalOpen, setIsCandidateModalOpen] = useState(false);
   const [jobFilter, setJobFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [questions, setQuestions] = useState<string[]>([]);
@@ -124,7 +125,7 @@ export default function EmployerDashboard() {
   const [postedJobs, setPostedJobs] = useState([]);
 
   // Sample data for candidates
-  const [candidates] = useState([
+  const [candidates, setCandidates] = useState([
     {
       id: 1,
       name: "Rahul Sharma",
@@ -283,6 +284,51 @@ export default function EmployerDashboard() {
     const token = localStorage.getItem('auth_token');
     console.log("LOG TOKEN:", token);
     setIsAuthenticated(!!token);
+  }, []);
+
+  useEffect(() => {
+    const fetchApplications = async () => {
+      try {
+        const token = localStorage.getItem('auth_token');
+        if (!token) return;
+        const res = await fetch('http://127.0.0.1:8010/employeer/api/employer/applications/', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) {
+          console.error('Failed to fetch employer applications');
+          return;
+        }
+        const data = await res.json();
+        console.log('Employer applications:', data);
+        // Map API to UI candidate shape
+        const mapped = (Array.isArray(data) ? data : []).map((app) => ({
+          id: app.id,
+          name: app.profile?.full_name || app.user_email || 'Unknown',
+          email: app.profile?.email || app.user_email,
+          phone: app.profile?.phone || 'Not provided',
+          location: [app.profile?.city, app.profile?.state, app.profile?.country].filter(Boolean).join(', '),
+          experience: app.profile?.experience || 'N/A',
+          currentRole: '',
+          currentCompany: '',
+          skills: app.profile?.skills || [],
+          education: '',
+          appliedFor: app.job_title,
+          appliedDate: app.applied_at,
+          status: 'Under Review',
+          resumeUrl: app.profile?.resume || '#',
+          profileImage: null,
+          summary: '',
+          workExperience: app.profile?.experiences || [],
+          educationDetails: app.profile?.educations || [],
+          certifications: app.profile?.certifications || [],
+          qa: app.answers || [],
+        }));
+        setCandidates(mapped);
+      } catch (e) {
+        console.error('Failed to fetch employer applications', e);
+      }
+    };
+    fetchApplications();
   }, []);
 
  const fetchPostedJobs = async () => {
@@ -1798,7 +1844,7 @@ export default function EmployerDashboard() {
                     {candidates.map((candidate) => (
                       <div
                         key={candidate.id}
-                        onClick={() => setSelectedCandidate(candidate)}
+                        onClick={() => { setSelectedCandidate(candidate); setIsCandidateModalOpen(true); }}
                         className={`p-4 cursor-pointer hover:bg-gray-50 border-l-4 transition-colors ${
                           selectedCandidate?.id === candidate.id
                             ? "border-l-blue-500 bg-blue-50"
@@ -1885,7 +1931,13 @@ export default function EmployerDashboard() {
                         </Button>
                         <Button variant="outline" size="sm">
                           <Download className="w-4 h-4 mr-2" />
-                          Resume
+                          {selectedCandidate.resumeUrl ? (
+                            <a href={selectedCandidate.resumeUrl} target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:text-purple-800 underline inline-flex items-center gap-1">
+                              View Resume
+                            </a>
+                          ) : (
+                            <span className="text-gray-400 italic">No resume uploaded</span>
+                          )}
                         </Button>
                       </div>
                     </div>
@@ -2031,8 +2083,22 @@ export default function EmployerDashboard() {
                         )}
                       </div>
                     </div>
-
                     {/* Certifications */}
+                    {Array.isArray(selectedCandidate.qa) && selectedCandidate.qa.length > 0 && (
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-900 mb-2">Application Q&A</h4>
+                    <div className="space-y-3">
+                      {selectedCandidate.qa.map((item, index) => (
+                        <div key={index} className="bg-gray-50 rounded p-3">
+                          <p className="text-sm font-medium text-gray-800">Q{(item.question_index ?? index) + 1}. {item.question_text || 'Question'}</p>
+                          <p className="text-sm text-gray-700 mt-1">{item.answer_text || '-'}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+
                     {selectedCandidate.certifications.length > 0 && (
                       <div>
                         <h3 className="font-semibold text-gray-900 mb-3">
@@ -2055,13 +2121,13 @@ export default function EmployerDashboard() {
                                   </p>
                                   <p className="text-sm text-gray-600">
                                     Issued: {cert.year}
-                                  </p>
-                                </div>
+                                </p>
                               </div>
-                            )
-                          )}
-                        </div>
+                            </div>
+                          )
+                        )}
                       </div>
+                    </div>
                     )}
 
                     {/* Action Buttons */}
@@ -2116,9 +2182,121 @@ export default function EmployerDashboard() {
           </Card>
         )}
       </div>
-      {isModalOpen && (
-  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div className="bg-white rounded-lg w-full max-w-3xl p-6 relative">
+
+      {/* Candidate Detail Modal */}
+      <Dialog open={isCandidateModalOpen} onOpenChange={setIsCandidateModalOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          {selectedCandidate && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="text-2xl font-bold text-gray-900">
+                  {selectedCandidate.name}
+                </DialogTitle>
+              </DialogHeader>
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="text-sm text-gray-700 space-y-2">
+                    <p><span className="font-medium">Email:</span> {selectedCandidate.email}</p>
+                    <p><span className="font-medium">Phone:</span> {selectedCandidate.phone}</p>
+                    <p><span className="font-medium">Location:</span> {selectedCandidate.location}</p>
+                    <p><span className="font-medium">Experience:</span> {selectedCandidate.experience}</p>
+                  </div>
+                  <div className="text-sm text-gray-700 space-y-2">
+                    <p><span className="font-medium">Applied For:</span> {selectedCandidate.appliedFor}</p>
+                    <p><span className="font-medium">Applied Date:</span> {new Date(selectedCandidate.appliedDate).toLocaleDateString()}</p>
+                    {selectedCandidate.resumeUrl ? (
+                      <a href={selectedCandidate.resumeUrl} target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:text-purple-800 underline inline-flex items-center gap-1">
+                        View Resume
+                      </a>
+                    ) : (
+                      <span className="text-gray-400 italic">No resume uploaded</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Skills */}
+                {Array.isArray(selectedCandidate.skills) && selectedCandidate.skills.length > 0 && (
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-900 mb-2">Skills</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedCandidate.skills.map((skill, index) => (
+                        <Badge key={index} variant="secondary" className="bg-purple-100 text-purple-800">{skill}</Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Work Experience */}
+                {Array.isArray(selectedCandidate.workExperience) && selectedCandidate.workExperience.length > 0 && (
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-900 mb-2">Work Experience</h4>
+                    <div className="space-y-3">
+                      {selectedCandidate.workExperience.map((exp, index) => (
+                        <div key={index} className="border-l-2 border-purple-200 pl-3">
+                          <p className="font-medium text-gray-900">{exp.role} {exp.company ? `@ ${exp.company}` : ''}</p>
+                          <p className="text-sm text-gray-600">{exp.start_date || ''} {exp.end_date ? `- ${exp.end_date}` : ''}</p>
+                          {exp.description && (<p className="text-sm text-gray-700">{exp.description}</p>)}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Education */}
+                {Array.isArray(selectedCandidate.educationDetails) && selectedCandidate.educationDetails.length > 0 && (
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-900 mb-2">Education</h4>
+                    <div className="space-y-3">
+                      {selectedCandidate.educationDetails.map((edu, index) => (
+                        <div key={index} className="border-l-2 border-green-200 pl-3">
+                          <p className="font-medium text-gray-900">{edu.degree} - {edu.field}</p>
+                          <p className="text-sm text-gray-600">{edu.institution} {edu.year ? `(${edu.year})` : ''}</p>
+                          {edu.grade && (<p className="text-sm text-gray-700">Grade: {edu.grade}</p>)}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Certifications */}
+                {Array.isArray(selectedCandidate.certifications) && selectedCandidate.certifications.length > 0 && (
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-900 mb-2">Certifications</h4>
+                    <div className="space-y-3">
+                      {selectedCandidate.certifications.map((cert, index) => (
+                        <div key={index} className="flex items-center gap-2">
+                          <Award className="w-4 h-4 text-yellow-600" />
+                          <span className="text-sm text-gray-800">{cert.name} - {cert.issuer} {cert.year ? `(${cert.year})` : ''}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Q&A didnt needs to be render here*/}
+                {/* {Array.isArray(selectedCandidate.qa) && selectedCandidate.qa.length > 0 && (
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-900 mb-2">Application Q&A</h4>
+                    <div className="space-y-3">
+                      {selectedCandidate.qa.map((item, index) => (
+                        <div key={index} className="bg-gray-50 rounded p-3">
+                          <p className="text-sm font-medium text-gray-800">Q{(item.question_index ?? index) + 1}. {item.question_text || 'Question'}</p>
+                          <p className="text-sm text-gray-700 mt-1">{item.answer_text || '-'}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )} */}
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+
+{isModalOpen && (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+       <div className="bg-white rounded-lg w-full max-w-3xl p-6 relative">
       {/* Close Button */}
       <button
         className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
