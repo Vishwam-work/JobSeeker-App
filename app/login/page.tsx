@@ -23,63 +23,69 @@ export default function Login() {
   const router = useRouter();
 
   // Email/Password login
-  // const handleLogin = async (e: React.FormEvent) => {
-  //   e.preventDefault();
-  //   try {
-  //     const response = await fetch(
-  //       "https://jobseeker-backend-jy1y.onrender.com/api/login/",
-  //       {
-  //         method: "POST",
-  //         headers: { "Content-Type": "application/json" },
-  //         body: JSON.stringify({ email, password }),
-  //       }
-  //     );
+//  const handleLogin = async (e: React.FormEvent) => {
+//   e.preventDefault();
+//   try {
+//     const response = await fetch('https://jobseeker-backend-jy1y.onrender.com/api/login/', {
+//       method: 'POST',
+//       headers: { 'Content-Type': 'application/json' },
+//       body: JSON.stringify({ email, password }),
+//     });
 
-  //     const data = await response.json();
+//   const data = await response.json();
+//       if (response.ok) {
+//         localStorage.setItem('auth_token', data.access);
+//         setAlertType('success');
+//         setAlertMessage('Login Successful!');
+//         setAlertOpen(true);
+//         setTimeout(() => {
+//           router.push('/');
+//         }, 2000);
+//       } else {
+//         setAlertType('error');
+//         setAlertMessage(data.error || 'Login Failed');
+//         setAlertOpen(true);
+//       }
+//     } catch (error) {
+//       setAlertType('error');
+//       setAlertMessage('Network Error!');
+//       setAlertOpen(true);
+//     }
+//   };
 
-  //     if (response.ok) {
-  //       const consentRaw = localStorage.getItem("cookieConsent");
-  //       const consent = consentRaw ? JSON.parse(consentRaw) : null;
+ const handleLogin = async (e: React.FormEvent) => {
+  e.preventDefault();
 
-  //       if (consent && consent.essential) {
-  //         localStorage.setItem("auth_token", data.access);
-  //       } else {
-  //         console.log("Consent not given: token not persisted");
-  //       }
+  try {
+  
+    const response = await fetch(
+      "https://jobseeker-backend-jy1y.onrender.com/api/login/",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      }
+    );
 
-  //       setAlertType("success");
-  //       setAlertMessage("Login Successful!");
-  //       setAlertOpen(true);
+    const data = await response.json();
 
-  //       setTimeout(() => {
-  //         router.push("/");
-  //       }, 2000);
-  //     } else {
-  //       setAlertType("error");
-  //       setAlertMessage(data.error || "Login Failed");
-  //       setAlertOpen(true);
-  //     }
-  //   } catch (error) {
-  //     setAlertType("error");
-  //     setAlertMessage("Network Error!");
-  //     setAlertOpen(true);
-  //   }
-  // };
+  
+    if (response.ok && data.access) {
+   
+      localStorage.setItem("auth_token", data.access);
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+   
+      const result = await signIn("credentials", {
+        redirect: false,
+        email,
+        password,
+      });
 
-    const result = await signIn("credentials", {
-      redirect: false, 
-      email,
-      password,
-    });
+      if (result?.error) {
+        console.error("NextAuth error:", result.error);
+      }
 
-    if (result?.error) {
-      setAlertType("error");
-      setAlertMessage("Invalid email or password");
-      setAlertOpen(true);
-    } else {
+     
       setAlertType("success");
       setAlertMessage("Login Successful!");
       setAlertOpen(true);
@@ -87,8 +93,21 @@ export default function Login() {
       setTimeout(() => {
         router.push("/");
       }, 2000);
+    } else {
+    
+      setAlertType("error");
+      setAlertMessage(data.error || "Invalid email or password");
+      setAlertOpen(true);
     }
-  };
+  } catch (error) {
+  
+    console.error("Login error:", error);
+    setAlertType("error");
+    setAlertMessage("Network Error!");
+    setAlertOpen(true);
+  }
+};
+
 
   // Google Login
   const handleGoogleLogin = async () => {

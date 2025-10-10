@@ -116,9 +116,7 @@ export default function Header() {
 
             {isAuthenticated || session ? (
               <>
-                {/* User logged in — local ya Google dono me */}
                 <div className="flex items-center space-x-3">
-                  {/* Google user info dikhane ke liye */}
                   {session && (
                     <div className="flex items-center space-x-2">
                       {/* <img
@@ -127,7 +125,8 @@ export default function Header() {
                         className="w-8 h-8 rounded-full border"
                       /> */}
                       <span className="text-gray-700 font-medium">
-                        {session.user?.name}
+                        {session?.user?.name ||
+                          session?.user?.full_name }
                       </span>
                     </div>
                   )}
@@ -148,7 +147,7 @@ export default function Header() {
 
                   <Link href="/profile">
                     <Button className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white">
-                      Profile
+                      Make Profile
                     </Button>
                   </Link>
                 </div>

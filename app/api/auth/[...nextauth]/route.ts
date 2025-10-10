@@ -38,7 +38,7 @@ const handler = NextAuth({
             //  Return all available user info
             return {
               id: data.user?.id || credentials?.email,
-              name: data.user?.name || "User",
+              name: data.user?.full_name || data.user?.name || "User",
               email: data.user?.email || credentials?.email,
               token: data.access,
             };
@@ -60,13 +60,18 @@ const handler = NextAuth({
     strategy: "jwt",
   },
 
-  callbacks: {
-    //  Store tokens and user info
-    async jwt({ token, user }) {
+     callbacks: {
+    
+    async jwt({ token, user, account, profile }) {
       if (user) {
-        token.accessToken = user.token;
+        token.accessToken = user.token || account?.access_token;
         token.email = user.email;
-        token.name = user.name; 
+        token.name =
+          user.full_name ||
+          user.name ||
+          profile?.name ||
+          token.name ||
+          "User";
       }
       return token;
     },
@@ -74,7 +79,7 @@ const handler = NextAuth({
       session.accessToken = token.accessToken;
       session.user = {
         email: token.email,
-        name: token.name, 
+        name: token.name  || "Guest", 
       };
       return session;
     },
