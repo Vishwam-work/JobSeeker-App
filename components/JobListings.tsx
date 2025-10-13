@@ -53,7 +53,9 @@ export default function JobListings() {
   const [selectedJob, setSelectedJob] = useState(null);
   const [isJobDetailOpen, setIsJobDetailOpen] = useState(false);
   const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
-
+  const [answers, setAnswers] = useState({});
+  const [userData, setUserData] = useState(null);
+  const [loadingUserData, setLoadingUserData] = useState(false);
   // Filter states
   const [filters, setFilters] = useState({
     search: '',
@@ -101,6 +103,7 @@ export default function JobListings() {
       setJobs(data);
       setFilteredJobs(data);
       setLoading(false);
+      fetchUserData();
     }, 1000);
   }, []);
 
@@ -237,8 +240,9 @@ export default function JobListings() {
       window.location.href = '/login';
       return;
     }
-    
     setSelectedJob(job);
+    setAnswers({}); // Reset answers for new application
+    fetchUserData(); // Fetch user data when opening modal
     setIsApplyModalOpen(true);
   };
 
@@ -268,12 +272,88 @@ export default function JobListings() {
     }
   };
 
-  const submitApplication = () => {
-    // Simulate application submission
-    console.log('Applying for job:', selectedJob);
-    alert(`Application submitted for ${selectedJob.title} at ${selectedJob.company}!`);
-    setIsApplyModalOpen(false);
-    setSelectedJob(null);
+
+const fetchUserData = async () => {
+  setLoadingUserData(true);
+  try {
+    const token = localStorage.getItem('auth_token');
+    const response = await fetch('https://jobseeker-backend-jy1y.onrender.com/api/profile/', {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      console.log("Data here:",data)
+      setUserData(data);
+    } else {
+      console.error('Failed to fetch user data');
+    }
+  } catch (error) {
+    console.error('Error fetching user data:', error);
+  } finally {
+    setLoadingUserData(false);
+  }
+};
+
+const handleAnswerChange = (questionIndex, value) => {
+  setAnswers(prev => ({
+    ...prev,
+    [questionIndex]: value
+  }));
+};
+
+const submitApplication = async() => {
+     try {
+     const token = localStorage.getItem('auth_token');
+
+    if (!token) {
+      alert('Please login to apply');
+      return;
+    }
+
+    // Validate answers if questions exist
+    if (selectedJob.questions && selectedJob.questions.length > 0) {
+      const unanswered = selectedJob.questions.some((_, index) => !answers[index]?.trim());
+      if (unanswered) {
+        alert('Please answer all questions before submitting');
+        return;
+      }
+    }
+
+    const applicationData = {
+      job_id: selectedJob.id,
+      answers: selectedJob.questions?.map((question, index) => ({
+        question: question,
+        answer: answers[index] || ''
+      })) || []
+    };
+
+    const response = await fetch('https://jobseeker-backend-jy1y.onrender.com/employeer/api/applications/submit/', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(applicationData)
+    });
+
+    const result = await response.json();
+
+    if (response.ok) {
+      alert(`Application submitted successfully for ${selectedJob.title}!`);
+      setIsApplyModalOpen(false);
+      setSelectedJob(null);
+      setAnswers({});
+    } else {
+      alert(result.error || 'Failed to submit application');
+    }
+  } catch (error) {
+    console.error('Error submitting application:', error);
+    alert('Network error. Please try again.');
+  }
   };
 
   const getWorkModeColor = (workMode) => {
@@ -846,6 +926,26 @@ export default function JobListings() {
                     </div>
                   </div>
 
+                  {/* <div>
+                    <h4 className="text-lg font-semibold text-gray-900 mb-3">Required Skills</h4>
+                    <div className="flex flex-wrap gap-2">
+                       {Array.isArray(selectedJob?.questions) && selectedJob.questions.length > 0 ? (
+                            selectedJob.questions.map((req, index) => (
+                              <div> <p className="font-medium text-gray-800">{req}:-</p>
+                                  <Input
+                                    placeholder="Type your answer here..."
+                                    // value={answers[q.id] || ''}
+                                    // onChange={e => handleChange(q.id, e.target.value)}
+                                  />
+                              </div>
+                              
+                            ))
+                        ) : (
+                            <p className="text-gray-500 italic">{selectedJob.questions}</p>
+                        )}
+                    </div>
+                  </div> */}
+
                   {/* Action Buttons */}
                   <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t">
                     <Button
@@ -882,7 +982,7 @@ export default function JobListings() {
         </Dialog>
 
         {/* Apply Modal */}
-        <Dialog open={isApplyModalOpen} onOpenChange={setIsApplyModalOpen}>
+       <Dialog open={isApplyModalOpen} onOpenChange={setIsApplyModalOpen}>
           <DialogContent className="max-w-md">
             {selectedJob && (
               <>
@@ -891,34 +991,73 @@ export default function JobListings() {
                     Apply for {selectedJob.title}
                   </DialogTitle>
                 </DialogHeader>
-                <div className="space-y-4">
-                  <div className="p-4 bg-gray-50 rounded-lg">
-                    <h4 className="font-semibold text-purple-600 mb-1">{selectedJob.company}</h4>
-                    <p className="text-sm text-gray-600">{selectedJob.location}</p>
-                    <p className="text-sm text-gray-600">{selectedJob.salary}</p>
-                  </div>
-                  
+                <div className="space-y-4 max-h-[70vh] overflow-y-auto">
                   <div className="space-y-3">
                     <p className="text-sm text-gray-700">
                       Your profile and resume will be sent to the employer.
                     </p>
-                    
                     <div className="flex items-center space-x-2 text-sm text-gray-600">
                       <CheckCircle className="w-4 h-4 text-green-500" />
                       <span>Profile information</span>
                     </div>
-                    
+                    <div className="p-4 bg-gray-50 rounded-lg">
+                      {loadingUserData ? (
+                        <div className="flex items-center justify-center py-4">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+                        </div>
+                      ) : userData && (
+                        <div className="p-4 bg-gray-50 rounded-lg space-y-2">
+                          <h4 className="font-semibold text-gray-900">Your Application Details</h4>
+                          <div className="text-sm text-gray-600 space-y-1">
+                            <p><span className="font-medium">Name:</span> {userData.name || userData.full_name}</p>
+                            <p><span className="font-medium">Email:</span> {userData.email}</p>
+                            <p><span className="font-medium">Phone:</span> {userData.phone || 'Not provided'}</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                     <div className="flex items-center space-x-2 text-sm text-gray-600">
                       <CheckCircle className="w-4 h-4 text-green-500" />
                       <span>Resume/CV</span>
                     </div>
-                    
-                    <div className="flex items-center space-x-2 text-sm text-gray-600">
-                      <CheckCircle className="w-4 h-4 text-green-500" />
-                      <span>Contact information</span>
+                    {userData?.resume ? (
+                      <a
+                        href={userData.resume}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-purple-600 hover:text-purple-800 underline flex items-center gap-1"
+                      >
+                        View Resume
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                    ) : (
+                      <span className="text-gray-400 italic">No resume uploaded</span>
+                    )}
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-900 mb-3">Required Skills</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {Array.isArray(selectedJob?.questions) && selectedJob.questions.length > 0 && (
+                        <div className="space-y-4">
+                          <h4 className="text-lg font-semibold text-gray-900">Additional Questions</h4>
+                          {selectedJob.questions.map((question, index) => (
+                            <div key={index} className="space-y-2">
+                              <Label htmlFor={`question-${index}`} className="font-medium text-gray-800">
+                                {index + 1}. {question}
+                              </Label>
+                              <Input
+                                id={`question-${index}`}
+                                placeholder="Type your answer here..."
+                                value={answers[index] || ''}
+                                onChange={(e) => handleAnswerChange(index, e.target.value)}
+                                className="w-full"
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
-
                   <div className="flex flex-col sm:flex-row gap-3 pt-4">
                     <Button
                       onClick={submitApplication}

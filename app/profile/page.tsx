@@ -549,30 +549,45 @@ export default function Profile() {
   }, [experienceForm.category]);
 
   const uploadResume = async () => {
-    if (!resumeFile) return true;
+        if (!resumeFile) return true;
 
-    const formData = new FormData();
-    formData.append("resume", resumeFile);
+        const formData = new FormData();
+        formData.append("resume", resumeFile);
+        try{
+        const res = await fetch(
+          "https://jobseeker-backend-jy1y.onrender.com/api/profile/upload-resume/",
+          {
+            method: "PATCH",
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
+            },
+            body: formData,
+          }
+        );
 
-    const res = await fetch(
-      "https://jobseeker-backend-jy1y.onrender.com/api/profile/upload-resume/",
-      {
-        method: "PATCH",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
-        },
-        body: formData,
+        if (res.ok) {
+          const data = await res.json();
+          console.log("Resume uploaded:", data.resume_url);
+          console.log("Resume Data uploaded:", data);
+          setProfileData(prev => ({
+            ...prev,
+            personalInfo: {
+              ...prev.personalInfo,
+              resume: data.resume_url || data.resume
+            }
+          }));
+          return true;
+        } else {
+          const error = await res.json();
+          console.error("Failed to upload resume:", error);
+          alert(`Resume upload failed: ${error.message || 'Unknown error'}`);
+          return false;
+        }
+      }catch (error) {
+        console.error("Error uploading resume:", error);
+        alert("Network error while uploading resume");
+        return false;
       }
-    );
-
-    if (res.ok) {
-      const data = await res.json();
-      console.log("Resume uploaded:", data.resume_url);
-      return true;
-    } else {
-      console.error("Failed to upload resume");
-      return false;
-    }
   };
 
   // Save Api
@@ -590,12 +605,12 @@ export default function Profile() {
       experience: profileData.personalInfo.experience,
       current_salary: profileData.personalInfo.currentSalary,
       expected_salary: profileData.personalInfo.expectedSalary,
-      current_currency: profileData.personalInfo.currentcurrency,
-      expected_currency: profileData.personalInfo.expectedCurrency,
+      current_currency_id: profileData.personalInfo.currentcurrency || null,
+      expected_currency_id: profileData.personalInfo.expectedCurrency || null,
       notice_period: profileData.personalInfo.noticePeriod,
-      country: profileData.personalInfo.countryId,
-      state: profileData.personalInfo.stateId,
-      city: profileData.personalInfo.cityId,
+      country_id: profileData.personalInfo.countryId || null,
+      state_id: profileData.personalInfo.stateId || null,
+      city_id: profileData.personalInfo.cityId || null,
       experiences: profileData.experience,
       educations: profileData.education,
       certifications: profileData.certifications,
@@ -614,9 +629,41 @@ export default function Profile() {
     });
     console.log("Response:", res);
     if (res.ok) {
+      try {
+        const data = await res.json();
+        // Normalize and set freshly returned data so the UI reflects what is persisted
+        setProfileData({
+          personalInfo: {
+            fullName: data.full_name || "",
+            email: data.email || "",
+            phone: data.phone || "",
+            phoneCode: data.phone_code || "",
+            countryId: data.country?.id?.toString() || "",
+            stateId: data.state?.id?.toString() || "",
+            cityId: data.city?.id?.toString() || "",
+            experience: data.experience || "",
+            currentSalary: data.current_salary || "",
+            expectedSalary: data.expected_salary || "",
+            currentcurrency: data.current_currency?.id?.toString() || "",
+            expectedCurrency: data.expected_currency?.id?.toString() || "",
+            noticePeriod: data.notice_period || "",
+            resume: data.resume || profileData.personalInfo.resume,
+          },
+          experience: data.experiences || [],
+          education: data.educations || [],
+          skills: (data.skills || []).map((s) => s.name),
+          certifications: data.certifications || [],
+          summary: profileData.summary,
+        });
+      } catch (e) {
+        // If response has no JSON body, silently skip state update
+        console.warn("Profile saved; response body parse skipped", e);
+      }
       alert("Profile saved successfully!");
     } else {
-      alert("Error saving profile.");
+      const errText = await res.text();
+      console.error("Save profile failed:", errText);
+      alert(`Error saving profile. ${errText}`);
     }
   };
 

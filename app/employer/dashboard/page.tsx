@@ -68,9 +68,12 @@ export default function EmployerDashboard() {
   const [cities, setCities] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedCandidate, setSelectedCandidate] = useState(null);
+  const [isCandidateModalOpen, setIsCandidateModalOpen] = useState(false);
   const [jobFilter, setJobFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
-
+  const [questions, setQuestions] = useState<string[]>([]);
+  const [askQuestionEnabled, setAskQuestionEnabled] = useState(false);
+  const [newQuestion, setNewQuestion] = useState("");
   // The Dialog box
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState(null);
@@ -122,7 +125,7 @@ export default function EmployerDashboard() {
   const [postedJobs, setPostedJobs] = useState([]);
 
   // Sample data for candidates
-  const [candidates] = useState([
+  const [candidates, setCandidates] = useState([
     {
       id: 1,
       name: "Rahul Sharma",
@@ -270,6 +273,7 @@ export default function EmployerDashboard() {
     vacancies: "",
     isUrgent: false,
     isRemote: false,
+    questions: [],
   });
 
   const [newSkill, setNewSkill] = useState("");
@@ -282,10 +286,52 @@ export default function EmployerDashboard() {
     setIsAuthenticated(!!token);
   }, []);
 
-
-  // Fetch data from APIs
   useEffect(() => {
-    const fetchPostedJobs = async () => {
+    const fetchApplications = async () => {
+      try {
+        const token = localStorage.getItem('auth_token');
+        if (!token) return;
+        const res = await fetch('https://jobseeker-backend-jy1y.onrender.com/employeer/api/employer/applications/', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) {
+          console.error('Failed to fetch employer applications');
+          return;
+        }
+        const data = await res.json();
+        console.log('Employer applications:', data);
+        // Map API to UI candidate shape
+        const mapped = (Array.isArray(data) ? data : []).map((app) => ({
+          id: app.id,
+          name: app.profile?.full_name || app.user_email || 'Unknown',
+          email: app.profile?.email || app.user_email,
+          phone: app.profile?.phone || 'Not provided',
+          location: [app.profile?.city, app.profile?.state, app.profile?.country].filter(Boolean).join(', '),
+          experience: app.profile?.experience || 'N/A',
+          currentRole: '',
+          currentCompany: '',
+          skills: app.profile?.skills || [],
+          education: '',
+          appliedFor: app.job_title,
+          appliedDate: app.applied_at,
+          status: 'Under Review',
+          resumeUrl: app.profile?.resume || '#',
+          profileImage: null,
+          summary: '',
+          workExperience: app.profile?.experiences || [],
+          educationDetails: app.profile?.educations || [],
+          certifications: app.profile?.certifications || [],
+          qa: app.answers || [],
+        }));
+        setCandidates(mapped);
+      } catch (e) {
+        console.error('Failed to fetch employer applications', e);
+      }
+    };
+    fetchApplications();
+  }, []);
+
+ const fetchPostedJobs = async () => {
       try {
         const token = localStorage.getItem("auth_token");
         if (!token) return;
@@ -312,6 +358,8 @@ export default function EmployerDashboard() {
       }
     };
 
+  // Fetch data from APIs
+  useEffect(() => {
     fetchPostedJobs();
   }, []);
   console.log("Posted Jobs:", postedJobs);
@@ -387,6 +435,21 @@ export default function EmployerDashboard() {
     }
   };
 
+  const handleAddQuestion = () => {
+  if (newQuestion.trim() && !jobForm.questions.includes(newQuestion.trim())) {
+    const updated = [...jobForm.questions, newQuestion.trim()];
+    setJobForm((prev) => ({ ...prev, questions: updated }));
+    setQuestions(updated); // ✅ keep them in sync
+    setNewQuestion("");
+  }
+};
+
+  const handleRemoveQuestion = (indexToRemove) => {
+  const updated = jobForm.questions.filter((_, index) => index !== indexToRemove);
+  setJobForm((prev) => ({ ...prev, questions: updated }));
+  setQuestions(updated);
+};
+
   const handleRemoveSkill = (skillToRemove) => {
     setJobForm((prev) => ({
       ...prev,
@@ -404,15 +467,15 @@ export default function EmployerDashboard() {
       }
       const payload = {
         title: jobForm.title,
-        category: jobForm.category,
-        job_title: jobForm.jobTitle,
+        category: parseInt(jobForm.category),       // Convert string ID to integer
+        job_title: parseInt(jobForm.jobTitle),     // Convert string ID to integer
         company: jobForm.company,
-        location: jobForm.location,
+        location: parseInt(jobForm.location),      // Convert string ID to integer
         experience: jobForm.experience,
         salary: jobForm.salary,
         job_type: jobForm.job_type,
         work_mode: jobForm.workMode,
-        vacancies: jobForm.vacancies || 1,
+        vacancies: parseInt(jobForm.vacancies) || 1,  // Ensure integer
         application_deadline: jobForm.applicationDeadline,
         description: jobForm.description,
         requirements: jobForm.requirements,
@@ -421,6 +484,7 @@ export default function EmployerDashboard() {
         is_urgent: jobForm.isUrgent,
         is_remote: jobForm.isRemote,
         status: "active",
+        questions: Array.isArray(jobForm.questions) ? jobForm.questions : [],
       };
       console.log("Payload:", payload);
       const response = await fetch(
@@ -429,7 +493,7 @@ export default function EmployerDashboard() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`, // Send JWT token
+             Authorization: `Bearer ${token}`, // Send JWT token
           },
           body: JSON.stringify(payload),
         }
@@ -446,6 +510,7 @@ export default function EmployerDashboard() {
       console.log("Job posted successfully:", data);
       setPostedJobs((prev) => [...prev, data]);
       alert("Job posted successfully!");
+      await fetchPostedJobs();
 
       // Reset form
       setJobForm({
@@ -467,7 +532,13 @@ export default function EmployerDashboard() {
         vacancies: "",
         isUrgent: false,
         isRemote: false,
+        questions: [],
       });
+      setSelectedCategory("");
+      setQuestions([]);
+      setAskQuestionEnabled(false); // uncheck the checkbox
+      setNewSkill("");
+      setNewQuestion("");
     } catch (error) {
       console.error("Error submitting job:", error);
       alert("An error occurred while posting the job.");
@@ -525,7 +596,7 @@ export default function EmployerDashboard() {
       console.error("Error fetching job details", err);
     }
   };
-
+//https://jobseeker-backend-jy1y.onrender.com
   const handleEditJob = async (job) => {
     try {
       const token = localStorage.getItem("auth_token");
@@ -540,25 +611,28 @@ export default function EmployerDashboard() {
       console.log("Data is prefill")
       // Prefill the form
       setJobForm({
-        title: data.title,
-        category: data.category,
-        jobTitle: data.job_title,
-        company: data.company,
-        location: data.location,
-        experience: data.experience,
-        salary: data.salary,
-        currency: data.currency,
-        job_type: data.job_type,
-        workMode: data.work_mode,
-        description: data.description,
-        requirements: data.requirements,
-        benefits: data.benefits,
-        skills: data.skills,
-        applicationDeadline: data.application_deadline,
-        vacancies: data.vacancies,
-        isUrgent: data.is_urgent,
-        isRemote: data.is_remote,
+          title: data.title || "",
+          category: data.category?.id?.toString() || data.category || "",
+          jobTitle: data.job_title?.id?.toString() || data.job_title || "",
+          company: data.company || "",
+          location: data.location?.id?.toString() || data.location || "",
+          experience: data.experience || "",
+          salary: data.salary || "",
+          currency: data.currency?.id?.toString() || data.currency || "",
+          job_type: data.job_type || "",
+          workMode: data.work_mode || "",
+          description: data.description || "",
+          requirements: data.requirements || "",
+          benefits: data.benefits || "",
+          skills: data.skills || [],
+          applicationDeadline: data.application_deadline || "",
+          vacancies: data.vacancies || "",
+          isUrgent: data.is_urgent || false,
+          isRemote: data.is_remote || false,
+          questions: data.questions || [],
       });
+      setQuestions(data.questions || []);
+      setAskQuestionEnabled(data.questions && data.questions.length > 0);
 
       setSelectedJob(data);
       setIsEditMode(true);
@@ -1220,7 +1294,55 @@ export default function EmployerDashboard() {
                       Remote work available
                     </Label>
                   </div>
-                </div>
+                  
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="ask-question"
+                          checked={askQuestionEnabled}
+                          onCheckedChange={(checked) => setAskQuestionEnabled(!!checked)}
+                        />
+                        <Label htmlFor="ask-question" className="text-sm">
+                          Ask Question
+                        </Label>
+                      </div>
+
+                      {askQuestionEnabled && (
+                        <div className="space-y-2">
+                          <div className="flex gap-2">
+                            <Input
+                              value={newQuestion}
+                              onChange={(e) => setNewQuestion(e.target.value)}
+                              placeholder="Enter a question..."
+                              className="flex-1"
+                            />
+                            <Button type="button" onClick={handleAddQuestion} variant="outline">
+                                Add Question
+                            </Button>
+                          </div>
+
+                          {/* Show added questions */}
+                          <div className="flex flex-wrap gap-2">
+                            {questions.map((q, index) => (
+                             
+                              <span
+                                key={index}
+                                  className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 text-green-800"
+                                >
+                                  {q}
+                                  <button
+                                    type="button"
+                                    className="ml-2 text-red-600 hover:text-red-800"
+                                    onClick={() => handleRemoveQuestion(index)}
+                                  >
+                                    ×
+                                  </button>
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                
 
                 {/* Submit Button */}
                 <div className="flex justify-end space-x-4">
@@ -1456,7 +1578,7 @@ export default function EmployerDashboard() {
                             <div className="space-y-2">
                               <div className="flex items-center text-gray-600">
                                 <MapPin className="w-4 h-4 mr-2" />
-                                <span>{selectedJob.location.name}</span>
+                                <span>{selectedJob.location?.name}</span>
                               </div>
                               <div className="flex items-center text-gray-600">
                                 <Briefcase className="w-4 h-4 mr-2" />
@@ -1474,7 +1596,7 @@ export default function EmployerDashboard() {
                               </div>
                               <div className="flex items-center text-gray-600">
                                 <Building2 className="w-4 h-4 mr-2" />
-                                <Badge className={getWorkModeColor(selectedJob.workMode)}>
+                                <Badge className={getWorkModeColor(selectedJob.work_mode)}>
                                   {selectedJob.work_mode}
                                 </Badge>
                               </div>
@@ -1531,6 +1653,26 @@ export default function EmployerDashboard() {
                               ))}
                             </div>
                           </div>
+
+                         {/* questions */}
+                          <div>
+                            <h4 className="text-lg font-semibold text-gray-900 mb-3">Questions</h4>
+                            <div className="flex flex-wrap gap-2">
+                              {selectedJob.questions && selectedJob.questions.length > 0 ? (
+                                selectedJob.questions.map((question, index) => (
+                                  <Badge
+                                    key={index}
+                                    variant="secondary"
+                                    className="bg-green-100 text-green-800"
+                                  >
+                                    {question}
+                                  </Badge>
+                                ))
+                              ) : (
+                                <p className="text-gray-500 text-sm">No questions added</p>
+                              )}
+                            </div>
+                          </div>
         
                           {/* Action Buttons */}
                           {/* <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t">
@@ -1583,7 +1725,7 @@ export default function EmployerDashboard() {
             </div>
             <div>
               <Label>Category</Label>
-              <Input name="category" value={jobForm.category.name || ""} onChange={(e) => setJobForm({ ...jobForm, [e.target.name]: e.target.value })} />
+              <Input name="category" value={jobForm.category?.name || ""} onChange={(e) => setJobForm({ ...jobForm, [e.target.name]: e.target.value })} />
             </div>
             <div>
               <Label>Job Title</Label>
@@ -1725,7 +1867,7 @@ export default function EmployerDashboard() {
                     {candidates.map((candidate) => (
                       <div
                         key={candidate.id}
-                        onClick={() => setSelectedCandidate(candidate)}
+                        onClick={() => { setSelectedCandidate(candidate); setIsCandidateModalOpen(true); }}
                         className={`p-4 cursor-pointer hover:bg-gray-50 border-l-4 transition-colors ${
                           selectedCandidate?.id === candidate.id
                             ? "border-l-blue-500 bg-blue-50"
@@ -1812,7 +1954,13 @@ export default function EmployerDashboard() {
                         </Button>
                         <Button variant="outline" size="sm">
                           <Download className="w-4 h-4 mr-2" />
-                          Resume
+                          {selectedCandidate.resumeUrl ? (
+                            <a href={selectedCandidate.resumeUrl} target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:text-purple-800 underline inline-flex items-center gap-1">
+                              View Resume
+                            </a>
+                          ) : (
+                            <span className="text-gray-400 italic">No resume uploaded</span>
+                          )}
                         </Button>
                       </div>
                     </div>
@@ -1958,8 +2106,22 @@ export default function EmployerDashboard() {
                         )}
                       </div>
                     </div>
-
                     {/* Certifications */}
+                    {Array.isArray(selectedCandidate.qa) && selectedCandidate.qa.length > 0 && (
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-900 mb-2">Application Q&A</h4>
+                    <div className="space-y-3">
+                      {selectedCandidate.qa.map((item, index) => (
+                        <div key={index} className="bg-gray-50 rounded p-3">
+                          <p className="text-sm font-medium text-gray-800">Q{(item.question_index ?? index) + 1}. {item.question_text || 'Question'}</p>
+                          <p className="text-sm text-gray-700 mt-1">{item.answer_text || '-'}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+
                     {selectedCandidate.certifications.length > 0 && (
                       <div>
                         <h3 className="font-semibold text-gray-900 mb-3">
@@ -1982,13 +2144,13 @@ export default function EmployerDashboard() {
                                   </p>
                                   <p className="text-sm text-gray-600">
                                     Issued: {cert.year}
-                                  </p>
-                                </div>
+                                </p>
                               </div>
-                            )
-                          )}
-                        </div>
+                            </div>
+                          )
+                        )}
                       </div>
+                    </div>
                     )}
 
                     {/* Action Buttons */}
@@ -2043,9 +2205,121 @@ export default function EmployerDashboard() {
           </Card>
         )}
       </div>
-      {isModalOpen && (
-  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div className="bg-white rounded-lg w-full max-w-3xl p-6 relative">
+
+      {/* Candidate Detail Modal */}
+      <Dialog open={isCandidateModalOpen} onOpenChange={setIsCandidateModalOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          {selectedCandidate && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="text-2xl font-bold text-gray-900">
+                  {selectedCandidate.name}
+                </DialogTitle>
+              </DialogHeader>
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="text-sm text-gray-700 space-y-2">
+                    <p><span className="font-medium">Email:</span> {selectedCandidate.email}</p>
+                    <p><span className="font-medium">Phone:</span> {selectedCandidate.phone}</p>
+                    <p><span className="font-medium">Location:</span> {selectedCandidate.location}</p>
+                    <p><span className="font-medium">Experience:</span> {selectedCandidate.experience}</p>
+                  </div>
+                  <div className="text-sm text-gray-700 space-y-2">
+                    <p><span className="font-medium">Applied For:</span> {selectedCandidate.appliedFor}</p>
+                    <p><span className="font-medium">Applied Date:</span> {new Date(selectedCandidate.appliedDate).toLocaleDateString()}</p>
+                    {selectedCandidate.resumeUrl ? (
+                      <a href={selectedCandidate.resumeUrl} target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:text-purple-800 underline inline-flex items-center gap-1">
+                        View Resume
+                      </a>
+                    ) : (
+                      <span className="text-gray-400 italic">No resume uploaded</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Skills */}
+                {Array.isArray(selectedCandidate.skills) && selectedCandidate.skills.length > 0 && (
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-900 mb-2">Skills</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedCandidate.skills.map((skill, index) => (
+                        <Badge key={index} variant="secondary" className="bg-purple-100 text-purple-800">{skill}</Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Work Experience */}
+                {Array.isArray(selectedCandidate.workExperience) && selectedCandidate.workExperience.length > 0 && (
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-900 mb-2">Work Experience</h4>
+                    <div className="space-y-3">
+                      {selectedCandidate.workExperience.map((exp, index) => (
+                        <div key={index} className="border-l-2 border-purple-200 pl-3">
+                          <p className="font-medium text-gray-900">{exp.role} {exp.company ? `@ ${exp.company}` : ''}</p>
+                          <p className="text-sm text-gray-600">{exp.start_date || ''} {exp.end_date ? `- ${exp.end_date}` : ''}</p>
+                          {exp.description && (<p className="text-sm text-gray-700">{exp.description}</p>)}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Education */}
+                {Array.isArray(selectedCandidate.educationDetails) && selectedCandidate.educationDetails.length > 0 && (
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-900 mb-2">Education</h4>
+                    <div className="space-y-3">
+                      {selectedCandidate.educationDetails.map((edu, index) => (
+                        <div key={index} className="border-l-2 border-green-200 pl-3">
+                          <p className="font-medium text-gray-900">{edu.degree} - {edu.field}</p>
+                          <p className="text-sm text-gray-600">{edu.institution} {edu.year ? `(${edu.year})` : ''}</p>
+                          {edu.grade && (<p className="text-sm text-gray-700">Grade: {edu.grade}</p>)}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Certifications */}
+                {Array.isArray(selectedCandidate.certifications) && selectedCandidate.certifications.length > 0 && (
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-900 mb-2">Certifications</h4>
+                    <div className="space-y-3">
+                      {selectedCandidate.certifications.map((cert, index) => (
+                        <div key={index} className="flex items-center gap-2">
+                          <Award className="w-4 h-4 text-yellow-600" />
+                          <span className="text-sm text-gray-800">{cert.name} - {cert.issuer} {cert.year ? `(${cert.year})` : ''}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Q&A didnt needs to be render here*/}
+                {/* {Array.isArray(selectedCandidate.qa) && selectedCandidate.qa.length > 0 && (
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-900 mb-2">Application Q&A</h4>
+                    <div className="space-y-3">
+                      {selectedCandidate.qa.map((item, index) => (
+                        <div key={index} className="bg-gray-50 rounded p-3">
+                          <p className="text-sm font-medium text-gray-800">Q{(item.question_index ?? index) + 1}. {item.question_text || 'Question'}</p>
+                          <p className="text-sm text-gray-700 mt-1">{item.answer_text || '-'}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )} */}
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+
+{isModalOpen && (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+       <div className="bg-white rounded-lg w-full max-w-3xl p-6 relative">
       {/* Close Button */}
       <button
         className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
