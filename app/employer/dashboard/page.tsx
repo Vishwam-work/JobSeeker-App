@@ -444,6 +444,7 @@ export default function EmployerDashboard() {
 
       const data = await response.json();
       console.log("Job posted successfully:", data);
+      setPostedJobs((prev) => [...prev, data]);
       alert("Job posted successfully!");
 
       // Reset form
@@ -534,6 +535,7 @@ export default function EmployerDashboard() {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
+      // https://jobseeker-backend-jy1y.onrender.com
       const data = await response.json();
       console.log("Data is prefill")
       // Prefill the form
@@ -566,13 +568,34 @@ export default function EmployerDashboard() {
     }
   };
 
-  const handleDeleteJob = (job) => {
-    if (
+  const handleDeleteJob = async(job) => {
+    const token = localStorage.getItem("auth_token");
+    try{
+      if (
       window.confirm(`Are you sure you want to delete the job: ${job.title}?`)
     ) {
       console.log("Deleting job:", job);
-      // Implement delete job functionality
+
       alert(`Job deleted: ${job.title}`);
+    }
+      const response = await fetch(`https://jobseeker-backend-jy1y.onrender.com/employeer/job-postings/${job.id}/delete/`,
+        {
+          method: "DELETE",
+          headers: {
+            "Authorization": `Bearer ${token}`, 
+          },
+        }
+      )
+      if (response.ok) {
+      setPostedJobs((prev) => prev.filter((j) => j.id !== job.id));
+      alert(`Job deleted: ${job.title}`);}
+    else {
+      console.error("Failed to delete job");
+      alert("Failed to delete job");
+    }
+    }
+    catch (err) {
+      console.error("Error fetching job details for edit", err);
     }
   };
 
@@ -991,9 +1014,9 @@ export default function EmployerDashboard() {
                   <div>
                     <Label className="text-sm font-medium">Job Type *</Label>
                     <Select
-                      value={jobForm.jobType}
+                      value={jobForm.job_type}
                       onValueChange={(value) =>
-                        setJobForm((prev) => ({ ...prev, jobType: value }))
+                        setJobForm((prev) => ({ ...prev, job_type: value }))
                       }
                     >
                       <SelectTrigger className="mt-1">

@@ -210,7 +210,7 @@ export default function JobListings() {
   const handleSkillFilter = (skill, checked) => {
     setFilters(prev => ({
       ...prev,
-      skills: checked 
+      skills: checked
         ? [...prev.skills, skill]
         : prev.skills.filter(s => s !== skill)
     }));
