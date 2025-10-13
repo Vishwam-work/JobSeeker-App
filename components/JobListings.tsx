@@ -98,7 +98,7 @@ export default function JobListings() {
   useEffect(() => {
     // Simulate API call
     setTimeout(async() => {
-      const response = await fetch('http://127.0.0.1:8010/employeer/api/all-jobs/')
+      const response = await fetch('https://jobseeker-backend-jy1y.onrender.com/employeer/api/all-jobs/')
       const data = await response.json()
       setJobs(data);
       setFilteredJobs(data);
@@ -277,7 +277,7 @@ const fetchUserData = async () => {
   setLoadingUserData(true);
   try {
     const token = localStorage.getItem('auth_token');
-    const response = await fetch('http://127.0.0.1:8010/api/profile/', {
+    const response = await fetch('https://jobseeker-backend-jy1y.onrender.com/api/profile/', {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
@@ -331,7 +331,7 @@ const submitApplication = async() => {
       })) || []
     };
 
-    const response = await fetch('http://127.0.0.1:8010/employeer/api/applications/submit/', {
+    const response = await fetch('https://jobseeker-backend-jy1y.onrender.com/employeer/api/applications/submit/', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
