@@ -272,6 +272,15 @@ export default function EmployerLogin() {
                       </Link>
                     </div>
                   </div>
+
+                  <Button
+                    type="submit"
+                    onClick={handleLogin}
+                    className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 h-12 shadow-lg hover:shadow-xl transition-all duration-200"
+                  >
+                    Login to Dashboard
+                  </Button>
+
                   <Button
                     type="button"
                     onClick={handleGoogleLogin}

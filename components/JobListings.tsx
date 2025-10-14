@@ -74,6 +74,10 @@ export default function JobListings() {
   const [locations, setLocations] = useState([]);
   const [skillsList, setSkillsList] = useState([]);
 
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [showLocationDropdown, setShowLocationDropdown] = useState(false);
+
+
   // Fetch companies from API
   useEffect(() => {
     const fetchCompanies = async () => {
@@ -96,25 +100,45 @@ export default function JobListings() {
   }, []);
 
   // Fetch locations from API
-  useEffect(() => {
-    const fetchLocations = async () => {
-      try {
-        const res = await fetch(
-          "https://jobseeker-backend-jy1y.onrender.com/master/api/states/"
-        );
-        const data = await res.json();
+  // useEffect(() => {
+  //   const fetchLocations = async () => {
+  //     try {
+  //       const res = await fetch(
+  //         "https://jobseeker-backend-jy1y.onrender.com/master/api/states/"
+  //       );
+  //       const data = await res.json();
 
-        const locationNames = data.map((item: any) => item.name);
-        setLocations(locationNames);
-      } catch (error) {
-        console.error("Error fetching locations:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  //       const locationNames = data.map((item: any) => item.name);
+  //       setLocations(locationNames);
+  //     } catch (error) {
+  //       console.error("Error fetching locations:", error);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
 
-    fetchLocations();
-  }, []);
+  //   fetchLocations();
+  // }, []);
+
+  // Lazy load locations
+
+  const loadLocations = async () => {
+    if (isLoaded) return; // prevent refetching
+    setLoading(true);
+    try {
+      const res = await fetch(
+        "https://jobseeker-backend-jy1y.onrender.com/master/api/states/"
+      );
+      const data = await res.json();
+      const locationNames = data.map((item: any) => item.name);
+      setLocations(locationNames);
+      setIsLoaded(true);
+    } catch (err) {
+      console.error("Error fetching locations:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Fetch skills from API
   useEffect(() => {
@@ -499,7 +523,7 @@ const submitApplication = async() => {
                   </div>
 
                   {/* Location */}
-                  <div>
+                  {/* <div>
                     <Label className="text-sm font-medium text-gray-700 mb-2 block">
                       Location
                     </Label>
@@ -527,6 +551,55 @@ const submitApplication = async() => {
                           ))}
                         </SelectContent>
                       </Select>
+                    )}
+                  </div> */}
+
+                  <div className="border rounded-lg p-3 bg-white shadow-sm">
+                    <button
+                      onClick={() => {
+                        if (!isLoaded) loadLocations();
+                        setShowLocationDropdown((prev) => !prev);
+                      }}
+                      className="w-full text-left font-semibold text-gray-700 flex justify-between items-center"
+                    >
+                      <span> Location</span>
+                      <span className="text-gray-400">
+                        {showLocationDropdown ? "▲" : "▼"}
+                      </span>
+                    </button>
+
+                    {showLocationDropdown && (
+                      <div className="mt-3 space-y-2 max-h-56 overflow-y-auto">
+                        {loading ? (
+                          <p className="text-sm text-gray-500">
+                            Loading locations...
+                          </p>
+                        ) : (
+                          locations.map((location) => (
+                            <div
+                              key={location}
+                              className="flex items-center space-x-2"
+                            >
+                              <Checkbox
+                                id={`location-${location}`}
+                                checked={filters.location === location}
+                                onCheckedChange={(checked) =>
+                                  setFilters((prev) => ({
+                                    ...prev,
+                                    location: checked ? location : "All",
+                                  }))
+                                }
+                              />
+                              <Label
+                                htmlFor={`location-${location}`}
+                                className="text-sm text-gray-600 cursor-pointer"
+                              >
+                                {location}
+                              </Label>
+                            </div>
+                          ))
+                        )}
+                      </div>
                     )}
                   </div>
 
