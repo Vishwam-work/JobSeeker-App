@@ -77,7 +77,6 @@ export default function JobListings() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
 
-
   // Fetch companies from API
   useEffect(() => {
     const fetchCompanies = async () => {
@@ -99,31 +98,9 @@ export default function JobListings() {
     fetchCompanies();
   }, []);
 
-  // Fetch locations from API
-  // useEffect(() => {
-  //   const fetchLocations = async () => {
-  //     try {
-  //       const res = await fetch(
-  //         "https://jobseeker-backend-jy1y.onrender.com/master/api/states/"
-  //       );
-  //       const data = await res.json();
-
-  //       const locationNames = data.map((item: any) => item.name);
-  //       setLocations(locationNames);
-  //     } catch (error) {
-  //       console.error("Error fetching locations:", error);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-
-  //   fetchLocations();
-  // }, []);
-
   // Lazy load locations
-
   const loadLocations = async () => {
-    if (isLoaded) return; // prevent refetching
+    if (isLoaded) return;
     setLoading(true);
     try {
       const res = await fetch(
@@ -203,33 +180,71 @@ export default function JobListings() {
 
     // Experience filter
     if (filters.experience && filters.experience !== "All") {
-      filtered = filtered.filter((job) =>
-        job.experience.includes(filters.experience)
+      filtered = filtered.filter((job) => {
+        const [minJobExp, maxJobExp] = job.experience.split("-").map(Number);
+        let [minFilterExp, maxFilterExp] = [0, 100]; // default
+
+        switch (filters.experience) {
+          case "0-1":
+            [minFilterExp, maxFilterExp] = [0, 1];
+            break;
+          case "2-4":
+            [minFilterExp, maxFilterExp] = [2, 4];
+            break;
+          case "3-5":
+            [minFilterExp, maxFilterExp] = [3, 5];
+            break;
+          case "5-8":
+            [minFilterExp, maxFilterExp] = [5, 8];
+            break;
+          case "8+":
+            [minFilterExp, maxFilterExp] = [8, 100];
+            break;
+        }
+
+        return maxJobExp >= minFilterExp && minJobExp <= maxFilterExp;
+      });
+    }
+
+    // Work Mode filter
+    if (filters.workMode && filters.workMode !== "All") {
+      filtered = filtered.filter(
+        (job) =>
+          job.work_mode &&
+          job.work_mode.toLowerCase().includes(filters.workMode.toLowerCase())
       );
     }
 
-    // Job type filter
+    // Job Type filter
     if (filters.jobType && filters.jobType !== "All") {
-      filtered = filtered.filter((job) => job.jobType === filters.jobType);
-    }
-
-    // Work mode filter
-    if (filters.workMode && filters.workMode !== "All") {
-      filtered = filtered.filter((job) => job.workMode === filters.workMode);
-    }
-
-    // Company filter
-    if (filters.companies.length > 0) {
-      filtered = filtered.filter((job) =>
-        filters.companies.includes(job.company)
+      filtered = filtered.filter(
+        (job) =>
+          job.job_type &&
+          job.job_type.toLowerCase().includes(filters.jobType.toLowerCase())
       );
     }
 
     // Skills filter
-    if (filters.skills.length > 0) {
-      filtered = filtered.filter((job) =>
-        filters.skills.some((skill) => job.skills.includes(skill))
+    if (filters.skills && filters.skills.length > 0) {
+      filtered = filtered.filter(
+        (job) =>
+          Array.isArray(job.skills) &&
+          filters.skills.every((skill) =>
+            job.skills.some((jobSkill) =>
+              jobSkill.toLowerCase().includes(skill.toLowerCase())
+            )
+          )
       );
+    }
+
+    // Company filter
+    if (filters.companies && filters.companies.length > 0) {
+      filtered = filtered.filter((job) => {
+        const companyName = job.company?.toLowerCase().trim();
+        return filters.companies.some(
+          (selected) => selected.toLowerCase().trim() === companyName
+        );
+      });
     }
 
     // Salary range filter
@@ -248,7 +263,7 @@ export default function JobListings() {
     if (filters.postedWithin && filters.postedWithin !== "All") {
       const now = new Date();
       filtered = filtered.filter((job) => {
-        const postedDate = new Date(job.postedDate);
+        const postedDate = new Date(job.created_at);
         const diffTime = Math.abs(now - postedDate);
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
@@ -523,37 +538,6 @@ const submitApplication = async() => {
                   </div>
 
                   {/* Location */}
-                  {/* <div>
-                    <Label className="text-sm font-medium text-gray-700 mb-2 block">
-                      Location
-                    </Label>
-
-                    {loading ? (
-                      <p className="text-gray-500 text-sm">
-                        Loading locations...
-                      </p>
-                    ) : (
-                      <Select
-                        value={filters.location}
-                        onValueChange={(value) =>
-                          handleFilterChange("location", value)
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select location" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="All">All Locations</SelectItem>
-                          {locations.map((location) => (
-                            <SelectItem key={location} value={location}>
-                              {location}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
-                  </div> */}
-
                   <div className="border rounded-lg p-3 bg-white shadow-sm">
                     <button
                       onClick={() => {
@@ -634,7 +618,7 @@ const submitApplication = async() => {
                       Job Type
                     </Label>
                     <Select
-                      value={filters.jobType}
+                      value={filters.job_Type}
                       onValueChange={(value) =>
                         handleFilterChange("jobType", value)
                       }
@@ -644,10 +628,10 @@ const submitApplication = async() => {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="All">All Types</SelectItem>
-                        <SelectItem value="Full Time">Full Time</SelectItem>
-                        <SelectItem value="Part Time">Part Time</SelectItem>
-                        <SelectItem value="Contract">Contract</SelectItem>
-                        <SelectItem value="Internship">Internship</SelectItem>
+                        <SelectItem value="full-time">Full Time</SelectItem>
+                        <SelectItem value="part-time">Part Time</SelectItem>
+                        <SelectItem value="contract">Contract</SelectItem>
+                        <SelectItem value="internship">Internship</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
