@@ -37,12 +37,22 @@ export default function Header() {
     return () => window.removeEventListener("storage", checkAuth);
   }, []);
 
-  // Logout
+  // -----------------------------
+  // Local logout
   const handleLogout = () => {
     localStorage.removeItem("auth_token");
     setIsAuthenticated(false);
     router.push("/login");
   };
+
+  // NextAuth logout
+  const handleNextAuthLogout = async () => {
+    localStorage.removeItem("auth_token"); // clear local token
+    setIsAuthenticated(false);
+    setIsMobileMenuOpen(false); // close mobile menu
+    await signOut({ redirect: true, callbackUrl: "/login" }); // proper logout
+  };
+  // -----------------------------
 
   return (
     <header className="bg-white shadow-sm border-b sticky top-0 z-50">
@@ -88,73 +98,35 @@ export default function Header() {
 
           {/* Desktop Auth Buttons */}
           <div className="hidden md:flex items-center space-x-4">
-            {/* {isAuthenticated ? (
-              <>
-                <Button variant="outline" className="border-red-600 text-red-600 hover:bg-red-50" onClick={handleLogout}>
+            {isAuthenticated || session ? (
+              <div className="flex items-center space-x-3">
+                {session && (
+                  <div className="flex items-center space-x-2">
+                    <span className="text-gray-700 font-medium">
+                      {session?.user?.name || session?.user?.full_name}
+                    </span>
+                  </div>
+                )}
+
+                <Button
+                  variant="outline"
+                  className="border-red-600 text-red-600 hover:bg-red-50"
+                  onClick={() => {
+                    if (session) handleNextAuthLogout();
+                    else handleLogout();
+                  }}
+                >
                   Logout
                 </Button>
+
                 <Link href="/profile">
                   <Button className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white">
                     Make Profile
                   </Button>
                 </Link>
-              </>
+              </div>
             ) : (
               <>
-                <Link href="/login">
-                  <Button variant="outline" className="border-purple-600 text-purple-600 hover:bg-purple-50">
-                    Login
-                  </Button>
-                </Link>
-                <Link href="/register">
-                  <Button className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white">
-                    Register
-                  </Button>
-                </Link>
-              </>
-            )} */}
-
-            {isAuthenticated || session ? (
-              <>
-                <div className="flex items-center space-x-3">
-                  {session && (
-                    <div className="flex items-center space-x-2">
-                      {/* <img
-                        // src={session.user?.image}
-                        alt="Profile"
-                        className="w-8 h-8 rounded-full border"
-                      /> */}
-                      <span className="text-gray-700 font-medium">
-                        {session?.user?.name ||
-                          session?.user?.full_name }
-                      </span>
-                    </div>
-                  )}
-
-                  <Button
-                    variant="outline"
-                    className="border-red-600 text-red-600 hover:bg-red-50"
-                    onClick={() => {
-                      if (session) {
-                        signOut({ callbackUrl: "/" }); // Google logout
-                      } else {
-                        handleLogout(); // local logout
-                      }
-                    }}
-                  >
-                    Logout
-                  </Button>
-
-                  <Link href="/profile">
-                    <Button className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white">
-                      Make Profile
-                    </Button>
-                  </Link>
-                </div>
-              </>
-            ) : (
-              <>
-                {/* User not logged in */}
                 <Link href="/login">
                   <Button
                     variant="outline"
@@ -204,6 +176,7 @@ export default function Header() {
               )}
             </div>
           </div>
+
           {/* Mobile Menu Button */}
           <button
             className="md:hidden p-2"
@@ -245,6 +218,7 @@ export default function Header() {
                   <span>Contact</span>
                 </div>
               </Link>
+
               {/* Mobile Employer Menu */}
               <div className="border-t pt-4">
                 <p className="text-sm font-medium text-gray-500 px-2 mb-2">
@@ -257,13 +231,17 @@ export default function Header() {
                   Employer Login
                 </Link>
               </div>
-              <div className="flex flex-col space-y-2 pt-4 border-t">
-                {isAuthenticated ? (
+
+              <div className="flex flex-col space-y-2 pt-4 border-t px-2">
+                {isAuthenticated || session ? (
                   <>
                     <Button
                       variant="outline"
                       className="w-full border-red-600 text-red-600 hover:bg-red-50"
-                      onClick={handleLogout}
+                      onClick={() => {
+                        if (session) handleNextAuthLogout();
+                        else handleLogout();
+                      }}
                     >
                       Logout
                     </Button>
