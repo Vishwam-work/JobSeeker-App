@@ -98,7 +98,7 @@ export default function JobListings() {
   useEffect(() => {
     // Simulate API call
     setTimeout(async() => {
-      const response = await fetch('https://jobseeker-backend-jy1y.onrender.com/employeer/api/all-jobs/')
+      const response = await fetch('http://127.0.0.1:8010/employeer/api/all-jobs/')
       const data = await response.json()
       setJobs(data);
       setFilteredJobs(data);
@@ -277,7 +277,7 @@ const fetchUserData = async () => {
   setLoadingUserData(true);
   try {
     const token = localStorage.getItem('auth_token');
-    const response = await fetch('https://jobseeker-backend-jy1y.onrender.com/api/profile/', {
+    const response = await fetch('http://127.0.0.1:8010/api/profile/', {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
@@ -305,33 +305,36 @@ const handleAnswerChange = (questionIndex, value) => {
   }));
 };
 
-const submitApplication = async() => {
-     try {
-     const token = localStorage.getItem('auth_token');
 
+const submitApplication = async () => {
+  try {
+    const token = localStorage.getItem('auth_token');
     if (!token) {
       alert('Please login to apply');
+      window.location.href = '/login';
       return;
     }
 
     // Validate answers if questions exist
-    if (selectedJob.questions && selectedJob.questions.length > 0) {
-      const unanswered = selectedJob.questions.some((_, index) => !answers[index]?.trim());
+    if (selectedJob.questions?.length) {
+      const unanswered = selectedJob.questions.some((_, index) => !answers?.[index]?.trim());
       if (unanswered) {
         alert('Please answer all questions before submitting');
         return;
       }
     }
 
+    // Prepare application data
     const applicationData = {
       job_id: selectedJob.id,
-      answers: selectedJob.questions?.map((question, index) => ({
-        question: question,
-        answer: answers[index] || ''
+      answers: selectedJob.questions?.map((q, i) => ({
+        question: q,
+        answer: answers[i] || ''
       })) || []
     };
 
-    const response = await fetch('https://jobseeker-backend-jy1y.onrender.com/employeer/api/applications/submit/', {
+    // Submit application to backend
+    const response = await fetch('http://127.0.0.1:8010/employeer/api/applications/submit/', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -340,21 +343,73 @@ const submitApplication = async() => {
       body: JSON.stringify(applicationData)
     });
 
-    const result = await response.json();
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: 'Failed to submit application' }));
+      alert(errorData.error || 'Failed to submit application');
+      return;
+    }
 
-    if (response.ok) {
+    const result = await response.json();
+    console.log('Application submitted:', result);
+
+    // Fetch user profile for email
+    const profileResponse = await fetch('http://127.0.0.1:8010/api/profile/', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!profileResponse.ok) {
+      console.warn('Could not fetch profile, but application was submitted');
       alert(`Application submitted successfully for ${selectedJob.title}!`);
       setIsApplyModalOpen(false);
       setSelectedJob(null);
       setAnswers({});
-    } else {
-      alert(result.error || 'Failed to submit application');
+      return;
     }
+
+    const profileData = await profileResponse.json();
+    
+    // Send confirmation email
+    try {
+      const emailResponse = await fetch('/api/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          applicantName: profileData.full_name || profileData.name || 'Applicant',
+          applicantEmail: profileData.email,
+          jobTitle: selectedJob.title,
+          companyName: selectedJob.company || 'Our Company'
+        })
+      });
+
+      const emailResult = await emailResponse.json();
+      
+      if (emailResult.success) {
+        console.log('Email sent successfully:', emailResult);
+        alert(`Application submitted successfully for ${selectedJob.title}! Check your email for confirmation.`);
+      } else {
+        console.warn('Email failed:', emailResult.error);
+        alert(`Application submitted successfully for ${selectedJob.title}! (Email notification could not be sent)`);
+      }
+    } catch (emailError) {
+      console.error('Error sending email:', emailError);
+      alert(`Application submitted successfully for ${selectedJob.title}! (Email notification could not be sent)`);
+    }
+
+    // Reset state
+    setIsApplyModalOpen(false);
+    setSelectedJob(null);
+    setAnswers({});
+
   } catch (error) {
     console.error('Error submitting application:', error);
-    alert('Network error. Please try again.');
+    alert('Network error. Please check your connection and try again.');
   }
-  };
+};
+
 
   const getWorkModeColor = (workMode) => {
     switch (workMode) {
