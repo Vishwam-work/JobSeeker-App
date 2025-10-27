@@ -23,100 +23,100 @@ export default function Login() {
   const router = useRouter();
 
   // Email/Password login
-//  const handleLogin = async (e: React.FormEvent) => {
-//   e.preventDefault();
-//   try {
-//     const response = await fetch('https://jobseeker-backend-jy1y.onrender.com/api/login/', {
-//       method: 'POST',
-//       headers: { 'Content-Type': 'application/json' },
-//       body: JSON.stringify({ email, password }),
-//     });
-
-//   const data = await response.json();
-//       if (response.ok) {
-//         localStorage.setItem('auth_token', data.access);
-//         setAlertType('success');
-//         setAlertMessage('Login Successful!');
-//         setAlertOpen(true);
-//         setTimeout(() => {
-//           router.push('/');
-//         }, 2000);
-//       } else {
-//         setAlertType('error');
-//         setAlertMessage(data.error || 'Login Failed');
-//         setAlertOpen(true);
-//       }
-//     } catch (error) {
-//       setAlertType('error');
-//       setAlertMessage('Network Error!');
-//       setAlertOpen(true);
-//     }
-//   };
-
  const handleLogin = async (e: React.FormEvent) => {
   e.preventDefault();
-
   try {
-  
-    const response = await fetch(
-      "https://jobseeker-backend-jy1y.onrender.com/api/login/",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+    const response = await fetch('https://jobseeker-backend-jy1y.onrender.com/api/login/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+
+  const data = await response.json();
+      if (response.ok) {
+        localStorage.setItem('auth_token', data.access);
+        setAlertType('success');
+        setAlertMessage('Login Successful!');
+        setAlertOpen(true);
+        setTimeout(() => {
+          router.push('/');
+        }, 2000);
+      } else {
+        setAlertType('error');
+        setAlertMessage(data.error || 'Login Failed');
+        setAlertOpen(true);
       }
-    );
-
-    const data = await response.json();
-
-  
-    if (response.ok && data.access) {
-   
-      localStorage.setItem("auth_token", data.access);
-
-   
-      const result = await signIn("credentials", {
-        redirect: false,
-        email,
-        password,
-      });
-
-      if (result?.error) {
-        console.error("NextAuth error:", result.error);
-      }
-
-     
-      setAlertType("success");
-      setAlertMessage("Login Successful!");
-      setAlertOpen(true);
-
-      setTimeout(() => {
-        router.push("/");
-      }, 2000);
-    } else {
-    
-      setAlertType("error");
-      setAlertMessage(data.error || "Invalid email or password");
+    } catch (error) {
+      setAlertType('error');
+      setAlertMessage('Network Error!');
       setAlertOpen(true);
     }
-  } catch (error) {
+  };
+
+//  const handleLogin = async (e: React.FormEvent) => {
+//   e.preventDefault();
+
+//   try {
   
-    console.error("Login error:", error);
-    setAlertType("error");
-    setAlertMessage("Network Error!");
-    setAlertOpen(true);
-  }
-};
+//     const response = await fetch(
+//       "https://jobseeker-backend-jy1y.onrender.com/api/login/",
+//       {
+//         method: "POST",
+//         headers: { "Content-Type": "application/json" },
+//         body: JSON.stringify({ email, password }),
+//       }
+//     );
+
+//     const data = await response.json();
+
+  
+//     if (response.ok && data.access) {
+   
+//       localStorage.setItem("auth_token", data.access);
+
+   
+//       const result = await signIn("credentials", {
+//         redirect: false,
+//         email,
+//         password,
+//       });
+
+//       if (result?.error) {
+//         console.error("NextAuth error:", result.error);
+//       }
+
+     
+//       setAlertType("success");
+//       setAlertMessage("Login Successful!");
+//       setAlertOpen(true);
+
+//       setTimeout(() => {
+//         router.push("/");
+//       }, 2000);
+//     } else {
+    
+//       setAlertType("error");
+//       setAlertMessage(data.error || "Invalid email or password");
+//       setAlertOpen(true);
+//     }
+//   } catch (error) {
+  
+//     console.error("Login error:", error);
+//     setAlertType("error");
+//     setAlertMessage("Network Error!");
+//     setAlertOpen(true);
+//   }
+// };
 
 
   // Google Login
-  const handleGoogleLogin = async () => {
-    await signIn("google", {
-      redirect: false,
-      callbackUrl: "/",
-      prompt: "select_account",
-    });
-  };
+  // const handleGoogleLogin = async () => {
+  //   await signIn("google", {
+  //     redirect: false,
+  //     callbackUrl: "/",
+  //     prompt: "select_account",
+  //   });
+  // };
 
   return (
     <>
@@ -277,7 +277,7 @@ export default function Login() {
                   </div>
 
                   {/* Google Login */}
-                  <Button
+                  {/* <Button
                     type="button"
                     onClick={handleGoogleLogin}
                     className="w-full h-12 bg-white border border-gray-300 rounded-lg flex items-center justify-center shadow-sm hover:bg-gray-50 transition-all duration-200"
@@ -290,7 +290,7 @@ export default function Login() {
                     <span className="text-gray-700 font-medium">
                       Sign in with Google
                     </span>
-                  </Button>
+                  </Button> */}
                 </form>
               </CardContent>
             </Card>

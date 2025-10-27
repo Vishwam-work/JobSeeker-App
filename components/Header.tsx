@@ -14,7 +14,7 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { useSession, signOut } from "next-auth/react";
+// import { useSession, signOut } from "next-auth/react"; 
 
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -22,7 +22,7 @@ export default function Header() {
   const [isEmployerDropdownOpen, setIsEmployerDropdownOpen] = useState(false);
   const router = useRouter();
 
-  const { data: session } = useSession();
+  // const { data: session } = useSession(); 
 
   useEffect(() => {
     const checkAuth = () => {
@@ -31,28 +31,17 @@ export default function Header() {
     };
 
     checkAuth();
-
     window.addEventListener("storage", checkAuth);
-
     return () => window.removeEventListener("storage", checkAuth);
   }, []);
 
-  // -----------------------------
   // Local logout
   const handleLogout = () => {
     localStorage.removeItem("auth_token");
+    localStorage.removeItem("user_name");
     setIsAuthenticated(false);
     router.push("/login");
   };
-
-  // NextAuth logout
-  const handleNextAuthLogout = async () => {
-    localStorage.removeItem("auth_token"); // clear local token
-    setIsAuthenticated(false);
-    setIsMobileMenuOpen(false); // close mobile menu
-    await signOut({ redirect: true, callbackUrl: "/login" }); // proper logout
-  };
-  // -----------------------------
 
   return (
     <header className="bg-white shadow-sm border-b sticky top-0 z-50">
@@ -98,24 +87,18 @@ export default function Header() {
 
           {/* Desktop Auth Buttons */}
           <div className="hidden md:flex items-center space-x-4">
-            {isAuthenticated || session ? (
+            {isAuthenticated ? (
               <div className="flex items-center space-x-3">
-                {session && (
-                  <div className="flex items-center space-x-2">
-                    <span className="text-gray-700 font-medium">
-                      {session?.user?.name || session?.user?.full_name}
-                    </span>
-                  </div>
-                )}
+                <div className="flex items-center space-x-2">
+                  <span className="text-gray-700 font-medium">
+                    {localStorage.getItem("full_name") || "User"}
+                  </span>
+                </div>
 
                 <Button
                   variant="outline"
                   className="border-red-600 text-red-600 hover:bg-red-50"
-                  onClick={() => {
-                    if (session) handleNextAuthLogout();
-                    else handleLogout();
-                  }}
-                >
+                  onClick={handleLogout}  >
                   Logout
                 </Button>
 
@@ -171,7 +154,6 @@ export default function Header() {
                   >
                     Register as Employer
                   </Link>
-                  <div className="border-t border-gray-100 my-1"></div>
                 </div>
               )}
             </div>
@@ -219,7 +201,6 @@ export default function Header() {
                 </div>
               </Link>
 
-              {/* Mobile Employer Menu */}
               <div className="border-t pt-4">
                 <p className="text-sm font-medium text-gray-500 px-2 mb-2">
                   For Employers
@@ -233,15 +214,12 @@ export default function Header() {
               </div>
 
               <div className="flex flex-col space-y-2 pt-4 border-t px-2">
-                {isAuthenticated || session ? (
+                {isAuthenticated ? (
                   <>
                     <Button
                       variant="outline"
                       className="w-full border-red-600 text-red-600 hover:bg-red-50"
-                      onClick={() => {
-                        if (session) handleNextAuthLogout();
-                        else handleLogout();
-                      }}
+                      onClick={handleLogout}
                     >
                       Logout
                     </Button>

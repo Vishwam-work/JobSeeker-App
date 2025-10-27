@@ -93,9 +93,9 @@ export default function EmployerLogin() {
     },
   ];
   // GoogleLogin
-  const handleGoogleLogin = () => {
-    signIn("google", { callbackUrl: "/employer/dashboard" });
-  };
+  // const handleGoogleLogin = () => {
+  //   signIn("google", { callbackUrl: "/employer/dashboard" });
+  // };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
@@ -281,7 +281,7 @@ export default function EmployerLogin() {
                     Login to Dashboard
                   </Button>
 
-                  <Button
+                  {/* <Button
                     type="button"
                     onClick={handleGoogleLogin}
                     className="w-full h-12 bg-white border border-gray-300 rounded-lg flex items-center justify-center shadow-sm hover:bg-gray-50 transition-all duration-200"
@@ -294,7 +294,7 @@ export default function EmployerLogin() {
                     <span className="text-gray-700 font-medium">
                       Sign in with Google
                     </span>
-                  </Button>
+                  </Button> */}
 
                   <div className="relative">
                     <div className="absolute inset-0 flex items-center">
