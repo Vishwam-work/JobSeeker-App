@@ -1,13 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Slider } from "@/components/ui/slider";
+import { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Slider } from '@/components/ui/slider';
+import { useSavedJobs } from "@/context/SavedJobsContext";
 import {
   Select,
   SelectContent,
@@ -56,6 +57,8 @@ export default function JobListings() {
   const [answers, setAnswers] = useState({});
   const [userData, setUserData] = useState(null);
   const [loadingUserData, setLoadingUserData] = useState(false);
+  const { savedJobs, addJob, removeJob } = useSavedJobs();
+
   // Filter states
   const [filters, setFilters] = useState({
     search: "",
@@ -324,6 +327,16 @@ export default function JobListings() {
     });
   };
 
+  const handleSaveJob = (job) => {
+  const isSaved = savedJobs.some((j) => j.id === job.id);
+  if (isSaved) {
+    removeJob(job.id);
+  } else {
+    addJob(job);
+  }
+};
+
+
   const handleApply = (job) => {
     const token = localStorage.getItem("auth_token");
     if (!token) {
@@ -342,13 +355,13 @@ export default function JobListings() {
     setIsJobDetailOpen(true);
   };
 
-  const handleBookmark = (jobId) => {
-    setJobs((prevJobs) =>
-      prevJobs.map((job) =>
-        job.id === jobId ? { ...job, isBookmarked: !job.isBookmarked } : job
-      )
-    );
-  };
+  // const handleBookmark = (jobId) => {
+  //   setJobs(prevJobs =>
+  //     prevJobs.map(job =>
+  //       job.id === jobId ? { ...job, isBookmarked: !job.isBookmarked } : job
+  //     )
+  //   );
+  // };
 
   const handleShare = (job) => {
     if (navigator.share) {
@@ -845,7 +858,7 @@ const submitApplication = async() => {
                               </div>
                             </div>
                             <div className="flex items-center space-x-2">
-                              <Button
+                              {/* <Button
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => handleBookmark(job.id)}
@@ -855,12 +868,22 @@ const submitApplication = async() => {
                                     : "text-gray-400"
                                 }
                               >
+                                <Bookmark className={`w-4 h-4 ${job.isBookmarked ? 'fill-current' : ''}`} />
+                              </Button> */}
+
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleSaveJob(job)}
+                                className={savedJobs.some((j) => j.id === job.id) ? 'text-purple-600' : 'text-gray-400'}
+                              >
                                 <Bookmark
                                   className={`w-4 h-4 ${
-                                    job.isBookmarked ? "fill-current" : ""
+                                    savedJobs.some((j) => j.id === job.id) ? 'fill-current' : ''
                                   }`}
                                 />
                               </Button>
+
                               <Button
                                 variant="ghost"
                                 size="sm"
@@ -1125,7 +1148,7 @@ const submitApplication = async() => {
                       <Send className="w-4 h-4 mr-2" />
                       Apply Now
                     </Button>
-                    <Button
+                    {/* <Button
                       variant="outline"
                       onClick={() => handleBookmark(selectedJob.id)}
                       className={`flex-1 ${
@@ -1134,13 +1157,29 @@ const submitApplication = async() => {
                           : ""
                       }`}
                     >
-                      <Bookmark
-                        className={`w-4 h-4 mr-2 ${
-                          selectedJob.isBookmarked ? "fill-current" : ""
-                        }`}
-                      />
-                      {selectedJob.isBookmarked ? "Bookmarked" : "Bookmark"}
-                    </Button>
+                      <Bookmark className={`w-4 h-4 mr-2 ${selectedJob.isBookmarked ? 'fill-current' : ''}`} />
+                      {selectedJob.isBookmarked ? 'Bookmarked' : 'Bookmark'}
+                    </Button> */}
+
+                    <Button
+                    variant="outline"
+                    onClick={() => handleSaveJob(selectedJob)}
+                    className={`flex-1 ${
+                      savedJobs.some((j) => j.id === selectedJob.id)
+                        ? "border-purple-600 text-purple-600"
+                        : ""
+                    }`}
+                  >
+                    <Bookmark
+                      className={`w-4 h-4 mr-2 ${
+                        savedJobs.some((j) => j.id === selectedJob.id) ? "fill-current" : ""
+                      }`}
+                    />
+                    {savedJobs.some((j) => j.id === selectedJob.id)
+                      ? "Saved"
+                      : "Save Job"}
+                  </Button>
+
                     <Button
                       variant="outline"
                       onClick={() => handleShare(selectedJob)}

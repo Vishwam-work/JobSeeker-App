@@ -7,6 +7,13 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+
+import { useSavedJobs } from "@/context/SavedJobsContext";
+import {  BookmarkX } from "lucide-react";
+// import { Button } from "@/components/ui/button";
+// import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
+// import { Card, CardContent } from "@/components/ui/card";
+
 import {
   Select,
   SelectContent,
@@ -44,6 +51,7 @@ import {
   Upload,
   Trash2,
   Save,
+  Bookmark,
   Ambulance as Cancel,
 } from "lucide-react";
 import Header from "@/components/Header";
@@ -57,6 +65,8 @@ import exp from "node:constants";
 
 export default function Profile() {
   // Form states, data, and functions, etc.
+  const { savedJobs, removeSavedJob } = useSavedJobs();
+
   const [profileData, setProfileData] = useState({
     personalInfo: {
       fullName: "",
@@ -105,7 +115,6 @@ export default function Profile() {
     location: "",
     description: "",
   });
-
   const [educationForm, setEducationForm] = useState({
     degree: "",
     field: "",
@@ -126,6 +135,7 @@ export default function Profile() {
     { id: "education", label: "Education", icon: GraduationCap },
     { id: "skills", label: "Skills", icon: Award },
     { id: "certifications", label: "Certifications", icon: Award },
+    { id: "save", label: "Save", icon: Bookmark },
   ];
   const [countries, setCountries] = useState([]);
   const [states, setStates] = useState([]);
@@ -156,7 +166,6 @@ export default function Profile() {
 
   const getJobTitleName = (id) =>
     jobTitles.find((t) => t.id === id)?.title || "";
-
 
   const resetExperienceForm = () => {
     setExperienceForm({
@@ -428,13 +437,16 @@ export default function Profile() {
       if (!token) return;
 
       try {
-        const res = await fetch("https://jobseeker-backend-jy1y.onrender.com/api/profile/", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const res = await fetch(
+          "https://jobseeker-backend-jy1y.onrender.com/api/profile/",
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
         if (res.ok) {
           const data = await res.json();
@@ -526,7 +538,9 @@ export default function Profile() {
   }, []);
 
   useEffect(() => {
-    fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_category/")
+    fetch(
+      "https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_category/"
+    )
       .then((res) => res.json())
       .then((data) => {
         setJobCategories(data);
@@ -548,45 +562,45 @@ export default function Profile() {
   }, [experienceForm.category_id]);
 
   const uploadResume = async () => {
-        if (!resumeFile) return true;
+    if (!resumeFile) return true;
 
-        const formData = new FormData();
-        formData.append("resume", resumeFile);
-        try{
-        const res = await fetch(
-          "https://jobseeker-backend-jy1y.onrender.com/api/profile/upload-resume/",
-          {
-            method: "PATCH",
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
-            },
-            body: formData,
-          }
-        );
-
-        if (res.ok) {
-          const data = await res.json();
-          console.log("Resume uploaded:", data.resume_url);
-          console.log("Resume Data uploaded:", data);
-          setProfileData(prev => ({
-            ...prev,
-            personalInfo: {
-              ...prev.personalInfo,
-              resume: data.resume_url || data.resume
-            }
-          }));
-          return true;
-        } else {
-          const error = await res.json();
-          console.error("Failed to upload resume:", error);
-          alert(`Resume upload failed: ${error.message || 'Unknown error'}`);
-          return false;
+    const formData = new FormData();
+    formData.append("resume", resumeFile);
+    try {
+      const res = await fetch(
+        "https://jobseeker-backend-jy1y.onrender.com/api/profile/upload-resume/",
+        {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
+          },
+          body: formData,
         }
-      }catch (error) {
-        console.error("Error uploading resume:", error);
-        alert("Network error while uploading resume");
+      );
+
+      if (res.ok) {
+        const data = await res.json();
+        console.log("Resume uploaded:", data.resume_url);
+        console.log("Resume Data uploaded:", data);
+        setProfileData((prev) => ({
+          ...prev,
+          personalInfo: {
+            ...prev.personalInfo,
+            resume: data.resume_url || data.resume,
+          },
+        }));
+        return true;
+      } else {
+        const error = await res.json();
+        console.error("Failed to upload resume:", error);
+        alert(`Resume upload failed: ${error.message || "Unknown error"}`);
         return false;
       }
+    } catch (error) {
+      console.error("Error uploading resume:", error);
+      alert("Network error while uploading resume");
+      return false;
+    }
   };
 
   // Save Api
@@ -617,15 +631,18 @@ export default function Profile() {
     };
     console.log("Payload:", payload);
     console.log("Token:", localStorage.getItem("auth_token"));
-    const res = await fetch("https://jobseeker-backend-jy1y.onrender.com/api/profile/", {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
-        // Authorization: `Token ${localStorage.getItem("auth_token")}`,
-      },
-      body: JSON.stringify(payload),
-    });
+    const res = await fetch(
+      "https://jobseeker-backend-jy1y.onrender.com/api/profile/",
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
+          // Authorization: `Token ${localStorage.getItem("auth_token")}`,
+        },
+        body: JSON.stringify(payload),
+      }
+    );
     console.log("Response:", res);
     if (res.ok) {
       try {
@@ -2156,6 +2173,53 @@ export default function Profile() {
                   </CardContent>
                 </Card>
               )}
+
+              {activeSection === "save" && (
+  <Card>
+    <CardHeader>
+      <CardTitle className="flex items-center gap-2 text-lg lg:text-xl">
+        <Award className="w-5 h-5" />
+        <span>Saved Jobs</span>
+      </CardTitle>
+    </CardHeader>
+
+    <CardContent>
+      {savedJobs.length > 0 ? (
+        savedJobs.map((job) => (
+          <div
+            key={job.id}
+            className="border rounded-lg p-4 mb-4 hover:shadow-md transition-shadow"
+          >
+            <div className="flex justify-between items-start">
+              <div>
+                <h3 className="font-semibold text-base lg:text-lg text-gray-900">
+                  {job.title}
+                </h3>
+                <p className="text-purple-600 font-medium text-sm">
+                  {job.company}
+                </p>
+                <p className="text-gray-600 text-xs">
+                  {job.location?.name ?? "N/A"}
+                </p>
+              </div>
+              {/* <Button
+                variant="outline"
+                size="sm"
+                onClick={() => removeSavedJob(job.id)}
+                className="text-red-500 border-red-200 hover:bg-red-50"
+              >
+                Remove
+              </Button> */}
+            </div>
+          </div>
+        ))
+      ) : (
+        <p className="text-gray-500 text-sm">No saved jobs yet.</p>
+      )}
+    </CardContent>
+  </Card>
+)}
+
             </div>
           </div>
         </div>
