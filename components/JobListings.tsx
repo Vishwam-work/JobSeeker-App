@@ -1,33 +1,33 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Slider } from '@/components/ui/slider';
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Slider } from "@/components/ui/slider";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
-import { 
-  MapPin, 
-  Briefcase, 
-  Clock, 
-  DollarSign, 
-  Building2, 
+} from "@/components/ui/dialog";
+import {
+  MapPin,
+  Briefcase,
+  Clock,
+  DollarSign,
+  Building2,
   Users,
   Calendar,
   Star,
@@ -43,8 +43,8 @@ import {
   Globe,
   Award,
   Eye,
-  Send
-} from 'lucide-react';
+  Send,
+} from "lucide-react";
 
 export default function JobListings() {
   const [jobs, setJobs] = useState([]);
@@ -58,48 +58,92 @@ export default function JobListings() {
   const [loadingUserData, setLoadingUserData] = useState(false);
   // Filter states
   const [filters, setFilters] = useState({
-    search: '',
-    location: '',
-    experience: '',
-    jobType: '',
-    workMode: '',
+    search: "",
+    location: "",
+    experience: "",
+    jobType: "",
+    workMode: "",
     salaryRange: [0, 50],
     companies: [],
     skills: [],
-    postedWithin: ''
+    postedWithin: "",
   });
 
   // Sample job data - in real app, this would come from API
+  const [companies, setCompanies] = useState([]);
+  const [locations, setLocations] = useState([]);
+  const [skillsList, setSkillsList] = useState([]);
 
-  const [companies] = useState([
-    'Tech Solutions Pvt Ltd',
-    'Digital Innovations Inc',
-    'StartupXYZ',
-    'Analytics Corp',
-    'Design Studio',
-    'Cloud Systems Ltd'
-  ]);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [showLocationDropdown, setShowLocationDropdown] = useState(false);
 
-  const [locations] = useState([
-    'Mumbai',
-    'Bangalore',
-    'Delhi',
-    'Pune',
-    'Hyderabad',
-    'Chennai',
-  ]);
+  // Fetch companies from API
+  useEffect(() => {
+    const fetchCompanies = async () => {
+      try {
+        const res = await fetch(
+          "https://jobseeker-backend-jy1y.onrender.com/master/api/companies/"
+        );
+        const data = await res.json();
 
-  const [skillsList] = useState([
-    'React', 'Node.js', 'JavaScript', 'Python', 'AWS', 'MongoDB',
-    'Vue.js', 'TypeScript', 'CSS', 'HTML', 'Machine Learning',
-    'SQL', 'Tableau', 'Figma', 'Adobe XD', 'Docker', 'Kubernetes'
-  ]);
+        const companyNames = data.map((item: any) => item.name);
+        setCompanies(companyNames);
+      } catch (error) {
+        console.error("Error fetching companies:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCompanies();
+  }, []);
+
+  // Lazy load locations
+  const loadLocations = async () => {
+    if (isLoaded) return;
+    setLoading(true);
+    try {
+      const res = await fetch(
+        "https://jobseeker-backend-jy1y.onrender.com/master/api/states/"
+      );
+      const data = await res.json();
+      const locationNames = data.map((item: any) => item.name);
+      setLocations(locationNames);
+      setIsLoaded(true);
+    } catch (err) {
+      console.error("Error fetching locations:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch skills from API
+  useEffect(() => {
+    const fetchSkills = async () => {
+      try {
+        const response = await fetch(
+          "https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_category/"
+        );
+        const data = await response.json();
+
+        const skillNames = data.map((skill: any) => skill.name);
+
+        setSkillsList(skillNames);
+      } catch (error) {
+        console.error("Error fetching skills:", error);
+      }
+    };
+
+    fetchSkills();
+  }, []);
 
   useEffect(() => {
     // Simulate API call
-    setTimeout(async() => {
-      const response = await fetch('https://jobseeker-backend-jy1y.onrender.com/employeer/api/all-jobs/')
-      const data = await response.json()
+    setTimeout(async () => {
+      const response = await fetch(
+        "https://jobseeker-backend-jy1y.onrender.com/employeer/api/all-jobs/"
+      );
+      const data = await response.json();
       setJobs(data);
       setFilteredJobs(data);
       setLoading(false);
@@ -112,58 +156,100 @@ export default function JobListings() {
 
     // Search filter
     if (filters.search) {
-      filtered = filtered.filter(job =>
-        job.title.toLowerCase().includes(filters.search.toLowerCase()) ||
-        job.company.toLowerCase().includes(filters.search.toLowerCase()) ||
-        job.skills.some(skill => skill.toLowerCase().includes(filters.search.toLowerCase()))
+      filtered = filtered.filter(
+        (job) =>
+          job.title.toLowerCase().includes(filters.search.toLowerCase()) ||
+          job.company.toLowerCase().includes(filters.search.toLowerCase()) ||
+          job.skills.some((skill) =>
+            skill.toLowerCase().includes(filters.search.toLowerCase())
+          )
       );
     }
 
     // Location filter
     if (filters.location && filters.location !== "All") {
-      filtered = filtered.filter(job =>
-        job.location.name.toLowerCase().includes(filters.location.name.toLowerCase())
+      filtered = filtered.filter(
+        (job) =>
+          job.location &&
+          job.location.name &&
+          job.location.name
+            .toLowerCase()
+            .includes(filters.location.toLowerCase())
       );
     }
 
     // Experience filter
     if (filters.experience && filters.experience !== "All") {
-      filtered = filtered.filter(job =>
-        job.experience.includes(filters.experience)
-      );
+      filtered = filtered.filter((job) => {
+        const [minJobExp, maxJobExp] = job.experience.split("-").map(Number);
+        let [minFilterExp, maxFilterExp] = [0, 100]; // default
+
+        switch (filters.experience) {
+          case "0-1":
+            [minFilterExp, maxFilterExp] = [0, 1];
+            break;
+          case "2-4":
+            [minFilterExp, maxFilterExp] = [2, 4];
+            break;
+          case "3-5":
+            [minFilterExp, maxFilterExp] = [3, 5];
+            break;
+          case "5-8":
+            [minFilterExp, maxFilterExp] = [5, 8];
+            break;
+          case "8+":
+            [minFilterExp, maxFilterExp] = [8, 100];
+            break;
+        }
+
+        return maxJobExp >= minFilterExp && minJobExp <= maxFilterExp;
+      });
     }
 
-    // Job type filter
-    if (filters.jobType && filters.jobType !== "All") {
-      filtered = filtered.filter(job =>
-        job.jobType === filters.jobType
-      );
-    }
-
-    // Work mode filter
+    // Work Mode filter
     if (filters.workMode && filters.workMode !== "All") {
-      filtered = filtered.filter(job =>
-        job.workMode === filters.workMode
+      filtered = filtered.filter(
+        (job) =>
+          job.work_mode &&
+          job.work_mode.toLowerCase().includes(filters.workMode.toLowerCase())
       );
     }
 
-    // Company filter
-    if (filters.companies.length > 0) {
-      filtered = filtered.filter(job =>
-        filters.companies.includes(job.company)
+    // Job Type filter
+    if (filters.jobType && filters.jobType !== "All") {
+      filtered = filtered.filter(
+        (job) =>
+          job.job_type &&
+          job.job_type.toLowerCase().includes(filters.jobType.toLowerCase())
       );
     }
 
     // Skills filter
-    if (filters.skills.length > 0) {
-      filtered = filtered.filter(job =>
-        filters.skills.some(skill => job.skills.includes(skill))
+    if (filters.skills && filters.skills.length > 0) {
+      filtered = filtered.filter(
+        (job) =>
+          Array.isArray(job.skills) &&
+          filters.skills.every((skill) =>
+            job.skills.some((jobSkill) =>
+              jobSkill.toLowerCase().includes(skill.toLowerCase())
+            )
+          )
       );
+    }
+
+    // Company filter
+    if (filters.companies && filters.companies.length > 0) {
+      filtered = filtered.filter((job) => {
+        const companyName = job.company?.toLowerCase().trim();
+        return filters.companies.some(
+          (selected) => selected.toLowerCase().trim() === companyName
+        );
+      });
     }
 
     // Salary range filter
     const [minSalary, maxSalary] = filters.salaryRange;
-    filtered = filtered.filter(job => {
+    filtered = filtered.filter((job) => {
       const salaryMatch = job.salary.match(/(\d+)-(\d+)/);
       if (salaryMatch) {
         const jobMinSalary = parseInt(salaryMatch[1]);
@@ -176,17 +262,22 @@ export default function JobListings() {
     // Posted within filter
     if (filters.postedWithin && filters.postedWithin !== "All") {
       const now = new Date();
-      filtered = filtered.filter(job => {
-        const postedDate = new Date(job.postedDate);
+      filtered = filtered.filter((job) => {
+        const postedDate = new Date(job.created_at);
         const diffTime = Math.abs(now - postedDate);
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        
+
         switch (filters.postedWithin) {
-          case '1': return diffDays <= 1;
-          case '3': return diffDays <= 3;
-          case '7': return diffDays <= 7;
-          case '30': return diffDays <= 30;
-          default: return true;
+          case "1":
+            return diffDays <= 1;
+          case "3":
+            return diffDays <= 3;
+          case "7":
+            return diffDays <= 7;
+          case "30":
+            return diffDays <= 30;
+          default:
+            return true;
         }
       });
     }
@@ -195,49 +286,49 @@ export default function JobListings() {
   }, [jobs, filters]);
 
   const handleFilterChange = (key, value) => {
-    setFilters(prev => ({
+    setFilters((prev) => ({
       ...prev,
-      [key]: value
+      [key]: value,
     }));
   };
 
   const handleCompanyFilter = (company, checked) => {
-    setFilters(prev => ({
+    setFilters((prev) => ({
       ...prev,
-      companies: checked 
+      companies: checked
         ? [...prev.companies, company]
-        : prev.companies.filter(c => c !== company)
+        : prev.companies.filter((c) => c !== company),
     }));
   };
 
   const handleSkillFilter = (skill, checked) => {
-    setFilters(prev => ({
+    setFilters((prev) => ({
       ...prev,
       skills: checked
         ? [...prev.skills, skill]
-        : prev.skills.filter(s => s !== skill)
+        : prev.skills.filter((s) => s !== skill),
     }));
   };
 
   const clearAllFilters = () => {
     setFilters({
-      search: '',
-      location: '',
-      experience: '',
-      jobType: '',
-      workMode: '',
+      search: "",
+      location: "",
+      experience: "",
+      jobType: "",
+      workMode: "",
       salaryRange: [0, 50],
       companies: [],
       skills: [],
-      postedWithin: ''
+      postedWithin: "",
     });
   };
 
   const handleApply = (job) => {
-    const token = localStorage.getItem('auth_token');
+    const token = localStorage.getItem("auth_token");
     if (!token) {
-      alert('Please login to apply for jobs');
-      window.location.href = '/login';
+      alert("Please login to apply for jobs");
+      window.location.href = "/login";
       return;
     }
     setSelectedJob(job);
@@ -252,8 +343,8 @@ export default function JobListings() {
   };
 
   const handleBookmark = (jobId) => {
-    setJobs(prevJobs =>
-      prevJobs.map(job =>
+    setJobs((prevJobs) =>
+      prevJobs.map((job) =>
         job.id === jobId ? { ...job, isBookmarked: !job.isBookmarked } : job
       )
     );
@@ -264,11 +355,11 @@ export default function JobListings() {
       navigator.share({
         title: job.title,
         text: `Check out this job: ${job.title} at ${job.company}`,
-        url: window.location.href
+        url: window.location.href,
       });
     } else {
       navigator.clipboard.writeText(window.location.href);
-      alert('Job link copied to clipboard!');
+      alert("Job link copied to clipboard!");
     }
   };
 
@@ -358,14 +449,14 @@ const submitApplication = async() => {
 
   const getWorkModeColor = (workMode) => {
     switch (workMode) {
-      case 'Remote':
-        return 'bg-green-100 text-green-800';
-      case 'Hybrid':
-        return 'bg-blue-100 text-blue-800';
-      case 'Office':
-        return 'bg-gray-100 text-gray-800';
+      case "Remote":
+        return "bg-green-100 text-green-800";
+      case "Hybrid":
+        return "bg-blue-100 text-blue-800";
+      case "Office":
+        return "bg-gray-100 text-gray-800";
       default:
-        return 'bg-gray-100 text-gray-800';
+        return "bg-gray-100 text-gray-800";
     }
   };
 
@@ -374,8 +465,8 @@ const submitApplication = async() => {
     const posted = new Date(postedDate);
     const diffTime = Math.abs(now - posted);
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
-    if (diffDays === 1) return '1 day ago';
+
+    if (diffDays === 1) return "1 day ago";
     if (diffDays < 7) return `${diffDays} days ago`;
     if (diffDays < 30) return `${Math.ceil(diffDays / 7)} weeks ago`;
     return `${Math.ceil(diffDays / 30)} months ago`;
@@ -403,7 +494,8 @@ const submitApplication = async() => {
             Latest Job Opportunities
           </h2>
           <p className="text-gray-600 text-lg">
-            Discover your next career move from {jobs.length}+ active job postings
+            Discover your next career move from {jobs.length}+ active job
+            postings
           </p>
         </div>
 
@@ -413,7 +505,9 @@ const submitApplication = async() => {
             <Card className="sticky top-4">
               <div className="p-6">
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900">Filters</h3>
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Filters
+                  </h3>
                   <Button
                     variant="ghost"
                     size="sm"
@@ -435,33 +529,62 @@ const submitApplication = async() => {
                       <Input
                         placeholder="Job title, skills, company..."
                         value={filters.search}
-                        onChange={(e) => handleFilterChange('search', e.target.value)}
+                        onChange={(e) =>
+                          handleFilterChange("search", e.target.value)
+                        }
                         className="pl-10"
                       />
                     </div>
                   </div>
 
                   {/* Location */}
-                  <div>
-                    <Label className="text-sm font-medium text-gray-700 mb-2 block">
-                      Location
-                    </Label>
-                    <Select
-                      value={filters.location}
-                      onValueChange={(value) => handleFilterChange('location', value)}
+                  <div className="border rounded-lg p-3 bg-white shadow-sm">
+                    <button
+                      onClick={() => {
+                        if (!isLoaded) loadLocations();
+                        setShowLocationDropdown((prev) => !prev);
+                      }}
+                      className="w-full text-left font-semibold text-gray-700 flex justify-between items-center"
                     >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select location" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="All">All Locations</SelectItem>
-                        {locations.map((location) => (
-                          <SelectItem key={location} value={location}>
-                            {location}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      <span> Location</span>
+                      <span className="text-gray-400">
+                        {showLocationDropdown ? "▲" : "▼"}
+                      </span>
+                    </button>
+
+                    {showLocationDropdown && (
+                      <div className="mt-3 space-y-2 max-h-56 overflow-y-auto">
+                        {loading ? (
+                          <p className="text-sm text-gray-500">
+                            Loading locations...
+                          </p>
+                        ) : (
+                          locations.map((location) => (
+                            <div
+                              key={location}
+                              className="flex items-center space-x-2"
+                            >
+                              <Checkbox
+                                id={`location-${location}`}
+                                checked={filters.location === location}
+                                onCheckedChange={(checked) =>
+                                  setFilters((prev) => ({
+                                    ...prev,
+                                    location: checked ? location : "All",
+                                  }))
+                                }
+                              />
+                              <Label
+                                htmlFor={`location-${location}`}
+                                className="text-sm text-gray-600 cursor-pointer"
+                              >
+                                {location}
+                              </Label>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   {/* Experience */}
@@ -471,7 +594,9 @@ const submitApplication = async() => {
                     </Label>
                     <Select
                       value={filters.experience}
-                      onValueChange={(value) => handleFilterChange('experience', value)}
+                      onValueChange={(value) =>
+                        handleFilterChange("experience", value)
+                      }
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select experience" />
@@ -493,18 +618,20 @@ const submitApplication = async() => {
                       Job Type
                     </Label>
                     <Select
-                      value={filters.jobType}
-                      onValueChange={(value) => handleFilterChange('jobType', value)}
+                      value={filters.job_Type}
+                      onValueChange={(value) =>
+                        handleFilterChange("jobType", value)
+                      }
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select job type" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="All">All Types</SelectItem>
-                        <SelectItem value="Full Time">Full Time</SelectItem>
-                        <SelectItem value="Part Time">Part Time</SelectItem>
-                        <SelectItem value="Contract">Contract</SelectItem>
-                        <SelectItem value="Internship">Internship</SelectItem>
+                        <SelectItem value="full-time">Full Time</SelectItem>
+                        <SelectItem value="part-time">Part Time</SelectItem>
+                        <SelectItem value="contract">Contract</SelectItem>
+                        <SelectItem value="internship">Internship</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -516,7 +643,9 @@ const submitApplication = async() => {
                     </Label>
                     <Select
                       value={filters.workMode}
-                      onValueChange={(value) => handleFilterChange('workMode', value)}
+                      onValueChange={(value) =>
+                        handleFilterChange("workMode", value)
+                      }
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select work mode" />
@@ -538,7 +667,9 @@ const submitApplication = async() => {
                     <div className="px-2">
                       <Slider
                         value={filters.salaryRange}
-                        onValueChange={(value) => handleFilterChange('salaryRange', value)}
+                        onValueChange={(value) =>
+                          handleFilterChange("salaryRange", value)
+                        }
                         max={50}
                         min={0}
                         step={1}
@@ -558,7 +689,9 @@ const submitApplication = async() => {
                     </Label>
                     <Select
                       value={filters.postedWithin}
-                      onValueChange={(value) => handleFilterChange('postedWithin', value)}
+                      onValueChange={(value) =>
+                        handleFilterChange("postedWithin", value)
+                      }
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Any time" />
@@ -580,11 +713,16 @@ const submitApplication = async() => {
                     </Label>
                     <div className="space-y-2 max-h-40 overflow-y-auto">
                       {companies.map((company) => (
-                        <div key={company} className="flex items-center space-x-2">
+                        <div
+                          key={company}
+                          className="flex items-center space-x-2"
+                        >
                           <Checkbox
                             id={`company-${company}`}
                             checked={filters.companies.includes(company)}
-                            onCheckedChange={(checked) => handleCompanyFilter(company, checked)}
+                            onCheckedChange={(checked) =>
+                              handleCompanyFilter(company, checked)
+                            }
                           />
                           <Label
                             htmlFor={`company-${company}`}
@@ -604,11 +742,16 @@ const submitApplication = async() => {
                     </Label>
                     <div className="space-y-2 max-h-40 overflow-y-auto">
                       {skillsList.map((skill) => (
-                        <div key={skill} className="flex items-center space-x-2">
+                        <div
+                          key={skill}
+                          className="flex items-center space-x-2"
+                        >
                           <Checkbox
                             id={`skill-${skill}`}
                             checked={filters.skills.includes(skill)}
-                            onCheckedChange={(checked) => handleSkillFilter(skill, checked)}
+                            onCheckedChange={(checked) =>
+                              handleSkillFilter(skill, checked)
+                            }
                           />
                           <Label
                             htmlFor={`skill-${skill}`}
@@ -633,7 +776,9 @@ const submitApplication = async() => {
               </p>
               <div className="flex items-center space-x-2">
                 <Filter className="w-4 h-4 text-gray-400" />
-                <span className="text-sm text-gray-600">Sort by: Relevance</span>
+                <span className="text-sm text-gray-600">
+                  Sort by: Relevance
+                </span>
               </div>
             </div>
 
@@ -641,14 +786,20 @@ const submitApplication = async() => {
               {filteredJobs.length === 0 ? (
                 <div className="text-center py-12">
                   <Briefcase className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">No jobs found</h3>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                    No jobs found
+                  </h3>
                   <p className="text-gray-600">
-                    Try adjusting your search criteria or check back later for new opportunities.
+                    Try adjusting your search criteria or check back later for
+                    new opportunities.
                   </p>
                 </div>
               ) : (
                 filteredJobs.map((job) => (
-                  <Card key={job.id} className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-transparent hover:border-l-purple-500">
+                  <Card
+                    key={job.id}
+                    className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-transparent hover:border-l-purple-500"
+                  >
                     <CardContent className="p-4 md:p-6">
                       <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
                         {/* Job Info */}
@@ -685,7 +836,9 @@ const submitApplication = async() => {
                                     <DollarSign className="w-4 h-4 mr-1 flex-shrink-0" />
                                     <span>{job.salary}</span>
                                   </div>
-                                  <Badge className={getWorkModeColor(job.workMode)}>
+                                  <Badge
+                                    className={getWorkModeColor(job.workMode)}
+                                  >
                                     {job.workMode}
                                   </Badge>
                                 </div>
@@ -696,9 +849,17 @@ const submitApplication = async() => {
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => handleBookmark(job.id)}
-                                className={job.isBookmarked ? 'text-purple-600' : 'text-gray-400'}
+                                className={
+                                  job.isBookmarked
+                                    ? "text-purple-600"
+                                    : "text-gray-400"
+                                }
                               >
-                                <Bookmark className={`w-4 h-4 ${job.isBookmarked ? 'fill-current' : ''}`} />
+                                <Bookmark
+                                  className={`w-4 h-4 ${
+                                    job.isBookmarked ? "fill-current" : ""
+                                  }`}
+                                />
                               </Button>
                               <Button
                                 variant="ghost"
@@ -719,12 +880,19 @@ const submitApplication = async() => {
                           {/* Skills */}
                           <div className="flex flex-wrap gap-2 mb-4">
                             {job.skills.slice(0, 5).map((skill, index) => (
-                              <Badge key={index} variant="secondary" className="text-xs bg-gray-100 text-gray-700">
+                              <Badge
+                                key={index}
+                                variant="secondary"
+                                className="text-xs bg-gray-100 text-gray-700"
+                              >
                                 {skill}
                               </Badge>
                             ))}
                             {job.skills.length > 5 && (
-                              <Badge variant="secondary" className="text-xs bg-gray-100 text-gray-700">
+                              <Badge
+                                variant="secondary"
+                                className="text-xs bg-gray-100 text-gray-700"
+                              >
                                 +{job.skills.length - 5} more
                               </Badge>
                             )}
@@ -735,7 +903,9 @@ const submitApplication = async() => {
                             <div className="flex items-center space-x-4">
                               <div className="flex items-center">
                                 <Clock className="w-4 h-4 mr-1" />
-                                <span>{getTimeSincePosted(job.postedDate)}</span>
+                                <span>
+                                  {getTimeSincePosted(job.postedDate)}
+                                </span>
                               </div>
                               <div className="flex items-center">
                                 <Users className="w-4 h-4 mr-1" />
@@ -753,8 +923,8 @@ const submitApplication = async() => {
                           >
                             Apply Now
                           </Button>
-                          <Button 
-                            variant="outline" 
+                          <Button
+                            variant="outline"
                             className="border-purple-200 text-purple-600 hover:bg-purple-50"
                             onClick={() => handleViewDetails(job)}
                           >
@@ -832,97 +1002,123 @@ const submitApplication = async() => {
                       </div>
                       <div className="flex items-center text-gray-600">
                         <Building2 className="w-4 h-4 mr-2" />
-                        <Badge className={getWorkModeColor(selectedJob.workMode)}>
+                        <Badge
+                          className={getWorkModeColor(selectedJob.workMode)}
+                        >
                           {selectedJob.work_mode}
                         </Badge>
                       </div>
                       <div className="flex items-center text-gray-600">
                         <Calendar className="w-4 h-4 mr-2" />
-                        <span>Posted {getTimeSincePosted(selectedJob.postedDate)}</span>
+                        <span>
+                          Posted {getTimeSincePosted(selectedJob.postedDate)}
+                        </span>
                       </div>
                     </div>
                   </div>
 
                   {/* Job Description */}
                   <div>
-                    <h4 className="text-lg font-semibold text-gray-900 mb-3">Job Description</h4>
-                    <p className="text-gray-700 leading-relaxed">{selectedJob.description}</p>
+                    <h4 className="text-lg font-semibold text-gray-900 mb-3">
+                      Job Description
+                    </h4>
+                    <p className="text-gray-700 leading-relaxed">
+                      {selectedJob.description}
+                    </p>
                   </div>
 
                   {/* Requirements */}
                   <div>
-                    <h4 className="text-lg font-semibold text-gray-900 mb-3">Requirements</h4>
+                    <h4 className="text-lg font-semibold text-gray-900 mb-3">
+                      Requirements
+                    </h4>
                     <ul className="space-y-2">
-                          {Array.isArray(selectedJob?.requirements) && selectedJob.requirements.length > 0 ? (
-                                        selectedJob.requirements.map((req, index) => (
-                                            <li key={index} className="flex items-start">
-                                                <CheckCircle className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                                                <span className="text-gray-700">{req}</span>
-                                            </li>
-                                        ))
-                                    ) : (
-                                  <p className="text-gray-500 italic">{selectedJob.requirements}</p>
-                            )}
+                      {Array.isArray(selectedJob?.requirements) &&
+                      selectedJob.requirements.length > 0 ? (
+                        selectedJob.requirements.map((req, index) => (
+                          <li key={index} className="flex items-start">
+                            <CheckCircle className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                            <span className="text-gray-700">{req}</span>
+                          </li>
+                        ))
+                      ) : (
+                        <p className="text-gray-500 italic">
+                          {selectedJob.requirements}
+                        </p>
+                      )}
                     </ul>
                   </div>
 
                   {/* Responsibilities */}
                   <div>
-                    <h4 className="text-lg font-semibold text-gray-900 mb-3">Responsibilities</h4>
+                    <h4 className="text-lg font-semibold text-gray-900 mb-3">
+                      Responsibilities
+                    </h4>
                     <ul className="space-y-2">
-                       
-                      {Array.isArray(selectedJob?.responsibilities) && selectedJob.responsibilities.length > 0 ? (
-                              selectedJob.responsibilities.map((req, index) => (
-                                  <li key={index} className="flex items-start">
-                                      <CheckCircle className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                                      <span className="text-gray-700">{req}</span>
-                                  </li>
-                              ))
-                          ) : (
-                              <p className="text-gray-500 italic">{selectedJob.responsibilities}</p>
-                          )}
+                      {Array.isArray(selectedJob?.responsibilities) &&
+                      selectedJob.responsibilities.length > 0 ? (
+                        selectedJob.responsibilities.map((req, index) => (
+                          <li key={index} className="flex items-start">
+                            <CheckCircle className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                            <span className="text-gray-700">{req}</span>
+                          </li>
+                        ))
+                      ) : (
+                        <p className="text-gray-500 italic">
+                          {selectedJob.responsibilities}
+                        </p>
+                      )}
 
-                         {/* {selectedJob.responsibilities.map((resp, index) => (
+                      {/* {selectedJob.responsibilities.map((resp, index) => (
                           <li key={index} className="flex items-start">
                             <Star className="w-4 h-4 text-purple-500 mr-2 mt-0.5 flex-shrink-0" />
                             <span className="text-gray-700">{resp}</span>
                           </li>
                         ))} */}
-                      </ul>
-                    </div> 
+                    </ul>
+                  </div>
 
                   {/* Benefits */}
                   <div>
-                    <h4 className="text-lg font-semibold text-gray-900 mb-3">Benefits</h4>
+                    <h4 className="text-lg font-semibold text-gray-900 mb-3">
+                      Benefits
+                    </h4>
                     <ul className="space-y-2">
-                      {Array.isArray(selectedJob?.benifits) && selectedJob.benifits.length > 0 ? (
-                            selectedJob.benifits.map((req, index) => (
-                                <li key={index} className="flex items-start">
-                                    <CheckCircle className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                                    <span className="text-gray-700">{req}</span>
-                                </li>
-                            ))
-                        ) : (
-                            <p className="text-gray-500 italic">{selectedJob.benifits}</p>
-                        )}
-
+                      {Array.isArray(selectedJob?.benifits) &&
+                      selectedJob.benifits.length > 0 ? (
+                        selectedJob.benifits.map((req, index) => (
+                          <li key={index} className="flex items-start">
+                            <CheckCircle className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                            <span className="text-gray-700">{req}</span>
+                          </li>
+                        ))
+                      ) : (
+                        <p className="text-gray-500 italic">
+                          {selectedJob.benifits}
+                        </p>
+                      )}
                     </ul>
                   </div>
 
                   {/* Skills */}
                   <div>
-                    <h4 className="text-lg font-semibold text-gray-900 mb-3">Required Skills</h4>
+                    <h4 className="text-lg font-semibold text-gray-900 mb-3">
+                      Required Skills
+                    </h4>
                     <div className="flex flex-wrap gap-2">
-                       {Array.isArray(selectedJob?.skills) && selectedJob.skills.length > 0 ? (
-                            selectedJob.skills.map((req, index) => (
-                                <li key={index} className="flex items-start">
-                                    <CheckCircle className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                                    <span className="text-gray-700">{req}</span>
-                                </li>
-                            ))
-                        ) : (
-                            <p className="text-gray-500 italic">{selectedJob.skills}</p>
-                        )}
+                      {Array.isArray(selectedJob?.skills) &&
+                      selectedJob.skills.length > 0 ? (
+                        selectedJob.skills.map((req, index) => (
+                          <li key={index} className="flex items-start">
+                            <CheckCircle className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                            <span className="text-gray-700">{req}</span>
+                          </li>
+                        ))
+                      ) : (
+                        <p className="text-gray-500 italic">
+                          {selectedJob.skills}
+                        </p>
+                      )}
                     </div>
                   </div>
 
@@ -961,10 +1157,18 @@ const submitApplication = async() => {
                     <Button
                       variant="outline"
                       onClick={() => handleBookmark(selectedJob.id)}
-                      className={`flex-1 ${selectedJob.isBookmarked ? 'border-purple-600 text-purple-600' : ''}`}
+                      className={`flex-1 ${
+                        selectedJob.isBookmarked
+                          ? "border-purple-600 text-purple-600"
+                          : ""
+                      }`}
                     >
-                      <Bookmark className={`w-4 h-4 mr-2 ${selectedJob.isBookmarked ? 'fill-current' : ''}`} />
-                      {selectedJob.isBookmarked ? 'Bookmarked' : 'Bookmark'}
+                      <Bookmark
+                        className={`w-4 h-4 mr-2 ${
+                          selectedJob.isBookmarked ? "fill-current" : ""
+                        }`}
+                      />
+                      {selectedJob.isBookmarked ? "Bookmarked" : "Bookmark"}
                     </Button>
                     <Button
                       variant="outline"
