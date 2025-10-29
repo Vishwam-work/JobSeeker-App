@@ -467,10 +467,11 @@ export default function EmployerDashboard() {
       }
       const payload = {
         title: jobForm.title,
-        category: parseInt(jobForm.category),       // Convert string ID to integer
-        job_title: parseInt(jobForm.jobTitle),     // Convert string ID to integer
+        category_id: parseInt(jobForm.category),
+        job_title: parseInt(jobForm.jobTitle),
         company: jobForm.company,
-        location: parseInt(jobForm.location),      // Convert string ID to integer
+        location_id: parseInt(jobForm.location),
+        currency_id: parseInt(jobForm.currency),
         experience: jobForm.experience,
         salary: jobForm.salary,
         job_type: jobForm.job_type,
