@@ -315,7 +315,7 @@ export default function EmployerDashboard() {
           appliedFor: app.job_title,
           appliedDate: app.applied_at,
           status: 'Under Review',
-          resumeUrl: app.profile?.resume? `http://localhost:8010${app.profile.resume}`: '#',
+          resumeUrl: app.profile?.resume? `https://jobseeker-backend-jy1y.onrender.com${app.profile.resume}`: '#',
           profileImage: null,
           summary: '',
           workExperience: app.profile?.experiences || [],
