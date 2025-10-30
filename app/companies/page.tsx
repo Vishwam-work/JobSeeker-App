@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,7 @@ import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
 import SearchSection from "@/components/SearchSection";
 import Image from "next/image";
-import allCompanies from "@/data/companies.json";
+// import allCompanies from "@/data/companies.json";
 import Link from "next/link";
 
 import Footer from "@/components/Footer";
@@ -25,8 +25,38 @@ export default function CompaniesPage() {
   const [sortBy, setSortBy] = useState("rating");
   const [visibleCount, setVisibleCount] = useState(6);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
-
+  const [allCompanies, setAllCompanies] = useState([]);
   const router = useRouter();
+
+   useEffect(() => {
+  const fetchCompanies = async () => {
+    try {
+      const token = localStorage.getItem("token"); 
+
+      const res = await fetch(
+        "https://jobseeker-backend-jy1y.onrender.com/employeer/api/companies/",
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: token ? `Bearer ${token}` : "",
+          },
+        }
+      );
+
+      const data = await res.json();
+      console.log("API Response:", data);
+
+      setAllCompanies(data.data || []); // ✅ this will now receive your real company list
+    } catch (error) {
+      console.error("Error fetching companies:", error);
+      setAllCompanies([]);
+    }
+  };
+
+  fetchCompanies();
+}, []);
+
+
 
   const toggleFilter = (filterType, value) => {
     setFilters((prev) => {
