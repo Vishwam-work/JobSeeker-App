@@ -32,11 +32,32 @@ export default function ProfileReview() {
   const [jobTitles, setJobTitles] = useState([]);
   const [jobCategories, setJobCategories] = useState([]);
 
-    const getCategoryName = (id) =>
+    useEffect(() => {
+      fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_title/")
+        .then((res) => res.json())
+        .then((data) => {
+          setJobTitles(data);
+        })
+        .catch((err) => console.error(err));
+    }, []);
+
+    useEffect(() => {
+      fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_category/")
+        .then((res) => res.json())
+        .then((data) => {
+          setJobCategories(data);
+        })
+        .catch((err) => console.error(err));
+    }, []);
+
+
+    const getCategoryName = (id: number | string) =>
     jobCategories.find((c) => c.id === id)?.name || "";
 
-    const getJobTitleName = (id) =>
-    jobTitles.find((t) => t.id === id)?.title || "";
+  const getJobTitleName = (id: number | string) => {
+    console.log("jobTitles", jobTitles);
+    return jobTitles.find((t) => t.id === id)?.title || "";
+  };
   useEffect(() => {
     const loadProfile = async () => {
       const res = await fetch("https://jobseeker-backend-jy1y.onrender.com/api/profile/", {
@@ -48,7 +69,7 @@ export default function ProfileReview() {
 
       if (res.ok) {
         const data = await res.json();
-        console.log("Profile Data:", data);
+        console.log("Profile Data: before", data);
         setProfileData({
           personalInfo: {
             fullName: data.full_name,
@@ -63,10 +84,10 @@ export default function ProfileReview() {
           experience: data.experiences.map((exp) => ({
             id: exp.id,
             company: exp.company,
-            position: exp.job_title?.title || "N/A",
+            position: exp.job_title || "N/A",
             duration: `${exp.start_date} - ${exp.end_date || "Present"}`,
             location: exp.location?.name || "N/A",
-            category: exp.category?.name || "N/A",
+            category: exp.category || "N/A",
             description: exp.description,
           })),
           education: data.educations.map((edu) => ({
@@ -99,7 +120,7 @@ export default function ProfileReview() {
       </div>
     );
   }
-  console.log("Profile Data:", profileData);
+  console.log("Profile Data: after", profileData);
   // Sample profile data - in a real app, this would come from an API or state management
 
 
@@ -236,9 +257,9 @@ export default function ProfileReview() {
                         <Building2 className="w-6 h-6 text-purple-600" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-lg text-gray-900">{exp.position}</h3>
+                        <h3 className="font-semibold text-lg text-gray-900">{getJobTitleName(exp.position)}</h3>
                         <p className="text-purple-600 font-medium">{exp.company}</p>
-                        <h2 className='text-gray-400 font-semibold'>{exp.category.name}</h2>
+                        <h2 className='text-gray-400 font-semibold'>{getCategoryName(exp.category)}</h2>
                         <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 text-sm text-gray-600 mt-1 gap-1 sm:gap-0">
                           <div className="flex items-center">
                             <Clock className="w-4 h-4 mr-1" />

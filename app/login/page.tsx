@@ -35,6 +35,7 @@ export default function Login() {
   const data = await response.json();
       if (response.ok) {
         localStorage.setItem('auth_token', data.access);
+        localStorage.setItem('full_name', data.full_name);
         setAlertType('success');
         setAlertMessage('Login Successful!');
         setAlertOpen(true);

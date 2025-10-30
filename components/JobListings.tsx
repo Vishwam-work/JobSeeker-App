@@ -826,7 +826,7 @@ const submitApplication = async() => {
                                 <div className="flex flex-wrap items-center gap-3 md:gap-4 text-sm text-gray-600 mb-3">
                                   <div className="flex items-center">
                                     <MapPin className="w-4 h-4 mr-1 flex-shrink-0" />
-                                    <span>{job.location?.name ?? "N/A"}</span>
+                                    <span>{job.location ?? "N/A"}</span>
                                   </div>
                                   <div className="flex items-center">
                                     <Briefcase className="w-4 h-4 mr-1 flex-shrink-0" />
@@ -904,12 +904,12 @@ const submitApplication = async() => {
                               <div className="flex items-center">
                                 <Clock className="w-4 h-4 mr-1" />
                                 <span>
-                                  {getTimeSincePosted(job.postedDate)}
+                                  {getTimeSincePosted(job.created_at)}
                                 </span>
                               </div>
                               <div className="flex items-center">
                                 <Users className="w-4 h-4 mr-1" />
-                                <span>{job.applications} applicants</span>
+                                <span>{job.vacancies} Vacancies</span>
                               </div>
                             </div>
                           </div>
@@ -984,7 +984,7 @@ const submitApplication = async() => {
                     <div className="space-y-2">
                       <div className="flex items-center text-gray-600">
                         <MapPin className="w-4 h-4 mr-2" />
-                        <span>{selectedJob.location?.name ?? "N/A"}</span>
+                        <span>{selectedJob.location ?? "N/A"}</span>
                       </div>
                       <div className="flex items-center text-gray-600">
                         <Briefcase className="w-4 h-4 mr-2" />
@@ -1011,7 +1011,7 @@ const submitApplication = async() => {
                       <div className="flex items-center text-gray-600">
                         <Calendar className="w-4 h-4 mr-2" />
                         <span>
-                          Posted {getTimeSincePosted(selectedJob.postedDate)}
+                          Posted {getTimeSincePosted(selectedJob.created_at)}
                         </span>
                       </div>
                     </div>
@@ -1049,44 +1049,15 @@ const submitApplication = async() => {
                     </ul>
                   </div>
 
-                  {/* Responsibilities */}
-                  <div>
-                    <h4 className="text-lg font-semibold text-gray-900 mb-3">
-                      Responsibilities
-                    </h4>
-                    <ul className="space-y-2">
-                      {Array.isArray(selectedJob?.responsibilities) &&
-                      selectedJob.responsibilities.length > 0 ? (
-                        selectedJob.responsibilities.map((req, index) => (
-                          <li key={index} className="flex items-start">
-                            <CheckCircle className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                            <span className="text-gray-700">{req}</span>
-                          </li>
-                        ))
-                      ) : (
-                        <p className="text-gray-500 italic">
-                          {selectedJob.responsibilities}
-                        </p>
-                      )}
-
-                      {/* {selectedJob.responsibilities.map((resp, index) => (
-                          <li key={index} className="flex items-start">
-                            <Star className="w-4 h-4 text-purple-500 mr-2 mt-0.5 flex-shrink-0" />
-                            <span className="text-gray-700">{resp}</span>
-                          </li>
-                        ))} */}
-                    </ul>
-                  </div>
-
                   {/* Benefits */}
                   <div>
                     <h4 className="text-lg font-semibold text-gray-900 mb-3">
                       Benefits
                     </h4>
                     <ul className="space-y-2">
-                      {Array.isArray(selectedJob?.benifits) &&
-                      selectedJob.benifits.length > 0 ? (
-                        selectedJob.benifits.map((req, index) => (
+                      {Array.isArray(selectedJob?.benefits) &&
+                      selectedJob.benefits.length > 0 ? (
+                        selectedJob.benefits.map((req, index) => (
                           <li key={index} className="flex items-start">
                             <CheckCircle className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
                             <span className="text-gray-700">{req}</span>
@@ -1094,7 +1065,7 @@ const submitApplication = async() => {
                         ))
                       ) : (
                         <p className="text-gray-500 italic">
-                          {selectedJob.benifits}
+                          {selectedJob.benefits}
                         </p>
                       )}
                     </ul>

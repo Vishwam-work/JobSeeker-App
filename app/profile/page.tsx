@@ -200,12 +200,12 @@ export default function Profile() {
 
     setExperienceForm({
       company: exp.company || "",
-      jobTitle: exp.job_title?.toString() || "",
+      job_title_id: exp.job_title?.toString() || "",
       startDate: startDate,
       endDate: endDate,
       isCurrentJob: !exp.end_date,
-      location: exp.location?.id?.toString() || "",
-      category: exp.category?.toString() || "",
+      location_id: exp.location?.id?.toString() || "",
+      category_id: exp.category?.toString() || "",
       description: exp.description || "",
     });
     setEditingExperience(exp);
@@ -215,8 +215,8 @@ export default function Profile() {
   const handleSaveExperience = () => {
     if (
       !experienceForm.company ||
-      !experienceForm.category ||
-      !experienceForm.jobTitle ||
+      !experienceForm.category_id ||
+      !experienceForm.job_title_id ||
       !experienceForm.startDate
     ) {
       alert("Please fill in all required fields");
@@ -231,11 +231,11 @@ export default function Profile() {
     const newExperience = {
       id: editingExperience ? editingExperience.id : Date.now(),
       company: experienceForm.company,
-      category: experienceForm.category,
-      job_title: experienceForm.jobTitle,
+      category_id: experienceForm.category_id,
+      job_title_id: experienceForm.job_title_id,
       start_date: formattedStart,
       end_date: formattedEnd,
-      location: experienceForm.location,
+      location_id: experienceForm.location_id,
       description: experienceForm.description,
     };
 
@@ -482,7 +482,6 @@ export default function Profile() {
         setCurrency(data);
       });
   }, []);
-  console.log("Currency", currency);
   useEffect(() => {
     fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/countries/")
       .then((res) => res.json())
@@ -536,9 +535,9 @@ export default function Profile() {
   }, []);
 
   useEffect(() => {
-    if (experienceForm.category) {
+    if (experienceForm.category_id) {
       fetch(
-        `https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_title/?category=${experienceForm.category}`
+        `https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_title/?category=${experienceForm.category_id}`
       )
         .then((res) => res.json())
         .then((data) => {
@@ -546,7 +545,7 @@ export default function Profile() {
         })
         .catch((err) => console.error(err));
     }
-  }, [experienceForm.category]);
+  }, [experienceForm.category_id]);
 
   const uploadResume = async () => {
         if (!resumeFile) return true;
@@ -1501,12 +1500,12 @@ export default function Profile() {
                                 <Label htmlFor="expLocation">Location *</Label>
                                 <Select
                                   value={
-                                    experienceForm.location.toString() || ""
+                                    experienceForm.location_id.toString() || ""
                                   }
                                   onValueChange={(value) =>
                                     setExperienceForm((prev) => ({
                                       ...prev,
-                                      location: value,
+                                      location_id: value,
                                     }))
                                   }
                                   placeholder="Select Location"
@@ -1532,12 +1531,12 @@ export default function Profile() {
                                 </Label>
                                 <Select
                                   value={
-                                    experienceForm.category.toString() || ""
+                                    experienceForm.category_id.toString() || ""
                                   }
                                   onValueChange={(value) => {
                                     setExperienceForm((prev) => ({
                                       ...prev,
-                                      category: value,
+                                      category_id: value,
                                       jobTitle: "", // Reset job title when category changes
                                     }));
                                     setJobTitles([]); // Clear job titles
@@ -1570,20 +1569,20 @@ export default function Profile() {
                                 </Label>
                                 <Select
                                   value={
-                                    experienceForm.jobTitle.toString() || ""
+                                    experienceForm.job_title_id.toString() || ""
                                   }
                                   onValueChange={(value) =>
                                     setExperienceForm((prev) => ({
                                       ...prev,
-                                      jobTitle: value,
+                                      job_title_id: value,
                                     }))
                                   }
-                                  disabled={!experienceForm.category}
+                                  disabled={!experienceForm.category_id}
                                 >
                                   <SelectTrigger className="mt-1 h-10 lg:h-11">
                                     <SelectValue
                                       placeholder={
-                                        experienceForm.category
+                                        experienceForm.category_id
                                           ? "Select job title"
                                           : "Select category first"
                                       }
@@ -1591,7 +1590,7 @@ export default function Profile() {
                                   </SelectTrigger>
                                   <SelectContent>
                                     {jobTitles.length === 0 &&
-                                      experienceForm.category && (
+                                      experienceForm.category_id && (
                                         <SelectItem value="loading" disabled>
                                           Loading job titles...
                                         </SelectItem>
