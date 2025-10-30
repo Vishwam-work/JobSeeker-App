@@ -33,7 +33,7 @@ export default function ProfileReview() {
   const [jobCategories, setJobCategories] = useState([]);
 
     useEffect(() => {
-      fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_title/")
+      fetch("http://127.0.0.1:8010/master/api/jobs_title/")
         .then((res) => res.json())
         .then((data) => {
           setJobTitles(data);
@@ -42,7 +42,7 @@ export default function ProfileReview() {
     }, []);
 
     useEffect(() => {
-      fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_category/")
+      fetch("http://127.0.0.1:8010/master/api/jobs_category/")
         .then((res) => res.json())
         .then((data) => {
           setJobCategories(data);
@@ -60,7 +60,7 @@ export default function ProfileReview() {
   };
   useEffect(() => {
     const loadProfile = async () => {
-      const res = await fetch("https://jobseeker-backend-jy1y.onrender.com/api/profile/", {
+      const res = await fetch("http://127.0.0.1:8010/api/profile/", {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
@@ -104,6 +104,7 @@ export default function ProfileReview() {
             year : cert.year
           })),
           skills: data.skills.map((s) => s.name),
+          resume: data.resume || "",
         });
       } else {
         console.error("Failed to fetch profile");
@@ -382,11 +383,11 @@ export default function ProfileReview() {
                 Edit Profile
               </Button>
             </Link>
+            <Link href={profileData.resume}>
             <Button className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-12">
-              <Download className="w-4 h-4 mr-2" />
-              Download Resume
+             Preview Resume
             </Button>
-
+           </Link>
           </div>
         </div>
       </div>
