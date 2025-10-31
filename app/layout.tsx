@@ -1,6 +1,7 @@
 import './globals.css';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
+import { SavedJobsProvider } from "@/context/SavedJobsContext";
 
 
 
@@ -18,7 +19,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-     <body className={inter.className}>{children}</body> 
+      <body className={inter.className}> 
+         <SavedJobsProvider>{children}</SavedJobsProvider>
+        </body>
     </html>
   );
 }
