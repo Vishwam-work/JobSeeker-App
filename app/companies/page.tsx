@@ -31,7 +31,7 @@ export default function CompaniesPage() {
    useEffect(() => {
   const fetchCompanies = async () => {
     try {
-      const token = localStorage.getItem("token"); 
+      const token = localStorage.getItem("auth_token"); 
 
       const res = await fetch(
         "https://jobseeker-backend-jy1y.onrender.com/employeer/api/companies/",
