@@ -315,7 +315,7 @@ export default function EmployerDashboard() {
           appliedFor: app.job_title,
           appliedDate: app.applied_at,
           status: 'Under Review',
-          resumeUrl: app.profile?.resume || '#',
+          resumeUrl: app.profile?.resume? `https://jobseeker-backend-jy1y.onrender.com${app.profile.resume}`: '#',
           profileImage: null,
           summary: '',
           workExperience: app.profile?.experiences || [],
@@ -1954,7 +1954,6 @@ export default function EmployerDashboard() {
                           Call
                         </Button>
                         <Button variant="outline" size="sm">
-                          <Download className="w-4 h-4 mr-2" />
                           {selectedCandidate.resumeUrl ? (
                             <a href={selectedCandidate.resumeUrl} target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:text-purple-800 underline inline-flex items-center gap-1">
                               View Resume
@@ -2208,114 +2207,7 @@ export default function EmployerDashboard() {
       </div>
 
       {/* Candidate Detail Modal */}
-      <Dialog open={isCandidateModalOpen} onOpenChange={setIsCandidateModalOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-          {selectedCandidate && (
-            <>
-              <DialogHeader>
-                <DialogTitle className="text-2xl font-bold text-gray-900">
-                  {selectedCandidate.name}
-                </DialogTitle>
-              </DialogHeader>
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="text-sm text-gray-700 space-y-2">
-                    <p><span className="font-medium">Email:</span> {selectedCandidate.email}</p>
-                    <p><span className="font-medium">Phone:</span> {selectedCandidate.phone}</p>
-                    <p><span className="font-medium">Location:</span> {selectedCandidate.location}</p>
-                    <p><span className="font-medium">Experience:</span> {selectedCandidate.experience}</p>
-                  </div>
-                  <div className="text-sm text-gray-700 space-y-2">
-                    <p><span className="font-medium">Applied For:</span> {selectedCandidate.appliedFor}</p>
-                    <p><span className="font-medium">Applied Date:</span> {new Date(selectedCandidate.appliedDate).toLocaleDateString()}</p>
-                    {selectedCandidate.resumeUrl ? (
-                      <a href={selectedCandidate.resumeUrl} target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:text-purple-800 underline inline-flex items-center gap-1">
-                        View Resume
-                      </a>
-                    ) : (
-                      <span className="text-gray-400 italic">No resume uploaded</span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Skills */}
-                {Array.isArray(selectedCandidate.skills) && selectedCandidate.skills.length > 0 && (
-                  <div>
-                    <h4 className="text-lg font-semibold text-gray-900 mb-2">Skills</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {selectedCandidate.skills.map((skill, index) => (
-                        <Badge key={index} variant="secondary" className="bg-purple-100 text-purple-800">{skill}</Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Work Experience */}
-                {Array.isArray(selectedCandidate.workExperience) && selectedCandidate.workExperience.length > 0 && (
-                  <div>
-                    <h4 className="text-lg font-semibold text-gray-900 mb-2">Work Experience</h4>
-                    <div className="space-y-3">
-                      {selectedCandidate.workExperience.map((exp, index) => (
-                        <div key={index} className="border-l-2 border-purple-200 pl-3">
-                          <p className="font-medium text-gray-900">{exp.role} {exp.company ? `@ ${exp.company}` : ''}</p>
-                          <p className="text-sm text-gray-600">{exp.start_date || ''} {exp.end_date ? `- ${exp.end_date}` : ''}</p>
-                          {exp.description && (<p className="text-sm text-gray-700">{exp.description}</p>)}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Education */}
-                {Array.isArray(selectedCandidate.educationDetails) && selectedCandidate.educationDetails.length > 0 && (
-                  <div>
-                    <h4 className="text-lg font-semibold text-gray-900 mb-2">Education</h4>
-                    <div className="space-y-3">
-                      {selectedCandidate.educationDetails.map((edu, index) => (
-                        <div key={index} className="border-l-2 border-green-200 pl-3">
-                          <p className="font-medium text-gray-900">{edu.degree} - {edu.field}</p>
-                          <p className="text-sm text-gray-600">{edu.institution} {edu.year ? `(${edu.year})` : ''}</p>
-                          {edu.grade && (<p className="text-sm text-gray-700">Grade: {edu.grade}</p>)}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Certifications */}
-                {Array.isArray(selectedCandidate.certifications) && selectedCandidate.certifications.length > 0 && (
-                  <div>
-                    <h4 className="text-lg font-semibold text-gray-900 mb-2">Certifications</h4>
-                    <div className="space-y-3">
-                      {selectedCandidate.certifications.map((cert, index) => (
-                        <div key={index} className="flex items-center gap-2">
-                          <Award className="w-4 h-4 text-yellow-600" />
-                          <span className="text-sm text-gray-800">{cert.name} - {cert.issuer} {cert.year ? `(${cert.year})` : ''}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Q&A didnt needs to be render here*/}
-                {/* {Array.isArray(selectedCandidate.qa) && selectedCandidate.qa.length > 0 && (
-                  <div>
-                    <h4 className="text-lg font-semibold text-gray-900 mb-2">Application Q&A</h4>
-                    <div className="space-y-3">
-                      {selectedCandidate.qa.map((item, index) => (
-                        <div key={index} className="bg-gray-50 rounded p-3">
-                          <p className="text-sm font-medium text-gray-800">Q{(item.question_index ?? index) + 1}. {item.question_text || 'Question'}</p>
-                          <p className="text-sm text-gray-700 mt-1">{item.answer_text || '-'}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )} */}
-              </div>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
+     
 
 
 {isModalOpen && (

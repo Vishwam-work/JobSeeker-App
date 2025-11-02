@@ -104,6 +104,7 @@ export default function ProfileReview() {
             year : cert.year
           })),
           skills: data.skills.map((s) => s.name),
+          resume: data.resume || "",
         });
       } else {
         console.error("Failed to fetch profile");
@@ -382,11 +383,11 @@ export default function ProfileReview() {
                 Edit Profile
               </Button>
             </Link>
+            <Link href={profileData.resume}>
             <Button className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-12">
-              <Download className="w-4 h-4 mr-2" />
-              Download Resume
+             Preview Resume
             </Button>
-
+           </Link>
           </div>
         </div>
       </div>
