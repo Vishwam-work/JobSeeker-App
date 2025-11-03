@@ -13,22 +13,21 @@ import {
 export default function ServicesPage() {
   const services = [
     {
-      title: "ROAD FREIGHT",
+      title: "Personalized Job Recommendations",
       description:
-        "We provide reliable road freight solutions ensuring timely and safe delivery across major cities.",
-      image: "/service_image/image.jpg",
+        "Get AI-powered job suggestions that match your skills and goals.",
+      image: "/service_image/service_image_1.png",
     },
     {
-      title: "AIR FREIGHT",
+      title: "Resume Upload & Profile Builder",
       description:
-        "Fast and efficient air freight services connecting you to global destinations with ease.",
-      image: "/service_image/image.jpg",
+        "Create a professional profile that showcases your experience and strengths.",
+      image: "/service_image/service_image_2_new.png",
     },
     {
-      title: "SEA FREIGHT",
-      description:
-        "Affordable sea freight solutions for bulk shipments with complete safety assurance.",
-      image: "/service_image/image.jpg",
+      title: "Skill Assessments & Career Guidance ",
+      description: "Access resources to upskill and prepare for interviews.",
+      image: "/service_image/service_image_3_new.png",
     },
   ];
 
@@ -44,8 +43,12 @@ export default function ServicesPage() {
               SERVICES
             </h1>
             <p className="mt-4 text-gray-700 text-lg">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut elit
-              tellus, luctus nec ullamcorper mattis, pulvinar dapibus leo.
+              we believe that the right job can change a life and the right hire
+              can transform a business. Our mission is to simplify the hiring
+              process for both candidates and companies through advanced
+              technology, personalized experiences, and real-time insights.
+              Whether you’re looking to launch your career or build your dream
+              team, we bring both worlds together under one digital roof.
             </p>
           </div>
         </div>
@@ -94,43 +97,47 @@ export default function ServicesPage() {
             {/* Left Column Accordion */}
             <Accordion type="single" collapsible className="space-y-4">
               <AccordionItem value="item-1">
-                <AccordionTrigger>Worldwide Transport</AccordionTrigger>
+                <AccordionTrigger>Instant Job Alerts</AccordionTrigger>
                 <AccordionContent>
-                  Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut
-                  elit tellus, luctus nec ullamcorper mattis, pulvinar dapibus
-                  leo.
+                  Stay updated with the latest openings in your preferred
+                  industries and locations.
                 </AccordionContent>
               </AccordionItem>
 
               <AccordionItem value="item-2">
-                <AccordionTrigger>Cargo</AccordionTrigger>
+                <AccordionTrigger>Smart Talent Search</AccordionTrigger>
                 <AccordionContent>
-                  Details about Cargo services.
+                  Access a verified database of skilled candidates using
+                  AI-powered filters.
                 </AccordionContent>
               </AccordionItem>
 
               <AccordionItem value="item-3">
-                <AccordionTrigger>Packaging & Storage</AccordionTrigger>
+                <AccordionTrigger>Job Posting & Branding</AccordionTrigger>
                 <AccordionContent>
-                  Details about Packaging & Storage services.
+                  Promote your openings and showcase your company culture.
                 </AccordionContent>
               </AccordionItem>
 
               <AccordionItem value="item-4">
-                <AccordionTrigger>Warehousing</AccordionTrigger>
+                <AccordionTrigger>
+                  Applicant Tracking Dashboard
+                </AccordionTrigger>
                 <AccordionContent>
-                  Details about Warehousing services.
+                  Manage applications, shortlist candidates, and schedule
+                  interviews seamlessly.
                 </AccordionContent>
               </AccordionItem>
 
               <AccordionItem value="item-5">
-                <AccordionTrigger>Door to Door Delivery</AccordionTrigger>
+                <AccordionTrigger>Custom Hiring Campaigns</AccordionTrigger>
                 <AccordionContent>
-                  Details about Door to Door Delivery services.
+                  Target the right talent pool with data-driven hiring
+                  strategies.
                 </AccordionContent>
               </AccordionItem>
 
-              <AccordionItem value="item-6">
+              {/* <AccordionItem value="item-6">
                 <AccordionTrigger>Ground Transport</AccordionTrigger>
                 <AccordionContent>
                   Details about Ground Transport services.
@@ -143,10 +150,10 @@ export default function ServicesPage() {
                   Details about International Mail Shipping services.
                 </AccordionContent>
               </AccordionItem>
-            </Accordion>
+            </Accordion> */}
 
-            {/* Right Column Accordion */}
-            <Accordion type="single" collapsible className="space-y-4">
+              {/* Right Column Accordion */}
+              {/* <Accordion type="single" collapsible className="space-y-4">
               <AccordionItem value="item-8">
                 <AccordionTrigger>International</AccordionTrigger>
                 <AccordionContent>
@@ -182,7 +189,7 @@ export default function ServicesPage() {
                 <AccordionContent>
                   Details about Advanced Shipping Solutions.
                 </AccordionContent>
-              </AccordionItem>
+              </AccordionItem> */}
             </Accordion>
           </div>
         </div>
