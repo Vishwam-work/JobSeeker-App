@@ -16,18 +16,18 @@ export default function ServicesPage() {
       title: "Personalized Job Recommendations",
       description:
         "Get AI-powered job suggestions that match your skills and goals.",
-      image: "/service_image/image.jpg",
+      image: "/service_image/service_image_1.png",
     },
     {
       title: "Resume Upload & Profile Builder",
       description:
         "Create a professional profile that showcases your experience and strengths.",
-      image: "/service_image/image.jpg",
+      image: "/service_image/service_image_2_new.png",
     },
     {
       title: "Skill Assessments & Career Guidance ",
       description: "Access resources to upskill and prepare for interviews.",
-      image: "/service_image/image.jpg",
+      image: "/service_image/service_image_3_new.png",
     },
   ];
 

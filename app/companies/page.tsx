@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
 import SearchSection from "@/components/SearchSection";
+import HeroCarousel from '@/components/Carousel';
 // import Image from "next/image";
 import Footer from "@/components/Footer";
 
@@ -72,7 +73,7 @@ export default function CompaniesPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
-      <SearchSection />
+      <HeroCarousel />
 
       <main className="p-6 max-w-7xl mx-auto">
         {/* Search bar */}

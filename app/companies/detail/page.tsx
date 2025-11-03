@@ -66,7 +66,7 @@ export default function CompanyDetailPage() {
                 id: job.id,
                 title: job.title || job.job_title,
                 description: job.description || "No description provided.",
-                location: job.location || job.city || "N/A",
+                location: job.location.name || job.city.name || "N/A",
                 salary: job.salary || "Not specified",
                 type: job.job_type || job.type || "",
               }))
@@ -106,7 +106,7 @@ export default function CompanyDetailPage() {
               {company.industry} • {company.type}
             </p>
             <p className="text-sm text-gray-500 mt-1">
-              {company.city}, {company.state}, {company.country}
+              {company.city?.name || company.city}, {company.state?.name || company.state}, {company.country?.name || company.country}
             </p>
             {company.website && (
               <a
