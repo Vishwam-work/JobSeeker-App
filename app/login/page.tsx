@@ -26,7 +26,7 @@ export default function Login() {
  const handleLogin = async (e: React.FormEvent) => {
   e.preventDefault();
   try {
-    const response = await fetch('https://jobseeker-backend-jy1y.onrender.com/api/login/', {
+    const response = await fetch('http://127.0.0.1:8010/api/login/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
@@ -60,7 +60,7 @@ export default function Login() {
 //   try {
   
 //     const response = await fetch(
-//       "https://jobseeker-backend-jy1y.onrender.com/api/login/",
+//       "http://127.0.0.1:8010/api/login/",
 //       {
 //         method: "POST",
 //         headers: { "Content-Type": "application/json" },

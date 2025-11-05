@@ -59,6 +59,9 @@ export default function JobListings() {
   const [loadingUserData, setLoadingUserData] = useState(false);
   const [appliedJobs, setAppliedJobs] = useState([]);
   const { savedJobs, addJob, removeJob } = useSavedJobs();
+  const [savedJobIds, setSavedJobIds] = useState<number[]>([]);
+
+
   // Filter states
   const [filters, setFilters] = useState({
     search: "",
@@ -92,7 +95,7 @@ export default function JobListings() {
     const fetchCompanies = async () => {
       try {
         const res = await fetch(
-          "https://jobseeker-backend-jy1y.onrender.com/master/api/companies/"
+          "http://127.0.0.1:8010/master/api/companies/"
         );
         const data = await res.json();
 
@@ -105,7 +108,29 @@ export default function JobListings() {
       }
     };
 
+    const fetchSavedJobs = async () => {
+      try {
+        const token = localStorage.getItem("auth_token");
+        if (!token) return;
+    
+        const res = await fetch("http://127.0.0.1:8010/api/saved-jobs/", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+    
+        if (!res.ok) return;
+        const data = await res.json();
+    
+        // Store the IDs of saved jobs
+        const jobIds = data.map((item: any) => item.job);
+        setSavedJobIds(jobIds);
+      } catch (err) {
+        console.error("Error fetching saved jobs:", err);
+      }
+    };
+
     fetchCompanies();
+    fetchSavedJobs();
+
   }, []);
 
   // Lazy load locations
@@ -114,7 +139,7 @@ export default function JobListings() {
     setLoading(true);
     try {
       const res = await fetch(
-        "https://jobseeker-backend-jy1y.onrender.com/master/api/states/"
+        "http://127.0.0.1:8010/master/api/states/"
       );
       const data = await res.json();
       const locationNames = data.map((item: any) => item.name);
@@ -132,7 +157,7 @@ export default function JobListings() {
     const fetchSkills = async () => {
       try {
         const response = await fetch(
-          "https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_category/"
+          "http://127.0.0.1:8010/master/api/jobs_category/"
         );
         const data = await response.json();
 
@@ -151,7 +176,7 @@ export default function JobListings() {
     // Simulate API call
     setTimeout(async () => {
       const response = await fetch(
-        "https://jobseeker-backend-jy1y.onrender.com/employeer/api/all-jobs/"
+        "http://127.0.0.1:8010/employeer/api/all-jobs/"
       );
       const data = await response.json();
       console.log("Jobs data:", data);
@@ -336,13 +361,72 @@ export default function JobListings() {
   };
 
   const handleSaveJob = (job) => {
-    const isSaved = savedJobs.some((j) => j.id === job.id);
-    if (isSaved) {
-      removeJob(job.id);
-    } else {
-      addJob(job);
+  const isSaved = savedJobs.some((j) => j.id === job.id);
+  if (isSaved) {
+    removeJob(job.id);
+  } else {
+    addJob(job);
+  }
+};
+
+const saveJob = async (jobId: number) => {
+  const token = localStorage.getItem("auth_token");
+  if (!token) {
+    alert("Please log in first.");
+    return;
+  }
+
+  try {
+    const res = await fetch("http://127.0.0.1:8010/api/saved-jobs/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ job: jobId }),
+    });
+
+    if (res.status === 400) {
+      const data = await res.json();
+      console.log(data.detail || "Already saved.");
+      return;
     }
-  };
+
+    if (!res.ok) throw new Error("Failed to save job");
+
+    setSavedJobIds((prev) => [...prev, jobId]);
+  } catch (err) {
+    console.error("Error saving job:", err);
+  }
+};
+
+const unsaveJob = async (jobId: number) => {
+  const token = localStorage.getItem("auth_token");
+  if (!token) return;
+
+  try {
+    // We need to find the savedJobId (record ID) for this job
+    const res = await fetch("http://127.0.0.1:8010/api/saved-jobs/", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const savedData = await res.json();
+    const record = savedData.find((item: any) => item.job === jobId);
+
+    if (!record) return;
+
+    const delRes = await fetch(`http://127.0.0.1:8010/api/saved-jobs/${record.id}/`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (!delRes.ok && delRes.status !== 204)
+      throw new Error("Failed to unsave job");
+
+    setSavedJobIds((prev) => prev.filter((id) => id !== jobId));
+  } catch (err) {
+    console.error("Error unsaving job:", err);
+  }
+};
 
   const handleApply = (job) => {
     const token = localStorage.getItem("auth_token");
@@ -403,6 +487,14 @@ export default function JobListings() {
         setUserData(data);
       } else {
         console.error("Failed to fetch user data");
+const fetchUserData = async () => {
+  setLoadingUserData(true);
+  try {
+    const token = localStorage.getItem('auth_token');
+    const response = await fetch('http://127.0.0.1:8010/api/profile/', {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
       }
     } catch (error) {
       console.error("Error fetching user data:", error);
@@ -478,6 +570,38 @@ export default function JobListings() {
       console.error("Error submitting application:", error);
       alert("Network error. Please try again.");
     }
+
+    const applicationData = {
+      job_id: selectedJob.id,
+      answers: selectedJob.questions?.map((question, index) => ({
+        question: question,
+        answer: answers[index] || ''
+      })) || []
+    };
+
+    const response = await fetch('http://127.0.0.1:8010/employeer/api/applications/submit/', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(applicationData)
+    });
+
+    const result = await response.json();
+
+    if (response.ok) {
+      alert(`Application submitted successfully for ${selectedJob.title}!`);
+      setIsApplyModalOpen(false);
+      setSelectedJob(null);
+      setAnswers({});
+    } else {
+      alert(result.error || 'Failed to submit application');
+    }
+  } catch (error) {
+    console.error('Error submitting application:', error);
+    alert('Network error. Please try again.');
+  }
   };
 
   const getWorkModeColor = (workMode) => {
@@ -891,24 +1015,28 @@ export default function JobListings() {
                                 <Bookmark className={`w-4 h-4 ${job.isBookmarked ? 'fill-current' : ''}`} />
                               </Button> */}
 
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleSaveJob(job)}
-                                className={
-                                  savedJobs.some((j) => j.id === job.id)
-                                    ? "text-purple-600"
-                                    : "text-gray-400"
-                                }
-                              >
-                                <Bookmark
-                                  className={`w-4 h-4 ${
-                                    savedJobs.some((j) => j.id === job.id)
-                                      ? "fill-current"
-                                      : ""
-                                  }`}
-                                />
-                              </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() =>
+                                savedJobIds.includes(job.id)
+                                  ? unsaveJob(job.id)
+                                  : saveJob(job.id)
+                              }
+                              className={`${
+                                savedJobIds.includes(job.id)
+                                  ? "text-green-600"
+                                  : "text-gray-400 hover:text-green-500"
+                              }`}
+                            >
+                              <Bookmark
+                                className={`w-4 h-4 transition-all duration-300 ${
+                                  savedJobIds.includes(job.id)
+                                    ? "fill-green-500 drop-shadow-[0_0_6px_rgba(34,197,94,0.8)]"
+                                    : ""
+                                }`}
+                              />
+                            </Button>
 
                               <Button
                                 variant="ghost"

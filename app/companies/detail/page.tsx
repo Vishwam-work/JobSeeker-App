@@ -40,11 +40,11 @@ export default function CompanyDetailPage() {
 
         const [companyRes, jobsRes] = await Promise.all([
           fetch(
-            `https://jobseeker-backend-jy1y.onrender.com/employeer/api/companies/${id}/`,
+            `http://127.0.0.1:8010/employeer/api/companies/${id}/`,
             { headers }
           ),
           fetch(
-            `https://jobseeker-backend-jy1y.onrender.com/employeer/api/companies/${id}/jobs/`,
+            `http://127.0.0.1:8010/employeer/api/companies/${id}/jobs/`,
             { headers }
           ),
         ]);

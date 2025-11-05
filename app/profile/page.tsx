@@ -144,7 +144,7 @@ export default function Profile() {
   const [jobTitles, setJobTitles] = useState([]);
   const [jobCategories, setJobCategories] = useState([]);
   const [currency, setCurrency] = useState([]);
-
+  const [savedJobsData, setSavedJobsData] = useState([]);
   const [noticeRanges] = useState([
     "0-15 days",
     "15-30 days",
@@ -438,7 +438,7 @@ export default function Profile() {
 
       try {
         const res = await fetch(
-          "https://jobseeker-backend-jy1y.onrender.com/api/profile/",
+          "http://127.0.0.1:8010/api/profile/",
           {
             method: "GET",
             headers: {
@@ -487,7 +487,33 @@ export default function Profile() {
   }, []);
 
   useEffect(() => {
-    fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/currencies/")
+    const fetchSavedJobs = async () => {
+      const token = localStorage.getItem("auth_token");
+      if (!token) return;
+  
+      try {
+        const res = await fetch("http://127.0.0.1:8010/api/saved-jobs/", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+  
+        if (res.ok) {
+          const data = await res.json();
+          console.log("Saved jobs data:", data);
+          setSavedJobsData(data);
+        } else {
+          console.error("Failed to fetch saved jobs");
+        }
+      } catch (err) {
+        console.error("Error fetching saved jobs:", err);
+      }
+    };
+  
+    fetchSavedJobs();
+  }, []);
+
+
+  useEffect(() => {
+    fetch("http://127.0.0.1:8010/master/api/currencies/")
       .then((res) => res.json())
       .then((data) => {
         console.log("Currency data:", data);
@@ -495,7 +521,7 @@ export default function Profile() {
       });
   }, []);
   useEffect(() => {
-    fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/countries/")
+    fetch("http://127.0.0.1:8010/master/api/countries/")
       .then((res) => res.json())
       .then((data) => {
         console.log("Country data:", data);
@@ -507,7 +533,7 @@ export default function Profile() {
   useEffect(() => {
     if (profileData.personalInfo.countryId) {
       fetch(
-        `https://jobseeker-backend-jy1y.onrender.com/master/api/states/?country_id=${profileData.personalInfo.countryId}`
+        `http://127.0.0.1:8010/master/api/states/?country_id=${profileData.personalInfo.countryId}`
       )
         .then((res) => res.json())
         .then((data) => {
@@ -520,7 +546,7 @@ export default function Profile() {
   useEffect(() => {
     if (profileData.personalInfo.stateId) {
       fetch(
-        `https://jobseeker-backend-jy1y.onrender.com/master/api/cities/?state=${profileData.personalInfo.stateId}`
+        `http://127.0.0.1:8010/master/api/cities/?state=${profileData.personalInfo.stateId}`
       )
         .then((res) => res.json())
         .then(setCities)
@@ -529,7 +555,7 @@ export default function Profile() {
   }, [profileData.personalInfo.stateId]);
 
   useEffect(() => {
-    fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/companies/")
+    fetch("http://127.0.0.1:8010/master/api/companies/")
       .then((res) => res.json())
       .then((data) => {
         setCompanies(data);
@@ -539,7 +565,7 @@ export default function Profile() {
 
   useEffect(() => {
     fetch(
-      "https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_category/"
+      "http://127.0.0.1:8010/master/api/jobs_category/"
     )
       .then((res) => res.json())
       .then((data) => {
@@ -551,7 +577,7 @@ export default function Profile() {
   useEffect(() => {
     if (experienceForm.category_id) {
       fetch(
-        `https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_title/?category=${experienceForm.category_id}`
+        `http://127.0.0.1:8010/master/api/jobs_title/?category=${experienceForm.category_id}`
       )
         .then((res) => res.json())
         .then((data) => {
@@ -568,7 +594,7 @@ export default function Profile() {
     formData.append("resume", resumeFile);
     try {
       const res = await fetch(
-        "https://jobseeker-backend-jy1y.onrender.com/api/profile/upload-resume/",
+        "http://127.0.0.1:8010/api/profile/upload-resume/",
         {
           method: "PATCH",
           headers: {
@@ -632,7 +658,7 @@ export default function Profile() {
     console.log("Payload:", payload);
     console.log("Token:", localStorage.getItem("auth_token"));
     const res = await fetch(
-      "https://jobseeker-backend-jy1y.onrender.com/api/profile/",
+      "http://127.0.0.1:8010/api/profile/",
       {
         method: "PUT",
         headers: {
@@ -782,7 +808,7 @@ export default function Profile() {
                       className="w-full text-sm lg:text-base h-10 lg:h-11"
                       onClick={() => {
                         if (profileData?.personalInfo?.resume) {
-                          window.open(`https://jobseeker-backend-jy1y.onrender.com${profileData.personalInfo.resume}`, "_blank");
+                          window.open(`http://127.0.0.1:8010${profileData.personalInfo.resume}`, "_blank");
                         } else {
                           alert("No resume uploaded.");
                         }
@@ -2174,42 +2200,63 @@ export default function Profile() {
                 </Card>
               )}
 
-              {activeSection === "save" && (
+{activeSection === "save" && (
   <Card>
     <CardHeader>
       <CardTitle className="flex items-center gap-2 text-lg lg:text-xl">
-        <Award className="w-5 h-5" />
+        <Bookmark className="w-5 h-5" />
         <span>Saved Jobs</span>
       </CardTitle>
     </CardHeader>
 
     <CardContent>
-      {savedJobs.length > 0 ? (
-        savedJobs.map((job) => (
+      {savedJobsData.length > 0 ? (
+        savedJobsData.map((savedJob) => (
           <div
-            key={job.id}
+            key={savedJob.id}
             className="border rounded-lg p-4 mb-4 hover:shadow-md transition-shadow"
           >
             <div className="flex justify-between items-start">
               <div>
                 <h3 className="font-semibold text-base lg:text-lg text-gray-900">
-                  {job.title}
+                  {savedJob.job?.title || "No title"}
                 </h3>
                 <p className="text-purple-600 font-medium text-sm">
-                  {job.company}
+                  {savedJob.job?.company || "Unknown Company"}
                 </p>
                 <p className="text-gray-600 text-xs">
-                  {job.location?.name ?? "N/A"}
+                  {savedJob.job?.location?.name || "Location not available"}
                 </p>
               </div>
-              {/* <Button
+
+              <Button
                 variant="outline"
                 size="sm"
-                onClick={() => removeSavedJob(job.id)}
+                onClick={async () => {
+                  const token = localStorage.getItem("auth_token");
+                  if (!token) return;
+                  try {
+                    const res = await fetch(
+                      `http://127.0.0.1:8010/api/saved-jobs/${savedJob.id}/`,
+                      {
+                        method: "DELETE",
+                        headers: { Authorization: `Bearer ${token}` },
+                      }
+                    );
+                    if (res.ok) {
+                      setSavedJobsData((prev) =>
+                        prev.filter((j) => j.id !== savedJob.id)
+                      );
+                    }
+                  } catch (err) {
+                    console.error("Error deleting saved job:", err);
+                  }
+                }}
                 className="text-red-500 border-red-200 hover:bg-red-50"
               >
+                <BookmarkX className="w-4 h-4 mr-2" />
                 Remove
-              </Button> */}
+              </Button>
             </div>
           </div>
         ))
