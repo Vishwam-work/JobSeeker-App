@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
 import SearchSection from "@/components/SearchSection";
-import HeroCarousel from '@/components/Carousel';
+import HeroCarousel from "@/components/Carousel";
 // import Image from "next/image";
 import Footer from "@/components/Footer";
 
@@ -68,7 +68,31 @@ export default function CompaniesPage() {
     );
   });
 
-  if (loading) return <p className="p-6">Loading companies...</p>;
+  if (loading)
+    return (
+      <div className="p-6 max-w-5xl mx-auto space-y-6 animate-pulse">
+        <div className="space-y-3">
+          <div className="h-8 bg-gray-200 rounded w-1/3"></div>
+          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+          <div className="h-3 bg-gray-200 rounded w-1/4"></div>
+        </div>
+
+        <div className="space-y-4 mt-6">
+          {[...Array(3)].map((_, i) => (
+            <div
+              key={i}
+              className="bg-white border rounded-lg p-4 shadow-sm flex justify-between items-center"
+            >
+              <div className="space-y-2 w-3/4">
+                <div className="h-5 bg-gray-200 rounded w-2/3"></div>
+                <div className="h-3 bg-gray-200 rounded w-full"></div>
+              </div>
+              <div className="h-8 bg-gray-300 rounded w-24"></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
 
   return (
     <div className="min-h-screen bg-gray-50">

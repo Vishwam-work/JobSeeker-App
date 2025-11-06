@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Slider } from '@/components/ui/slider';
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Slider } from "@/components/ui/slider";
 import { useSavedJobs } from "@/context/SavedJobsContext";
 import {
   Select,
@@ -57,8 +57,8 @@ export default function JobListings() {
   const [answers, setAnswers] = useState({});
   const [userData, setUserData] = useState(null);
   const [loadingUserData, setLoadingUserData] = useState(false);
+  const [appliedJobs, setAppliedJobs] = useState([]);
   const { savedJobs, addJob, removeJob } = useSavedJobs();
-
   // Filter states
   const [filters, setFilters] = useState({
     search: "",
@@ -80,6 +80,13 @@ export default function JobListings() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
 
+  useEffect(() => {
+    const storedApplied = localStorage.getItem("applied_jobs");
+    if (storedApplied) {
+      setAppliedJobs(JSON.parse(storedApplied));
+    }
+  }, []);
+
   // Fetch companies from API
   useEffect(() => {
     const fetchCompanies = async () => {
@@ -88,7 +95,7 @@ export default function JobListings() {
           "https://jobseeker-backend-jy1y.onrender.com/master/api/companies/"
         );
         const data = await res.json();
-        
+
         const companyNames = data.map((item: any) => item.name);
         setCompanies(companyNames);
       } catch (error) {
@@ -329,14 +336,13 @@ export default function JobListings() {
   };
 
   const handleSaveJob = (job) => {
-  const isSaved = savedJobs.some((j) => j.id === job.id);
-  if (isSaved) {
-    removeJob(job.id);
-  } else {
-    addJob(job);
-  }
-};
-
+    const isSaved = savedJobs.some((j) => j.id === job.id);
+    if (isSaved) {
+      removeJob(job.id);
+    } else {
+      addJob(job);
+    }
+  };
 
   const handleApply = (job) => {
     const token = localStorage.getItem("auth_token");
@@ -377,88 +383,101 @@ export default function JobListings() {
     }
   };
 
+  const fetchUserData = async () => {
+    setLoadingUserData(true);
+    try {
+      const token = localStorage.getItem("auth_token");
+      const response = await fetch(
+        "https://jobseeker-backend-jy1y.onrender.com/api/profile/",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
-const fetchUserData = async () => {
-  setLoadingUserData(true);
-  try {
-    const token = localStorage.getItem('auth_token');
-    const response = await fetch('https://jobseeker-backend-jy1y.onrender.com/api/profile/', {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
+      if (response.ok) {
+        const data = await response.json();
+        console.log("Data here:", data);
+        setUserData(data);
+      } else {
+        console.error("Failed to fetch user data");
       }
-    });
-    
-    if (response.ok) {
-      const data = await response.json();
-      console.log("Data here:",data)
-      setUserData(data);
-    } else {
-      console.error('Failed to fetch user data');
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+    } finally {
+      setLoadingUserData(false);
     }
-  } catch (error) {
-    console.error('Error fetching user data:', error);
-  } finally {
-    setLoadingUserData(false);
-  }
-};
+  };
 
-const handleAnswerChange = (questionIndex, value) => {
-  setAnswers(prev => ({
-    ...prev,
-    [questionIndex]: value
-  }));
-};
+  const handleAnswerChange = (questionIndex, value) => {
+    setAnswers((prev) => ({
+      ...prev,
+      [questionIndex]: value,
+    }));
+  };
 
-const submitApplication = async() => {
-     try {
-     const token = localStorage.getItem('auth_token');
+  const submitApplication = async () => {
+    try {
+      const token = localStorage.getItem("auth_token");
 
-    if (!token) {
-      alert('Please login to apply');
-      return;
-    }
-
-    // Validate answers if questions exist
-    if (selectedJob.questions && selectedJob.questions.length > 0) {
-      const unanswered = selectedJob.questions.some((_, index) => !answers[index]?.trim());
-      if (unanswered) {
-        alert('Please answer all questions before submitting');
+      if (!token) {
+        alert("Please login to apply");
         return;
       }
+
+      // Validate answers if questions exist
+      if (selectedJob.questions && selectedJob.questions.length > 0) {
+        const unanswered = selectedJob.questions.some(
+          (_, index) => !answers[index]?.trim()
+        );
+        if (unanswered) {
+          alert("Please answer all questions before submitting");
+          return;
+        }
+      }
+
+      const applicationData = {
+        job_id: selectedJob.id,
+        answers:
+          selectedJob.questions?.map((question, index) => ({
+            question: question,
+            answer: answers[index] || "",
+          })) || [],
+      };
+
+      const response = await fetch(
+        "https://jobseeker-backend-jy1y.onrender.com/employeer/api/applications/submit/",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(applicationData),
+        }
+      );
+
+      const result = await response.json();
+
+      if (response.ok) {
+        alert(`Application submitted successfully for ${selectedJob.title}!`);
+        setIsApplyModalOpen(false);
+        setSelectedJob(null);
+        setAnswers({});
+        setAppliedJobs((prev) => {
+          const updated = [...prev, selectedJob.id]; // ✅ use selectedJob.id
+          localStorage.setItem("applied_jobs", JSON.stringify(updated));
+          return updated;
+        });
+      } else {
+        alert(result.error || "Failed to submit application");
+      }
+    } catch (error) {
+      console.error("Error submitting application:", error);
+      alert("Network error. Please try again.");
     }
-
-    const applicationData = {
-      job_id: selectedJob.id,
-      answers: selectedJob.questions?.map((question, index) => ({
-        question: question,
-        answer: answers[index] || ''
-      })) || []
-    };
-
-    const response = await fetch('https://jobseeker-backend-jy1y.onrender.com/employeer/api/applications/submit/', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(applicationData)
-    });
-
-    const result = await response.json();
-
-    if (response.ok) {
-      alert(`Application submitted successfully for ${selectedJob.title}!`);
-      setIsApplyModalOpen(false);
-      setSelectedJob(null);
-      setAnswers({});
-    } else {
-      alert(result.error || 'Failed to submit application');
-    }
-  } catch (error) {
-    console.error('Error submitting application:', error);
-    alert('Network error. Please try again.');
-  }
   };
 
   const getWorkModeColor = (workMode) => {
@@ -876,11 +895,17 @@ const submitApplication = async() => {
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => handleSaveJob(job)}
-                                className={savedJobs.some((j) => j.id === job.id) ? 'text-purple-600' : 'text-gray-400'}
+                                className={
+                                  savedJobs.some((j) => j.id === job.id)
+                                    ? "text-purple-600"
+                                    : "text-gray-400"
+                                }
                               >
                                 <Bookmark
                                   className={`w-4 h-4 ${
-                                    savedJobs.some((j) => j.id === job.id) ? 'fill-current' : ''
+                                    savedJobs.some((j) => j.id === job.id)
+                                      ? "fill-current"
+                                      : ""
                                   }`}
                                 />
                               </Button>
@@ -941,12 +966,14 @@ const submitApplication = async() => {
 
                         {/* Action Buttons */}
                         <div className="flex flex-col sm:flex-row lg:flex-col gap-2 lg:w-32">
-                          <Button
-                            onClick={() => handleApply(job)}
-                            className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
-                          >
-                            Apply Now
-                          </Button>
+                          {!appliedJobs.includes(job.id) && (
+                            <Button
+                              onClick={() => handleApply(job)}
+                              className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
+                            >
+                              Apply Now
+                            </Button>
+                          )}
                           <Button
                             variant="outline"
                             className="border-purple-200 text-purple-600 hover:bg-purple-50"
@@ -1163,23 +1190,25 @@ const submitApplication = async() => {
                     </Button> */}
 
                     <Button
-                    variant="outline"
-                    onClick={() => handleSaveJob(selectedJob)}
-                    className={`flex-1 ${
-                      savedJobs.some((j) => j.id === selectedJob.id)
-                        ? "border-purple-600 text-purple-600"
-                        : ""
-                    }`}
-                  >
-                    <Bookmark
-                      className={`w-4 h-4 mr-2 ${
-                        savedJobs.some((j) => j.id === selectedJob.id) ? "fill-current" : ""
+                      variant="outline"
+                      onClick={() => handleSaveJob(selectedJob)}
+                      className={`flex-1 ${
+                        savedJobs.some((j) => j.id === selectedJob.id)
+                          ? "border-purple-600 text-purple-600"
+                          : ""
                       }`}
-                    />
-                    {savedJobs.some((j) => j.id === selectedJob.id)
-                      ? "Saved"
-                      : "Save Job"}
-                  </Button>
+                    >
+                      <Bookmark
+                        className={`w-4 h-4 mr-2 ${
+                          savedJobs.some((j) => j.id === selectedJob.id)
+                            ? "fill-current"
+                            : ""
+                        }`}
+                      />
+                      {savedJobs.some((j) => j.id === selectedJob.id)
+                        ? "Saved"
+                        : "Save Job"}
+                    </Button>
 
                     <Button
                       variant="outline"
@@ -1197,8 +1226,8 @@ const submitApplication = async() => {
         </Dialog>
 
         {/* Apply Modal */}
-       <Dialog open={isApplyModalOpen} onOpenChange={setIsApplyModalOpen}>
-          <DialogContent className="max-w-md">
+        <Dialog open={isApplyModalOpen} onOpenChange={setIsApplyModalOpen}>
+          <DialogContent className="max-w-2xl w-full max-h-[85vh] overflow-y-auto p-6">
             {selectedJob && (
               <>
                 <DialogHeader>
@@ -1220,15 +1249,28 @@ const submitApplication = async() => {
                         <div className="flex items-center justify-center py-4">
                           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
                         </div>
-                      ) : userData && (
-                        <div className="p-4 bg-gray-50 rounded-lg space-y-2">
-                          <h4 className="font-semibold text-gray-900">Your Application Details</h4>
-                          <div className="text-sm text-gray-600 space-y-1">
-                            <p><span className="font-medium">Name:</span> {userData.name || userData.full_name}</p>
-                            <p><span className="font-medium">Email:</span> {userData.email}</p>
-                            <p><span className="font-medium">Phone:</span> {userData.phone || 'Not provided'}</p>
+                      ) : (
+                        userData && (
+                          <div className="p-4 bg-gray-50 rounded-lg space-y-2">
+                            <h4 className="font-semibold text-gray-900">
+                              Your Application Details
+                            </h4>
+                            <div className="text-sm text-gray-600 space-y-1">
+                              <p>
+                                <span className="font-medium">Name:</span>{" "}
+                                {userData.name || userData.full_name}
+                              </p>
+                              <p>
+                                <span className="font-medium">Email:</span>{" "}
+                                {userData.email}
+                              </p>
+                              <p>
+                                <span className="font-medium">Phone:</span>{" "}
+                                {userData.phone || "Not provided"}
+                              </p>
+                            </div>
                           </div>
-                        </div>
+                        )
                       )}
                     </div>
                     <div className="flex items-center space-x-2 text-sm text-gray-600">
@@ -1246,31 +1288,43 @@ const submitApplication = async() => {
                         <ExternalLink className="w-3 h-3" />
                       </a>
                     ) : (
-                      <span className="text-gray-400 italic">No resume uploaded</span>
+                      <span className="text-gray-400 italic">
+                        No resume uploaded
+                      </span>
                     )}
                   </div>
                   <div>
-                    <h4 className="text-lg font-semibold text-gray-900 mb-3">Required Skills</h4>
+                    <h4 className="text-lg font-semibold text-gray-900 mb-3">
+                      Required Skills
+                    </h4>
                     <div className="flex flex-wrap gap-2">
-                      {Array.isArray(selectedJob?.questions) && selectedJob.questions.length > 0 && (
-                        <div className="space-y-4">
-                          <h4 className="text-lg font-semibold text-gray-900">Additional Questions</h4>
-                          {selectedJob.questions.map((question, index) => (
-                            <div key={index} className="space-y-2">
-                              <Label htmlFor={`question-${index}`} className="font-medium text-gray-800">
-                                {index + 1}. {question}
-                              </Label>
-                              <Input
-                                id={`question-${index}`}
-                                placeholder="Type your answer here..."
-                                value={answers[index] || ''}
-                                onChange={(e) => handleAnswerChange(index, e.target.value)}
-                                className="w-full"
-                              />
-                            </div>
-                          ))}
-                        </div>
-                      )}
+                      {Array.isArray(selectedJob?.questions) &&
+                        selectedJob.questions.length > 0 && (
+                          <div className="space-y-4">
+                            <h4 className="text-lg font-semibold text-gray-900">
+                              Additional Questions
+                            </h4>
+                            {selectedJob.questions.map((question, index) => (
+                              <div key={index} className="space-y-2">
+                                <Label
+                                  htmlFor={`question-${index}`}
+                                  className="font-medium text-gray-800"
+                                >
+                                  {index + 1}. {question}
+                                </Label>
+                                <Input
+                                  id={`question-${index}`}
+                                  placeholder="Type your answer here..."
+                                  value={answers[index] || ""}
+                                  onChange={(e) =>
+                                    handleAnswerChange(index, e.target.value)
+                                  }
+                                  className="w-full"
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        )}
                     </div>
                   </div>
                   <div className="flex flex-col sm:flex-row gap-3 pt-4">
