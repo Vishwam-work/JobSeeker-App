@@ -492,7 +492,7 @@ export default function Profile() {
       if (!token) return;
   
       try {
-        const res = await fetch("http://127.0.0.1:8010/api/saved-jobs/", {
+        const res = await fetch("http://127.0.0.1:8010/api/saved-jobs-all/", {
           headers: { Authorization: `Bearer ${token}` },
         });
   
@@ -2219,7 +2219,7 @@ export default function Profile() {
             <div className="flex justify-between items-start">
               <div>
                 <h3 className="font-semibold text-base lg:text-lg text-gray-900">
-                  {savedJob.job?.title || "No title"}
+                  {savedJob.job_title || "No title"}
                 </h3>
                 <p className="text-purple-600 font-medium text-sm">
                   {savedJob.job?.company || "Unknown Company"}
