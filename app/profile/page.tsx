@@ -135,7 +135,7 @@ export default function Profile() {
     { id: "education", label: "Education", icon: GraduationCap },
     { id: "skills", label: "Skills", icon: Award },
     { id: "certifications", label: "Certifications", icon: Award },
-    { id: "save", label: "Save", icon: Bookmark },
+    { id: "save", label: "Jobs", icon: Briefcase },
   ];
   const [countries, setCountries] = useState([]);
   const [states, setStates] = useState([]);
@@ -145,6 +145,8 @@ export default function Profile() {
   const [jobCategories, setJobCategories] = useState([]);
   const [currency, setCurrency] = useState([]);
   const [savedJobsData, setSavedJobsData] = useState([]);
+  const [activeSaveTab, setActiveSaveTab] = useState("SavedJobs");
+
   const [noticeRanges] = useState([
     "0-15 days",
     "15-30 days",
@@ -981,26 +983,68 @@ export default function Profile() {
               {/* Desktop Navigation Tabs */}
               <div className="hidden lg:block bg-white rounded-lg shadow-sm mb-6 overflow-x-auto">
                 <div className="flex border-b">
-                  {sections.map((tab) => {
-                    const IconComponent = tab.icon;
-                    return (
-                      <button
-                        key={tab.id}
-                        onClick={() => setActiveSection(tab.id)}
-                        className={`flex items-center space-x-2 px-4 xl:px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
-                          activeSection === tab.id
-                            ? "border-purple-600 text-purple-600"
-                            : "border-transparent text-gray-600 hover:text-purple-600"
-                        }`}
-                      >
-                        <IconComponent className="w-4 h-4" />
-                        <span className="hidden xl:inline">{tab.label}</span>
-                        <span className="xl:hidden">
-                          {tab.label.split(" ")[0]}
-                        </span>
-                      </button>
-                    );
-                  })}
+                <div className="flex border-b relative">
+                    {sections.map((tab) => {
+                      const IconComponent = tab.icon;
+
+                      // ✅ Normal hover dropdown for "Save"
+                      if (tab.id === "save") {
+                        return (
+                          <div key={tab.id} className="relative group">
+                          <button
+                            className={`flex items-center space-x-2 px-4 xl:px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                              ["SavedJobs", "AppliedJobs"].includes(activeSection)
+                                ? "border-purple-600 text-purple-600"
+                                : "border-transparent text-gray-600 hover:text-purple-600"
+                            }`}
+                          >
+                            <IconComponent className="w-4 h-4" />
+                            <span className="hidden xl:inline">{tab.label}</span>
+                          </button>
+                        
+                          {/* 👇 fixed dropdown - detached from clipped container */}
+                          <div
+                            className="hidden group-hover:block fixed bg-white border border-gray-200 rounded-lg shadow-lg w-56 z-[9999] mt-1"
+                            style={{ transform: "translateX(-10px)", top: "70px" }}
+                          >
+                            <ul className="text-sm text-gray-700">
+                              <li
+                                onClick={() => setActiveSection("SavedJobs")}
+                                className="px-4 py-2 hover:bg-purple-50 cursor-pointer"
+                              >
+                                Saved Jobs
+                              </li>
+                              <li
+                                onClick={() => setActiveSection("AppliedJobs")}
+                                className="px-4 py-2 hover:bg-purple-50 cursor-pointer"
+                              >
+                                Applied Jobs
+                              </li>
+                            </ul>
+                          </div>
+                        </div>
+                        );
+                      }
+
+                      // ✅ Default tab buttons
+                      return (
+                        <button
+                          key={tab.id}
+                          onClick={() => setActiveSection(tab.id)}
+                          className={`flex items-center space-x-2 px-4 xl:px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                            activeSection === tab.id
+                              ? "border-purple-600 text-purple-600"
+                              : "border-transparent text-gray-600 hover:text-purple-600"
+                          }`}
+                        >
+                          <IconComponent className="w-4 h-4" />
+                          <span className="hidden xl:inline">{tab.label}</span>
+                          <span className="xl:hidden">{tab.label.split(" ")[0]}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
                 </div>
               </div>
 
@@ -2200,7 +2244,7 @@ export default function Profile() {
                 </Card>
               )}
 
-{activeSection === "save" && (
+{activeSection === "SavedJobs" && (
   <Card>
     <CardHeader>
       <CardTitle className="flex items-center gap-2 text-lg lg:text-xl">
@@ -2266,6 +2310,135 @@ export default function Profile() {
     </CardContent>
   </Card>
 )}
+
+{activeSection === "AppliedJobs" && (
+  <Card>
+    <CardHeader>
+      <CardTitle className="flex items-center gap-2 text-lg lg:text-xl">
+        <Bookmark className="w-5 h-5" />
+        <span>Applied Jobs</span>
+      </CardTitle>
+    </CardHeader>
+
+    <CardContent>
+      {[
+        {
+          id: 1,
+          job_title: "Backend Developer",
+          job: {
+            company: "TechNova Pvt. Ltd.",
+            location: { name: "Bangalore" },
+          },
+        },
+        {
+          id: 2,
+          job_title: "Full Stack Engineer",
+          job: {
+            company: "NextCore Technologies",
+            location: { name: "Hyderabad" },
+          },
+        },
+        {
+          id: 3,
+          job_title: "Data Engineer",
+          job: {
+            company: "Cloudify Systems",
+            location: { name: "Remote" },
+          },
+        },
+      ].map((appliedJob) => (
+        <div
+          key={appliedJob.id}
+          className="border rounded-lg p-4 mb-4 hover:shadow-md transition-shadow"
+        >
+          <div className="flex justify-between items-start">
+            <div>
+              <h3 className="font-semibold text-base lg:text-lg text-gray-900">
+                {appliedJob.job_title}
+              </h3>
+              <p className="text-purple-600 font-medium text-sm">
+                {appliedJob.job.company}
+              </p>
+              <p className="text-gray-600 text-xs">
+                {appliedJob.job.location.name}
+              </p>
+            </div>
+            <div className="text-green-600 text-xs font-medium bg-green-50 px-3 py-1 rounded-full">
+              Applied
+            </div>
+          </div>
+        </div>
+      ))}
+    </CardContent>
+  </Card>
+)}
+
+{/* {activeSection === "save" && (
+  <Card>
+    <CardHeader>
+      <CardTitle className="flex items-center gap-2 text-lg lg:text-xl">
+        <Bookmark className="w-5 h-5" />
+        <span>Saved Jobs</span>
+      </CardTitle>
+    </CardHeader>
+
+    <CardContent>
+      {savedJobsData.length > 0 ? (
+        savedJobsData.map((savedJob) => (
+          <div
+            key={savedJob.id}
+            className="border rounded-lg p-4 mb-4 hover:shadow-md transition-shadow"
+          >
+            <div className="flex justify-between items-start">
+              <div>
+                <h3 className="font-semibold text-base lg:text-lg text-gray-900">
+                  {savedJob.job_title || "No title"}
+                </h3>
+                <p className="text-purple-600 font-medium text-sm">
+                  {savedJob.job?.company || "Unknown Company"}
+                </p>
+                <p className="text-gray-600 text-xs">
+                  {savedJob.job?.location?.name || "Location not available"}
+                </p>
+              </div>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={async () => {
+                  const token = localStorage.getItem("auth_token");
+                  if (!token) return;
+                  try {
+                    const res = await fetch(
+                      `http://127.0.0.1:8010/api/saved-jobs/${savedJob.id}/`,
+                      {
+                        method: "DELETE",
+                        headers: { Authorization: `Bearer ${token}` },
+                      }
+                    );
+                    if (res.ok) {
+                      setSavedJobsData((prev) =>
+                        prev.filter((j) => j.id !== savedJob.id)
+                      );
+                    }
+                  } catch (err) {
+                    console.error("Error deleting saved job:", err);
+                  }
+                }}
+                className="text-red-500 border-red-200 hover:bg-red-50"
+              >
+                <BookmarkX className="w-4 h-4 mr-2" />
+                Remove
+              </Button>
+            </div>
+          </div>
+        ))
+      ) : (
+        <p className="text-gray-500 text-sm">No saved jobs yet.</p>
+      )}
+    </CardContent>
+  </Card>
+)} */}
 
             </div>
           </div>
