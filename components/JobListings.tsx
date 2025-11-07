@@ -95,7 +95,7 @@ export default function JobListings() {
     const fetchCompanies = async () => {
       try {
         const res = await fetch(
-          "http://127.0.0.1:8010/master/api/companies/"
+          "https://jobseeker-backend-jy1y.onrender.com/master/api/companies/"
         );
         const data = await res.json();
 
@@ -113,7 +113,7 @@ export default function JobListings() {
         const token = localStorage.getItem("auth_token");
         if (!token) return;
     
-        const res = await fetch("http://127.0.0.1:8010/api/saved-jobs/", {
+        const res = await fetch("https://jobseeker-backend-jy1y.onrender.com/api/saved-jobs/", {
           headers: { Authorization: `Bearer ${token}` },
         });
     
@@ -139,7 +139,7 @@ export default function JobListings() {
     setLoading(true);
     try {
       const res = await fetch(
-        "http://127.0.0.1:8010/master/api/states/"
+        "https://jobseeker-backend-jy1y.onrender.com/master/api/states/"
       );
       const data = await res.json();
       const locationNames = data.map((item: any) => item.name);
@@ -157,7 +157,7 @@ export default function JobListings() {
     const fetchSkills = async () => {
       try {
         const response = await fetch(
-          "http://127.0.0.1:8010/master/api/jobs_category/"
+          "https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_category/"
         );
         const data = await response.json();
 
@@ -176,7 +176,7 @@ export default function JobListings() {
     // Simulate API call
     setTimeout(async () => {
       const response = await fetch(
-        "http://127.0.0.1:8010/employeer/api/all-jobs/"
+        "https://jobseeker-backend-jy1y.onrender.com/employeer/api/all-jobs/"
       );
       const data = await response.json();
       console.log("Jobs data:", data);
@@ -377,7 +377,7 @@ const saveJob = async (jobId: number) => {
   }
 
   try {
-    const res = await fetch("http://127.0.0.1:8010/api/saved-jobs/", {
+    const res = await fetch("https://jobseeker-backend-jy1y.onrender.com/api/saved-jobs/", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -406,7 +406,7 @@ const unsaveJob = async (jobId: number) => {
 
   try {
     // We need to find the savedJobId (record ID) for this job
-    const res = await fetch("http://127.0.0.1:8010/api/saved-jobs/", {
+    const res = await fetch("https://jobseeker-backend-jy1y.onrender.com/api/saved-jobs/", {
       headers: { Authorization: `Bearer ${token}` },
     });
     const savedData = await res.json();
@@ -414,7 +414,7 @@ const unsaveJob = async (jobId: number) => {
 
     if (!record) return;
 
-    const delRes = await fetch(`http://127.0.0.1:8010/api/saved-jobs/${record.id}/`, {
+    const delRes = await fetch(`https://jobseeker-backend-jy1y.onrender.com/api/saved-jobs/${record.id}/`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -491,7 +491,7 @@ const fetchUserData = async () => {
   setLoadingUserData(true);
   try {
     const token = localStorage.getItem('auth_token');
-    const response = await fetch('http://127.0.0.1:8010/api/profile/', {
+    const response = await fetch('https://jobseeker-backend-jy1y.onrender.com/api/profile/', {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
@@ -579,7 +579,7 @@ const fetchUserData = async () => {
       })) || []
     };
 
-    const response = await fetch('http://127.0.0.1:8010/employeer/api/applications/submit/', {
+    const response = await fetch('https://jobseeker-backend-jy1y.onrender.com/employeer/api/applications/submit/', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
