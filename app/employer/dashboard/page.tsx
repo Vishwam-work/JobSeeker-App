@@ -1135,7 +1135,7 @@ export default function EmployerDashboard() {
                   </div>
 
                   <div>
-                    <Label className="text-sm font-medium">Location *</Label>
+                    <Label className="text-sm font-medium">Job Location *</Label>
                     <Select
                       value={jobForm.location}
                       onValueChange={(value) =>
@@ -1591,7 +1591,7 @@ export default function EmployerDashboard() {
                             </div>
                             <div className="flex items-center">
                               <Briefcase className="w-4 h-4 mr-1" />
-                              <span>{job.experience}</span>
+                              <span>{job.experience} Years</span>
                             </div>
                             <div className="flex items-center">
                               <DollarSign className="w-4 h-4 mr-1" />

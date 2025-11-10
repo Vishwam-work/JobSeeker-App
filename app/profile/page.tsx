@@ -148,7 +148,7 @@ export default function Profile() {
   const [activeSaveTab, setActiveSaveTab] = useState("SavedJobs");
 
   const [noticeRanges] = useState([
-    "0-15 days",
+    "1-15 days",
     "15-30 days",
     "30-60 days",
     "60-90 days",
@@ -1334,7 +1334,7 @@ export default function Profile() {
                           htmlFor="currentSalary"
                           className="text-sm font-medium"
                         >
-                          Current Salary (LPA)
+                          Current Salary (PA)
                         </Label>
                         <div className="flex gap-2 mt-1">
                           <Select
@@ -1388,7 +1388,7 @@ export default function Profile() {
                           htmlFor="expectedSalary"
                           className="text-sm font-medium"
                         >
-                          Expected Salary (LPA)
+                          Expected Salary (PA)
                         </Label>
                         <div className="flex gap-2 mt-1">
                           <Select
