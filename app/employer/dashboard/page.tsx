@@ -756,7 +756,7 @@ export default function EmployerDashboard() {
   // const handleUpdateJob = async () => {
   //   try {
   //     const token = localStorage.getItem("auth_token");
-  //     const response = await fetch(`http://127.0.0.1:8010/employeer/api/job-postings/${selectedJob.id}/`, {
+  //     const response = await fetch(`https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-postings/${selectedJob.id}/`, {
   //       method: "PUT",
   //       headers: {
   //         "Content-Type": "application/json",
@@ -797,7 +797,7 @@ export default function EmployerDashboard() {
       }
 
       const response = await fetch(
-        `http://127.0.0.1:8010/employeer/job-postings/${selectedJob.id}/update/`,
+        `https://jobseeker-backend-jy1y.onrender.com/employeer/job-postings/${selectedJob.id}/update/`,
         {
           method: "PUT",
           headers: {
