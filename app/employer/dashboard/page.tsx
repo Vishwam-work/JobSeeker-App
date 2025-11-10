@@ -353,6 +353,15 @@ export default function EmployerDashboard() {
     try {
       const token = localStorage.getItem("auth_token");
       if (!token) return;
+        const response = await fetch(
+          "https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-list-view/",
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
       const response = await fetch(
         "https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-list-view/",
@@ -619,7 +628,7 @@ export default function EmployerDashboard() {
       console.error("Error fetching job details", err);
     }
   };
-  //https://jobseeker-backend-jy1y.onrender.com
+//https://jobseeker-backend-jy1y.onrender.com
   const handleEditJob = async (job) => {
     try {
       const token = localStorage.getItem("auth_token");

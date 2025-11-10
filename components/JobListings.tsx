@@ -59,6 +59,9 @@ export default function JobListings() {
   const [loadingUserData, setLoadingUserData] = useState(false);
   const [appliedJobs, setAppliedJobs] = useState([]);
   const { savedJobs, addJob, removeJob } = useSavedJobs();
+  const [savedJobIds, setSavedJobIds] = useState<number[]>([]);
+
+
   // Filter states
   const [filters, setFilters] = useState({
     search: "",
@@ -105,7 +108,29 @@ export default function JobListings() {
       }
     };
 
+    const fetchSavedJobs = async () => {
+      try {
+        const token = localStorage.getItem("auth_token");
+        if (!token) return;
+    
+        const res = await fetch("https://jobseeker-backend-jy1y.onrender.com/api/saved-jobs/", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+    
+        if (!res.ok) return;
+        const data = await res.json();
+    
+        // Store the IDs of saved jobs
+        const jobIds = data.map((item: any) => item.job);
+        setSavedJobIds(jobIds);
+      } catch (err) {
+        console.error("Error fetching saved jobs:", err);
+      }
+    };
+
     fetchCompanies();
+    fetchSavedJobs();
+
   }, []);
 
   // Lazy load locations
@@ -336,13 +361,72 @@ export default function JobListings() {
   };
 
   const handleSaveJob = (job) => {
-    const isSaved = savedJobs.some((j) => j.id === job.id);
-    if (isSaved) {
-      removeJob(job.id);
-    } else {
-      addJob(job);
+  const isSaved = savedJobs.some((j) => j.id === job.id);
+  if (isSaved) {
+    removeJob(job.id);
+  } else {
+    addJob(job);
+  }
+};
+
+const saveJob = async (jobId: number) => {
+  const token = localStorage.getItem("auth_token");
+  if (!token) {
+    alert("Please log in first.");
+    return;
+  }
+
+  try {
+    const res = await fetch("https://jobseeker-backend-jy1y.onrender.com/api/saved-jobs/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ job: jobId }),
+    });
+
+    if (res.status === 400) {
+      const data = await res.json();
+      console.log(data.detail || "Already saved.");
+      return;
     }
-  };
+
+    if (!res.ok) throw new Error("Failed to save job");
+
+    setSavedJobIds((prev) => [...prev, jobId]);
+  } catch (err) {
+    console.error("Error saving job:", err);
+  }
+};
+
+const unsaveJob = async (jobId: number) => {
+  const token = localStorage.getItem("auth_token");
+  if (!token) return;
+
+  try {
+    // We need to find the savedJobId (record ID) for this job
+    const res = await fetch("https://jobseeker-backend-jy1y.onrender.com/api/saved-jobs/", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const savedData = await res.json();
+    const record = savedData.find((item: any) => item.job === jobId);
+
+    if (!record) return;
+
+    const delRes = await fetch(`https://jobseeker-backend-jy1y.onrender.com/api/saved-jobs/${record.id}/`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (!delRes.ok && delRes.status !== 204)
+      throw new Error("Failed to unsave job");
+
+    setSavedJobIds((prev) => prev.filter((id) => id !== jobId));
+  } catch (err) {
+    console.error("Error unsaving job:", err);
+  }
+};
 
   const handleApply = (job) => {
     const token = localStorage.getItem("auth_token");
@@ -891,24 +975,28 @@ export default function JobListings() {
                                 <Bookmark className={`w-4 h-4 ${job.isBookmarked ? 'fill-current' : ''}`} />
                               </Button> */}
 
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleSaveJob(job)}
-                                className={
-                                  savedJobs.some((j) => j.id === job.id)
-                                    ? "text-purple-600"
-                                    : "text-gray-400"
-                                }
-                              >
-                                <Bookmark
-                                  className={`w-4 h-4 ${
-                                    savedJobs.some((j) => j.id === job.id)
-                                      ? "fill-current"
-                                      : ""
-                                  }`}
-                                />
-                              </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() =>
+                                savedJobIds.includes(job.id)
+                                  ? unsaveJob(job.id)
+                                  : saveJob(job.id)
+                              }
+                              className={`${
+                                savedJobIds.includes(job.id)
+                                  ? "text-green-600"
+                                  : "text-gray-400 hover:text-green-500"
+                              }`}
+                            >
+                              <Bookmark
+                                className={`w-4 h-4 transition-all duration-300 ${
+                                  savedJobIds.includes(job.id)
+                                    ? "fill-green-500 drop-shadow-[0_0_6px_rgba(34,197,94,0.8)]"
+                                    : ""
+                                }`}
+                              />
+                            </Button>
 
                               <Button
                                 variant="ghost"
