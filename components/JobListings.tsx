@@ -487,14 +487,6 @@ const unsaveJob = async (jobId: number) => {
         setUserData(data);
       } else {
         console.error("Failed to fetch user data");
-const fetchUserData = async () => {
-  setLoadingUserData(true);
-  try {
-    const token = localStorage.getItem('auth_token');
-    const response = await fetch('https://jobseeker-backend-jy1y.onrender.com/api/profile/', {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
       }
     } catch (error) {
       console.error("Error fetching user data:", error);
@@ -570,38 +562,6 @@ const fetchUserData = async () => {
       console.error("Error submitting application:", error);
       alert("Network error. Please try again.");
     }
-
-    const applicationData = {
-      job_id: selectedJob.id,
-      answers: selectedJob.questions?.map((question, index) => ({
-        question: question,
-        answer: answers[index] || ''
-      })) || []
-    };
-
-    const response = await fetch('https://jobseeker-backend-jy1y.onrender.com/employeer/api/applications/submit/', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(applicationData)
-    });
-
-    const result = await response.json();
-
-    if (response.ok) {
-      alert(`Application submitted successfully for ${selectedJob.title}!`);
-      setIsApplyModalOpen(false);
-      setSelectedJob(null);
-      setAnswers({});
-    } else {
-      alert(result.error || 'Failed to submit application');
-    }
-  } catch (error) {
-    console.error('Error submitting application:', error);
-    alert('Network error. Please try again.');
-  }
   };
 
   const getWorkModeColor = (workMode) => {
