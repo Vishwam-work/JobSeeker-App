@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useRouter } from 'next/navigation';
+import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -59,7 +59,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 
 export default function EmployerDashboard() {
   const [activeTab, setActiveTab] = useState("post-job");
@@ -78,6 +78,8 @@ export default function EmployerDashboard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState(null);
   const [isEditMode, setIsEditMode] = useState(false);
+
+  const [filter, setFilter] = useState("All");
 
   const router = useRouter();
   // Sample data for posted jobs
@@ -281,7 +283,7 @@ export default function EmployerDashboard() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem('auth_token');
+    const token = localStorage.getItem("auth_token");
     console.log("LOG TOKEN:", token);
     setIsAuthenticated(!!token);
   }, []);
@@ -289,35 +291,46 @@ export default function EmployerDashboard() {
   useEffect(() => {
     const fetchApplications = async () => {
       try {
-        const token = localStorage.getItem('auth_token');
+        const token = localStorage.getItem("auth_token");
         if (!token) return;
-        const res = await fetch('https://jobseeker-backend-jy1y.onrender.com/employeer/api/employer/applications/', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
+        const res = await fetch(
+          "https://jobseeker-backend-jy1y.onrender.com/employeer/api/employer/applications/",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
         if (!res.ok) {
-          console.error('Failed to fetch employer applications');
+          console.error("Failed to fetch employer applications");
           return;
         }
         const data = await res.json();
-        console.log('Employer applications:', data);
+        console.log("Employer applications:", data);
         // Map API to UI candidate shape
         const mapped = (Array.isArray(data) ? data : []).map((app) => ({
           id: app.id,
-          name: app.profile?.full_name || app.user_email || 'Unknown',
+          name: app.profile?.full_name || app.user_email || "Unknown",
           email: app.profile?.email || app.user_email,
-          phone: app.profile?.phone || 'Not provided',
-          location: [app.profile?.city, app.profile?.state, app.profile?.country].filter(Boolean).join(', '),
-          experience: app.profile?.experience || 'N/A',
-          currentRole: '',
-          currentCompany: '',
+          phone: app.profile?.phone || "Not provided",
+          location: [
+            app.profile?.city,
+            app.profile?.state,
+            app.profile?.country,
+          ]
+            .filter(Boolean)
+            .join(", "),
+          experience: app.profile?.experience || "N/A",
+          currentRole: "",
+          currentCompany: "",
           skills: app.profile?.skills || [],
-          education: '',
+          education: "",
           appliedFor: app.job_title,
           appliedDate: app.applied_at,
-          status: 'Under Review',
-          resumeUrl: app.profile?.resume? `https://jobseeker-backend-jy1y.onrender.com${app.profile.resume}`: '#',
+          status: "Under Review",
+          resumeUrl: app.profile?.resume
+            ? `https://jobseeker-backend-jy1y.onrender.com${app.profile.resume}`
+            : "#",
           profileImage: null,
-          summary: '',
+          summary: "",
           workExperience: app.profile?.experiences || [],
           educationDetails: app.profile?.educations || [],
           certifications: app.profile?.certifications || [],
@@ -325,38 +338,43 @@ export default function EmployerDashboard() {
         }));
         setCandidates(mapped);
       } catch (e) {
-        console.error('Failed to fetch employer applications', e);
+        console.error("Failed to fetch employer applications", e);
       }
     };
     fetchApplications();
   }, []);
 
- const fetchPostedJobs = async () => {
-      try {
-        const token = localStorage.getItem("auth_token");
-        if (!token) return;
+  const filteredCandidates = candidates.filter((candidate) => {
+    if (filter === "All") return true;
+    return candidate.status === filter;
+  });
 
-        const response = await fetch(
-          "https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-list-view/",
-          {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+  const fetchPostedJobs = async () => {
+    try {
+      const token = localStorage.getItem("auth_token");
+      if (!token) return;
 
-        if (!response.ok) {
-          console.error("Failed to fetch jobs");
-          return;
+      const response = await fetch(
+        "https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-list-view/",
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
+      );
 
-        const data = await response.json();
-        setPostedJobs(data); // Set jobs into state
-      } catch (error) {
-        console.error("Error fetching jobs:", error);
+      if (!response.ok) {
+        console.error("Failed to fetch jobs");
+        return;
       }
-    };
+
+      const data = await response.json();
+      setPostedJobs(data); // Set jobs into state
+    } catch (error) {
+      console.error("Error fetching jobs:", error);
+    }
+  };
 
   // Fetch data from APIs
   useEffect(() => {
@@ -375,7 +393,9 @@ export default function EmployerDashboard() {
 
   useEffect(() => {
     // Fetch job categories
-    fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_category/")
+    fetch(
+      "https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_category/"
+    )
       .then((res) => {
         if (!res.ok) {
           throw new Error(`HTTP error! status: ${res.status}`);
@@ -405,7 +425,7 @@ export default function EmployerDashboard() {
 
   // Fetch job titles when category changes
   useEffect(() => {
-    if (selectedCategory){
+    if (selectedCategory) {
       fetch(
         `https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_title/?category=${selectedCategory}`
       )
@@ -436,19 +456,21 @@ export default function EmployerDashboard() {
   };
 
   const handleAddQuestion = () => {
-  if (newQuestion.trim() && !jobForm.questions.includes(newQuestion.trim())) {
-    const updated = [...jobForm.questions, newQuestion.trim()];
-    setJobForm((prev) => ({ ...prev, questions: updated }));
-    setQuestions(updated); // ✅ keep them in sync
-    setNewQuestion("");
-  }
-};
+    if (newQuestion.trim() && !jobForm.questions.includes(newQuestion.trim())) {
+      const updated = [...jobForm.questions, newQuestion.trim()];
+      setJobForm((prev) => ({ ...prev, questions: updated }));
+      setQuestions(updated); // ✅ keep them in sync
+      setNewQuestion("");
+    }
+  };
 
   const handleRemoveQuestion = (indexToRemove) => {
-  const updated = jobForm.questions.filter((_, index) => index !== indexToRemove);
-  setJobForm((prev) => ({ ...prev, questions: updated }));
-  setQuestions(updated);
-};
+    const updated = jobForm.questions.filter(
+      (_, index) => index !== indexToRemove
+    );
+    setJobForm((prev) => ({ ...prev, questions: updated }));
+    setQuestions(updated);
+  };
 
   const handleRemoveSkill = (skillToRemove) => {
     setJobForm((prev) => ({
@@ -476,7 +498,7 @@ export default function EmployerDashboard() {
         salary: jobForm.salary,
         job_type: jobForm.job_type,
         work_mode: jobForm.workMode,
-        vacancies: parseInt(jobForm.vacancies) || 1,  // Ensure integer
+        vacancies: parseInt(jobForm.vacancies) || 1, // Ensure integer
         application_deadline: jobForm.applicationDeadline,
         description: jobForm.description,
         requirements: jobForm.requirements,
@@ -494,7 +516,7 @@ export default function EmployerDashboard() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-             Authorization: `Bearer ${token}`, // Send JWT token
+            Authorization: `Bearer ${token}`, // Send JWT token
           },
           body: JSON.stringify(payload),
         }
@@ -584,10 +606,10 @@ export default function EmployerDashboard() {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
       const data = await response.json();
       console.log("Job details:", data);
       setSelectedJob(data);
@@ -597,7 +619,7 @@ export default function EmployerDashboard() {
       console.error("Error fetching job details", err);
     }
   };
-//https://jobseeker-backend-jy1y.onrender.com
+  //https://jobseeker-backend-jy1y.onrender.com
   const handleEditJob = async (job) => {
     try {
       const token = localStorage.getItem("auth_token");
@@ -609,78 +631,119 @@ export default function EmployerDashboard() {
       );
       // https://jobseeker-backend-jy1y.onrender.com
       const data = await response.json();
-      console.log("Data is prefill")
+      console.log("Data is prefill");
       // Prefill the form
       setJobForm({
-          title: data.title || "",
-          category: data.category?.id?.toString() || data.category || "",
-          jobTitle: data.job_title?.id?.toString() || data.job_title || "",
-          company: data.company || "",
-          location: data.location?.id?.toString() || data.location || "",
-          experience: data.experience || "",
-          salary: data.salary || "",
-          currency: data.currency?.id?.toString() || data.currency || "",
-          job_type: data.job_type || "",
-          workMode: data.work_mode || "",
-          description: data.description || "",
-          requirements: data.requirements || "",
-          benefits: data.benefits || "",
-          skills: data.skills || [],
-          applicationDeadline: data.application_deadline || "",
-          vacancies: data.vacancies || "",
-          isUrgent: data.is_urgent || false,
-          isRemote: data.is_remote || false,
-          questions: data.questions || [],
+        title: data.title || "",
+        category: data.category?.id?.toString() || data.category || "",
+        jobTitle: data.job_title?.id?.toString() || data.job_title || "",
+        company: data.company || "",
+        location: data.location?.id?.toString() || data.location || "",
+        experience: data.experience || "",
+        salary: data.salary || "",
+        currency: data.currency?.id?.toString() || data.currency || "",
+        job_type: data.job_type || "",
+        workMode: data.work_mode || "",
+        description: data.description || "",
+        requirements: data.requirements || "",
+        benefits: data.benefits || "",
+        skills: data.skills || [],
+        applicationDeadline: data.application_deadline || "",
+        vacancies: data.vacancies || "",
+        isUrgent: data.is_urgent || false,
+        isRemote: data.is_remote || false,
+        questions: data.questions || [],
       });
       setQuestions(data.questions || []);
       setAskQuestionEnabled(data.questions && data.questions.length > 0);
 
       setSelectedJob(data);
       setIsEditMode(true);
-      
     } catch (err) {
       console.error("Error fetching job details for edit", err);
     }
   };
 
-  const handleDeleteJob = async(job) => {
+  const handleDeleteJob = async (job) => {
     const token = localStorage.getItem("auth_token");
-    try{
+    try {
       if (
-      window.confirm(`Are you sure you want to delete the job: ${job.title}?`)
-    ) {
-      console.log("Deleting job:", job);
+        window.confirm(`Are you sure you want to delete the job: ${job.title}?`)
+      ) {
+        console.log("Deleting job:", job);
 
-      alert(`Job deleted: ${job.title}`);
-    }
-      const response = await fetch(`https://jobseeker-backend-jy1y.onrender.com/employeer/job-postings/${job.id}/delete/`,
+        alert(`Job deleted: ${job.title}`);
+      }
+      const response = await fetch(
+        `https://jobseeker-backend-jy1y.onrender.com/employeer/job-postings/${job.id}/delete/`,
         {
           method: "DELETE",
           headers: {
-            "Authorization": `Bearer ${token}`, 
+            Authorization: `Bearer ${token}`,
           },
         }
-      )
+      );
       if (response.ok) {
-      setPostedJobs((prev) => prev.filter((j) => j.id !== job.id));
-      alert(`Job deleted: ${job.title}`);}
-    else {
-      console.error("Failed to delete job");
-      alert("Failed to delete job");
-    }
-    }
-    catch (err) {
+        setPostedJobs((prev) => prev.filter((j) => j.id !== job.id));
+        alert(`Job deleted: ${job.title}`);
+      } else {
+        console.error("Failed to delete job");
+        alert("Failed to delete job");
+      }
+    } catch (err) {
       console.error("Error fetching job details for edit", err);
     }
   };
 
-  const handleToggleJobStatus = (job) => {
-    const newStatus = job.status === "Active" ? "Closed" : "Active";
-    console.log(`Changing job status from ${job.status} to ${newStatus}`);
-    // Implement status toggle functionality
-    alert(`Job status changed to: ${newStatus}`);
+  // const handleToggleJobStatus = (job) => {
+  //   const newStatus = job.status === "Active" ? "Closed" : "Active";
+  //   console.log(`Changing job status from ${job.status} to ${newStatus}`);
+  //   // Implement status toggle functionality
+  //   alert(`Job status changed to: ${newStatus}`);
+  // };
+
+  const handleToggleJobStatus = async (job) => {
+    const token = localStorage.getItem("auth_token");
+
+    if (!token) {
+      alert("You are not logged in. Please log in again.");
+      return;
+    }
+
+    const newStatus =
+      job.status.toLowerCase() === "active" ? "closed" : "active";
+
+    try {
+      const response = await fetch(
+        `https://jobseeker-backend-jy1y.onrender.com/employeer/job-postings/${job.id}/update/`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ status: newStatus }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (response.ok) {
+        setPostedJobs((prev) =>
+          prev.map((j) => (j.id === job.id ? { ...j, status: newStatus } : j))
+        );
+        alert(`Job status changed to: ${newStatus}`);
+      } else {
+        console.error("Failed to update job status:", result);
+        alert(result.detail || JSON.stringify(result));
+      }
+    } catch (err) {
+      console.error("Error updating job status:", err);
+      alert("Network error. Please try again.");
+    }
   };
-// OLD handleUpdateJOB
+
+  // OLD handleUpdateJOB
   // const handleUpdateJob = async () => {
   //   try {
   //     const token = localStorage.getItem("auth_token");
@@ -716,14 +779,14 @@ export default function EmployerDashboard() {
       alert("No job selected for update");
       return;
     }
-  
+
     try {
       const token = localStorage.getItem("auth_token");
       if (!token) {
         alert("You must be logged in to update a job.");
         return;
       }
-  
+
       const response = await fetch(
         `https://jobseeker-backend-jy1y.onrender.com/employeer/job-postings/${selectedJob.id}/update/`,
         {
@@ -747,9 +810,7 @@ export default function EmployerDashboard() {
 
       // Update the state with the new job data
       setPostedJobs((prevJobs) =>
-        prevJobs.map((job) =>
-          job.id === updatedJob.id ? updatedJob : job
-        )
+        prevJobs.map((job) => (job.id === updatedJob.id ? updatedJob : job))
       );
 
       setIsEditMode(false); // Close the dialog
@@ -760,10 +821,91 @@ export default function EmployerDashboard() {
     }
   };
 
+  // SHORTLIST
+  const handleShortlistCandidate = async (candidate) => {
+    if (!candidate?.id) {
+      alert("Candidate ID missing");
+      return;
+    }
+
+    const token = localStorage.getItem("auth_token");
+    if (!token) {
+      alert("You must be logged in to shortlist a candidate.");
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `https://jobseeker-backend-jy1y.onrender.com/employeer/api/employer/applications/${candidate.id}/update/`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ status: "shortlisted" }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Failed to shortlist:", errorData);
+        alert(`Error: ${errorData.detail || "Unable to shortlist candidate"}`);
+        return;
+      }
+
+      const updatedCandidate = await response.json();
+
+      setCandidates((prev) =>
+        prev.map((c) =>
+          c.id === updatedCandidate.id
+            ? { ...c, status: updatedCandidate.status }
+            : c
+        )
+      );
+
+      alert("Candidate shortlisted successfully!");
+    } catch (err) {
+      console.error("Error shortlisting candidate:", err);
+      alert("Network error. Please try again.");
+    }
+  };
+
+  /* REJECT */
+  const handleRejectCandidate = async (candidate) => {
+    const token = localStorage.getItem("auth_token");
+    if (!token) return alert("Not logged in");
+
+    const url = `https://jobseeker-backend-jy1y.onrender.com/employeer/job-postings/${candidate.id}/update/`;
+    const payload = { status: "Rejected" };
+
+    try {
+      const res = await fetch(url, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (res.ok) {
+        alert(`${candidate.name} rejected successfully`);
+      } else {
+        const errText = await res.text();
+        console.error("Failed:", res.status, errText);
+        alert(`Failed to reject: ${res.status}`);
+      }
+    } catch (e) {
+      console.error("Network error:", e);
+      alert("Network error. Please try again.");
+    }
+  };
+
   const handleLogout = () => {
-    localStorage.removeItem('auth_token');
+    localStorage.removeItem("auth_token");
     setIsAuthenticated(false);
-    router.push('/employer/login');
+    router.push("/employer/login");
   };
 
   const tabs = [
@@ -775,14 +917,14 @@ export default function EmployerDashboard() {
 
   const getWorkModeColor = (workMode) => {
     switch (workMode) {
-      case 'Remote':
-        return 'bg-green-100 text-green-800';
-      case 'Hybrid':
-        return 'bg-blue-100 text-blue-800';
-      case 'Office':
-        return 'bg-gray-100 text-gray-800';
+      case "Remote":
+        return "bg-green-100 text-green-800";
+      case "Hybrid":
+        return "bg-blue-100 text-blue-800";
+      case "Office":
+        return "bg-gray-100 text-gray-800";
       default:
-        return 'bg-gray-100 text-gray-800';
+        return "bg-gray-100 text-gray-800";
     }
   };
 
@@ -791,23 +933,19 @@ export default function EmployerDashboard() {
     const posted = new Date(postedDate);
     const diffTime = Math.abs(now - posted);
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
-    if (diffDays === 1) return '1 day ago';
+
+    if (diffDays === 1) return "1 day ago";
     if (diffDays < 7) return `${diffDays} days ago`;
     if (diffDays < 30) return `${Math.ceil(diffDays / 7)} weeks ago`;
     return `${Math.ceil(diffDays / 30)} months ago`;
   };
-
-
-  
-  
 
   // let companyInfoSize;
   // if(typeof selectedJob ==="object" && selectedJob?.companyInfo.size){
   //  selectedJob.requirements.map((req, index) => (
   //                        )
   // }
-     
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -1295,55 +1433,59 @@ export default function EmployerDashboard() {
                       Remote work available
                     </Label>
                   </div>
-                  
-                      <div className="flex items-center space-x-2">
-                        <Checkbox
-                          id="ask-question"
-                          checked={askQuestionEnabled}
-                          onCheckedChange={(checked) => setAskQuestionEnabled(!!checked)}
+
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="ask-question"
+                      checked={askQuestionEnabled}
+                      onCheckedChange={(checked) =>
+                        setAskQuestionEnabled(!!checked)
+                      }
+                    />
+                    <Label htmlFor="ask-question" className="text-sm">
+                      Ask Question
+                    </Label>
+                  </div>
+
+                  {askQuestionEnabled && (
+                    <div className="space-y-2">
+                      <div className="flex gap-2">
+                        <Input
+                          value={newQuestion}
+                          onChange={(e) => setNewQuestion(e.target.value)}
+                          placeholder="Enter a question..."
+                          className="flex-1"
                         />
-                        <Label htmlFor="ask-question" className="text-sm">
-                          Ask Question
-                        </Label>
+                        <Button
+                          type="button"
+                          onClick={handleAddQuestion}
+                          variant="outline"
+                        >
+                          Add Question
+                        </Button>
                       </div>
 
-                      {askQuestionEnabled && (
-                        <div className="space-y-2">
-                          <div className="flex gap-2">
-                            <Input
-                              value={newQuestion}
-                              onChange={(e) => setNewQuestion(e.target.value)}
-                              placeholder="Enter a question..."
-                              className="flex-1"
-                            />
-                            <Button type="button" onClick={handleAddQuestion} variant="outline">
-                                Add Question
-                            </Button>
-                          </div>
-
-                          {/* Show added questions */}
-                          <div className="flex flex-wrap gap-2">
-                            {questions.map((q, index) => (
-                             
-                              <span
-                                key={index}
-                                  className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 text-green-800"
-                                >
-                                  {q}
-                                  <button
-                                    type="button"
-                                    className="ml-2 text-red-600 hover:text-red-800"
-                                    onClick={() => handleRemoveQuestion(index)}
-                                  >
-                                    ×
-                                  </button>
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
+                      {/* Show added questions */}
+                      <div className="flex flex-wrap gap-2">
+                        {questions.map((q, index) => (
+                          <span
+                            key={index}
+                            className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 text-green-800"
+                          >
+                            {q}
+                            <button
+                              type="button"
+                              className="ml-2 text-red-600 hover:text-red-800"
+                              onClick={() => handleRemoveQuestion(index)}
+                            >
+                              ×
+                            </button>
+                          </span>
+                        ))}
+                      </div>
                     </div>
-                
+                  )}
+                </div>
 
                 {/* Submit Button */}
                 <div className="flex justify-end space-x-4">
@@ -1504,14 +1646,15 @@ export default function EmployerDashboard() {
                               <DropdownMenuItem
                                 onClick={() => handleToggleJobStatus(job)}
                               >
-                                {job.status === "Active" ? (
+                                {job.status?.toLowerCase() === "active" ||
+                                job.status?.toLowerCase() === "open" ? (
                                   <>
-                                    <XCircle className="w-4 h-4 mr-2" />
+                                    <XCircle className="w-4 h-4 mr-2 text-red-500" />
                                     Close Job
                                   </>
                                 ) : (
                                   <>
-                                    <CheckCircle className="w-4 h-4 mr-2" />
+                                    <CheckCircle className="w-4 h-4 mr-2 text-green-500" />
                                     Activate Job
                                   </>
                                 )}
@@ -1535,32 +1678,32 @@ export default function EmployerDashboard() {
           </Card>
         )}
 
-          <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-                    {selectedJob && (
-                      <>
-                        <DialogHeader>
-                          <DialogTitle className="text-2xl font-bold text-gray-900">
-                            {selectedJob.title}
-                          </DialogTitle>
-                        </DialogHeader>
-                        <div className="space-y-6">
-                          {/* Company Info */}
-                          <div className="flex items-start space-x-4 p-4 bg-gray-50 rounded-lg">
-                            <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-blue-100 rounded-lg flex items-center justify-center">
-                              <Building2 className="w-8 h-8 text-purple-600" />
-                            </div>
-                            <div className="flex-1">
-                              <h3 className="text-xl font-semibold text-purple-600 mb-1">
-                                {selectedJob.company}
-                              </h3>
-                              {/* <p className="text-gray-600 mb-2">{selectedJob.companyInfo.about}</p> */}
-                              <div className="flex flex-wrap gap-4 text-sm text-gray-600">
-                                <div className="flex items-center">
-                                  <Users className="w-4 h-4 mr-1" />
-                                  {/* <span>{selectedJob.companyInfo.size}</span> */}
-                                </div>
-                                {/* <div className="flex items-center">
+        <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            {selectedJob && (
+              <>
+                <DialogHeader>
+                  <DialogTitle className="text-2xl font-bold text-gray-900">
+                    {selectedJob.title}
+                  </DialogTitle>
+                </DialogHeader>
+                <div className="space-y-6">
+                  {/* Company Info */}
+                  <div className="flex items-start space-x-4 p-4 bg-gray-50 rounded-lg">
+                    <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-blue-100 rounded-lg flex items-center justify-center">
+                      <Building2 className="w-8 h-8 text-purple-600" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-xl font-semibold text-purple-600 mb-1">
+                        {selectedJob.company}
+                      </h3>
+                      {/* <p className="text-gray-600 mb-2">{selectedJob.companyInfo.about}</p> */}
+                      <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                        <div className="flex items-center">
+                          <Users className="w-4 h-4 mr-1" />
+                          {/* <span>{selectedJob.companyInfo.size}</span> */}
+                        </div>
+                        {/* <div className="flex items-center">
                                   <Building2 className="w-4 h-4 mr-1" />
                                   <span>{selectedJob.companyInfo.industry}</span>
                                 </div>
@@ -1569,61 +1712,69 @@ export default function EmployerDashboard() {
                                   <a href={selectedJob.companyInfo.website} className="text-purple-600 hover:underline">
                                     Website
                                   </a> */}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
-                          {/* Job Details */}
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <div className="flex items-center text-gray-600">
-                                <MapPin className="w-4 h-4 mr-2" />
-                                <span>{selectedJob.location?.name}</span>
-                              </div>
-                              <div className="flex items-center text-gray-600">
-                                <Briefcase className="w-4 h-4 mr-2" />
-                                <span>{selectedJob.experience}</span>
-                              </div>
-                              <div className="flex items-center text-gray-600">
-                                <DollarSign className="w-4 h-4 mr-2" />
-                                <span>{selectedJob.salary}</span>
-                              </div>
-                            </div>
-                            <div className="space-y-2">
-                              <div className="flex items-center text-gray-600">
-                                <Clock className="w-4 h-4 mr-2" />
-                                <span>{selectedJob.job_type}</span>
-                              </div>
-                              <div className="flex items-center text-gray-600">
-                                <Building2 className="w-4 h-4 mr-2" />
-                                <Badge className={getWorkModeColor(selectedJob.work_mode)}>
-                                  {selectedJob.work_mode}
-                                </Badge>
-                              </div>
-                              <div className="flex items-center text-gray-600">
-                                <Calendar className="w-4 h-4 mr-2" />
-                                <span>Posted {getTimeSincePosted(selectedJob.created_at)}</span>
-                              </div>
-                            </div>
-                          </div>
+                {/* Job Details */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <div className="flex items-center text-gray-600">
+                      <MapPin className="w-4 h-4 mr-2" />
+                      <span>{selectedJob.location?.name}</span>
+                    </div>
+                    <div className="flex items-center text-gray-600">
+                      <Briefcase className="w-4 h-4 mr-2" />
+                      <span>{selectedJob.experience}</span>
+                    </div>
+                    <div className="flex items-center text-gray-600">
+                      <DollarSign className="w-4 h-4 mr-2" />
+                      <span>{selectedJob.salary}</span>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center text-gray-600">
+                      <Clock className="w-4 h-4 mr-2" />
+                      <span>{selectedJob.job_type}</span>
+                    </div>
+                    <div className="flex items-center text-gray-600">
+                      <Building2 className="w-4 h-4 mr-2" />
+                      <Badge
+                        className={getWorkModeColor(selectedJob.work_mode)}
+                      >
+                        {selectedJob.work_mode}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center text-gray-600">
+                      <Calendar className="w-4 h-4 mr-2" />
+                      <span>
+                        Posted {getTimeSincePosted(selectedJob.created_at)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
 
-                          {/* Job Description */}
-                          <div>
-                            <h4 className="text-lg font-semibold text-gray-900 mb-3">Job Description</h4>
-                            <p className="text-gray-700 leading-relaxed">{selectedJob.description}</p>
-                          </div>
+                {/* Job Description */}
+                <div>
+                  <h4 className="text-lg font-semibold text-gray-900 mb-3">
+                    Job Description
+                  </h4>
+                  <p className="text-gray-700 leading-relaxed">
+                    {selectedJob.description}
+                  </p>
+                </div>
 
-                          {/* Requirements */}
-                          <div>
-                            <h4 className="text-lg font-semibold text-gray-900 mb-3">Requirements</h4>
-                            <ul className="space-y-2">
-                              {selectedJob.requirements}
-                            </ul>
-                          </div>
+                {/* Requirements */}
+                <div>
+                  <h4 className="text-lg font-semibold text-gray-900 mb-3">
+                    Requirements
+                  </h4>
+                  <ul className="space-y-2">{selectedJob.requirements}</ul>
+                </div>
 
-                          {/* Responsibilities */}
-                          {/* <div>
+                {/* Responsibilities */}
+                {/* <div>
                             <h4 className="text-lg font-semibold text-gray-900 mb-3">Responsibilities</h4>
                             <ul className="space-y-2">
                               {selectedJob.responsibilities.map((resp, index) => (
@@ -1635,48 +1786,59 @@ export default function EmployerDashboard() {
                             </ul>
                           </div>
                           */}
-                          {/* Benefits */}
-                          <div>
-                            <h4 className="text-lg font-semibold text-gray-900 mb-3">Benefits</h4>
-                            <ul className="space-y-2">
-                              {selectedJob.benefits}
-                            </ul>
-                          </div>
-        
-                          {/* Skills */}
-                          <div>
-                            <h4 className="text-lg font-semibold text-gray-900 mb-3">Required Skills</h4>
-                            <div className="flex flex-wrap gap-2">
-                              {selectedJob.skills.map((skill, index) => (
-                                <Badge key={index} variant="secondary" className="bg-purple-100 text-purple-800">
-                                  {skill}
-                                </Badge>
-                              ))}
-                            </div>
-                          </div>
+                {/* Benefits */}
+                <div>
+                  <h4 className="text-lg font-semibold text-gray-900 mb-3">
+                    Benefits
+                  </h4>
+                  <ul className="space-y-2">{selectedJob.benefits}</ul>
+                </div>
 
-                         {/* questions */}
-                          <div>
-                            <h4 className="text-lg font-semibold text-gray-900 mb-3">Questions</h4>
-                            <div className="flex flex-wrap gap-2">
-                              {selectedJob.questions && selectedJob.questions.length > 0 ? (
-                                selectedJob.questions.map((question, index) => (
-                                  <Badge
-                                    key={index}
-                                    variant="secondary"
-                                    className="bg-green-100 text-green-800"
-                                  >
-                                    {question}
-                                  </Badge>
-                                ))
-                              ) : (
-                                <p className="text-gray-500 text-sm">No questions added</p>
-                              )}
-                            </div>
-                          </div>
-        
-                          {/* Action Buttons */}
-                          {/* <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t">
+                {/* Skills */}
+                <div>
+                  <h4 className="text-lg font-semibold text-gray-900 mb-3">
+                    Required Skills
+                  </h4>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedJob.skills.map((skill, index) => (
+                      <Badge
+                        key={index}
+                        variant="secondary"
+                        className="bg-purple-100 text-purple-800"
+                      >
+                        {skill}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+
+                {/* questions */}
+                <div>
+                  <h4 className="text-lg font-semibold text-gray-900 mb-3">
+                    Questions
+                  </h4>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedJob.questions &&
+                    selectedJob.questions.length > 0 ? (
+                      selectedJob.questions.map((question, index) => (
+                        <Badge
+                          key={index}
+                          variant="secondary"
+                          className="bg-green-100 text-green-800"
+                        >
+                          {question}
+                        </Badge>
+                      ))
+                    ) : (
+                      <p className="text-gray-500 text-sm">
+                        No questions added
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                {/* <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t">
                             <Button
                               onClick={() => {
                                 setIsJobDetailOpen(false);
@@ -1704,145 +1866,275 @@ export default function EmployerDashboard() {
                               Share
                             </Button>
                           </div> */}
-                        {/* </div> */}
-                      </>
-                    )}
-                  </DialogContent>
-                </Dialog>
+                {/* </div> */}
+              </>
+            )}
+          </DialogContent>
+        </Dialog>
 
-{/* FIX: THE Values are not showing, Preset the Value */}
-    <Dialog open={isEditMode} onOpenChange={setIsEditMode}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-xl">
-        <DialogHeader>
-          <DialogTitle className="text-2xl font-bold">Edit Job Profile</DialogTitle>
-        </DialogHeader>
+        {/* FIX: THE Values are not showing, Preset the Value */}
+        <Dialog open={isEditMode} onOpenChange={setIsEditMode}>
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-xl">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-bold">
+                Edit Job Profile
+              </DialogTitle>
+            </DialogHeader>
 
-        <div className="grid grid-cols-2 gap-4 py-4">
-          {/* Left Column */}
-          <div className="space-y-3">
-            <div>
-              <Label>Title</Label>
-              <Input name="title" value={jobForm.title || ""} onChange={(e) => setJobForm({ ...jobForm, [e.target.name]: e.target.value })}/>
-            </div>
-            <div>
-              <Label>Category</Label>
-              <Input name="category" value={jobForm.category?.name || ""} onChange={(e) => setJobForm({ ...jobForm, [e.target.name]: e.target.value })} />
-            </div>
-            <div>
-              <Label>Job Title</Label>
-              <Input name="jobTitle" value={jobForm.jobTitle || ""} onChange={(e) => setJobForm({ ...jobForm, [e.target.name]: e.target.value })} />
-            </div>
-            <div>
-              <Label>Company</Label>
-              <Input name="company"  value={jobForm.company || ""} onChange={(e) => setJobForm({ ...jobForm, [e.target.name]: e.target.value })}/>
-            </div>
-            <div>
-              <Label>Location</Label>
-              <Input name="location" value={jobForm.location?.name || ""} onChange={(e) => setJobForm({ ...jobForm, [e.target.name]: e.target.value })} />
-            </div>
-            <div>
-              <Label>Experience</Label>
-              <Input name="experience" value={jobForm.experience || ""} onChange={(e) => setJobForm({ ...jobForm, [e.target.name]: e.target.value })} />
-            </div>
-            <div>
-              <Label>Salary</Label>
-              <Input name="salary" value={jobForm.salary || ""} onChange={(e) => setJobForm({ ...jobForm, [e.target.name]: e.target.value })} />
-            </div>
-            <div>
-              <Label>Currency</Label>
-              <Input name="currency" value={jobForm.currency || ""} onChange={(e) => setJobForm({ ...jobForm, [e.target.name]: e.target.value })} />
-            </div>
-          </div>
-
-          {/* Right Column */}
-          <div className="space-y-3">
-            <div>
-              <Label>Job Type</Label>
-              <Input name="job_type" value={jobForm.job_type|| ""} onChange={(e) => setJobForm({ ...jobForm, [e.target.name]: e.target.value })} />
-            </div>
-            <div>
-              <Label>Work Mode</Label>
-              <Input name="workMode" value={jobForm.workMode || ""} onChange={(e) => setJobForm({ ...jobForm, [e.target.name]: e.target.value })} />
-            </div>
-            <div>
-              <Label>Description</Label>
-              <Textarea
-                name="description"
-                value={jobForm.description || ""} onChange={(e) => setJobForm({ ...jobForm, [e.target.name]: e.target.value })}
-                rows={3}
-              />
-            </div>
-            <div>
-              <Label>Requirements</Label>
-              <Textarea
-                name="requirements"
-                value={jobForm.requirements || ""} onChange={(e) => setJobForm({ ...jobForm, [e.target.name]: e.target.value })}
-                rows={3}
-              />
-            </div>
-            <div>
-              <Label>Benefits</Label>
-              <Textarea
-                name="benefits"
-                value={jobForm.benefits || ""} onChange={(e) => setJobForm({ ...jobForm, [e.target.name]: e.target.value })}
-                rows={3}
-              />
-            </div>
-            <div>
-              <Label>Skills</Label>
-              <Textarea
-                name="skills"
-                value={jobForm.skills || ""} onChange={(e) => setJobForm({ ...jobForm, [e.target.name]: e.target.value })}
-                rows={2}
-              />
-            </div>
-            <div>
-              <Label>Application Deadline</Label>
-              <Input
-                type="date"
-                name="applicationDeadline"
-                value={jobForm.applicationDeadline || ""} onChange={(e) => setJobForm({ ...jobForm, [e.target.name]: e.target.value })}
-              />
-            </div>
-            <div>
-              <Label>Vacancies</Label>
-              <Input
-                type="number"
-                name="vacancies"
-                value={jobForm.vacancies || ""} onChange={(e) => setJobForm({ ...jobForm, [e.target.name]: e.target.value })}
-              />
-            </div>
-
-            {/* Checkboxes */}
-            <div className="flex items-center gap-4 mt-2">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                 checked={jobForm.isUrgent === true} onCheckedChange={(checked) => setJobForm({ ...jobForm, isUrgent: !!checked })}
-                />
-                <Label>Urgent</Label>
+            <div className="grid grid-cols-2 gap-4 py-4">
+              {/* Left Column */}
+              <div className="space-y-3">
+                <div>
+                  <Label>Title</Label>
+                  <Input
+                    name="title"
+                    value={jobForm.title || ""}
+                    onChange={(e) =>
+                      setJobForm({
+                        ...jobForm,
+                        [e.target.name]: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+                <div>
+                  <Label>Category</Label>
+                  <Input
+                    name="category"
+                    value={jobForm.category?.name || ""}
+                    onChange={(e) =>
+                      setJobForm({
+                        ...jobForm,
+                        [e.target.name]: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+                <div>
+                  <Label>Job Title</Label>
+                  <Input
+                    name="jobTitle"
+                    value={jobForm.jobTitle || ""}
+                    onChange={(e) =>
+                      setJobForm({
+                        ...jobForm,
+                        [e.target.name]: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+                <div>
+                  <Label>Company</Label>
+                  <Input
+                    name="company"
+                    value={jobForm.company || ""}
+                    onChange={(e) =>
+                      setJobForm({
+                        ...jobForm,
+                        [e.target.name]: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+                <div>
+                  <Label>Location</Label>
+                  <Input
+                    name="location"
+                    value={jobForm.location?.name || ""}
+                    onChange={(e) =>
+                      setJobForm({
+                        ...jobForm,
+                        [e.target.name]: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+                <div>
+                  <Label>Experience</Label>
+                  <Input
+                    name="experience"
+                    value={jobForm.experience || ""}
+                    onChange={(e) =>
+                      setJobForm({
+                        ...jobForm,
+                        [e.target.name]: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+                <div>
+                  <Label>Salary</Label>
+                  <Input
+                    name="salary"
+                    value={jobForm.salary || ""}
+                    onChange={(e) =>
+                      setJobForm({
+                        ...jobForm,
+                        [e.target.name]: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+                <div>
+                  <Label>Currency</Label>
+                  <Input
+                    name="currency"
+                    value={jobForm.currency || ""}
+                    onChange={(e) =>
+                      setJobForm({
+                        ...jobForm,
+                        [e.target.name]: e.target.value,
+                      })
+                    }
+                  />
+                </div>
               </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  checked={jobForm.isRemote === true} onCheckedChange={(remote) => setJobForm({ ...jobForm, isUrgent: !!remote })}
-                  
-                />
-                <Label>Remote</Label>
+
+              {/* Right Column */}
+              <div className="space-y-3">
+                <div>
+                  <Label>Job Type</Label>
+                  <Input
+                    name="job_type"
+                    value={jobForm.job_type || ""}
+                    onChange={(e) =>
+                      setJobForm({
+                        ...jobForm,
+                        [e.target.name]: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+                <div>
+                  <Label>Work Mode</Label>
+                  <Input
+                    name="workMode"
+                    value={jobForm.workMode || ""}
+                    onChange={(e) =>
+                      setJobForm({
+                        ...jobForm,
+                        [e.target.name]: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+                <div>
+                  <Label>Description</Label>
+                  <Textarea
+                    name="description"
+                    value={jobForm.description || ""}
+                    onChange={(e) =>
+                      setJobForm({
+                        ...jobForm,
+                        [e.target.name]: e.target.value,
+                      })
+                    }
+                    rows={3}
+                  />
+                </div>
+                <div>
+                  <Label>Requirements</Label>
+                  <Textarea
+                    name="requirements"
+                    value={jobForm.requirements || ""}
+                    onChange={(e) =>
+                      setJobForm({
+                        ...jobForm,
+                        [e.target.name]: e.target.value,
+                      })
+                    }
+                    rows={3}
+                  />
+                </div>
+                <div>
+                  <Label>Benefits</Label>
+                  <Textarea
+                    name="benefits"
+                    value={jobForm.benefits || ""}
+                    onChange={(e) =>
+                      setJobForm({
+                        ...jobForm,
+                        [e.target.name]: e.target.value,
+                      })
+                    }
+                    rows={3}
+                  />
+                </div>
+                <div>
+                  <Label>Skills</Label>
+                  <Textarea
+                    name="skills"
+                    value={jobForm.skills || ""}
+                    onChange={(e) =>
+                      setJobForm({
+                        ...jobForm,
+                        [e.target.name]: e.target.value,
+                      })
+                    }
+                    rows={2}
+                  />
+                </div>
+                <div>
+                  <Label>Application Deadline</Label>
+                  <Input
+                    type="date"
+                    name="applicationDeadline"
+                    value={jobForm.applicationDeadline || ""}
+                    onChange={(e) =>
+                      setJobForm({
+                        ...jobForm,
+                        [e.target.name]: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+                <div>
+                  <Label>Vacancies</Label>
+                  <Input
+                    type="number"
+                    name="vacancies"
+                    value={jobForm.vacancies || ""}
+                    onChange={(e) =>
+                      setJobForm({
+                        ...jobForm,
+                        [e.target.name]: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+
+                {/* Checkboxes */}
+                <div className="flex items-center gap-4 mt-2">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      checked={jobForm.isUrgent === true}
+                      onCheckedChange={(checked) =>
+                        setJobForm({ ...jobForm, isUrgent: !!checked })
+                      }
+                    />
+                    <Label>Urgent</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      checked={jobForm.isRemote === true}
+                      onCheckedChange={(remote) =>
+                        setJobForm({ ...jobForm, isUrgent: !!remote })
+                      }
+                    />
+                    <Label>Remote</Label>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
 
-        {/* Footer */}
-        <div className="flex justify-end gap-2 mt-4">
-          <Button variant="ghost">
-            Cancel
-          </Button>
-          {/* FIX : Put the Onclick handle update method */}
-          <Button onClick={handleUpdateJob} >Save Changes</Button>
-        </div>
-      </DialogContent>
-    </Dialog>
-
+            {/* Footer */}
+            <div className="flex justify-end gap-2 mt-4">
+              <Button variant="ghost">Cancel</Button>
+              {/* FIX : Put the Onclick handle update method */}
+              <Button onClick={handleUpdateJob}>Save Changes</Button>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Candidates Tab */}
         {activeTab === "candidates" && (
@@ -1853,6 +2145,20 @@ export default function EmployerDashboard() {
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-lg">Applications</CardTitle>
+                    <select
+                      value={filter}
+                      onChange={(e) => setFilter(e.target.value)}
+                      className="border border-gray-300 rounded-md px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="All">All</option>
+                      <option value="Shortlisted">Shortlisted</option>
+                      <option value="Rejected">Rejected</option>
+                      <option value="Under Review">Under Review</option>
+                    </select>
+                    <Badge variant="secondary">
+                      {filteredCandidates.length}
+                    </Badge>
+
                     <Badge variant="secondary">{candidates.length}</Badge>
                   </div>
                   <div className="relative">
@@ -1868,7 +2174,10 @@ export default function EmployerDashboard() {
                     {candidates.map((candidate) => (
                       <div
                         key={candidate.id}
-                        onClick={() => { setSelectedCandidate(candidate); setIsCandidateModalOpen(true); }}
+                        onClick={() => {
+                          setSelectedCandidate(candidate);
+                          setIsCandidateModalOpen(true);
+                        }}
                         className={`p-4 cursor-pointer hover:bg-gray-50 border-l-4 transition-colors ${
                           selectedCandidate?.id === candidate.id
                             ? "border-l-blue-500 bg-blue-50"
@@ -1955,19 +2264,24 @@ export default function EmployerDashboard() {
                         </Button>
                         <Button variant="outline" size="sm">
                           {selectedCandidate.resumeUrl ? (
-                            <a href={selectedCandidate.resumeUrl} target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:text-purple-800 underline inline-flex items-center gap-1">
+                            <a
+                              href={selectedCandidate.resumeUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-purple-600 hover:text-purple-800 underline inline-flex items-center gap-1"
+                            >
                               View Resume
                             </a>
                           ) : (
-                            <span className="text-gray-400 italic">No resume uploaded</span>
+                            <span className="text-gray-400 italic">
+                              No resume uploaded
+                            </span>
                           )}
                         </Button>
                       </div>
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-6">
-
-
                     {/* Contact Information */}
                     <div>
                       <h3 className="font-semibold text-gray-900 mb-3">
@@ -2107,20 +2421,30 @@ export default function EmployerDashboard() {
                       </div>
                     </div>
                     {/* Certifications */}
-                    {Array.isArray(selectedCandidate.qa) && selectedCandidate.qa.length > 0 && (
-                  <div>
-                    <h4 className="text-lg font-semibold text-gray-900 mb-2">Application Q&A</h4>
-                    <div className="space-y-3">
-                      {selectedCandidate.qa.map((item, index) => (
-                        <div key={index} className="bg-gray-50 rounded p-3">
-                          <p className="text-sm font-medium text-gray-800">Q{(item.question_index ?? index) + 1}. {item.question_text || 'Question'}</p>
-                          <p className="text-sm text-gray-700 mt-1">{item.answer_text || '-'}</p>
+                    {Array.isArray(selectedCandidate.qa) &&
+                      selectedCandidate.qa.length > 0 && (
+                        <div>
+                          <h4 className="text-lg font-semibold text-gray-900 mb-2">
+                            Application Q&A
+                          </h4>
+                          <div className="space-y-3">
+                            {selectedCandidate.qa.map((item, index) => (
+                              <div
+                                key={index}
+                                className="bg-gray-50 rounded p-3"
+                              >
+                                <p className="text-sm font-medium text-gray-800">
+                                  Q{(item.question_index ?? index) + 1}.{" "}
+                                  {item.question_text || "Question"}
+                                </p>
+                                <p className="text-sm text-gray-700 mt-1">
+                                  {item.answer_text || "-"}
+                                </p>
+                              </div>
+                            ))}
+                          </div>
                         </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
+                      )}
 
                     {selectedCandidate.certifications.length > 0 && (
                       <div>
@@ -2144,18 +2468,18 @@ export default function EmployerDashboard() {
                                   </p>
                                   <p className="text-sm text-gray-600">
                                     Issued: {cert.year}
-                                </p>
+                                  </p>
+                                </div>
                               </div>
-                            </div>
-                          )
-                        )}
+                            )
+                          )}
+                        </div>
                       </div>
-                    </div>
                     )}
 
                     {/* Action Buttons */}
                     <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t">
-                      <Button className="bg-green-600 hover:bg-green-700 flex-1">
+                      {/* <Button className="bg-green-600 hover:bg-green-700 flex-1">
                         <CheckCircle className="w-4 h-4 mr-2" />
                         Shortlist Candidate
                       </Button>
@@ -2165,7 +2489,26 @@ export default function EmployerDashboard() {
                       >
                         <XCircle className="w-4 h-4 mr-2" />
                         Reject Application
+                      </Button> */}
+                      <Button
+                        className="bg-green-600 hover:bg-green-700 flex-1"
+                        onClick={() =>
+                          handleShortlistCandidate(selectedCandidate)
+                        }
+                      >
+                        <CheckCircle className="w-4 h-4 mr-2" />
+                        Shortlist Candidate
                       </Button>
+
+                      <Button
+                        variant="outline"
+                        className="border-red-600 text-red-600 hover:bg-red-50 flex-1"
+                        onClick={() => handleRejectCandidate(selectedCandidate)}
+                      >
+                        <XCircle className="w-4 h-4 mr-2" />
+                        Reject Application
+                      </Button>
+
                       <Button variant="outline" className="flex-1">
                         <ExternalLink className="w-4 h-4 mr-2" />
                         Schedule Interview
@@ -2207,98 +2550,113 @@ export default function EmployerDashboard() {
       </div>
 
       {/* Candidate Detail Modal */}
-     
 
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg w-full max-w-3xl p-6 relative">
+            {/* Close Button */}
+            <button
+              className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
+              onClick={() => setIsModalOpen(false)}
+            >
+              ✕
+            </button>
 
-{isModalOpen && (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-       <div className="bg-white rounded-lg w-full max-w-3xl p-6 relative">
-      {/* Close Button */}
-      <button
-        className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
-        onClick={() => setIsModalOpen(false)}
-      >
-        ✕
-      </button>
+            {isEditMode ? (
+              <>
+                <h2 className="text-xl font-bold mb-4">Edit Job</h2>
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    handleUpdateJob();
+                  }}
+                  className="space-y-4"
+                >
+                  {/* Title */}
+                  <div>
+                    <Label>Job Title</Label>
+                    <Input
+                      value={jobForm.title}
+                      onChange={(e) =>
+                        setJobForm((prev) => ({
+                          ...prev,
+                          title: e.target.value,
+                        }))
+                      }
+                    />
+                  </div>
+                  {/* Company */}
+                  <div>
+                    <Label>Company</Label>
+                    <Input
+                      value={jobForm.company}
+                      onChange={(e) =>
+                        setJobForm((prev) => ({
+                          ...prev,
+                          company: e.target.value,
+                        }))
+                      }
+                    />
+                  </div>
+                  {/* Salary */}
+                  <div>
+                    <Label>Salary</Label>
+                    <Input
+                      value={jobForm.salary}
+                      onChange={(e) =>
+                        setJobForm((prev) => ({
+                          ...prev,
+                          salary: e.target.value,
+                        }))
+                      }
+                    />
+                  </div>
+                  {/* Description */}
+                  <div>
+                    <Label>Description</Label>
+                    <Textarea
+                      value={jobForm.description}
+                      onChange={(e) =>
+                        setJobForm((prev) => ({
+                          ...prev,
+                          description: e.target.value,
+                        }))
+                      }
+                    />
+                  </div>
 
-      {isEditMode ? (
-        <>
-          <h2 className="text-xl font-bold mb-4">Edit Job</h2>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleUpdateJob();
-            }}
-            className="space-y-4"
-          >
-            {/* Title */}
-            <div>
-              <Label>Job Title</Label>
-              <Input
-                value={jobForm.title}
-                onChange={(e) =>
-                  setJobForm((prev) => ({ ...prev, title: e.target.value }))
-                }
-              />
-            </div>
-            {/* Company */}
-            <div>
-              <Label>Company</Label>
-              <Input
-                value={jobForm.company}
-                onChange={(e) =>
-                  setJobForm((prev) => ({ ...prev, company: e.target.value }))
-                }
-              />
-            </div>
-            {/* Salary */}
-            <div>
-              <Label>Salary</Label>
-              <Input
-                value={jobForm.salary}
-                onChange={(e) =>
-                  setJobForm((prev) => ({ ...prev, salary: e.target.value }))
-                }
-              />
-            </div>
-            {/* Description */}
-            <div>
-              <Label>Description</Label>
-              <Textarea
-                value={jobForm.description}
-                onChange={(e) =>
-                  setJobForm((prev) => ({ ...prev, description: e.target.value }))
-                }
-              />
-            </div>
-
-            <div className="flex justify-end gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setIsModalOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button type="submit">Update Job</Button>
-            </div>
-          </form>
-        </>
-      ) : (
-        <>
-          <h2 className="text-xl font-bold mb-4">{selectedJob?.title}</h2>
-          <p className="text-gray-600 mb-2">Company: {selectedJob?.company}</p>
-          <p className="text-gray-600 mb-2">Salary: {selectedJob?.salary}</p>
-          <p className="text-gray-600 mb-2">
-            Description: {selectedJob?.description}
-          </p>
-          <p className="text-gray-600 mb-2">Status: {selectedJob?.status}</p>
-        </>
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setIsModalOpen(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button type="submit">Update Job</Button>
+                  </div>
+                </form>
+              </>
+            ) : (
+              <>
+                <h2 className="text-xl font-bold mb-4">{selectedJob?.title}</h2>
+                <p className="text-gray-600 mb-2">
+                  Company: {selectedJob?.company}
+                </p>
+                <p className="text-gray-600 mb-2">
+                  Salary: {selectedJob?.salary}
+                </p>
+                <p className="text-gray-600 mb-2">
+                  Description: {selectedJob?.description}
+                </p>
+                <p className="text-gray-600 mb-2">
+                  Status: {selectedJob?.status}
+                </p>
+              </>
+            )}
+          </div>
+        </div>
       )}
-    </div>
-  </div>
-)}
-
     </div>
   );
 }
