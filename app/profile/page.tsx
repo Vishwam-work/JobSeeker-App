@@ -442,8 +442,7 @@ export default function Profile() {
     const file = event.target.files?.[0];
     if (file) {
       setResumeFile(file);
-      alert(`Resume "${file.name}" uploaded successfully!`);
-      setIsDialogOpen((prev) => ({ ...prev, resume: false }));
+      alert(`Selected: ${file.name}`);
     }
   };
 
@@ -508,15 +507,15 @@ export default function Profile() {
               email: data.email || "",
               phone: data.phone || "",
               phoneCode: data.phone_code || "",
-              countryId: data.country.id?.toString() || "",
-              stateId: data.state.id?.toString() || "",
-              cityId: data.city.id?.toString() || "",
+              countryId: data?.country?.id?.toString() ?? "",
+              stateId: data?.state?.id?.toString() ?? "",
+              cityId: data?.city?.id?.toString() ?? "",
               experience: data.experience || "",
               currentSalary: data.current_salary || "",
               expectedSalary: data.expected_salary || "",
-              currentcurrency: data.current_currency.id?.toString() || "",
-              expectedCurrency: data.expected_currency.id?.toString() || "",
-              noticePeriod: data.notice_period || "",
+              currentcurrency: data?.current_currency?.id?.toString() ?? "",
+              expectedCurrency: data?.expected_currency?.id?.toString() ?? "",
+              noticePeriod: data?.notice_period || "",
               resume: data.resume,
             },
             experience: data.experiences || [],
@@ -665,6 +664,8 @@ export default function Profile() {
             resume: data.resume_url || data.resume,
           },
         }));
+        setIsDialogOpen(prev => ({ ...prev, resume: false }));
+        setResumeFile(null);
         return true;
       } else {
         const error = await res.json();
@@ -956,6 +957,12 @@ export default function Profile() {
                             </p>
                           )}
 
+                          {resumeFile && (
+                              <p className="text-sm font-medium text-blue-600 truncate">
+                                Selected File: <span className="text-gray-700">{resumeFile.name}</span>
+                              </p>
+                            )}
+
                           <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
                             <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                             <p className="text-sm text-gray-600 mb-4">
@@ -982,6 +989,15 @@ export default function Profile() {
                               PDF, DOC, DOCX up to 5MB
                             </p>
                           </div>
+                          <Button
+                            onClick={uploadResume}
+                            disabled={!resumeFile}
+                            className={`w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600
+                            hover:from-purple-700 hover:to-blue-700 h-10 lg:h-11 mt-6
+                            ${!resumeFile ? "opacity-50 cursor-not-allowed" : ""}`}
+                          >
+                            SUBMIT
+                          </Button>
                         </div>
                       </DialogContent>
                     </Dialog>
