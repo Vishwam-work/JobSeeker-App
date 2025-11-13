@@ -23,92 +23,91 @@ export default function Login() {
   const router = useRouter();
 
   // Email/Password login
- const handleLogin = async (e: React.FormEvent) => {
-  e.preventDefault();
-  try {
-    const response = await fetch('https://jobseeker-backend-jy1y.onrender.com/api/login/', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
-    });
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const response = await fetch(
+        "https://jobseeker-backend-jy1y.onrender.com/api/login/",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        }
+      );
 
-  const data = await response.json();
+      const data = await response.json();
       if (response.ok) {
-        localStorage.setItem('auth_token', data.access);
-        localStorage.setItem('full_name', data.full_name);
-        setAlertType('success');
-        setAlertMessage('Login Successful!');
+        localStorage.setItem("auth_token", data.access);
+        localStorage.setItem("full_name", data.full_name);
+        setAlertType("success");
+        setAlertMessage("Login Successful!");
         setAlertOpen(true);
         setTimeout(() => {
-          router.push('/');
+          router.push("/");
         }, 2000);
       } else {
-        setAlertType('error');
-        setAlertMessage(data.error || 'Login Failed');
+        setAlertType("error");
+        setAlertMessage(data.error || "Login Failed");
         setAlertOpen(true);
       }
     } catch (error) {
-      setAlertType('error');
-      setAlertMessage('Network Error!');
+      setAlertType("error");
+      setAlertMessage("Network Error!");
       setAlertOpen(true);
     }
   };
 
-//  const handleLogin = async (e: React.FormEvent) => {
-//   e.preventDefault();
+  //  const handleLogin = async (e: React.FormEvent) => {
+  //   e.preventDefault();
 
-//   try {
-  
-//     const response = await fetch(
-//       "https://jobseeker-backend-jy1y.onrender.com/api/login/",
-//       {
-//         method: "POST",
-//         headers: { "Content-Type": "application/json" },
-//         body: JSON.stringify({ email, password }),
-//       }
-//     );
+  //   try {
 
-//     const data = await response.json();
+  //     const response = await fetch(
+  //       "https://jobseeker-backend-jy1y.onrender.com/api/login/",
+  //       {
+  //         method: "POST",
+  //         headers: { "Content-Type": "application/json" },
+  //         body: JSON.stringify({ email, password }),
+  //       }
+  //     );
 
-  
-//     if (response.ok && data.access) {
-   
-//       localStorage.setItem("auth_token", data.access);
+  //     const data = await response.json();
 
-   
-//       const result = await signIn("credentials", {
-//         redirect: false,
-//         email,
-//         password,
-//       });
+  //     if (response.ok && data.access) {
 
-//       if (result?.error) {
-//         console.error("NextAuth error:", result.error);
-//       }
+  //       localStorage.setItem("auth_token", data.access);
 
-     
-//       setAlertType("success");
-//       setAlertMessage("Login Successful!");
-//       setAlertOpen(true);
+  //       const result = await signIn("credentials", {
+  //         redirect: false,
+  //         email,
+  //         password,
+  //       });
 
-//       setTimeout(() => {
-//         router.push("/");
-//       }, 2000);
-//     } else {
-    
-//       setAlertType("error");
-//       setAlertMessage(data.error || "Invalid email or password");
-//       setAlertOpen(true);
-//     }
-//   } catch (error) {
-  
-//     console.error("Login error:", error);
-//     setAlertType("error");
-//     setAlertMessage("Network Error!");
-//     setAlertOpen(true);
-//   }
-// };
+  //       if (result?.error) {
+  //         console.error("NextAuth error:", result.error);
+  //       }
 
+  //       setAlertType("success");
+  //       setAlertMessage("Login Successful!");
+  //       setAlertOpen(true);
+
+  //       setTimeout(() => {
+  //         router.push("/");
+  //       }, 2000);
+  //     } else {
+
+  //       setAlertType("error");
+  //       setAlertMessage(data.error || "Invalid email or password");
+  //       setAlertOpen(true);
+  //     }
+  //   } catch (error) {
+
+  //     console.error("Login error:", error);
+  //     setAlertType("error");
+  //     setAlertMessage("Network Error!");
+  //     setAlertOpen(true);
+  //   }
+  // };
 
   // Google Login
   // const handleGoogleLogin = async () => {

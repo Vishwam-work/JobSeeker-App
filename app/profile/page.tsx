@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 
 import { useSavedJobs } from "@/context/SavedJobsContext";
-import {  BookmarkX } from "lucide-react";
+import { BookmarkX } from "lucide-react";
 // import { Button } from "@/components/ui/button";
 // import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 // import { Card, CardContent } from "@/components/ui/card";
@@ -711,6 +711,54 @@ export default function Profile() {
     }
   };
 
+  // Fetch User Data for Profile Name, Email, Phone
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const token = localStorage.getItem("auth_token");
+        if (!token) {
+          console.warn("No auth token found");
+          return;
+        }
+
+        const res = await fetch(
+          "https://jobseeker-backend-jy1y.onrender.com/api/register/",
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (!res.ok) {
+          console.error("Failed to fetch user data");
+          return;
+        }
+
+        const data = await res.json();
+        console.log("Register API data:", data);
+
+        // ✅ Handle both single object or array API responses
+        const user = Array.isArray(data) ? data[0] : data;
+
+        setProfileData((prev) => ({
+          ...prev,
+          personalInfo: {
+            ...prev.personalInfo,
+            fullName: user.full_name || user.name || "",
+            email: user.email || "",
+            phone: user.phone || user.number || "",
+          },
+        }));
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      }
+    };
+
+    fetchUserProfile();
+  }, []);
+
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <div className="min-h-screen bg-gray-50">
@@ -1103,6 +1151,48 @@ export default function Profile() {
                           required={true}
                         />
                       </div>
+
+                      {/* <div>
+  <Label htmlFor="fullName" className="text-sm font-medium">
+    Full Name *
+  </Label>
+  <Input
+    id="fullName"
+    value={profileData.personalInfo.fullName}
+    onChange={(e) =>
+      setProfileData((prev) => ({
+        ...prev,
+        personalInfo: {
+          ...prev.personalInfo,
+          fullName: e.target.value,
+        },
+      }))
+    }
+    className="mt-1 h-10 lg:h-11"
+  />
+</div> */}
+
+                      {/* <div>
+  <Label htmlFor="email" className="text-sm font-medium">
+    Email Address *
+  </Label>
+  <Input
+    id="email"
+    type="email"
+    value={profileData.personalInfo.email}
+    onChange={(e) =>
+      setProfileData((prev) => ({
+        ...prev,
+        personalInfo: {
+          ...prev.personalInfo,
+          email: e.target.value,
+        },
+      }))
+    }
+    className="mt-1 h-10 lg:h-11"
+  />
+</div> */}
+
                       {/* <div>
                         <Label htmlFor="phone" className="text-sm font-medium">
                           Phone Number *
@@ -1368,6 +1458,7 @@ export default function Profile() {
                           </Select>
                           <Input
                             id="currentSalary"
+                            type="number"
                             value={profileData.personalInfo.currentSalary}
                             onChange={(e) =>
                               setProfileData((prev) => ({
@@ -1380,6 +1471,7 @@ export default function Profile() {
                             }
                             className="flex-1 h-10 lg:h-11"
                             placeholder="Enter amount"
+                            max="0"
                           />
                         </div>
                       </div>
@@ -1422,6 +1514,7 @@ export default function Profile() {
                           </Select>
                           <Input
                             id="expectedSalary"
+                            type="number"
                             value={profileData.personalInfo.expectedSalary}
                             onChange={(e) =>
                               setProfileData((prev) => ({
@@ -1433,6 +1526,8 @@ export default function Profile() {
                               }))
                             }
                             className="flex-1 h-10 lg:h-11"
+                            placeholder="Enter amount"
+                            max="0"
                           />
                         </div>
                       </div>

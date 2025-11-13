@@ -60,6 +60,20 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { ChevronsUpDown } from "lucide-react";
 
 export default function EmployerDashboard() {
   const [activeTab, setActiveTab] = useState("post-job");
@@ -81,7 +95,19 @@ export default function EmployerDashboard() {
 
   const [filter, setFilter] = useState("All");
 
+  const [dateFilter, setDateFilter] = useState("all");
+  const [search, setSearch] = useState("");
+  const [open, setOpen] = useState(false);
   const router = useRouter();
+
+  const [selectedCity, setSelectedCity] = useState("");
+  const [selectedCountry, setSelectedCountry] = useState("");
+  const [statusFilter, setStatusFilter] = useState("All");
+  const [locationFilter, setLocationFilter] = useState("All");
+  const [salaryFilter, setSalaryFilter] = useState("All");
+  const [experienceFilter, setExperienceFilter] = useState("All");
+  const [searchJobTitle, setSearchJobTitle] = useState("");
+
   // Sample data for posted jobs
   // const [postedJobs] = useState([
   //   {
@@ -260,7 +286,7 @@ export default function EmployerDashboard() {
     title: "",
     category: "",
     jobTitle: "",
-    company: "",
+    company: "Tesseract Technolabs",
     location: "",
     experience: "",
     salary: "",
@@ -344,10 +370,10 @@ export default function EmployerDashboard() {
     fetchApplications();
   }, []);
 
-  const filteredCandidates = candidates.filter((candidate) => {
-    if (filter === "All") return true;
-    return candidate.status === filter;
-  });
+  // const filteredCandidates = candidates.filter((candidate) => {
+  //   if (filter === "All") return true;
+  //   return candidate.status === filter;
+  // });
 
   const fetchPostedJobs = async () => {
     try {
@@ -603,8 +629,58 @@ export default function EmployerDashboard() {
       job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       job.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
       job.location?.name.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesFilter && matchesSearch;
+
+    // Date filter
+    let matchesDate = true;
+    if (dateFilter !== "all" && job.created_at) {
+      const jobDate = new Date(job.created_at);
+      const now = new Date();
+
+      if (dateFilter === "today") {
+        matchesDate = jobDate.toDateString() === now.toDateString();
+      } else if (dateFilter === "week") {
+        const weekAgo = new Date();
+        weekAgo.setDate(now.getDate() - 7);
+        matchesDate = jobDate >= weekAgo;
+      } else if (dateFilter === "month") {
+        const monthAgo = new Date();
+        monthAgo.setMonth(now.getMonth() - 1);
+        matchesDate = jobDate >= monthAgo;
+      }
+    }
+    return matchesFilter && matchesSearch && matchesDate;
   });
+
+  const filteredCategories = candidates.filter((c) => {
+    const nameMatch =
+      c.name?.toLowerCase().startsWith(searchTerm.toLowerCase()) ||
+      c.currentRole?.toLowerCase().startsWith(searchTerm.toLowerCase()) ||
+      c.appliedFor?.toLowerCase().startsWith(searchTerm.toLowerCase());
+
+    const statusMatch =
+      statusFilter === "All" ||
+      c.status?.toLowerCase() === statusFilter.toLowerCase();
+
+    const locationMatch =
+      locationFilter === "All" ||
+      c.location?.toLowerCase() === locationFilter.toLowerCase();
+
+    const salary = parseInt(c.expectedSalary) || 0;
+    const salaryMatch =
+      salaryFilter === "All" ||
+      (salaryFilter === "Below 20000" && salary < 20000) ||
+      (salaryFilter === "20000-50000" && salary >= 20000 && salary <= 50000) ||
+      (salaryFilter === "Above 50000" && salary > 50000);
+
+    const expMatch =
+      experienceFilter === "All" ||
+      c.experience?.toLowerCase().includes(experienceFilter.toLowerCase());
+
+    return nameMatch && statusMatch && locationMatch && salaryMatch && expMatch;
+  });
+  const filteredCities = cities.filter((city) =>
+    city.name.toLowerCase().startsWith(searchTerm.toLowerCase())
+  );
 
   const handleViewJob = async (job) => {
     try {
@@ -954,7 +1030,6 @@ export default function EmployerDashboard() {
   //  selectedJob.requirements.map((req, index) => (
   //                        )
   // }
-
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -1055,6 +1130,7 @@ export default function EmployerDashboard() {
                     <Label className="text-sm font-medium">
                       Job Category *
                     </Label>
+
                     <Select
                       value={selectedCategory}
                       onValueChange={(value) => {
@@ -1067,17 +1143,47 @@ export default function EmployerDashboard() {
                       }}
                     >
                       <SelectTrigger className="mt-1">
-                        <SelectValue placeholder="Select job category" />
+                        <SelectValue placeholder="Select job category">
+                          {jobCategories.find(
+                            (category) =>
+                              category.id?.toString() === selectedCategory
+                          )?.name || "Select job category"}
+                        </SelectValue>
                       </SelectTrigger>
+
                       <SelectContent>
-                        {jobCategories.map((category) => (
-                          <SelectItem
-                            key={category.id}
-                            value={category.id.toString()}
-                          >
-                            {category.name}
-                          </SelectItem>
-                        ))}
+                        <div className="p-2 sticky top-0 bg-white z-10 border-b">
+                          <Input
+                            placeholder="Search category..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="h-8 text-sm"
+                          />
+                        </div>
+
+                        {Array.isArray(jobCategories) &&
+                        jobCategories.length > 0 ? (
+                          jobCategories
+                            .filter((category) =>
+                              category?.name
+                                ?.toLowerCase()
+                                .startsWith(searchTerm.toLowerCase())
+                            )
+                            .map((category) => (
+                              <SelectItem
+                                key={category.id}
+                                value={category.id?.toString()}
+                              >
+                                {category.name}
+                              </SelectItem>
+                            ))
+                        ) : (
+                          <div className="p-2 text-sm text-gray-500">
+                            {jobCategories.length === 0
+                              ? "No categories found"
+                              : "No matching results"}
+                          </div>
+                        )}
                       </SelectContent>
                     </Select>
                   </div>
@@ -1102,15 +1208,39 @@ export default function EmployerDashboard() {
                           }
                         />
                       </SelectTrigger>
+
                       <SelectContent>
-                        {jobTitles.map((title) => (
-                          <SelectItem
-                            key={title.id}
-                            value={title.id.toString()}
-                          >
-                            {title.title}
-                          </SelectItem>
-                        ))}
+                        <div className="p-2 sticky top-0 bg-white z-10 border-b">
+                          <Input
+                            placeholder="Search job title..."
+                            value={searchJobTitle}
+                            onChange={(e) => setSearchJobTitle(e.target.value)}
+                            className="h-8 text-sm"
+                          />
+                        </div>
+
+                        {Array.isArray(jobTitles) && jobTitles.length > 0 ? (
+                          jobTitles
+                            .filter((title) =>
+                              title?.title
+                                ?.toLowerCase()
+                                .startsWith(searchJobTitle.toLowerCase())
+                            )
+                            .map((title) => (
+                              <SelectItem
+                                key={title.id}
+                                value={title.id.toString()}
+                              >
+                                {title.title}
+                              </SelectItem>
+                            ))
+                        ) : (
+                          <div className="p-2 text-sm text-gray-500">
+                            {jobTitles.length === 0
+                              ? "No job titles found"
+                              : "No matching results"}
+                          </div>
+                        )}
                       </SelectContent>
                     </Select>
                   </div>
@@ -1135,24 +1265,54 @@ export default function EmployerDashboard() {
                   </div>
 
                   <div>
-                    <Label className="text-sm font-medium">Job Location *</Label>
-                    <Select
-                      value={jobForm.location}
-                      onValueChange={(value) =>
-                        setJobForm((prev) => ({ ...prev, location: value }))
-                      }
-                    >
-                      <SelectTrigger className="mt-1">
-                        <SelectValue placeholder="Select location" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {cities.map((city) => (
-                          <SelectItem key={city.id} value={city.id.toString()}>
-                            {city.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Label className="text-sm font-medium">
+                      Job Location *
+                    </Label>
+                    <Popover open={open} onOpenChange={setOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          className="w-full justify-between mt-1 h-10 lg:h-11"
+                        >
+                          {selectedCity || "Select location"}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+
+                      <PopoverContent className="w-full p-0">
+                        <Command>
+                          <CommandInput
+                            placeholder="Search location..."
+                            value={search}
+                            onValueChange={setSearch}
+                          />
+                          <CommandList>
+                            {filteredCities.length === 0 ? (
+                              <CommandEmpty>No location found.</CommandEmpty>
+                            ) : (
+                              <CommandGroup>
+                                {filteredCities.map((city) => (
+                                  <CommandItem
+                                    key={city.id}
+                                    onSelect={() => {
+                                      setJobForm((prev: any) => ({
+                                        ...prev,
+                                        location: city.id.toString(),
+                                      }));
+                                      setSearch("");
+                                      setOpen(false);
+                                    }}
+                                  >
+                                    {city.name}
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            )}
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
                   </div>
 
                   <div>
@@ -1180,7 +1340,7 @@ export default function EmployerDashboard() {
 
                   <div>
                     <Label htmlFor="salary" className="text-sm font-medium">
-                      Salary Range (LPA)
+                      Salary Range (PA)
                     </Label>
                     {/* <div className="flex gap-2 mt-1">
                       <Select defaultValue="INR">
@@ -1227,7 +1387,7 @@ export default function EmployerDashboard() {
                             salary: e.target.value,
                           }))
                         }
-                        placeholder="e.g., 5-8 LPA"
+                        placeholder="e.g., 5-8 PA"
                         className="flex-1"
                       />
                     </div>
@@ -1521,6 +1681,20 @@ export default function EmployerDashboard() {
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <CardTitle>Manage Your Jobs</CardTitle>
                 <div className="flex items-center space-x-2">
+                  {/*  Date Filter */}
+                  <Select value={dateFilter} onValueChange={setDateFilter}>
+                    <SelectTrigger className="w-32">
+                      <SelectValue placeholder="Filter by Date" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Date</SelectItem>
+                      <SelectItem value="today">Today</SelectItem>
+                      <SelectItem value="week">This Week</SelectItem>
+                      <SelectItem value="month">This Month</SelectItem>
+                      <SelectItem value="year">This Year</SelectItem>
+                    </SelectContent>
+                  </Select>
+
                   <Select value={jobFilter} onValueChange={setJobFilter}>
                     <SelectTrigger className="w-32">
                       <SelectValue />
@@ -2154,33 +2328,127 @@ export default function EmployerDashboard() {
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-lg">Applications</CardTitle>
-                    <select
-                      value={filter}
-                      onChange={(e) => setFilter(e.target.value)}
-                      className="border border-gray-300 rounded-md px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="All">All</option>
-                      <option value="Shortlisted">Shortlisted</option>
-                      <option value="Rejected">Rejected</option>
-                      <option value="Under Review">Under Review</option>
-                    </select>
-                    <Badge variant="secondary">
-                      {filteredCandidates.length}
-                    </Badge>
 
                     <Badge variant="secondary">{candidates.length}</Badge>
                   </div>
-                  <div className="relative">
+                  {/* <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <Input
                       placeholder="Search candidates..."
                       className="pl-10"
                     />
+                  </div> */}
+                  {/* 🔍 Search Bar (Full Width) */}
+                  <div className="mb-4">
+                    <div className="relative">
+                      <Input
+                        type="text"
+                        placeholder="Search by name, role or applied job..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full h-11 pl-10"
+                      />
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M21 21l-4.35-4.35M11 18a7 7 0 100-14 7 7 0 000 14z"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+
+                  {/* 🧭 Filters */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                    {/* 🏷️ Status Filter */}
+                    <Select
+                      value={statusFilter}
+                      onValueChange={setStatusFilter}
+                    >
+                      <SelectTrigger className="w-full h-10">
+                        <SelectValue placeholder="Status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="All">All Status</SelectItem>
+                        <SelectItem value="Under Review">
+                          Under Review
+                        </SelectItem>
+                        <SelectItem value="Shortlisted">Shortlisted</SelectItem>
+                        <SelectItem value="Rejected">Rejected</SelectItem>
+                      </SelectContent>
+                    </Select>
+
+                    {/* 📍 Location Filter */}
+                    <Select
+                      value={locationFilter}
+                      onValueChange={setLocationFilter}
+                    >
+                      <SelectTrigger className="w-full h-10">
+                        <SelectValue placeholder="Location" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="All">All Locations</SelectItem>
+                        {Array.from(new Set(candidates.map((c) => c.location)))
+                          .filter(Boolean)
+                          .map((loc, i) => (
+                            <SelectItem key={i} value={loc}>
+                              {loc}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                    {/* 💰 Salary Filter */}
+                    <Select
+                      value={salaryFilter}
+                      onValueChange={setSalaryFilter}
+                    >
+                      <SelectTrigger className="w-full h-10">
+                        <SelectValue placeholder="Salary" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="All">All Salaries</SelectItem>
+                        <SelectItem value="Below 20000">
+                          Below ₹20,000
+                        </SelectItem>
+                        <SelectItem value="20000-50000">
+                          ₹20,000–₹50,000
+                        </SelectItem>
+                        <SelectItem value="Above 50000">
+                          Above ₹50,000
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+
+                    {/* 🧑‍💼 Experience Filter */}
+                    <Select
+                      value={experienceFilter}
+                      onValueChange={setExperienceFilter}
+                    >
+                      <SelectTrigger className="w-full h-10">
+                        <SelectValue placeholder="Experience" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="All">All Experience</SelectItem>
+                        <SelectItem value="Fresher">Fresher</SelectItem>
+                        <SelectItem value="1-3 Years">1–3 Years</SelectItem>
+                        <SelectItem value="3-5 Years">3–5 Years</SelectItem>
+                        <SelectItem value="5+ Years">5+ Years</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </CardHeader>
                 <CardContent className="p-0">
-                  <div className="space-y-1">
-                    {candidates.map((candidate) => (
+                  {/* {candidates.map((candidate) => (
                       <div
                         key={candidate.id}
                         onClick={() => {
@@ -2224,8 +2492,58 @@ export default function EmployerDashboard() {
                           </div>
                         </div>
                       </div>
-                    ))}
-                  </div>
+                    ))} */}
+
+                  {filteredCategories.length > 0 ? (
+                    filteredCategories.map((candidate) => (
+                      <div
+                        key={candidate.id}
+                        onClick={() => {
+                          setSelectedCandidate(candidate);
+                          setIsCandidateModalOpen(true);
+                        }}
+                        className={`p-4 cursor-pointer hover:bg-gray-50 border-l-4 transition-colors ${
+                          selectedCandidate?.id === candidate.id
+                            ? "border-l-blue-500 bg-blue-50"
+                            : "border-l-transparent"
+                        }`}
+                      >
+                        <div className="flex items-start space-x-3">
+                          <div className="w-10 h-10 bg-gradient-to-br from-purple-100 to-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                            <Users className="w-5 h-5 text-purple-600" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-medium text-gray-900 truncate">
+                              {candidate.name}
+                            </h4>
+                            <p className="text-sm text-gray-600 truncate">
+                              {candidate.currentRole}
+                            </p>
+                            <p className="text-sm text-gray-500 truncate">
+                              {candidate.appliedFor}
+                            </p>
+                            <div className="flex items-center justify-between mt-2">
+                              <Badge
+                                className={`text-xs ${getStatusColor(
+                                  candidate.status
+                                )}`}
+                              >
+                                {candidate.status}
+                              </Badge>
+                              <span className="text-xs text-gray-500">
+                                {new Date(
+                                  candidate.appliedDate
+                                ).toLocaleDateString()}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-gray-500 text-sm">No candidates found</p>
+                  )}
+                  <div className="flex flex-wrap gap-3 mb-4 items-center"></div>
                 </CardContent>
               </Card>
             </div>
