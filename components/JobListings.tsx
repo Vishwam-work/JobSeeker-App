@@ -82,6 +82,11 @@ export default function JobListings() {
 
   const [isLoaded, setIsLoaded] = useState(false);
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
+  const [searchLocation, setSearchLocation] = useState("");
+  const [showCompanyDropdown, setShowCompanyDropdown] = useState(false);
+  const [searchCompany, setSearchCompany] = useState("");
+  const [showSkillsDropdown, setShowSkillsDropdown] = useState(false);
+  const [searchSkill, setSearchSkill] = useState("");
 
   useEffect(() => {
     const storedApplied = localStorage.getItem("applied_jobs");
@@ -671,34 +676,51 @@ const unsaveJob = async (jobId: number) => {
 
                     {showLocationDropdown && (
                       <div className="mt-3 space-y-2 max-h-56 overflow-y-auto">
+                        <div className="sticky top-0 bg-white z-10 p-1 border-b">
+                          <input
+                            type="text"
+                            placeholder="Search location..."
+                            value={searchLocation}
+                            onChange={(e) => setSearchLocation(e.target.value)}
+                            className="w-full h-8 text-sm border rounded px-2"
+                          />
+                        </div>
+
                         {loading ? (
                           <p className="text-sm text-gray-500">
                             Loading locations...
                           </p>
                         ) : (
-                          locations.map((location) => (
-                            <div
-                              key={location}
-                              className="flex items-center space-x-2"
-                            >
-                              <Checkbox
-                                id={`location-${location}`}
-                                checked={filters.location === location}
-                                onCheckedChange={(checked) =>
-                                  setFilters((prev) => ({
-                                    ...prev,
-                                    location: checked ? location : "All",
-                                  }))
-                                }
-                              />
-                              <Label
-                                htmlFor={`location-${location}`}
-                                className="text-sm text-gray-600 cursor-pointer"
-                              >
-                                {location}
-                              </Label>
-                            </div>
-                          ))
+                          locations
+                            .filter((location) =>
+                              location
+                                .toLowerCase()
+                                .startsWith(searchLocation.toLowerCase())
+                            )
+                            .map((location) => {
+                              const isSelected = filters.location === location;
+
+                              return (
+                                <div
+                                  key={location}
+                                  onClick={() =>
+                                    setFilters((prev) => ({
+                                      ...prev,
+                                      location: isSelected ? "All" : location,
+                                    }))
+                                  }
+                                  className={`p-2 rounded cursor-pointer text-sm
+                  ${
+                    isSelected
+                      ? "bg-blue-100 text-blue-700 font-medium"
+                      : "text-gray-700 hover:bg-gray-100"
+                  }
+                `}
+                                >
+                                  {location}
+                                </div>
+                              );
+                            })
                         )}
                       </div>
                     )}
@@ -824,61 +846,111 @@ const unsaveJob = async (jobId: number) => {
                   </div>
 
                   {/* Companies */}
-                  <div>
-                    <Label className="text-sm font-medium text-gray-700 mb-2 block">
-                      Companies
-                    </Label>
-                    <div className="space-y-2 max-h-40 overflow-y-auto">
-                      {companies.map((company) => (
-                        <div
-                          key={company}
-                          className="flex items-center space-x-2"
-                        >
-                          <Checkbox
-                            id={`company-${company}`}
-                            checked={filters.companies.includes(company)}
-                            onCheckedChange={(checked) =>
-                              handleCompanyFilter(company, checked)
-                            }
+                  <div className="border rounded-lg p-3 bg-white shadow-sm">
+                    <button
+                      onClick={() => setShowCompanyDropdown((prev) => !prev)}
+                      className="w-full text-left font-semibold text-gray-700 flex justify-between items-center"
+                    >
+                      <span>Companies</span>
+                      <span className="text-gray-400">
+                        {showCompanyDropdown ? "▲" : "▼"}
+                      </span>
+                    </button>
+
+                    {showCompanyDropdown && (
+                      <div className="mt-3 space-y-2 max-h-56 overflow-y-auto">
+                        <div className="sticky top-0 bg-white z-10 p-1 border-b">
+                          <input
+                            type="text"
+                            placeholder="Search company..."
+                            value={searchCompany}
+                            onChange={(e) => setSearchCompany(e.target.value)}
+                            className="w-full h-8 text-sm border rounded px-2"
                           />
-                          <Label
-                            htmlFor={`company-${company}`}
-                            className="text-sm text-gray-600 cursor-pointer"
-                          >
-                            {company}
-                          </Label>
                         </div>
-                      ))}
-                    </div>
+
+                        {/* List */}
+                        {companies
+                          .filter((company) =>
+                            company
+                              .toLowerCase()
+                              .startsWith(searchCompany.toLowerCase())
+                          )
+                          .map((company) => (
+                            <div
+                              key={company}
+                              className="p-2 text-sm text-gray-700 cursor-pointer hover:bg-gray-100 rounded"
+                              onClick={() =>
+                                setFilters((prev) => ({
+                                  ...prev,
+                                  companies: [company],
+                                }))
+                              }
+                            >
+                              {company}
+                            </div>
+                          ))}
+                      </div>
+                    )}
                   </div>
 
                   {/* Skills */}
-                  <div>
-                    <Label className="text-sm font-medium text-gray-700 mb-2 block">
-                      Skills
-                    </Label>
-                    <div className="space-y-2 max-h-40 overflow-y-auto">
-                      {skillsList.map((skill) => (
-                        <div
-                          key={skill}
-                          className="flex items-center space-x-2"
-                        >
-                          <Checkbox
-                            id={`skill-${skill}`}
-                            checked={filters.skills.includes(skill)}
-                            onCheckedChange={(checked) =>
-                              handleSkillFilter(skill, checked)
-                            }
+                  <div className="border rounded-lg p-3 bg-white shadow-sm">
+                    <button
+                      onClick={() => setShowSkillsDropdown((prev) => !prev)}
+                      className="w-full text-left font-semibold text-gray-700 flex justify-between items-center"
+                    >
+                      <span>Skills</span>
+                      <span className="text-gray-400">
+                        {showSkillsDropdown ? "▲" : "▼"}
+                      </span>
+                    </button>
+
+                    {showSkillsDropdown && (
+                      <div className="mt-3 space-y-2 max-h-56 overflow-y-auto">
+                        <div className="sticky top-0 bg-white z-10 p-1 border-b">
+                          <input
+                            type="text"
+                            placeholder="Search skills..."
+                            value={searchSkill}
+                            onChange={(e) => setSearchSkill(e.target.value)}
+                            className="w-full h-8 text-sm border rounded px-2"
                           />
-                          <Label
-                            htmlFor={`skill-${skill}`}
-                            className="text-sm text-gray-600 cursor-pointer"
-                          >
-                            {skill}
-                          </Label>
                         </div>
-                      ))}
-                    </div>
+
+                        {/* List */}
+                        {skillsList
+                          .filter((skill) =>
+                            skill
+                              .toLowerCase()
+                              .startsWith(searchSkill.toLowerCase())
+                          )
+                          .map((skill) => {
+                            const isSelected = filters.skills.includes(skill);
+
+                            return (
+                              <div
+                                key={skill}
+                                className={`p-2 text-sm cursor-pointer rounded ${
+                                  isSelected
+                                    ? "bg-blue-100 text-blue-700 font-medium"
+                                    : "text-gray-700 hover:bg-gray-100"
+                                }`}
+                                onClick={() => {
+                                  setFilters((prev) => ({
+                                    ...prev,
+                                    skills: isSelected
+                                      ? prev.skills.filter((s) => s !== skill)
+                                      : [...prev.skills, skill],
+                                  }));
+                                }}
+                              >
+                                {skill}
+                              </div>
+                            );
+                          })}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
