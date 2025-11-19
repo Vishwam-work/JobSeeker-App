@@ -116,7 +116,7 @@ export default function EmployerDashboard() {
   //     company: "Tech Solutions Pvt Ltd",
   //     location: "Mumbai",
   //     experience: "3-5 years",
-  //     salary: "8-12 LPA",
+  //     salary: "8-12 PA",
   //     jobType: "Full Time",
   //     postedDate: "2024-01-15",
   //     applications: 45,
@@ -129,7 +129,7 @@ export default function EmployerDashboard() {
   //     company: "Digital Innovations Inc",
   //     location: "Bangalore",
   //     experience: "2-4 years",
-  //     salary: "6-10 LPA",
+  //     salary: "6-10 PA",
   //     jobType: "Full Time",
   //     postedDate: "2024-01-10",
   //     applications: 32,
@@ -142,7 +142,7 @@ export default function EmployerDashboard() {
   //     company: "StartupXYZ",
   //     location: "Delhi",
   //     experience: "5-8 years",
-  //     salary: "15-20 LPA",
+  //     salary: "15-20 PA",
   //     jobType: "Full Time",
   //     postedDate: "2024-01-08",
   //     applications: 28,
@@ -286,7 +286,7 @@ export default function EmployerDashboard() {
     title: "",
     category: "",
     jobTitle: "",
-    company: "Tesseract Technolabs",
+    company: "",
     location: "",
     experience: "",
     salary: "",
@@ -673,14 +673,30 @@ export default function EmployerDashboard() {
       (salaryFilter === "Above 50000" && salary > 50000);
 
     const expMatch =
-      experienceFilter === "All" ||
-      c.experience?.toLowerCase().includes(experienceFilter.toLowerCase());
+  experienceFilter === "All" ||
+  (experienceFilter === "Fresher" &&
+    (c.experience?.toLowerCase().includes("fresher") ||
+      c.experience?.includes("0"))) ||
+  (experienceFilter === "1-3 Years" &&
+    (c.experience?.includes("1") ||
+      c.experience?.includes("2") ||
+      c.experience?.includes("3"))) ||
+  (experienceFilter === "3-5 Years" &&
+    (c.experience?.includes("3") ||
+      c.experience?.includes("4") ||
+      c.experience?.includes("5"))) ||
+  (experienceFilter === "5+ Years" &&
+    (c.experience?.includes("5") ||
+      c.experience?.includes("6") ||
+      c.experience?.includes("7")));
 
     return nameMatch && statusMatch && locationMatch && salaryMatch && expMatch;
   });
   const filteredCities = cities.filter((city) =>
     city.name.toLowerCase().startsWith(searchTerm.toLowerCase())
   );
+
+
 
   const handleViewJob = async (job) => {
     try {
@@ -907,7 +923,10 @@ export default function EmployerDashboard() {
   };
 
   // SHORTLIST
-  const handleShortlistCandidate = async (candidate) => {
+const handleShortlistCandidate = async (candidate) => {
+  try {
+    console.log("Shortlisting candidate: ", candidate);
+
     if (!candidate?.id) {
       alert("Candidate ID missing");
       return;
@@ -915,31 +934,28 @@ export default function EmployerDashboard() {
 
     const token = localStorage.getItem("auth_token");
     if (!token) {
-      alert("You must be logged in to shortlist a candidate.");
+      alert("Token missing");
       return;
     }
 
-    try {
-      const response = await fetch(
-        `https://jobseeker-backend-jy1y.onrender.com/employeer/api/employer/applications/${candidate.id}/update/`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ status: "shortlisted" }),
-        }
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("Failed to shortlist:", errorData);
-        alert(`Error: ${errorData.detail || "Unable to shortlist candidate"}`);
-        return;
+    const response = await fetch(
+      `https://jobseeker-backend-jy1y.onrender.com/employeer/api/employer/applications/${candidate.id}/update/`,
+      {
+        method: "PUT",  
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          application_status: "shortlisted", 
+        }),
       }
+    );
 
-      const updatedCandidate = await response.json();
+    // const text = await response.text();
+    // console.log("Raw Response → ", text);
+ 
+const updatedCandidate = await response.json();
 
       setCandidates((prev) =>
         prev.map((c) =>
@@ -948,44 +964,81 @@ export default function EmployerDashboard() {
             : c
         )
       );
+console.log("Raw Response → ", updatedCandidate);
 
-      alert("Candidate shortlisted successfully!");
-    } catch (err) {
-      console.error("Error shortlisting candidate:", err);
-      alert("Network error. Please try again.");
+
+    let data = null;
+    try {
+      data = JSON.parse(updatedCandidate);
+    } catch {
+      console.log("HTML Error Response Received");
     }
-  };
+
+    if (!response.ok) {
+      alert(data?.detail || "Update failed");
+      return;
+    }
+
+    alert("Candidate Shortlisted!");
+  } catch (err) {
+    console.log("Shortlist error: ", err);
+    alert("Network error");
+  }
+};
+
 
   /* REJECT */
-  const handleRejectCandidate = async (candidate) => {
+ const handleRejectCandidate = async (candidate) => {
+  try {
+    console.log("Rejecting candidate: ", candidate);
+
+    if (!candidate?.id) {
+      alert("Candidate ID missing");
+      return;
+    }
+
     const token = localStorage.getItem("auth_token");
-    if (!token) return alert("Not logged in");
+    if (!token) {
+      alert("Token missing");
+      return;
+    }
 
-    const url = `https://jobseeker-backend-jy1y.onrender.com/employeer/job-postings/${candidate.id}/update/`;
-    const payload = { status: "Rejected" };
-
-    try {
-      const res = await fetch(url, {
-        method: "PATCH",
+    const response = await fetch(
+      `https://jobseeker-backend-jy1y.onrender.com/employeer/api/employer/applications/${candidate.id}/update/`,
+      {
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(payload),
-      });
-
-      if (res.ok) {
-        alert(`${candidate.name} rejected successfully`);
-      } else {
-        const errText = await res.text();
-        console.error("Failed:", res.status, errText);
-        alert(`Failed to reject: ${res.status}`);
+        body: JSON.stringify({
+          application_status: "Rejected",
+        }),
       }
-    } catch (e) {
-      console.error("Network error:", e);
-      alert("Network error. Please try again.");
+    );
+
+    const text = await response.text();
+    console.log("Raw Response → ", text);
+
+    let data = null;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      console.log("HTML Error Response Received");
     }
-  };
+
+    if (!response.ok) {
+      alert(data?.detail || "Update failed");
+      return;
+    }
+
+    alert("Candidate Rejected!");
+  } catch (err) {
+    console.log("Reject error: ", err);
+    alert("Network error");
+  }
+};
+
 
   const handleLogout = () => {
     localStorage.removeItem("auth_token");
@@ -1030,6 +1083,39 @@ export default function EmployerDashboard() {
   //  selectedJob.requirements.map((req, index) => (
   //                        )
   // }
+
+  useEffect(() => {
+  const fetchCompany = async () => {
+    try {
+      const token = localStorage.getItem("auth_token");
+      if (!token) return;
+
+      const res = await fetch(
+        "https://jobseeker-backend-jy1y.onrender.com/employeer/api/employeer_register/",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = await res.json();
+      console.log("Company API → ", data);
+
+      if (data?.company_name) {
+        setJobForm((prev) => ({
+          ...prev,
+          company: data.company_name,
+        }));
+      }
+    } catch (err) {
+      console.error("Company fetch error:", err);
+    }
+  };
+
+  fetchCompany();
+}, []);
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -2328,17 +2414,10 @@ export default function EmployerDashboard() {
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-lg">Applications</CardTitle>
-
-                    <Badge variant="secondary">{candidates.length}</Badge>
+                    <Badge variant="secondary">{filteredCategories.length}</Badge>
                   </div>
-                  {/* <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <Input
-                      placeholder="Search candidates..."
-                      className="pl-10"
-                    />
-                  </div> */}
-                  {/* 🔍 Search Bar (Full Width) */}
+                 
+                  {/*  Search Bar  */}
                   <div className="mb-4">
                     <div className="relative">
                       <Input
@@ -2365,9 +2444,9 @@ export default function EmployerDashboard() {
                     </div>
                   </div>
 
-                  {/* 🧭 Filters */}
+                  {/*  Filters */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-                    {/* 🏷️ Status Filter */}
+                    {/*  Status Filter */}
                     <Select
                       value={statusFilter}
                       onValueChange={setStatusFilter}
@@ -2385,7 +2464,7 @@ export default function EmployerDashboard() {
                       </SelectContent>
                     </Select>
 
-                    {/* 📍 Location Filter */}
+                    {/* Location Filter */}
                     <Select
                       value={locationFilter}
                       onValueChange={setLocationFilter}
@@ -2407,7 +2486,7 @@ export default function EmployerDashboard() {
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-                    {/* 💰 Salary Filter */}
+                    {/*  Salary Filter */}
                     <Select
                       value={salaryFilter}
                       onValueChange={setSalaryFilter}
@@ -2429,7 +2508,7 @@ export default function EmployerDashboard() {
                       </SelectContent>
                     </Select>
 
-                    {/* 🧑‍💼 Experience Filter */}
+                    {/* Experience Filter */}
                     <Select
                       value={experienceFilter}
                       onValueChange={setExperienceFilter}

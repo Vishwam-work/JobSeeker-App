@@ -121,6 +121,7 @@ export default function Profile() {
     institution: "",
     year: null,
     percentage: "",
+     scoreType: "percentage",
   });
 
   const [certificationForm, setCertificationForm] = useState({
@@ -397,6 +398,8 @@ export default function Profile() {
       setActiveSection(sections[currentIndex + 1].id);
     }
   };
+
+  
 
   const handleAddSkill = () => {
     if (newSkill.trim() && !profileData.skills.includes(newSkill.trim())) {
@@ -2068,23 +2071,51 @@ export default function Profile() {
                                   )}
                                 />
                               </div>
-                              <div className="md:col-span-2">
-                                <Label htmlFor="percentage">
-                                  Grade/Percentage
-                                </Label>
-                                <Input
-                                  id="percentage"
-                                  value={educationForm.percentage}
-                                  onChange={(e) =>
-                                    setEducationForm((prev) => ({
-                                      ...prev,
-                                      percentage: e.target.value,
-                                    }))
-                                  }
-                                  placeholder="e.g., 8.5 CGPA or 85%"
-                                  className="mt-1"
-                                />
-                              </div>
+                             <div className="md:col-span-2">
+  <Label className="text-sm font-medium text-gray-700">Score</Label>
+
+  <div className="flex items-center gap-3">
+
+    {/* Small Score Type Selector */}
+    <select
+      id="scoreType"
+      value={educationForm.scoreType}
+      onChange={(e) =>
+        setEducationForm((prev) => ({
+          ...prev,
+          scoreType: e.target.value,
+        }))
+      }
+      className="h-10 border rounded px-2 text-sm w-32"   // 👈 small width (left side)
+    >
+      <option value="percentage">Percentage</option>
+      <option value="cgpa">CGPA</option>
+      <option value="grade">Grade</option>
+    </select>
+
+    {/* Dynamic Input */}
+    <Input
+      id="percentage"
+      value={educationForm.percentage}
+      onChange={(e) =>
+        setEducationForm((prev) => ({
+          ...prev,
+          percentage: e.target.value,
+        }))
+      }
+      placeholder={
+        educationForm.scoreType === "percentage"
+          ? "85%"
+          : educationForm.scoreType === "cgpa"
+          ? "8.5"
+          : "A+"
+      }
+      className="flex-1 h-10"
+    />
+  </div>
+</div>
+
+
                             </div>
                             <div className="flex justify-end space-x-2">
                               <Button

@@ -433,18 +433,32 @@ const unsaveJob = async (jobId: number) => {
   }
 };
 
+ useEffect(() => {
+  const token = localStorage.getItem("auth_token");
+
+  if (token) {
+    const userId = localStorage.getItem("user_id");
+    const saved = localStorage.getItem(`applied_jobs_${userId}`);
+    setAppliedJobs(saved ? JSON.parse(saved) : []);
+  } else {
+    setAppliedJobs([]); 
+  }
+}, []);
+
+
+
   const handleApply = (job) => {
-    const token = localStorage.getItem("auth_token");
-    if (!token) {
-      alert("Please login to apply for jobs");
-      window.location.href = "/login";
-      return;
-    }
-    setSelectedJob(job);
-    setAnswers({}); // Reset answers for new application
-    fetchUserData(); // Fetch user data when opening modal
-    setIsApplyModalOpen(true);
-  };
+  const token = localStorage.getItem("auth_token");
+  if (!token) {
+    alert("Please login to apply for jobs");
+    window.location.href = "/login";
+    return;
+  }
+  setSelectedJob(job);
+  setAnswers({});
+  fetchUserData();
+  setIsApplyModalOpen(true);
+};
 
   const handleViewDetails = (job) => {
     setSelectedJob(job);
@@ -801,7 +815,7 @@ const unsaveJob = async (jobId: number) => {
                   {/* Salary Range */}
                   <div>
                     <Label className="text-sm font-medium text-gray-700 mb-2 block">
-                      Salary Range (LPA)
+                      Salary Range (PA)
                     </Label>
                     <div className="px-2">
                       <Slider
@@ -815,8 +829,8 @@ const unsaveJob = async (jobId: number) => {
                         className="w-full"
                       />
                       <div className="flex justify-between text-xs text-gray-500 mt-1">
-                        <span>{filters.salaryRange[0]} LPA</span>
-                        <span>{filters.salaryRange[1]} LPA</span>
+                        <span>{filters.salaryRange[0]} PA</span>
+                        <span>{filters.salaryRange[1]} PA</span>
                       </div>
                     </div>
                   </div>
@@ -1126,14 +1140,24 @@ const unsaveJob = async (jobId: number) => {
 
                         {/* Action Buttons */}
                         <div className="flex flex-col sm:flex-row lg:flex-col gap-2 lg:w-32">
-                          {!appliedJobs.includes(job.id) && (
-                            <Button
-                              onClick={() => handleApply(job)}
-                              className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
-                            >
-                              Apply Now
-                            </Button>
-                          )}
+                          {(() => {
+      const token = localStorage.getItem("auth_token");
+
+      // Login + Already applied → Button hide
+      if (token && appliedJobs.includes(job.id)) {
+        return null;
+      }
+
+      // Logout or Login but not applied → show button
+      return (
+        <Button
+          onClick={() => handleApply(job)}
+          className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
+        >
+          Apply Now
+        </Button>
+      );
+    })()}
                           <Button
                             variant="outline"
                             className="border-purple-200 text-purple-600 hover:bg-purple-50"
