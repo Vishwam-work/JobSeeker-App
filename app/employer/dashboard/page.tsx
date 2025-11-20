@@ -330,7 +330,7 @@ export default function EmployerDashboard() {
         const token = localStorage.getItem("auth_token");
         if (!token) return;
         const res = await fetch(
-          "https://jobseeker-backend-jy1y.onrender.com/employeer/api/employer/applications/",
+          "http://127.0.0.1:8010/employeer/api/employer/applications/",
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -363,7 +363,7 @@ export default function EmployerDashboard() {
           appliedDate: app.applied_at,
           status: app.application_status || "Under Review",
           resumeUrl: app.profile?.resume
-            ? `https://jobseeker-backend-jy1y.onrender.com${app.profile.resume}`
+            ? `http://127.0.0.1:8010${app.profile.resume}`
             : "#",
           profileImage: null,
           summary: "",
@@ -390,7 +390,7 @@ export default function EmployerDashboard() {
       const token = localStorage.getItem("auth_token");
       if (!token) return;
         const response = await fetch(
-          "https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-list-view/",
+          "http://127.0.0.1:8010/employeer/api/job-list-view/",
           {
             method: "GET",
             headers: {
@@ -398,12 +398,23 @@ export default function EmployerDashboard() {
             },
           }
         );
+
+      const response = await fetch(
+        "https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-list-view/",
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
       if (!response.ok) {
         console.error("Failed to fetch jobs");
         return;
       }
-
       const data = await response.json();
+      console.log("Here is the Job-list-view-data:",data)
       setPostedJobs(data); // Set jobs into state
     } catch (error) {
       console.error("Error fetching jobs:", error);
@@ -417,7 +428,7 @@ export default function EmployerDashboard() {
   console.log("Posted Jobs:", postedJobs);
 
   useEffect(() => {
-    fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/currencies/")
+    fetch("http://127.0.0.1:8010/master/api/currencies/")
       .then((res) => res.json())
       .then((data) => {
         console.log("Currency data:", data);
@@ -428,7 +439,7 @@ export default function EmployerDashboard() {
   useEffect(() => {
     // Fetch job categories
     fetch(
-      "https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_category/"
+      "http://127.0.0.1:8010/master/api/jobs_category/"
     )
       .then((res) => {
         if (!res.ok) {
@@ -443,7 +454,7 @@ export default function EmployerDashboard() {
       });
 
     // Fetch country
-    fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/countries/")
+    fetch("http://127.0.0.1:8010/master/api/countries/")
       .then((res) => {
         if (!res.ok) {
           throw new Error(`HTTP error! status: ${res.status}`);
@@ -461,7 +472,7 @@ export default function EmployerDashboard() {
   useEffect(() => {
     if (selectedCategory) {
       fetch(
-        `https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_title/?category=${selectedCategory}`
+        `http://127.0.0.1:8010/master/api/jobs_title/?category=${selectedCategory}`
       )
         .then((res) => {
           if (!res.ok) {
@@ -599,7 +610,7 @@ export default function EmployerDashboard() {
       };
       console.log("Payload:", payload);
       const response = await fetch(
-        "https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-postings/",
+        "http://127.0.0.1:8010/employeer/api/job-postings/",
         {
           method: "POST",
           headers: {
@@ -617,61 +628,61 @@ export default function EmployerDashboard() {
         return;
       }
 
-      const data = await response.json();
-      console.log("Job posted successfully:", data);
-      setPostedJobs((prev) => [...prev, data]);
-      alert("Job posted successfully!");
-      await fetchPostedJobs();
+  const data = await response.json();
+  console.log("Job posted successfully:", data);
+  setPostedJobs((prev) => [...prev, data]);
+  alert("Job posted successfully!");
+  await fetchPostedJobs();
 
       // Reset form
-      setJobForm({
-        title: "",
-        category: "",
-        jobTitle: "",
-        company: "",
-        location: "",
-        experience: "",
-        salary: "",
-        currency: "",
-        job_type: "",
-        workMode: "",
-        description: "",
-        requirements: "",
-        benefits: "",
-        skills: [],
-        applicationDeadline: "",
-        vacancies: "",
-        isUrgent: false,
-        isRemote: false,
-        questions: [],
-      });
-      setSelectedCategory("");
-      setQuestions([]);
-      setAskQuestionEnabled(false); // uncheck the checkbox
-      setNewSkill("");
-      setNewQuestion("");
-    } catch (error) {
-      console.error("Error submitting job:", error);
-      alert("An error occurred while posting the job.");
-    }
-  };
+        setJobForm({
+          title: "",
+          category: "",
+          jobTitle: "",
+          company: "",
+          location: "",
+          experience: "",
+          salary: "",
+          currency: "",
+          job_type: "",
+          workMode: "",
+          description: "",
+          requirements: "",
+          benefits: "",
+          skills: [],
+          applicationDeadline: "",
+          vacancies: "",
+          isUrgent: false,
+          isRemote: false,
+          questions: [],
+        });
+        setSelectedCategory("");
+        setQuestions([]);
+        setAskQuestionEnabled(false); // uncheck the checkbox
+        setNewSkill("");
+        setNewQuestion("");
+      } catch (error) {
+        console.error("Error submitting job:", error);
+        alert("An error occurred while posting the job.");
+      }
+    };
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "active":
-        return "bg-green-100 text-green-800";
-      case "closed":
-        return "bg-red-100 text-red-800";
-      case "Under Review":
-        return "bg-yellow-100 text-yellow-800";
-      case "Shortlisted":
-        return "bg-blue-100 text-blue-800";
-      case "Rejected":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
+    const getStatusColor = (status) => {
+      switch (status) {
+        case "active":
+          return "bg-green-100 text-green-800";
+        case "closed":
+          return "bg-red-100 text-red-800";
+        case "Under Review":
+          return "bg-yellow-100 text-yellow-800";
+        case "Shortlisted":
+          return "bg-blue-100 text-blue-800";
+        case "Rejected":
+          return "bg-red-100 text-red-800";
+        default:
+          return "bg-gray-100 text-gray-800";
+      }
+    };
 
   // Filter jobs based on status and search term
   const filteredJobs = postedJobs.filter((job) => {
@@ -682,121 +693,46 @@ export default function EmployerDashboard() {
       job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       job.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
       job.location?.name.toLowerCase().includes(searchTerm.toLowerCase());
-
-    // Date filter
-    let matchesDate = true;
-    if (dateFilter !== "all" && job.created_at) {
-      const jobDate = new Date(job.created_at);
-      const now = new Date();
-
-      if (dateFilter === "today") {
-        matchesDate = jobDate.toDateString() === now.toDateString();
-      } else if (dateFilter === "week") {
-        const weekAgo = new Date();
-        weekAgo.setDate(now.getDate() - 7);
-        matchesDate = jobDate >= weekAgo;
-      } else if (dateFilter === "month") {
-        const monthAgo = new Date();
-        monthAgo.setMonth(now.getMonth() - 1);
-        matchesDate = jobDate >= monthAgo;
-      }
-    }
-    return matchesFilter && matchesSearch && matchesDate;
+    return matchesFilter && matchesSearch;
   });
 
-  const filteredCategories = candidates.filter((c) => {
-    const nameMatch =
-      c.name?.toLowerCase().startsWith(searchTerm.toLowerCase()) ||
-      c.currentRole?.toLowerCase().startsWith(searchTerm.toLowerCase()) ||
-      c.appliedFor?.toLowerCase().startsWith(searchTerm.toLowerCase());
+    const handleViewJob = async (job) => {
+      try {
+        const token = localStorage.getItem("auth_token");
+        const response = await fetch(
+          `http://127.0.0.1:8010/employeer/api/job-list-view/${job.id}/`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
 
-    const statusMatch =
-      statusFilter === "All" ||
-      c.status?.toLowerCase() === statusFilter.toLowerCase();
-
-    const locationMatch =
-      locationFilter === "All" ||
-      c.location?.toLowerCase() === locationFilter.toLowerCase();
-
-    const jobTitleMatch =
-      jobTitleFilter === "All" ||
-      c.appliedFor?.toLowerCase() === jobTitleFilter.toLowerCase();
-
-    const salary = parseInt(c.expectedSalary) || 0;
-    const salaryMatch =
-      salaryFilter === "All" ||
-      (salaryFilter === "Below 20000" && salary < 20000) ||
-      (salaryFilter === "20000-50000" && salary >= 20000 && salary <= 50000) ||
-      (salaryFilter === "Above 50000" && salary > 50000);
-
-    const expMatch =
-      experienceFilter === "All" ||
-      (experienceFilter === "Fresher" &&
-        (c.experience?.toLowerCase().includes("fresher") ||
-          c.experience?.includes("0"))) ||
-      (experienceFilter === "1-3 Years" &&
-        (c.experience?.includes("1") ||
-          c.experience?.includes("2") ||
-          c.experience?.includes("3"))) ||
-      (experienceFilter === "3-5 Years" &&
-        (c.experience?.includes("3") ||
-          c.experience?.includes("4") ||
-          c.experience?.includes("5"))) ||
-      (experienceFilter === "5+ Years" &&
-        (c.experience?.includes("5") ||
-          c.experience?.includes("6") ||
-          c.experience?.includes("7")));
-
-    return (
-      nameMatch &&
-      statusMatch &&
-      locationMatch &&
-      salaryMatch &&
-      expMatch &&
-      jobTitleMatch
-    );
-  });
-  const filteredCities = cities.filter((city) =>
-    city.name.toLowerCase().startsWith(searchTerm.toLowerCase())
-  );
-
-  const handleViewJob = async (job) => {
-    try {
-      const token = localStorage.getItem("auth_token");
-      const response = await fetch(
-        `https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-list-view/${job.id}/`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
         }
-      );
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
+        const data = await response.json();
+        console.log("Job details:", data);
+        setSelectedJob(data);
+        setIsEditMode(false);
+        setIsModalOpen(true);
+      } catch (err) {
+        console.error("Error fetching job details", err);
       }
-      const data = await response.json();
-      console.log("Job details:", data);
-      setSelectedJob(data);
-      setIsEditMode(false);
-      setIsModalOpen(true);
-    } catch (err) {
-      console.error("Error fetching job details", err);
-    }
-  };
-//https://jobseeker-backend-jy1y.onrender.com
-  const handleEditJob = async (job) => {
-    try {
-      const token = localStorage.getItem("auth_token");
-      const response = await fetch(
-        `https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-list-view/${job.id}/`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      // https://jobseeker-backend-jy1y.onrender.com
-      const data = await response.json();
-      console.log("Data is prefill");
-      // Prefill the form
-      setJobForm({
+    };
+  //http://127.0.0.1:8010
+    const handleEditJob = async (job) => {
+      try {
+        const token = localStorage.getItem("auth_token");
+        const response = await fetch(
+          `http://127.0.0.1:8010/employeer/api/job-list-view/${job.id}/`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        // http://127.0.0.1:8010
+        const data = await response.json();
+        console.log("Data is prefill");
+        // Prefill the form
+    setJobForm({
         title: data.title || "",
         category: data.category?.id?.toString() || data.category || "",
         jobTitle: data.job_title?.id?.toString() || data.job_title || "",
@@ -838,7 +774,7 @@ export default function EmployerDashboard() {
         alert(`Job deleted: ${job.title}`);
       }
       const response = await fetch(
-        `https://jobseeker-backend-jy1y.onrender.com/employeer/job-postings/${job.id}/delete/`,
+        `http://127.0.0.1:8010/employeer/job-postings/${job.id}/delete/`,
         {
           method: "DELETE",
           headers: {
@@ -878,7 +814,7 @@ export default function EmployerDashboard() {
 
     try {
       const response = await fetch(
-        `https://jobseeker-backend-jy1y.onrender.com/employeer/job-postings/${job.id}/update/`,
+        `http://127.0.0.1:8010/employeer/job-postings/${job.id}/update/`,
         {
           method: "PATCH",
           headers: {
@@ -910,7 +846,7 @@ export default function EmployerDashboard() {
   // const handleUpdateJob = async () => {
   //   try {
   //     const token = localStorage.getItem("auth_token");
-  //     const response = await fetch(`https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-postings/${selectedJob.id}/`, {
+  //     const response = await fetch(`http://127.0.0.1:8010/employeer/api/job-postings/${selectedJob.id}/`, {
   //       method: "PUT",
   //       headers: {
   //         "Content-Type": "application/json",
@@ -951,7 +887,7 @@ export default function EmployerDashboard() {
       }
 
       const response = await fetch(
-        `https://jobseeker-backend-jy1y.onrender.com/employeer/job-postings/${selectedJob.id}/update/`,
+        `http://127.0.0.1:8010/employeer/job-postings/${selectedJob.id}/update/`,
         {
           method: "PUT",
           headers: {
@@ -1058,7 +994,7 @@ export default function EmployerDashboard() {
       }
 
       const response = await fetch(
-        `https://jobseeker-backend-jy1y.onrender.com/employeer/api/employer/applications/${candidate.id}/update/`,
+        `http://127.0.0.1:8010/employeer/api/employer/applications/${candidate.id}/update/`,
         {
           method: "PUT",
           headers: {
@@ -1122,9 +1058,8 @@ export default function EmployerDashboard() {
       const token = localStorage.getItem("auth_token");
       if (!token) return alert("Token missing");
 
-      if (!selectedCandidate?.id) {
-        return alert("Candidate ID missing!!");
-      }
+    const url = `https://jobseeker-backend-jy1y.onrender.com/employeer/job-postings/${candidate.id}/update/`;
+    const payload = { status: "Rejected" };
 
       const res = await fetch(
         `https://jobseeker-backend-jy1y.onrender.com/employeer/api/employer/applications/${selectedCandidate.id}/update/`,
@@ -2008,7 +1943,7 @@ export default function EmployerDashboard() {
                               onClick={() => handleApplicationsClick(job.id)}
                             >
                               <Users className="w-4 h-4 mr-1" />
-                              <span>{job.applications} Applications</span>
+                              <span>{job.applicants} Applications</span>
                             </div>
 
                             <div className="flex items-center text-green-600">
