@@ -39,6 +39,11 @@ export default function Login() {
       if (response.ok) {
         localStorage.setItem("auth_token", data.access);
         localStorage.setItem("full_name", data.full_name);
+
+        localStorage.setItem("user_email", email);
+        if (data.id) localStorage.setItem("user_id", data.id);
+        window.dispatchEvent(new Event("user-email-updated"));
+
         setAlertType("success");
         setAlertMessage("Login Successful!");
         setAlertOpen(true);

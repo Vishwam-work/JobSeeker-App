@@ -87,6 +87,11 @@ export default function JobListings() {
   const [searchCompany, setSearchCompany] = useState("");
   const [showSkillsDropdown, setShowSkillsDropdown] = useState(false);
   const [searchSkill, setSearchSkill] = useState("");
+  const [userEmail, setUserEmail] = useState<string | null>(() =>
+    localStorage.getItem("user_email")
+  );
+
+  // const [appliedJobs, setAppliedJobs] = useState<number[]>([]);
 
   useEffect(() => {
     const storedApplied = localStorage.getItem("applied_jobs");
@@ -191,6 +196,28 @@ export default function JobListings() {
       fetchUserData();
     }, 1000);
   }, []);
+
+  // Load applied jobs per user
+  useEffect(() => {
+    const email = localStorage.getItem("user_email");
+
+    if (!email) {
+      setAppliedJobs([]);
+      return;
+    }
+
+    const saved = localStorage.getItem(`applied_jobs_${email}`);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved).map((id: any) => Number(id));
+        setAppliedJobs(parsed);
+      } catch {
+        setAppliedJobs([]);
+      }
+    } else {
+      setAppliedJobs([]);
+    }
+  }, [userEmail]);
 
   useEffect(() => {
     let filtered = jobs;
@@ -433,32 +460,28 @@ const unsaveJob = async (jobId: number) => {
   }
 };
 
- useEffect(() => {
-  const token = localStorage.getItem("auth_token");
+  useEffect(() => {
+    if (!userEmail) {
+      setAppliedJobs([]);
+      return;
+    }
 
-  if (token) {
-    const userId = localStorage.getItem("user_id");
-    const saved = localStorage.getItem(`applied_jobs_${userId}`);
+    const saved = localStorage.getItem(`applied_jobs_${userEmail}`);
     setAppliedJobs(saved ? JSON.parse(saved) : []);
-  } else {
-    setAppliedJobs([]); 
-  }
-}, []);
-
-
+  }, [userEmail]);
 
   const handleApply = (job) => {
-  const token = localStorage.getItem("auth_token");
-  if (!token) {
-    alert("Please login to apply for jobs");
-    window.location.href = "/login";
-    return;
-  }
-  setSelectedJob(job);
-  setAnswers({});
-  fetchUserData();
-  setIsApplyModalOpen(true);
-};
+    const token = localStorage.getItem("auth_token");
+    if (!token) {
+      alert("Please login to apply for jobs");
+      window.location.href = "/login";
+      return;
+    }
+    setSelectedJob(job);
+    setAnswers({});
+    fetchUserData();
+    setIsApplyModalOpen(true);
+  };
 
   const handleViewDetails = (job) => {
     setSelectedJob(job);
@@ -569,11 +592,23 @@ const unsaveJob = async (jobId: number) => {
         setIsApplyModalOpen(false);
         setSelectedJob(null);
         setAnswers({});
+
+        // SAVE APPLIED JOB PER USER
+        const email = localStorage.getItem("user_email");
+        const key = email ? `applied_jobs_${email}` : "applied_jobs";
+
         setAppliedJobs((prev) => {
-          const updated = [...prev, selectedJob.id]; // ✅ use selectedJob.id
-          localStorage.setItem("applied_jobs", JSON.stringify(updated));
+          const jobIdNum = Number(selectedJob.id);
+          const updated = prev.includes(jobIdNum) ? prev : [...prev, jobIdNum];
+          localStorage.setItem(key, JSON.stringify(updated));
           return updated;
         });
+
+        // setAppliedJobs((prev) => {
+        //   const updated = [...prev, selectedJob.id]; // ✅ use selectedJob.id
+        //   localStorage.setItem("applied_jobs", JSON.stringify(updated));
+        //   return updated;
+        // });
       } else {
         alert(result.error || "Failed to submit application");
       }
@@ -1141,23 +1176,24 @@ const unsaveJob = async (jobId: number) => {
                         {/* Action Buttons */}
                         <div className="flex flex-col sm:flex-row lg:flex-col gap-2 lg:w-32">
                           {(() => {
-      const token = localStorage.getItem("auth_token");
+                            const token = localStorage.getItem("auth_token");
+                            const jobIdNum = Number(job.id);
+                            const appliedList = appliedJobs.map(Number);
 
-      // Login + Already applied → Button hide
-      if (token && appliedJobs.includes(job.id)) {
-        return null;
-      }
+                            if (token && appliedList.includes(jobIdNum)) {
+                              return null;
+                            }
 
-      // Logout or Login but not applied → show button
-      return (
-        <Button
-          onClick={() => handleApply(job)}
-          className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
-        >
-          Apply Now
-        </Button>
-      );
-    })()}
+                            return (
+                              <Button
+                                onClick={() => handleApply(job)}
+                                className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
+                              >
+                                Apply Now
+                              </Button>
+                            );
+                          })()}
+
                           <Button
                             variant="outline"
                             className="border-purple-200 text-purple-600 hover:bg-purple-50"
