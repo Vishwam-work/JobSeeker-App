@@ -87,11 +87,14 @@ export default function JobListings() {
   const [searchCompany, setSearchCompany] = useState("");
   const [showSkillsDropdown, setShowSkillsDropdown] = useState(false);
   const [searchSkill, setSearchSkill] = useState("");
-  const [userEmail, setUserEmail] = useState<string | null>(() =>
-    localStorage.getItem("user_email")
-  );
+  const [userEmail, setUserEmail] = useState<string | null>(null);
 
-  // const [appliedJobs, setAppliedJobs] = useState<number[]>([]);
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const email = localStorage.getItem("user_email");
+      setUserEmail(email);
+    }
+  }, []);
 
   useEffect(() => {
     const storedApplied = localStorage.getItem("applied_jobs");
