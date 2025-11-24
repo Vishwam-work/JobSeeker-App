@@ -673,30 +673,28 @@ export default function EmployerDashboard() {
       (salaryFilter === "Above 50000" && salary > 50000);
 
     const expMatch =
-  experienceFilter === "All" ||
-  (experienceFilter === "Fresher" &&
-    (c.experience?.toLowerCase().includes("fresher") ||
-      c.experience?.includes("0"))) ||
-  (experienceFilter === "1-3 Years" &&
-    (c.experience?.includes("1") ||
-      c.experience?.includes("2") ||
-      c.experience?.includes("3"))) ||
-  (experienceFilter === "3-5 Years" &&
-    (c.experience?.includes("3") ||
-      c.experience?.includes("4") ||
-      c.experience?.includes("5"))) ||
-  (experienceFilter === "5+ Years" &&
-    (c.experience?.includes("5") ||
-      c.experience?.includes("6") ||
-      c.experience?.includes("7")));
+      experienceFilter === "All" ||
+      (experienceFilter === "Fresher" &&
+        (c.experience?.toLowerCase().includes("fresher") ||
+          c.experience?.includes("0"))) ||
+      (experienceFilter === "1-3 Years" &&
+        (c.experience?.includes("1") ||
+          c.experience?.includes("2") ||
+          c.experience?.includes("3"))) ||
+      (experienceFilter === "3-5 Years" &&
+        (c.experience?.includes("3") ||
+          c.experience?.includes("4") ||
+          c.experience?.includes("5"))) ||
+      (experienceFilter === "5+ Years" &&
+        (c.experience?.includes("5") ||
+          c.experience?.includes("6") ||
+          c.experience?.includes("7")));
 
     return nameMatch && statusMatch && locationMatch && salaryMatch && expMatch;
   });
   const filteredCities = cities.filter((city) =>
     city.name.toLowerCase().startsWith(searchTerm.toLowerCase())
   );
-
-
 
   const handleViewJob = async (job) => {
     try {
@@ -923,39 +921,39 @@ export default function EmployerDashboard() {
   };
 
   // SHORTLIST
-const handleShortlistCandidate = async (candidate) => {
-  try {
-    console.log("Shortlisting candidate: ", candidate);
+  const handleShortlistCandidate = async (candidate) => {
+    try {
+      console.log("Shortlisting candidate: ", candidate);
 
-    if (!candidate?.id) {
-      alert("Candidate ID missing");
-      return;
-    }
-
-    const token = localStorage.getItem("auth_token");
-    if (!token) {
-      alert("Token missing");
-      return;
-    }
-
-    const response = await fetch(
-      `https://jobseeker-backend-jy1y.onrender.com/employeer/api/employer/applications/${candidate.id}/update/`,
-      {
-        method: "PUT",  
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          application_status: "shortlisted", 
-        }),
+      if (!candidate?.id) {
+        alert("Candidate ID missing");
+        return;
       }
-    );
 
-    // const text = await response.text();
-    // console.log("Raw Response → ", text);
- 
-const updatedCandidate = await response.json();
+      const token = localStorage.getItem("auth_token");
+      if (!token) {
+        alert("Token missing");
+        return;
+      }
+
+      const response = await fetch(
+        `https://jobseeker-backend-jy1y.onrender.com/employeer/api/employer/applications/${candidate.id}/update/`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            application_status: "shortlisted",
+          }),
+        }
+      );
+
+      // const text = await response.text();
+      // console.log("Raw Response → ", text);
+
+      const updatedCandidate = await response.json();
 
       setCandidates((prev) =>
         prev.map((c) =>
@@ -964,81 +962,78 @@ const updatedCandidate = await response.json();
             : c
         )
       );
-console.log("Raw Response → ", updatedCandidate);
+      console.log("Raw Response → ", updatedCandidate);
 
+      let data = null;
+      try {
+        data = JSON.parse(updatedCandidate);
+      } catch {
+        console.log("HTML Error Response Received");
+      }
 
-    let data = null;
-    try {
-      data = JSON.parse(updatedCandidate);
-    } catch {
-      console.log("HTML Error Response Received");
+      if (!response.ok) {
+        alert(data?.detail || "Update failed");
+        return;
+      }
+
+      alert("Candidate Shortlisted!");
+    } catch (err) {
+      console.log("Shortlist error: ", err);
+      alert("Network error");
     }
-
-    if (!response.ok) {
-      alert(data?.detail || "Update failed");
-      return;
-    }
-
-    alert("Candidate Shortlisted!");
-  } catch (err) {
-    console.log("Shortlist error: ", err);
-    alert("Network error");
-  }
-};
-
+  };
 
   /* REJECT */
- const handleRejectCandidate = async (candidate) => {
-  try {
-    console.log("Rejecting candidate: ", candidate);
-
-    if (!candidate?.id) {
-      alert("Candidate ID missing");
-      return;
-    }
-
-    const token = localStorage.getItem("auth_token");
-    if (!token) {
-      alert("Token missing");
-      return;
-    }
-
-    const response = await fetch(
-      `https://jobseeker-backend-jy1y.onrender.com/employeer/api/employer/applications/${candidate.id}/update/`,
-      {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          application_status: "Rejected",
-        }),
-      }
-    );
-
-    const text = await response.text();
-    console.log("Raw Response → ", text);
-
-    let data = null;
+  const handleRejectCandidate = async (candidate) => {
     try {
-      data = JSON.parse(text);
-    } catch {
-      console.log("HTML Error Response Received");
+      console.log("Rejecting candidate: ", candidate);
+
+      if (!candidate?.id) {
+        alert("Candidate ID missing");
+        return;
+      }
+
+      const token = localStorage.getItem("auth_token");
+      if (!token) {
+        alert("Token missing");
+        return;
+      }
+
+      const response = await fetch(
+        `https://jobseeker-backend-jy1y.onrender.com/employeer/api/employer/applications/${candidate.id}/update/`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            application_status: "Rejected",
+          }),
+        }
+      );
+
+      const text = await response.text();
+      console.log("Raw Response → ", text);
+
+      let data = null;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        console.log("HTML Error Response Received");
+      }
+
+      if (!response.ok) {
+        alert(data?.detail || "Update failed");
+        return;
+      }
+
+      alert("Candidate Rejected!");
+    } catch (err) {
+      console.log("Reject error: ", err);
+      alert("Network error");
     }
-
-    if (!response.ok) {
-      alert(data?.detail || "Update failed");
-      return;
-    }
-
-    alert("Candidate Rejected!");
-  } catch (err) {
-    console.log("Reject error: ", err);
-    alert("Network error");
-  }
-};
-
+  };
 
   const handleLogout = () => {
     localStorage.removeItem("auth_token");
@@ -1085,36 +1080,36 @@ console.log("Raw Response → ", updatedCandidate);
   // }
 
   useEffect(() => {
-  const fetchCompany = async () => {
-    try {
-      const token = localStorage.getItem("auth_token");
-      if (!token) return;
+    const fetchCompany = async () => {
+      try {
+        const token = localStorage.getItem("auth_token");
+        if (!token) return;
 
-      const res = await fetch(
-        "https://jobseeker-backend-jy1y.onrender.com/employeer/api/employeer_register/",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+        const res = await fetch(
+          "https://jobseeker-backend-jy1y.onrender.com/employeer/api/employeer_register/",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        const data = await res.json();
+        console.log("Company API → ", data);
+
+        if (data?.company_name) {
+          setJobForm((prev) => ({
+            ...prev,
+            company: data.company_name,
+          }));
         }
-      );
-
-      const data = await res.json();
-      console.log("Company API → ", data);
-
-      if (data?.company_name) {
-        setJobForm((prev) => ({
-          ...prev,
-          company: data.company_name,
-        }));
+      } catch (err) {
+        console.error("Company fetch error:", err);
       }
-    } catch (err) {
-      console.error("Company fetch error:", err);
-    }
-  };
+    };
 
-  fetchCompany();
-}, []);
+    fetchCompany();
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -2414,9 +2409,11 @@ console.log("Raw Response → ", updatedCandidate);
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-lg">Applications</CardTitle>
-                    <Badge variant="secondary">{filteredCategories.length}</Badge>
+                    <Badge variant="secondary">
+                      {filteredCategories.length}
+                    </Badge>
                   </div>
-                 
+
                   {/*  Search Bar  */}
                   <div className="mb-4">
                     <div className="relative">
@@ -2915,7 +2912,7 @@ console.log("Raw Response → ", updatedCandidate);
                         Reject Application
                       </Button>
 
-                      <Button variant="outline" className="flex-1">
+                     <Button variant="outline" className="flex-1">
                         <ExternalLink className="w-4 h-4 mr-2" />
                         Schedule Interview
                       </Button>
