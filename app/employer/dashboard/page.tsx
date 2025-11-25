@@ -926,13 +926,6 @@ export default function EmployerDashboard() {
   // SHORTLIST
 const handleShortlistCandidate = async (candidate) => {
   try {
-    console.log("Shortlisting candidate: ", candidate);
-
-    if (!candidate?.id) {
-      alert("Candidate ID missing");
-      return;
-    }
-
     const token = localStorage.getItem("auth_token");
     if (!token) {
       alert("Token missing");
@@ -942,47 +935,35 @@ const handleShortlistCandidate = async (candidate) => {
     const response = await fetch(
       `https://jobseeker-backend-jy1y.onrender.com/employeer/api/employer/applications/${candidate.id}/update/`,
       {
-        method: "PUT",  
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          application_status: "shortlisted", 
+          application_status: "shortlisted",
         }),
       }
     );
 
-    // const text = await response.text();
-    // console.log("Raw Response → ", text);
- 
-const updatedCandidate = await response.json();
-
-      setCandidates((prev) =>
-        prev.map((c) =>
-          c.id === updatedCandidate.id
-            ? { ...c, status: updatedCandidate.status }
-            : c
-        )
-      );
-console.log("Raw Response → ", updatedCandidate);
-
-
-    let data = null;
-    try {
-      data = JSON.parse(updatedCandidate);
-    } catch {
-      console.log("HTML Error Response Received");
-    }
+    const updated = await response.json();
+    console.log("Updated Response:", updated);
 
     if (!response.ok) {
-      alert(data?.detail || "Update failed");
+      alert(updated.error || "Update failed");
       return;
     }
 
+    setSelectedCandidate((prev) =>
+      prev && prev.id === updated.id
+        ? { ...prev, status: updated.application_status }
+        : prev
+    );
+    console.log("Now>>>>>>>",selectedCandidate);
+
     alert("Candidate Shortlisted!");
   } catch (err) {
-    console.log("Shortlist error: ", err);
+    console.log("Shortlist error:", err);
     alert("Network error");
   }
 };
@@ -1028,10 +1009,15 @@ console.log("Raw Response → ", updatedCandidate);
         console.log("HTML Error Response Received");
       }
 
-    if (!response.ok) {
-      alert(data?.detail || "Update failed");
-      return;
-    }
+      if (!response.ok) {
+        alert(data?.detail || "Update failed");
+        return;
+      }
+      setSelectedCandidate((prev) =>
+        prev && prev.id === data.id
+          ? { ...prev, status: data.application_status }
+          : prev
+      );
 
       alert("Candidate Rejected!");
     } catch (err) {
