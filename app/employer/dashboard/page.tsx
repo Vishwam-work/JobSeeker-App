@@ -957,11 +957,23 @@ export default function EmployerDashboard() {
         return;
       }
 
+      setCandidates((prev) =>
+        prev.map((c) =>
+          c.id === updated.id ? { ...c, status: updated.application_status } : c
+        )
+      );
+
       setSelectedCandidate((prev) =>
         prev && prev.id === updated.id
           ? { ...prev, status: updated.application_status }
           : prev
       );
+
+      // setSelectedCandidate((prev) =>
+      //   prev && prev.id === updated.id
+      //     ? { ...prev, status: updated.application_status }
+      //     : prev
+      // );
       console.log("Now>>>>>>>", selectedCandidate);
 
       alert("Candidate Shortlisted!");
@@ -1015,11 +1027,24 @@ export default function EmployerDashboard() {
         alert(data?.detail || "Update failed");
         return;
       }
+
+      setCandidates((prev) =>
+        prev.map((c) =>
+          c.id === data.id ? { ...c, status: data.application_status } : c
+        )
+      );
+
       setSelectedCandidate((prev) =>
         prev && prev.id === data.id
           ? { ...prev, status: data.application_status }
           : prev
       );
+
+      // setSelectedCandidate((prev) =>
+      //   prev && prev.id === data.id
+      //     ? { ...prev, status: data.application_status }
+      //     : prev
+      // );
 
       alert("Candidate Rejected!");
     } catch (err) {
@@ -1067,6 +1092,17 @@ export default function EmployerDashboard() {
       if (!res.ok) {
         return alert("Failed: " + JSON.stringify(data));
       }
+      setCandidates((prev) =>
+        prev.map((c) =>
+          c.id === data.id ? { ...c, status: data.application_status } : c
+        )
+      );
+
+      setSelectedCandidate((prev) =>
+        prev && prev.id === data.id
+          ? { ...prev, status: data.application_status }
+          : prev
+      );
 
       alert("Interview Scheduled!");
       setOpenSchedule(false);
@@ -2923,137 +2959,174 @@ export default function EmployerDashboard() {
 
                     {/* Action Buttons */}
                     <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t">
-                      {/* <Button className="bg-green-600 hover:bg-green-700 flex-1">
-                        <CheckCircle className="w-4 h-4 mr-2" />
-                        Shortlist Candidate
-                      </Button>
-                      <Button
-                        variant="outline"
-                        className="border-red-600 text-red-600 hover:bg-red-50 flex-1"
-                      >
-                        <XCircle className="w-4 h-4 mr-2" />
-                        Reject Application
-                      </Button> */}
-                      <Button
-                        className="bg-green-600 hover:bg-green-700 flex-1"
-                        onClick={() =>
-                          handleShortlistCandidate(selectedCandidate)
-                        }
-                      >
-                        <CheckCircle className="w-4 h-4 mr-2" />
-                        Shortlist Candidate
-                      </Button>
+                      
+                      <div className="flex flex-col sm:flex-row gap-3 mt-4">
+                        {/* UNDER REVIEW */}
+                        {selectedCandidate?.status === "Under Review" && (
+                          <>
+                            <Button
+                              className="bg-green-600 hover:bg-green-700 flex-1"
+                              onClick={() =>
+                                handleShortlistCandidate(selectedCandidate)
+                              }
+                            >
+                              <CheckCircle className="w-4 h-4 mr-2" />
+                              Shortlist Candidate
+                            </Button>
 
-                      <Button
-                        variant="outline"
-                        className="border-red-600 text-red-600 hover:bg-red-50 flex-1"
-                        onClick={() => handleRejectCandidate(selectedCandidate)}
-                      >
-                        <XCircle className="w-4 h-4 mr-2" />
-                        Reject Application
-                      </Button>
+                            <Button
+                              variant="outline"
+                              className="border-red-600 text-red-600 hover:bg-red-50 flex-1"
+                              onClick={() =>
+                                handleRejectCandidate(selectedCandidate)
+                              }
+                            >
+                              <XCircle className="w-4 h-4 mr-2" />
+                              Reject Application
+                            </Button>
+                          </>
+                        )}
 
-                      <Button
-                        variant="outline"
-                        className="flex-1"
-                        onClick={() =>
-                          handleScheduleInterview(selectedCandidate)
-                        }
-                      >
-                        <ExternalLink className="w-4 h-4 mr-2" />
-                        Schedule Interview
-                      </Button>
-                     {openSchedule && (
-  <Dialog open={openSchedule} onOpenChange={() => setOpenSchedule(false)}>
-    <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto rounded-xl">
-      <DialogHeader>
-        <DialogTitle className="text-lg font-semibold">
-          Schedule Interview
-        </DialogTitle>
-      </DialogHeader>
+                        {/* SHORTLISTED */}
+                        {selectedCandidate?.status === "shortlisted" && (
+                          <Button
+                            variant="outline"
+                            className="flex-1 border-blue-600 text-blue-600"
+                            onClick={() =>
+                              handleScheduleInterview(selectedCandidate)
+                            }
+                          >
+                            <ExternalLink className="w-4 h-4 mr-2" />
+                            Schedule Interview
+                          </Button>
+                        )}
 
-      <div className="space-y-4 mt-3">
+                        {/* REJECTED */}
+                        {selectedCandidate?.status === "Rejected" && (
+                          <Button
+                            disabled
+                            variant="outline"
+                            className="border-red-600 text-red-600 flex-1 opacity-50 cursor-not-allowed"
+                          >
+                            <XCircle className="w-4 h-4 mr-2" />
+                            Application Rejected
+                          </Button>
+                        )}
+                      </div>
 
-        {/* Candidate Name */}
-        <div className="bg-gray-50 p-3 rounded-lg border">
-          <p className="text-xs text-gray-500">Candidate</p>
-          <p className="font-semibold text-gray-800">
-            {selectedCandidate?.name}
-          </p>
-        </div>
+                      {openSchedule && (
+                        <Dialog
+                          open={openSchedule}
+                          onOpenChange={() => setOpenSchedule(false)}
+                        >
+                          <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto rounded-xl">
+                            <DialogHeader>
+                              <DialogTitle className="text-lg font-semibold">
+                                Schedule Interview
+                              </DialogTitle>
+                            </DialogHeader>
 
-        {/* Candidate Email */}
-        <div className="bg-gray-50 p-3 rounded-lg border">
-          <p className="text-xs text-gray-500">Email</p>
-          <p className="font-semibold text-gray-800">
-            {selectedCandidate?.email}
-          </p>
-        </div>
+                            <div className="space-y-4 mt-3">
+                              {/* Candidate Name */}
+                              <div className="bg-gray-50 p-3 rounded-lg border">
+                                <p className="text-xs text-gray-500">
+                                  Candidate
+                                </p>
+                                <p className="font-semibold text-gray-800">
+                                  {selectedCandidate?.name}
+                                </p>
+                              </div>
 
-        {/* Date */}
-        <div>
-          <label className="text-sm font-medium">Interview Date</label>
-          <input
-            type="date"
-            className="w-full border rounded-lg p-2 mt-1 focus:ring-2 focus:ring-blue-500"
-            value={interviewDate}
-            onChange={(e) => setInterviewDate(e.target.value)}
-          />
-        </div>
+                              {/* Candidate Email */}
+                              <div className="bg-gray-50 p-3 rounded-lg border">
+                                <p className="text-xs text-gray-500">Email</p>
+                                <p className="font-semibold text-gray-800">
+                                  {selectedCandidate?.email}
+                                </p>
+                              </div>
 
-        {/* Time */}
-        <div>
-          <label className="text-sm font-medium">Interview Time</label>
-          <input
-            type="time"
-            className="w-full border rounded-lg p-2 mt-1 focus:ring-2 focus:ring-blue-500"
-            value={interviewTime}
-            onChange={(e) => setInterviewTime(e.target.value)}
-          />
-        </div>
+                              {/* Date */}
+                              <div>
+                                <label className="text-sm font-medium">
+                                  Interview Date
+                                </label>
+                                <input
+                                  type="date"
+                                  className="w-full border rounded-lg p-2 mt-1 focus:ring-2 focus:ring-blue-500"
+                                  value={interviewDate}
+                                  onChange={(e) =>
+                                    setInterviewDate(e.target.value)
+                                  }
+                                />
+                              </div>
 
-        {/* Mode */}
-        <div>
-          <label className="text-sm font-medium">Interview Mode</label>
-          <select
-            className="w-full border rounded-lg p-2 mt-1 focus:ring-2 focus:ring-blue-500"
-            value={interviewMode}
-            onChange={(e) => setInterviewMode(e.target.value)}
-          >
-            <option>Online</option>
-            <option>Office</option>
-            <option>Phone Call</option>
-          </select>
-        </div>
+                              {/* Time */}
+                              <div>
+                                <label className="text-sm font-medium">
+                                  Interview Time
+                                </label>
+                                <input
+                                  type="time"
+                                  className="w-full border rounded-lg p-2 mt-1 focus:ring-2 focus:ring-blue-500"
+                                  value={interviewTime}
+                                  onChange={(e) =>
+                                    setInterviewTime(e.target.value)
+                                  }
+                                />
+                              </div>
 
-        {/* Notes */}
-        <div className="mt-4">
-          <p className="text-sm text-gray-700 mb-1">Message / Notes</p>
-          <textarea
-            className="w-full border rounded-md p-2 text-sm focus:ring-2 focus:ring-blue-500"
-            rows={3}
-            placeholder="Enter interview instructions or notes..."
-            value={interviewNotes}
-            onChange={(e) => setInterviewNotes(e.target.value)}
-          />
-        </div>
-      </div>
+                              {/* Mode */}
+                              <div>
+                                <label className="text-sm font-medium">
+                                  Interview Mode
+                                </label>
+                                <select
+                                  className="w-full border rounded-lg p-2 mt-1 focus:ring-2 focus:ring-blue-500"
+                                  value={interviewMode}
+                                  onChange={(e) =>
+                                    setInterviewMode(e.target.value)
+                                  }
+                                >
+                                  <option>Online</option>
+                                  <option>Office</option>
+                                  <option>Phone Call</option>
+                                </select>
+                              </div>
 
-      <DialogFooter className="mt-3">
-        <Button variant="outline" onClick={() => setOpenSchedule(false)}>
-          Cancel
-        </Button>
-        <Button 
-          className="bg-blue-600 hover:bg-blue-700" 
-          onClick={handleScheduleSubmit}
-        >
-          Schedule
-        </Button>
-      </DialogFooter>
-    </DialogContent>
-  </Dialog>
-)}
+                              {/* Notes */}
+                              <div className="mt-4">
+                                <p className="text-sm text-gray-700 mb-1">
+                                  Message / Notes
+                                </p>
+                                <textarea
+                                  className="w-full border rounded-md p-2 text-sm focus:ring-2 focus:ring-blue-500"
+                                  rows={3}
+                                  placeholder="Enter interview instructions or notes..."
+                                  value={interviewNotes}
+                                  onChange={(e) =>
+                                    setInterviewNotes(e.target.value)
+                                  }
+                                />
+                              </div>
+                            </div>
 
+                            <DialogFooter className="mt-3">
+                              <Button
+                                variant="outline"
+                                onClick={() => setOpenSchedule(false)}
+                              >
+                                Cancel
+                              </Button>
+                              <Button
+                                className="bg-blue-600 hover:bg-blue-700"
+                                onClick={handleScheduleSubmit}
+                              >
+                                Schedule
+                              </Button>
+                            </DialogFooter>
+                          </DialogContent>
+                        </Dialog>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
