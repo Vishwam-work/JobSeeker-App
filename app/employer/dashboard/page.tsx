@@ -112,6 +112,7 @@ export default function EmployerDashboard() {
   const [interviewDate, setInterviewDate] = useState("");
   const [interviewTime, setInterviewTime] = useState("");
   const [interviewMode, setInterviewMode] = useState("Online");
+  const [interviewNotes, setInterviewNotes] = useState("");
 
   // Sample data for posted jobs
   // const [postedJobs] = useState([
@@ -433,7 +434,9 @@ export default function EmployerDashboard() {
 
   useEffect(() => {
     // Fetch job categories
-    fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_category/")
+    fetch(
+      "https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_category/"
+    )
       .then((res) => {
         if (!res.ok) {
           throw new Error(`HTTP error! status: ${res.status}`);
@@ -924,50 +927,49 @@ export default function EmployerDashboard() {
   };
 
   // SHORTLIST
-const handleShortlistCandidate = async (candidate) => {
-  try {
-    const token = localStorage.getItem("auth_token");
-    if (!token) {
-      alert("Token missing");
-      return;
-    }
-
-    const response = await fetch(
-      `https://jobseeker-backend-jy1y.onrender.com/employeer/api/employer/applications/${candidate.id}/update/`,
-      {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          application_status: "shortlisted",
-        }),
+  const handleShortlistCandidate = async (candidate) => {
+    try {
+      const token = localStorage.getItem("auth_token");
+      if (!token) {
+        alert("Token missing");
+        return;
       }
-    );
 
-    const updated = await response.json();
-    console.log("Updated Response:", updated);
+      const response = await fetch(
+        `https://jobseeker-backend-jy1y.onrender.com/employeer/api/employer/applications/${candidate.id}/update/`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            application_status: "shortlisted",
+          }),
+        }
+      );
 
-    if (!response.ok) {
-      alert(updated.error || "Update failed");
-      return;
+      const updated = await response.json();
+      console.log("Updated Response:", updated);
+
+      if (!response.ok) {
+        alert(updated.error || "Update failed");
+        return;
+      }
+
+      setSelectedCandidate((prev) =>
+        prev && prev.id === updated.id
+          ? { ...prev, status: updated.application_status }
+          : prev
+      );
+      console.log("Now>>>>>>>", selectedCandidate);
+
+      alert("Candidate Shortlisted!");
+    } catch (err) {
+      console.log("Shortlist error:", err);
+      alert("Network error");
     }
-
-    setSelectedCandidate((prev) =>
-      prev && prev.id === updated.id
-        ? { ...prev, status: updated.application_status }
-        : prev
-    );
-    console.log("Now>>>>>>>",selectedCandidate);
-
-    alert("Candidate Shortlisted!");
-  } catch (err) {
-    console.log("Shortlist error:", err);
-    alert("Network error");
-  }
-};
-
+  };
 
   /* REJECT */
   const handleRejectCandidate = async (candidate) => {
@@ -1033,46 +1035,46 @@ const handleShortlistCandidate = async (candidate) => {
   };
 
   const handleScheduleSubmit = async () => {
-  try {
-    const token = localStorage.getItem("auth_token");
-    if (!token) return alert("Token missing");
+    try {
+      const token = localStorage.getItem("auth_token");
+      if (!token) return alert("Token missing");
 
-    if (!selectedCandidate?.id) {
-      return alert("Candidate ID missing!!");
-    }
-
-    const res = await fetch(
-      `https://jobseeker-backend-jy1y.onrender.com/employeer/api/employer/applications/${selectedCandidate.id}/update/`,
-      {
-        method: "PATCH",  
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          interview_date: interviewDate,
-          interview_time: interviewTime,
-          interview_mode: interviewMode,
-          application_status: "Interview Scheduled",
-        }),
+      if (!selectedCandidate?.id) {
+        return alert("Candidate ID missing!!");
       }
-    );
 
-    const data = await res.json();
-    console.log("Response:", data);
+      const res = await fetch(
+        `https://jobseeker-backend-jy1y.onrender.com/employeer/api/employer/applications/${selectedCandidate.id}/update/`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            interview_date: interviewDate,
+            interview_time: interviewTime,
+            interview_mode: interviewMode,
+            notes: interviewNotes,
+            application_status: "Interview Scheduled",
+          }),
+        }
+      );
 
-    if (!res.ok) {
-      return alert("Failed: " + JSON.stringify(data));
+      const data = await res.json();
+      console.log("Response:", data);
+
+      if (!res.ok) {
+        return alert("Failed: " + JSON.stringify(data));
+      }
+
+      alert("Interview Scheduled!");
+      setOpenSchedule(false);
+    } catch (err) {
+      console.log(err);
+      alert("Network Error");
     }
-
-    alert("Interview Scheduled!");
-    setOpenSchedule(false);
-
-  } catch (err) {
-    console.log(err);
-    alert("Network Error");
-  }
-};
+  };
 
   const handleLogout = () => {
     localStorage.removeItem("auth_token");
@@ -2961,89 +2963,97 @@ const handleShortlistCandidate = async (candidate) => {
                         <ExternalLink className="w-4 h-4 mr-2" />
                         Schedule Interview
                       </Button>
-                      {openSchedule && (
-                        <Dialog
-                          open={openSchedule}
-                          onOpenChange={() => setOpenSchedule(false)}
-                        >
-                          <DialogContent className="max-w-md">
-                            <DialogHeader>
-                              <DialogTitle>Schedule Interview</DialogTitle>
-                            </DialogHeader>
+                     {openSchedule && (
+  <Dialog open={openSchedule} onOpenChange={() => setOpenSchedule(false)}>
+    <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto rounded-xl">
+      <DialogHeader>
+        <DialogTitle className="text-lg font-semibold">
+          Schedule Interview
+        </DialogTitle>
+      </DialogHeader>
 
-                            <div className="space-y-4 mt-3">
-                              <div>
-                                <p className="text-sm text-gray-700">
-                                  Candidate
-                                </p>
-                                <p className="font-semibold">
-                                  {selectedCandidate?.name}
-                                </p>
-                              </div>
+      <div className="space-y-4 mt-3">
 
-                              <div>
-                                <label className="text-sm font-medium">
-                                  Interview Date
-                                </label>
-                                <input
-                                  type="date"
-                                  className="w-full border rounded-lg p-2 mt-1"
-                                  value={interviewDate}
-                                  onChange={(e) =>
-                                    setInterviewDate(e.target.value)
-                                  }
-                                />
-                              </div>
+        {/* Candidate Name */}
+        <div className="bg-gray-50 p-3 rounded-lg border">
+          <p className="text-xs text-gray-500">Candidate</p>
+          <p className="font-semibold text-gray-800">
+            {selectedCandidate?.name}
+          </p>
+        </div>
 
-                              <div>
-                                <label className="text-sm font-medium">
-                                  Interview Time
-                                </label>
-                                <input
-                                  type="time"
-                                  className="w-full border rounded-lg p-2 mt-1"
-                                  value={interviewTime}
-                                  onChange={(e) =>
-                                    setInterviewTime(e.target.value)
-                                  }
-                                />
-                              </div>
+        {/* Candidate Email */}
+        <div className="bg-gray-50 p-3 rounded-lg border">
+          <p className="text-xs text-gray-500">Email</p>
+          <p className="font-semibold text-gray-800">
+            {selectedCandidate?.email}
+          </p>
+        </div>
 
-                              <div>
-                                <label className="text-sm font-medium">
-                                  Interview Mode
-                                </label>
-                                <select
-                                  className="w-full border rounded-lg p-2 mt-1"
-                                  value={interviewMode}
-                                  onChange={(e) =>
-                                    setInterviewMode(e.target.value)
-                                  }
-                                >
-                                  <option>Online</option>
-                                  <option>Office</option>
-                                  <option>Phone Call</option>
-                                </select>
-                              </div>
-                            </div>
+        {/* Date */}
+        <div>
+          <label className="text-sm font-medium">Interview Date</label>
+          <input
+            type="date"
+            className="w-full border rounded-lg p-2 mt-1 focus:ring-2 focus:ring-blue-500"
+            value={interviewDate}
+            onChange={(e) => setInterviewDate(e.target.value)}
+          />
+        </div>
 
-                            <DialogFooter>
-                              <Button
-                                variant="outline"
-                                onClick={() => setOpenSchedule(false)}
-                              >
-                                Cancel
-                              </Button>
-                              <Button
-                                className="bg-blue-600"
-                                onClick={handleScheduleSubmit}
-                              >
-                                Schedule
-                              </Button>
-                            </DialogFooter>
-                          </DialogContent>
-                        </Dialog>
-                      )}
+        {/* Time */}
+        <div>
+          <label className="text-sm font-medium">Interview Time</label>
+          <input
+            type="time"
+            className="w-full border rounded-lg p-2 mt-1 focus:ring-2 focus:ring-blue-500"
+            value={interviewTime}
+            onChange={(e) => setInterviewTime(e.target.value)}
+          />
+        </div>
+
+        {/* Mode */}
+        <div>
+          <label className="text-sm font-medium">Interview Mode</label>
+          <select
+            className="w-full border rounded-lg p-2 mt-1 focus:ring-2 focus:ring-blue-500"
+            value={interviewMode}
+            onChange={(e) => setInterviewMode(e.target.value)}
+          >
+            <option>Online</option>
+            <option>Office</option>
+            <option>Phone Call</option>
+          </select>
+        </div>
+
+        {/* Notes */}
+        <div className="mt-4">
+          <p className="text-sm text-gray-700 mb-1">Message / Notes</p>
+          <textarea
+            className="w-full border rounded-md p-2 text-sm focus:ring-2 focus:ring-blue-500"
+            rows={3}
+            placeholder="Enter interview instructions or notes..."
+            value={interviewNotes}
+            onChange={(e) => setInterviewNotes(e.target.value)}
+          />
+        </div>
+      </div>
+
+      <DialogFooter className="mt-3">
+        <Button variant="outline" onClick={() => setOpenSchedule(false)}>
+          Cancel
+        </Button>
+        <Button 
+          className="bg-blue-600 hover:bg-blue-700" 
+          onClick={handleScheduleSubmit}
+        >
+          Schedule
+        </Button>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
+)}
+
                     </div>
                   </CardContent>
                 </Card>
