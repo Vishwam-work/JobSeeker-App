@@ -356,7 +356,7 @@ export default function EmployerDashboard() {
           education: "",
           appliedFor: app.job_title,
           appliedDate: app.applied_at,
-          status: "Under Review",
+          status: app.application_status || "Under Review",
           resumeUrl: app.profile?.resume
             ? `https://jobseeker-backend-jy1y.onrender.com${app.profile.resume}`
             : "#",
@@ -433,9 +433,7 @@ export default function EmployerDashboard() {
 
   useEffect(() => {
     // Fetch job categories
-    fetch(
-      "https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_category/"
-    )
+    fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_category/")
       .then((res) => {
         if (!res.ok) {
           throw new Error(`HTTP error! status: ${res.status}`);
@@ -926,39 +924,39 @@ export default function EmployerDashboard() {
   };
 
   // SHORTLIST
-  const handleShortlistCandidate = async (candidate) => {
-    try {
-      console.log("Shortlisting candidate: ", candidate);
+const handleShortlistCandidate = async (candidate) => {
+  try {
+    console.log("Shortlisting candidate: ", candidate);
 
-      if (!candidate?.id) {
-        alert("Candidate ID missing");
-        return;
+    if (!candidate?.id) {
+      alert("Candidate ID missing");
+      return;
+    }
+
+    const token = localStorage.getItem("auth_token");
+    if (!token) {
+      alert("Token missing");
+      return;
+    }
+
+    const response = await fetch(
+      `https://jobseeker-backend-jy1y.onrender.com/employeer/api/employer/applications/${candidate.id}/update/`,
+      {
+        method: "PUT",  
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          application_status: "shortlisted", 
+        }),
       }
+    );
 
-      const token = localStorage.getItem("auth_token");
-      if (!token) {
-        alert("Token missing");
-        return;
-      }
-
-      const response = await fetch(
-        `https://jobseeker-backend-jy1y.onrender.com/employeer/api/employer/applications/${candidate.id}/update/`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            application_status: "shortlisted",
-          }),
-        }
-      );
-
-      // const text = await response.text();
-      // console.log("Raw Response → ", text);
-
-      const updatedCandidate = await response.json();
+    // const text = await response.text();
+    // console.log("Raw Response → ", text);
+ 
+const updatedCandidate = await response.json();
 
       setCandidates((prev) =>
         prev.map((c) =>
@@ -967,26 +965,28 @@ export default function EmployerDashboard() {
             : c
         )
       );
-      console.log("Raw Response → ", updatedCandidate);
+console.log("Raw Response → ", updatedCandidate);
 
-      let data = null;
-      try {
-        data = JSON.parse(updatedCandidate);
-      } catch {
-        console.log("HTML Error Response Received");
-      }
 
-      if (!response.ok) {
-        alert(data?.detail || "Update failed");
-        return;
-      }
-
-      alert("Candidate Shortlisted!");
-    } catch (err) {
-      console.log("Shortlist error: ", err);
-      alert("Network error");
+    let data = null;
+    try {
+      data = JSON.parse(updatedCandidate);
+    } catch {
+      console.log("HTML Error Response Received");
     }
-  };
+
+    if (!response.ok) {
+      alert(data?.detail || "Update failed");
+      return;
+    }
+
+    alert("Candidate Shortlisted!");
+  } catch (err) {
+    console.log("Shortlist error: ", err);
+    alert("Network error");
+  }
+};
+
 
   /* REJECT */
   const handleRejectCandidate = async (candidate) => {
@@ -1028,10 +1028,10 @@ export default function EmployerDashboard() {
         console.log("HTML Error Response Received");
       }
 
-      if (!response.ok) {
-        alert(data?.detail || "Update failed");
-        return;
-      }
+    if (!response.ok) {
+      alert(data?.detail || "Update failed");
+      return;
+    }
 
       alert("Candidate Rejected!");
     } catch (err) {
