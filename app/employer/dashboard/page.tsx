@@ -59,6 +59,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import {
   Popover,
@@ -107,6 +108,10 @@ export default function EmployerDashboard() {
   const [salaryFilter, setSalaryFilter] = useState("All");
   const [experienceFilter, setExperienceFilter] = useState("All");
   const [searchJobTitle, setSearchJobTitle] = useState("");
+  const [openSchedule, setOpenSchedule] = useState(false);
+  const [interviewDate, setInterviewDate] = useState("");
+  const [interviewTime, setInterviewTime] = useState("");
+  const [interviewMode, setInterviewMode] = useState("Online");
 
   // Sample data for posted jobs
   // const [postedJobs] = useState([
@@ -1034,6 +1039,54 @@ export default function EmployerDashboard() {
       alert("Network error");
     }
   };
+
+  // INTERVIEW SCHEDULE
+  const handleScheduleInterview = (candidate) => {
+    setSelectedCandidate(candidate);
+    setOpenSchedule(true);
+  };
+
+  const handleScheduleSubmit = async () => {
+  try {
+    const token = localStorage.getItem("auth_token");
+    if (!token) return alert("Token missing");
+
+    if (!selectedCandidate?.id) {
+      return alert("Candidate ID missing!!");
+    }
+
+    const res = await fetch(
+      `https://jobseeker-backend-jy1y.onrender.com/employeer/api/employer/applications/${selectedCandidate.id}/update/`,
+      {
+        method: "PATCH",  
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          interview_date: interviewDate,
+          interview_time: interviewTime,
+          interview_mode: interviewMode,
+          application_status: "Interview Scheduled",
+        }),
+      }
+    );
+
+    const data = await res.json();
+    console.log("Response:", data);
+
+    if (!res.ok) {
+      return alert("Failed: " + JSON.stringify(data));
+    }
+
+    alert("Interview Scheduled!");
+    setOpenSchedule(false);
+
+  } catch (err) {
+    console.log(err);
+    alert("Network Error");
+  }
+};
 
   const handleLogout = () => {
     localStorage.removeItem("auth_token");
@@ -2912,10 +2965,99 @@ export default function EmployerDashboard() {
                         Reject Application
                       </Button>
 
-                     <Button variant="outline" className="flex-1">
+                      <Button
+                        variant="outline"
+                        className="flex-1"
+                        onClick={() =>
+                          handleScheduleInterview(selectedCandidate)
+                        }
+                      >
                         <ExternalLink className="w-4 h-4 mr-2" />
                         Schedule Interview
                       </Button>
+                      {openSchedule && (
+                        <Dialog
+                          open={openSchedule}
+                          onOpenChange={() => setOpenSchedule(false)}
+                        >
+                          <DialogContent className="max-w-md">
+                            <DialogHeader>
+                              <DialogTitle>Schedule Interview</DialogTitle>
+                            </DialogHeader>
+
+                            <div className="space-y-4 mt-3">
+                              <div>
+                                <p className="text-sm text-gray-700">
+                                  Candidate
+                                </p>
+                                <p className="font-semibold">
+                                  {selectedCandidate?.name}
+                                </p>
+                              </div>
+
+                              <div>
+                                <label className="text-sm font-medium">
+                                  Interview Date
+                                </label>
+                                <input
+                                  type="date"
+                                  className="w-full border rounded-lg p-2 mt-1"
+                                  value={interviewDate}
+                                  onChange={(e) =>
+                                    setInterviewDate(e.target.value)
+                                  }
+                                />
+                              </div>
+
+                              <div>
+                                <label className="text-sm font-medium">
+                                  Interview Time
+                                </label>
+                                <input
+                                  type="time"
+                                  className="w-full border rounded-lg p-2 mt-1"
+                                  value={interviewTime}
+                                  onChange={(e) =>
+                                    setInterviewTime(e.target.value)
+                                  }
+                                />
+                              </div>
+
+                              <div>
+                                <label className="text-sm font-medium">
+                                  Interview Mode
+                                </label>
+                                <select
+                                  className="w-full border rounded-lg p-2 mt-1"
+                                  value={interviewMode}
+                                  onChange={(e) =>
+                                    setInterviewMode(e.target.value)
+                                  }
+                                >
+                                  <option>Online</option>
+                                  <option>Office</option>
+                                  <option>Phone Call</option>
+                                </select>
+                              </div>
+                            </div>
+
+                            <DialogFooter>
+                              <Button
+                                variant="outline"
+                                onClick={() => setOpenSchedule(false)}
+                              >
+                                Cancel
+                              </Button>
+                              <Button
+                                className="bg-blue-600"
+                                onClick={handleScheduleSubmit}
+                              >
+                                Schedule
+                              </Button>
+                            </DialogFooter>
+                          </DialogContent>
+                        </Dialog>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
