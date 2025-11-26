@@ -135,13 +135,12 @@ export default function EmployerRegister() {
   ];
 
   const filteredIndustries = industries.filter((item) =>
-  item.toLowerCase().includes(industrySearch.toLowerCase())
-);
+    item.toLowerCase().includes(industrySearch.toLowerCase())
+  );
 
-const filteredCountries = countries.filter((c) =>
-  c.name.toLowerCase().includes(countrySearch.toLowerCase())
-);
-
+  const filteredCountries = countries.filter((c) =>
+    c.name.toLowerCase().includes(countrySearch.toLowerCase())
+  );
 
   // Fetch the Data from the MASTER DB
   useEffect(() => {
@@ -430,7 +429,7 @@ const filteredCountries = countries.filter((c) =>
                           </Select>
                         </div>
 
-                <div>
+                        <div>
                           <Label className="text-sm font-medium text-gray-700">
                             Industry *
                           </Label>
@@ -452,7 +451,6 @@ const filteredCountries = countries.filter((c) =>
                             </SelectContent>
                           </Select>
                         </div>
-
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -693,49 +691,53 @@ const filteredCountries = countries.filter((c) =>
                       </div> */}
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         {/* Country Dropdown */}
-                   <div>
-  <Label className="text-sm font-medium text-gray-700">Country *</Label>
+                        <div>
+                          <Label className="text-sm font-medium text-gray-700">
+                            Country *
+                          </Label>
 
-  <Select
-    value={formData.countryId}
-    onValueChange={(value) => handleInputChange("countryId", value)}
-  >
-    <SelectTrigger className="mt-1 h-12">
-      <SelectValue placeholder="Select country" />
-    </SelectTrigger>
+                          <Select
+                            value={formData.countryId}
+                            onValueChange={(value) =>
+                              handleInputChange("countryId", value)
+                            }
+                          >
+                            <SelectTrigger className="mt-1 h-12">
+                              <SelectValue placeholder="Select country" />
+                            </SelectTrigger>
 
-    <SelectContent align="start" className="p-0">
-      
-      {/* Search Box */}
-      <div className="sticky top-0 bg-white z-10 p-2 border-b">
-        <input
-          type="text"
-          placeholder="Search country..."
-          value={countrySearch}
-          onChange={(e) => setCountrySearch(e.target.value)}
-          className="w-full px-3 py-2 border rounded-md text-sm"
-        />
-      </div>
+                            <SelectContent align="start" className="p-0">
+                              <div className="sticky top-0 bg-white z-10 p-2 border-b">
+                                <input
+                                  type="text"
+                                  placeholder="Search country..."
+                                  value={countrySearch}
+                                  onChange={(e) =>
+                                    setCountrySearch(e.target.value)
+                                  }
+                                  className="w-full px-3 py-2 border rounded-md text-sm"
+                                />
+                              </div>
 
-      {/* Scrollable List */}
-      <div className="max-h-60 overflow-y-auto">
-        {countries
-          .filter((c) =>
-            c.name.toLowerCase().startsWith(countrySearch.toLowerCase())
-          )
-          .map((country) => (
-            <SelectItem
-              key={`country-${country.id}`}
-              value={country.id.toString()}
-            >
-              {country.name}
-            </SelectItem>
-          ))}
-      </div>
-
-    </SelectContent>
-  </Select>
-</div>
+                              <div className="max-h-60 overflow-y-auto">
+                                {countries
+                                  .filter((c) =>
+                                    c.name
+                                      .toLowerCase()
+                                      .startsWith(countrySearch.toLowerCase())
+                                  )
+                                  .map((country) => (
+                                    <SelectItem
+                                      key={`country-${country.id}`}
+                                      value={country.id.toString()}
+                                    >
+                                      {country.name}
+                                    </SelectItem>
+                                  ))}
+                              </div>
+                            </SelectContent>
+                          </Select>
+                        </div>
 
                         {/* State Dropdown */}
                         <div>

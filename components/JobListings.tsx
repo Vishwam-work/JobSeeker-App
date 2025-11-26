@@ -108,11 +108,14 @@ export default function JobListings() {
     const fetchCompanies = async () => {
       try {
         const res = await fetch(
-          "https://jobseeker-backend-jy1y.onrender.com/master/api/companies/"
+          "https://jobseeker-backend-jy1y.onrender.com/employeer/api/all-jobs/"
         );
         const data = await res.json();
 
-        const companyNames = data.map((item: any) => item.name);
+        const companyNames = [
+          ...new Set(data.map((item: any) => item.company).filter(Boolean)),
+        ];
+
         setCompanies(companyNames);
       } catch (error) {
         console.error("Error fetching companies:", error);
