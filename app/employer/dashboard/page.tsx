@@ -52,7 +52,7 @@ import {
   XCircle,
 } from "lucide-react";
 import Link from "next/link";
-
+import { jwtDecode } from "jwt-decode";
 import {
   Dialog,
   DialogContent,
@@ -93,7 +93,7 @@ export default function EmployerDashboard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState(null);
   const [isEditMode, setIsEditMode] = useState(false);
-
+  const [CompanyName, setCompanyName] = useState("");
   const [filter, setFilter] = useState("All");
 
   const [dateFilter, setDateFilter] = useState("all");
@@ -322,6 +322,40 @@ export default function EmployerDashboard() {
     const token = localStorage.getItem("auth_token");
     console.log("LOG TOKEN:", token);
     setIsAuthenticated(!!token);
+  }, []);
+
+  useEffect(() => {
+    const run = async () => {
+      try {
+        const token = localStorage.getItem("auth_token");
+        if (!token) return;
+  
+        const decoded = jwtDecode(token);
+        console.log("DECODED:", decoded);
+        console.log("Employer ID:", decoded.user_id);
+  
+        const res = await fetch(
+          `http://127.0.0.1:8010/employeer/api/companies/${decoded.user_id}/`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+  
+        if (!res.ok) {
+          console.error("FETCH FAILED:", res.status);
+          return;
+        }
+     
+        const data = await res.json();
+        console.log("Applications:", data);
+        setCompanyName(data.company_name)
+        console.log(data.company_name)
+      } catch (err) {
+        console.error("Error:", err);
+      }
+    };
+  
+    run();
   }, []);
 
   useEffect(() => {
@@ -1403,7 +1437,7 @@ export default function EmployerDashboard() {
                     </Label>
                     <Input
                       id="company"
-                      value={jobForm.company}
+                      value={CompanyName}
                       onChange={(e) =>
                         setJobForm((prev) => ({
                           ...prev,

@@ -141,9 +141,6 @@ export default function Register() {
               <div className="w-20 h-20 md:w-24 md:h-24 bg-gradient-to-br from-purple-100 to-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <User className="w-10 h-10 md:w-12 md:h-12 text-purple-600" />
               </div>
-              <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-2">
-                On registering, you can
-              </h2>
             </div>
 
             <div className="space-y-4 md:space-y-6">
@@ -417,18 +414,19 @@ export default function Register() {
                 </label>
               </div>
 
-              <Button className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold py-3 h-12 shadow-lg hover:shadow-xl transition-all duration-200">
-                Register for Free
-              </Button>
-
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-300" />
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white text-gray-500">Or</span>
-                </div>
-              </div>
+                  {/* Register Button */}
+                  <div className="pt-4">
+                    <button 
+                      type="submit" 
+                      className="w-full bg-violet-600 text-white font-bold py-4 rounded-xl hover:bg-violet-700 active:scale-[0.99] transition-all shadow-lg shadow-violet-200 flex items-center justify-center gap-2 group"
+                    >
+                      Register Now
+                      <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                    </button>
+                    <p className="text-center text-xs text-slate-400 mt-4">
+                      By clicking Register, you agree to the <a href="#" className="text-violet-600 hover:underline">Terms and Conditions</a> & <a href="#" className="text-violet-600 hover:underline">Privacy Policy</a>
+                    </p>
+                  </div>
 
               <Button
                 variant="outline"
@@ -453,6 +451,32 @@ export default function Register() {
             </form>
           </div>
         </div>
+      </main>
+
+      {/* Footer / Trust Badges (Optional) */}
+      <footer className="w-full py-6 text-center text-slate-400 text-sm hidden lg:block">
+        <div className="flex items-center justify-center gap-6 opacity-70">
+           <span className="flex items-center gap-1"><ShieldCheck size={14}/> 100% Data Privacy</span>
+           <span>&bull;</span>
+           <span>ISO 27001 Certified</span>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+// Sub-component for Benefits List on Left Panel
+function BenefitItem({ icon, title, desc }) {
+  return (
+    <div className="flex items-start gap-4">
+      <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-emerald-500 flex-shrink-0 mt-1">
+        <CheckCircle2 size={20} />
+      </div>
+      <div>
+        <h3 className="font-bold text-slate-800 text-sm lg:text-base flex items-center gap-2">
+          {title}
+        </h3>
+        <p className="text-sm text-slate-500 mt-0.5 leading-relaxed">{desc}</p>
       </div>
     </div>
   );
