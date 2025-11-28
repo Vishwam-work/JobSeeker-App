@@ -51,7 +51,7 @@ export default function Register() {
   console.log("DATA",data)
 
   try {
-    const response = await fetch('http://127.0.0.1:8010/api/register/', {
+    const response = await fetch('https://jobseeker-backend-jy1y.onrender.com/api/register/', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -447,7 +447,7 @@ export default function Register() {
       className="w-full bg-indigo-600 text-white py-3 rounded-xl"
       onClick={async () => {
         try {
-          const res = await fetch("http://127.0.0.1:8010/api/verify-otp/", {
+          const res = await fetch("https://jobseeker-backend-jy1y.onrender.com/api/verify-otp/", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email, otp }),
