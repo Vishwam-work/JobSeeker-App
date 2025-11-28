@@ -3096,7 +3096,7 @@ export default function EmployerDashboard() {
                               {/* Notes */}
                               <div className="mt-4">
                                 <p className="text-sm text-gray-700 mb-1">
-                                  Message / Notes
+                                  Google Meet link
                                 </p>
                                 <textarea
                                   className="w-full border rounded-md p-2 text-sm focus:ring-2 focus:ring-blue-500"

@@ -515,33 +515,85 @@ const unsaveJob = async (jobId: number) => {
     }
   };
 
-  const fetchUserData = async () => {
-    setLoadingUserData(true);
-    try {
-      const token = localStorage.getItem("auth_token");
-      const response = await fetch(
-        "https://jobseeker-backend-jy1y.onrender.com/api/profile/",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+  // const fetchUserData = async () => {
+  //   setLoadingUserData(true);
+  //   try {
+  //     const token = localStorage.getItem("auth_token");
+  //     const response = await fetch(
+  //       "https://jobseeker-backend-jy1y.onrender.com/api/profile/",
+  //       {
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //           "Content-Type": "application/json",
+  //         },
+  //       }
+  //     );
 
-      if (response.ok) {
-        const data = await response.json();
-        console.log("Data here:", data);
-        setUserData(data);
-      } else {
-        console.error("Failed to fetch user data");
+  //     if (response.ok) {
+  //       const data = await response.json();
+  //       console.log("Data here:", data);
+  //       setUserData(data);
+  //        if (data.applied_jobs) {
+  //   const email = localStorage.getItem("user_email");
+  //   const key = email ? `applied_jobs_${email}` : "applied_jobs";
+
+  //   const appliedIds = data.applied_jobs.map((job) => Number(job.job_id));
+
+  //   localStorage.setItem(key, JSON.stringify(appliedIds));
+  //   setAppliedJobs(appliedIds);
+  // }
+  //     } else {
+  //       console.error("Failed to fetch user data");
+  //     }
+  //   } catch (error) {
+  //     console.error("Error fetching user data:", error);
+  //   } finally {
+  //     setLoadingUserData(false);
+  //   }
+  // };
+
+  const fetchUserData = async () => {
+  setLoadingUserData(true);
+  try {
+    const token = localStorage.getItem("auth_token");
+
+    const response = await fetch(
+      "https://jobseeker-backend-jy1y.onrender.com/api/profile/",
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
       }
-    } catch (error) {
-      console.error("Error fetching user data:", error);
-    } finally {
-      setLoadingUserData(false);
+    );
+
+    if (response.ok) {
+      const data = await response.json();
+      console.log("User Data: ", data);
+      setUserData(data);
+
+    
+      if (data.applied_jobs && Array.isArray(data.applied_jobs)) {
+        const email = localStorage.getItem("user_email");
+        const key = email ? `applied_jobs_${email}` : "applied_jobs";
+
+        const appliedIds = data.applied_jobs.map((j) => Number(j.job_id));
+
+        localStorage.setItem(key, JSON.stringify(appliedIds));
+        setAppliedJobs(appliedIds);
+
+        console.log("Applied Jobs Loaded from backend:", appliedIds);
+      }
+    } else {
+      console.error("Failed to fetch user data");
     }
-  };
+  } catch (error) {
+    console.error("Error fetching user data:", error);
+  } finally {
+    setLoadingUserData(false);
+  }
+};
+
 
   const handleAnswerChange = (questionIndex, value) => {
     setAnswers((prev) => ({
@@ -597,6 +649,7 @@ const unsaveJob = async (jobId: number) => {
         alert(`Application submitted successfully for ${selectedJob.title}!`);
         setIsApplyModalOpen(false);
         setSelectedJob(null);
+        fetchUserData();
         setAnswers({});
 
         // SAVE APPLIED JOB PER USER

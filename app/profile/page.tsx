@@ -10,9 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 
 import { useSavedJobs } from "@/context/SavedJobsContext";
 import { BookmarkX } from "lucide-react";
-// import { Button } from "@/components/ui/button";
-// import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
-// import { Card, CardContent } from "@/components/ui/card";
+
 
 import {
   Select,
@@ -109,7 +107,7 @@ export default function Profile() {
     resume: false,
   });
   const [open, setOpen] = useState(false);
-
+  const [cityOpen, setCityOpen] = useState(false);
   const [citySearch, setCitySearch] = useState("");
   const [newSkill, setNewSkill] = useState("");
 
@@ -1329,11 +1327,19 @@ export default function Profile() {
                           </PopoverTrigger>
 
                           <PopoverContent className="p-0 w-[300px]">
-                            <Command>
-                              {/* Search Input */}
+                            <Command
+                              filter={(value, search) =>
+                                value
+                                  .toLowerCase()
+                                  .startsWith(search.toLowerCase())
+                                  ? 1
+                                  : 0
+                              }
+                            >
+                             
                               <CommandInput placeholder="Search country..." />
 
-                              {/* List */}
+                     
                               <CommandList>
                                 {countries.map((country) => (
                                   <CommandItem
@@ -1376,7 +1382,15 @@ export default function Profile() {
                           </PopoverTrigger>
 
                           <PopoverContent className="p-0 w-[300px]">
-                            <Command>
+                            <Command
+                              filter={(value, search) =>
+                                value
+                                  .toLowerCase()
+                                  .startsWith(search.toLowerCase())
+                                  ? 1
+                                  : 0
+                              }
+                            >
                               <CommandInput placeholder="Search state..." />
 
                               <CommandList>
@@ -1405,21 +1419,26 @@ export default function Profile() {
                       </div>
 
                       <div>
-                        <Label className="text-sm font-medium">City *</Label>
+                        <Label className="text-sm font-medium text-gray-700">
+                          City *
+                        </Label>
 
-                        <Popover>
+                        <Popover open={cityOpen} onOpenChange={setCityOpen}>
                           <PopoverTrigger asChild>
-                            <button className="w-full mt-1 h-10 lg:h-11 border rounded px-3 text-left">
+                            <Button
+                              variant="outline"
+                              className="w-full justify-between mt-1 h-12"
+                            >
                               {profileData.personalInfo.cityId
                                 ? cities.find(
                                     (c) =>
-                                      c.id === profileData.personalInfo.cityId
+                                      c.id == profileData.personalInfo.cityId
                                   )?.name
                                 : "Select city"}
-                            </button>
+                            </Button>
                           </PopoverTrigger>
 
-                          <PopoverContent className="p-0 w-[300px]">
+                          <PopoverContent align="start" className="w-full p-0">
                             <Command>
                               <CommandInput
                                 placeholder="Search city..."
@@ -1427,31 +1446,36 @@ export default function Profile() {
                                 onValueChange={setCitySearch}
                               />
 
-                              <CommandList>
-                                {cities
-                                  .filter((city) =>
-                                    city.name
-                                      .toLowerCase()
-                                      .includes(citySearch.toLowerCase())
-                                  )
-                                  .map((city) => (
-                                    <CommandItem
-                                      key={city.id}
-                                      value={city.name}
-                                      onSelect={() => {
-                                        setProfileData((prev) => ({
-                                          ...prev,
-                                          personalInfo: {
-                                            ...prev.personalInfo,
-                                            cityId: city.id,
-                                          },
-                                        }));
-                                        setCitySearch("");
-                                      }}
-                                    >
-                                      {city.name}
-                                    </CommandItem>
-                                  ))}
+                              <CommandList className="max-h-60 overflow-y-auto">
+                                <CommandEmpty>No city found.</CommandEmpty>
+
+                                <CommandGroup>
+                                  {cities
+                                    .filter(
+                                      (city) =>
+                                        city.name
+                                          .toLowerCase()
+                                          .startsWith(citySearch.toLowerCase()) 
+                                    )
+                                    .map((city) => (
+                                      <CommandItem
+                                        key={city.id}
+                                        value={city.name}
+                                        onSelect={() => {
+                                          setProfileData((prev) => ({
+                                            ...prev,
+                                            personalInfo: {
+                                              ...prev.personalInfo,
+                                              cityId: city.id,
+                                            },
+                                          }));
+                                          setCityOpen(false);
+                                        }}
+                                      >
+                                        {city.name}
+                                      </CommandItem>
+                                    ))}
+                                </CommandGroup>
                               </CommandList>
                             </Command>
                           </PopoverContent>
