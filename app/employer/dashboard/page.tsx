@@ -110,9 +110,12 @@ export default function EmployerDashboard() {
   const [searchJobTitle, setSearchJobTitle] = useState("");
   const [openSchedule, setOpenSchedule] = useState(false);
   const [interviewDate, setInterviewDate] = useState("");
-  const [interviewTime, setInterviewTime] = useState("");
   const [interviewMode, setInterviewMode] = useState("Online");
   const [interviewNotes, setInterviewNotes] = useState("");
+  const [hour, setHour] = useState("12");
+  const [minute, setMinute] = useState("00");
+  const [ampm, setAmPm] = useState("AM");
+  const interviewTime = `${hour}:${minute} ${ampm}`;
 
   // Sample data for posted jobs
   // const [postedJobs] = useState([
@@ -2959,7 +2962,6 @@ export default function EmployerDashboard() {
 
                     {/* Action Buttons */}
                     <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t">
-                      
                       <div className="flex flex-col sm:flex-row gap-3 mt-4">
                         {/* UNDER REVIEW */}
                         {selectedCandidate?.status === "Under Review" && (
@@ -3061,18 +3063,35 @@ export default function EmployerDashboard() {
                               </div>
 
                               {/* Time */}
-                              <div>
+                              <div className="flex space-x-2">
                                 <label className="text-sm font-medium">
                                   Interview Time
                                 </label>
                                 <input
-                                  type="time"
-                                  className="w-full border rounded-lg p-2 mt-1 focus:ring-2 focus:ring-blue-500"
-                                  value={interviewTime}
-                                  onChange={(e) =>
-                                    setInterviewTime(e.target.value)
-                                  }
+                                  type="number"
+                                  min="1"
+                                  max="12"
+                                  value={hour}
+                                  onChange={(e) => setHour(e.target.value)}
+                                  className="w-16 border rounded-lg p-2"
                                 />
+                                <span>:</span>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  max="59"
+                                  value={minute}
+                                  onChange={(e) => setMinute(e.target.value)}
+                                  className="w-16 border rounded-lg p-2"
+                                />
+                                <select
+                                  value={ampm}
+                                  onChange={(e) => setAmPm(e.target.value)}
+                                  className="border rounded-lg p-2"
+                                >
+                                  <option>AM</option>
+                                  <option>PM</option>
+                                </select>
                               </div>
 
                               {/* Mode */}
