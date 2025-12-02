@@ -476,9 +476,8 @@ export default function Register() {
   </DialogContent>
 </Dialog>
 
-                 
-   
- 
+
+
           </div>
         </div>
       </div>

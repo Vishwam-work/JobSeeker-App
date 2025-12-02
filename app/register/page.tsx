@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import Header from '@/components/Header';
+
 import {
   Chrome,
   CheckCircle,
@@ -14,6 +16,7 @@ import {
   Phone,
   User,
   Search,
+  Bell,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -30,6 +33,23 @@ import {
   CommandEmpty,
   CommandGroup,
 } from "@/components/ui/command";
+
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSeparator,
+  InputOTPSlot,
+} from "@/components/ui/input-otp"
+
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+
+
 
 export default function Register() {
   const [workStatus, setWorkStatus] = useState("");
@@ -52,6 +72,18 @@ export default function Register() {
       phone: "",
     },
   });
+  
+  // Verification States: 'idle' | 'sending' | 'sent' | 'verifying' | 'verified'
+  const [emailStatus, setEmailStatus] = useState('idle');
+  const [phoneStatus, setPhoneStatus] = useState('idle');
+  const [isEmailOtp, setisEmailOtp] = useState(false);
+  const [otp, setOtp] = useState("");
+  const [isOtpVerified, setIsOtpVerified] = useState(false);
+
+  // Mock OTP storage
+
+  const [emailOtp, setEmailOtp] = useState(['', '', '', '']);
+  const [phoneOtp, setPhoneOtp] = useState(['', '', '', '']);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -88,6 +120,55 @@ export default function Register() {
       router.push("/login");
     } catch (error) {
       console.error("Registration error:", error);
+  // Mock Send OTP Action
+  const sendOtp = (type) => {
+    const setStatus = type === 'email' ? setEmailStatus : setPhoneStatus;
+    if (type === 'email' && !formData.email.includes('@')) {
+      alert('Please enter a valid email address');
+      return;
+    }
+    const value = type === 'email' ? formData.email : formData.phone;
+    
+    if (!value) return; // Simple validation
+
+    setStatus('sending');
+    
+    // Simulate API call
+    setTimeout(() => {
+      setStatus('sent');
+      // In a real app, you'd trigger a toast notification here
+    }, 1500);
+    setisEmailOtp(true);
+  };
+
+  // Mock Verify OTP Action
+  const verifyOtp = (type) => {
+    const setStatus = type === 'email' ? setEmailStatus : setPhoneStatus;
+    
+    setStatus('verifying');
+
+    // Simulate API verification
+    setTimeout(() => {
+      setStatus('verified');
+    }, 1500);
+
+   
+  };
+
+  // Helper for OTP Input logic
+  const handleOtpChange = (index, value, type) => {
+    if (isNaN(value)) return;
+    
+    const newOtp = type === 'email' ? [...emailOtp] : [...phoneOtp];
+    newOtp[index] = value;
+    
+    if (type === 'email') setEmailOtp(newOtp);
+    else setPhoneOtp(newOtp);
+
+    // Auto-focus next input
+    if (value && index < 3) {
+      const nextInput = document.getElementById(`${type}-otp-${index + 1}`);
+      if (nextInput) nextInput.focus();
     }
   };
 
@@ -132,6 +213,9 @@ export default function Register() {
           </div>
         </div>
       </div>
+              
+              <h1 className="text-3xl font-bold text-slate-800 mb-2">Create your profile</h1>n3
+              <p className="text-slate-500 mb-8">Join millions of professionals finding their dream jobs.</p>
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
         <div className="grid lg:grid-cols-2 gap-6 md:gap-8">
@@ -453,6 +537,76 @@ export default function Register() {
         </div>
       </main>
 
+   <Dialog open={isEmailOtp} onOpenChange={setisEmailOtp}>
+      <DialogContent>
+
+        <div className="bg-gradient-to-b from-indigo-100/50 to-white px-6 pt-10 pb-6 flex flex-col items-center text-center">
+          <div className="h-20 w-20 bg-white rounded-full flex items-center justify-center shadow-md mb-4 ring-8 ring-indigo-50">
+
+
+            {/* logo of the portal here */}
+
+
+          </div>
+
+          <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">
+            Enter Your OTP
+          </h1>
+          <p className="text-sm text-slate-600 mt-2">
+            We sent a code to 
+            <span className="font-semibold text-slate-800"> user@email.com </span>
+          </p>
+      </div>
+    <div className="flex justify-center my-6">
+      <InputOTP
+        maxLength={6}
+        value={otp}
+        onChange={(val) => setOtp(val)}
+      >
+        <InputOTPGroup>
+          <InputOTPSlot index={0}/>
+          <InputOTPSlot index={1}/>
+          <InputOTPSlot index={2}/>
+          <InputOTPSlot index={3}/>
+          <InputOTPSlot index={4}/>
+          <InputOTPSlot index={5}/>
+        </InputOTPGroup>
+      </InputOTP>
+    </div>
+
+    <button
+      className="w-full bg-indigo-600 text-white py-3 rounded-xl"
+      onClick={async () => {
+        try {
+          const res = await fetch("https://jobseeker-backend-jy1y.onrender.com/api/verify-otp/", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: formData.email, otp }),
+          });
+
+          const data = await res.json();
+
+          if (!res.ok) {
+            alert(data.error || "Invalid OTP");
+            return;
+          }
+
+          // OTP Success
+          setIsOtpVerified(true);
+          setIsOtpOpen(false);
+          alert("OTP Verified Successfully!");
+
+        } catch (err) {
+          console.error(err);
+        }
+      }}
+    >
+      Verify
+    </button>
+    
+        </DialogContent>
+      </Dialog>
+
       {/* Footer / Trust Badges (Optional) */}
       <footer className="w-full py-6 text-center text-slate-400 text-sm hidden lg:block">
         <div className="flex items-center justify-center gap-6 opacity-70">
@@ -481,3 +635,6 @@ function BenefitItem({ icon, title, desc }) {
     </div>
   );
 }
+
+// Sub-component for OTP Inputs (The "Interactive" part
+
