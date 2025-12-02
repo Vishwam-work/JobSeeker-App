@@ -285,7 +285,7 @@ export default function Register() {
                                   setCountryOpen(false);
                                 }}
                               >
-                                {country.name} (+{country.phonecode})
+                                {country.name}
                               </CommandItem>
                             ))}
                         </CommandGroup>
