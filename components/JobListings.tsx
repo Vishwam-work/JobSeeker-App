@@ -507,43 +507,50 @@ const unsaveJob = async (jobId: number) => {
     }
   };
 
-  const fetchUserData = async () => {
-    setLoadingUserData(true);
-    try {
-      const token = localStorage.getItem("auth_token");
 
-      const response = await fetch(
-        "https://jobseeker-backend-jy1y.onrender.com/api/profile/",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
 
-      if (!response.ok) {
-        console.error("Failed to fetch profile");
-        return;
+const fetchUserData = async () => {
+  setLoadingUserData(true);
+  try {
+    const token = localStorage.getItem("auth_token");
+    const email = localStorage.getItem("user_email");
+
+    const response = await fetch(
+      "https://jobseeker-backend-jy1y.onrender.com/employeer/api/employer/applications/all/",
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
       }
+    );
 
-      const data = await response.json();
-      console.log("User Profile Data:", data);
-      setUserData(data);
-
-      const email = localStorage.getItem("user_email");
-      const key = email ? `applied_jobs_${email}` : "applied_jobs";
-
-      const applied = JSON.parse(localStorage.getItem(key)) || [];
-      setAppliedJobs(applied);
-      console.log("Applied Jobs Loaded:", applied);
-    } catch (error) {
-      console.error("Fetch user data error:", error);
-    } finally {
-      setLoadingUserData(false);
+    if (!response.ok) {
+      console.log("Applied API failed:", response.status);
+      return;
     }
-  };
 
+    const data = await response.json();
+    console.log("ALL applications from backend:", data);
+
+    const myApplications = data.filter(app => app.user_email === email);
+
+    console.log("MY Applications:", myApplications);
+
+    const appliedIDs = myApplications.map(app => Number(app.job));
+
+    localStorage.setItem(`applied_jobs_${email}`, JSON.stringify(appliedIDs));
+
+    setAppliedJobs(appliedIDs);
+
+    console.log("Saved my applied job IDs:", appliedIDs);
+
+  } catch (error) {
+    console.error("Fetch user data error:", error);
+  } finally {
+    setLoadingUserData(false);
+  }
+};
   const handleAnswerChange = (questionIndex, value) => {
     setAnswers((prev) => ({
       ...prev,
@@ -612,11 +619,7 @@ const unsaveJob = async (jobId: number) => {
           return updated;
         });
 
-        // setAppliedJobs((prev) => {
-        //   const updated = [...prev, selectedJob.id]; // ✅ use selectedJob.id
-        //   localStorage.setItem("applied_jobs", JSON.stringify(updated));
-        //   return updated;
-        // });
+       
       } else {
         alert(result.error || "Failed to submit application");
       }

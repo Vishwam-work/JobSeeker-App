@@ -40,9 +40,18 @@ export default function Register() {
   const [receivePromotions, setReceivePromotions] = useState(false);
   const router = useRouter();
   const [countries, setCountries] = useState<any[]>([]);
+  const [phoneCode, setPhoneCode] = useState("");
   const [countrySearch, setCountrySearch] = useState("");
   const [countryOpen, setCountryOpen] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState<number | null>(null);
+  const [profileData, setProfileData] = useState({
+    personalInfo: {
+      countryId: "",
+      stateId: "",
+      cityId: "",
+      phone: "",
+    },
+  });
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -220,7 +229,7 @@ export default function Register() {
               </div>
 
               <div>
-                <Label className="text-sm font-medium text-gray-700 mt-2 mb-1">
+                <Label className="text-sm font-medium text-gray-700">
                   Country *
                 </Label>
 
@@ -228,22 +237,18 @@ export default function Register() {
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
-                      className="w-full justify-between h-12"
+                      className="w-full justify-between mt-1 h-12"
                     >
-                      {selectedCountry
-                        ? countries.find((c) => c.id === selectedCountry)?.name
+                      {profileData.personalInfo.countryId
+                        ? countries.find(
+                            (c) => c.id == profileData.personalInfo.countryId
+                          )?.name
                         : "Select country"}
                     </Button>
                   </PopoverTrigger>
 
                   <PopoverContent align="start" className="w-full p-0">
-                    <Command
-                      filter={(value, search) =>
-                        value.toLowerCase().startsWith(search.toLowerCase())
-                          ? 1
-                          : 0
-                      }
-                    >
+                    <Command>
                       <CommandInput
                         placeholder="Search country..."
                         value={countrySearch}
@@ -255,21 +260,32 @@ export default function Register() {
 
                         <CommandGroup>
                           {countries
-                            .filter((c) =>
-                              c.name
+                            .filter((country) =>
+                              country.name
                                 .toLowerCase()
                                 .startsWith(countrySearch.toLowerCase())
                             )
-                            .map((c) => (
+                            .map((country) => (
                               <CommandItem
-                                key={c.id}
-                                value={c.name}
+                                key={country.id}
+                                value={country.name}
                                 onSelect={() => {
-                                  setSelectedCountry(c.id);
+                                  setProfileData((prev) => ({
+                                    ...prev,
+                                    personalInfo: {
+                                      ...prev.personalInfo,
+                                      countryId: country.id,
+                                      stateId: "",
+                                      cityId: "",
+                                    },
+                                  }));
+
+                                  setPhoneCode(country.phonecode);
+
                                   setCountryOpen(false);
                                 }}
                               >
-                                {c.name}
+                                {country.name} (+{country.phonecode})
                               </CommandItem>
                             ))}
                         </CommandGroup>
@@ -302,21 +318,36 @@ export default function Register() {
                 </p>
               </div>
 
-              <div>
+              <div className="mt-1">
                 <Label
                   htmlFor="mobile"
                   className="text-sm font-medium text-gray-700"
                 >
                   Mobile number*
                 </Label>
-                <div className="mt-1 relative">
-                  <Phone className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-                  <Input
-                    id="mobile"
-                    placeholder="+91 Enter your mobile number"
-                    className="pl-10 h-12 border-gray-200 focus:border-purple-500 focus:ring-purple-500"
-                    value={mobile}
-                    onChange={(e) => setMobile(e.target.value)}
+
+                <div className="relative flex items-center gap-2 mt-2">
+                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+
+                  <input
+                    className="w-24 h-12 pl-10 border rounded-lg bg-gray-100 text-gray-700"
+                    value={`+${phoneCode}`}
+                    readOnly
+                  />
+
+                  <input
+                    className="flex-1 h-12 border rounded-lg px-3 focus:ring-purple-500 focus:border-purple-500"
+                    placeholder="Enter mobile number"
+                    value={profileData.personalInfo.phone}
+                    onChange={(e) =>
+                      setProfileData((prev) => ({
+                        ...prev,
+                        personalInfo: {
+                          ...prev.personalInfo,
+                          phone: e.target.value,
+                        },
+                      }))
+                    }
                   />
                 </div>
                 <p className="text-xs text-gray-500 mt-1">
