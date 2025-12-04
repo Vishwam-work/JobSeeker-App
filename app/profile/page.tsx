@@ -228,12 +228,12 @@ export default function Profile() {
 
     setExperienceForm({
       company: exp.company || "",
-      job_title_id: exp.job_title?.toString() || "",
+      job_title_id: exp.job_title?.id?.toString() || "",
       startDate: startDate,
       endDate: endDate,
       isCurrentJob: !exp.end_date,
       location_id: exp.location?.id?.toString() || "",
-      category_id: exp.category?.toString() || "",
+      category_id: exp.category?.id?.toString() || "",
       description: exp.description || "",
     });
     setEditingExperience(exp);
@@ -522,7 +522,12 @@ export default function Profile() {
               noticePeriod: data?.notice_period || "",
               resume: data.resume,
             },
-            experience: data.experiences || [],
+            experience: (data.experiences || []).map(exp => ({
+              ...exp,
+              category_id: exp.category?.id ?? "",
+              job_title_id: exp.job_title?.id ?? "",
+              location_id: exp.location?.id ?? "",
+            })),
             education: (data.educations || []).map(e => ({
               ...e,
               score_type: e.score_type?.toLowerCase() || "cgpa",
@@ -708,7 +713,16 @@ export default function Profile() {
       country_id: profileData.personalInfo.countryId || null,
       state_id: profileData.personalInfo.stateId || null,
       city_id: profileData.personalInfo.cityId || null,
-      experiences: profileData.experience,
+      experiences: profileData.experience.map(exp => ({
+        id: exp.id,
+        company: exp.company,
+        category_id: Number(exp.category_id),
+        job_title_id: Number(exp.job_title_id),
+        location_id: exp.location_id ? Number(exp.location_id) : null,
+        start_date: exp.start_date,
+        end_date: exp.end_date,
+        description: exp.description,
+      })),
       educations: profileData.education.map((edu) => ({
         ...edu,
         score_type: edu.score_type?.toLowerCase() || "cgpa",
@@ -1725,14 +1739,14 @@ export default function Profile() {
                               </div>
                               <div className="min-w-0 flex-1">
                                 <h3 className="font-semibold text-base lg:text-lg text-gray-900 break-words">
-                                  {getJobTitleName(exp.job_title)}
+                                  {getJobTitleName(exp.job_title_id)}
                                 </h3>
                                 <p className="text-purple-600 font-medium text-sm lg:text-base break-words">
                                   {exp.company}
                                 </p>
                                 {exp.category && (
                                   <p className="text-gray-600 text-sm break-words">
-                                    {getCategoryName(exp.category)}
+                                    {getCategoryName(exp.category_id)}
                                   </p>
                                 )}
                                 <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 text-xs lg:text-sm text-gray-600 mt-1 gap-1 sm:gap-0">
