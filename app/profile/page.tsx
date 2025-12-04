@@ -136,7 +136,7 @@ export default function Profile() {
     institution: "",
     year: null,
     percentage: "",
-    scoreType: "percentage",
+    score_type: "",
   });
 
   const [certificationForm, setCertificationForm] = useState({
@@ -205,6 +205,7 @@ export default function Profile() {
       institution: "",
       year: null,
       percentage: "",
+      score_type: "",
     });
   };
 
@@ -304,6 +305,7 @@ export default function Profile() {
       institution: edu.institution,
       year: edu.year ? dayjs(edu.year, "YYYY") : null,
       percentage: edu.percentage,
+      score_type: edu.score_type ? edu.score_type.toLowerCase() : "",
     });
     setEditingEducation(edu);
     setShowAddEducation(true);
@@ -313,7 +315,8 @@ export default function Profile() {
     if (
       !educationForm.degree ||
       !educationForm.field ||
-      !educationForm.institution
+      !educationForm.institution ||
+      !educationForm.score_type
     ) {
       alert("Please fill in all required fields");
       return;
@@ -326,6 +329,7 @@ export default function Profile() {
       institution: educationForm.institution,
       year: educationForm.year ? educationForm.year.format("YYYY") : "",
       percentage: educationForm.percentage,
+      score_type : educationForm.score_type,
     };
 
     if (editingEducation) {
@@ -487,7 +491,7 @@ export default function Profile() {
 
       try {
         const res = await fetch(
-          "https://jobseeker-backend-jy1y.onrender.com/api/profile/",
+          "http://127.0.0.1:8010/api/profile/",
           {
             method: "GET",
             headers: {
@@ -519,7 +523,10 @@ export default function Profile() {
               resume: data.resume,
             },
             experience: data.experiences || [],
-            education: data.educations || [],
+            education: (data.educations || []).map(e => ({
+              ...e,
+              score_type: e.score_type?.toLowerCase() || "cgpa",
+            })),
             skills: (data.skills || []).map((skill) => skill.name),
             certifications: data.certifications || [],
             summary: "", // Optional: if you use a summary field
@@ -541,7 +548,7 @@ export default function Profile() {
       if (!token) return;
   
       try {
-        const res = await fetch("https://jobseeker-backend-jy1y.onrender.com/api/saved-jobs-all/", {
+        const res = await fetch("http://127.0.0.1:8010/api/saved-jobs-all/", {
           headers: { Authorization: `Bearer ${token}` },
         });
   
@@ -562,7 +569,7 @@ export default function Profile() {
 
 
   useEffect(() => {
-    fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/currencies/")
+    fetch("http://127.0.0.1:8010/master/api/currencies/")
       .then((res) => res.json())
       .then((data) => {
         console.log("Currency data:", data);
@@ -570,7 +577,7 @@ export default function Profile() {
       });
   }, []);
   useEffect(() => {
-    fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/countries/")
+    fetch("http://127.0.0.1:8010/master/api/countries/")
       .then((res) => res.json())
       .then((data) => {
         console.log("Country data:", data);
@@ -582,7 +589,7 @@ export default function Profile() {
   useEffect(() => {
     if (profileData.personalInfo.countryId) {
       fetch(
-        `https://jobseeker-backend-jy1y.onrender.com/master/api/states/?country_id=${profileData.personalInfo.countryId}`
+        `http://127.0.0.1:8010/master/api/states/?country_id=${profileData.personalInfo.countryId}`
       )
         .then((res) => res.json())
         .then((data) => {
@@ -595,7 +602,7 @@ export default function Profile() {
   useEffect(() => {
     if (profileData.personalInfo.stateId) {
       fetch(
-        `https://jobseeker-backend-jy1y.onrender.com/master/api/cities/?state=${profileData.personalInfo.stateId}`
+        `http://127.0.0.1:8010/master/api/cities/?state=${profileData.personalInfo.stateId}`
       )
         .then((res) => res.json())
         .then(setCities)
@@ -604,7 +611,7 @@ export default function Profile() {
   }, [profileData.personalInfo.stateId]);
 
   useEffect(() => {
-    fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/companies/")
+    fetch("http://127.0.0.1:8010/master/api/companies/")
       .then((res) => res.json())
       .then((data) => {
         setCompanies(data);
@@ -614,7 +621,7 @@ export default function Profile() {
 
   useEffect(() => {
     fetch(
-      "https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_category/"
+      "http://127.0.0.1:8010/master/api/jobs_category/"
     )
       .then((res) => res.json())
       .then((data) => {
@@ -626,7 +633,7 @@ export default function Profile() {
   useEffect(() => {
     if (experienceForm.category_id) {
       fetch(
-        `https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_title/?category=${experienceForm.category_id}`
+        `http://127.0.0.1:8010/master/api/jobs_title/?category=${experienceForm.category_id}`
       )
         .then((res) => res.json())
         .then((data) => {
@@ -643,7 +650,7 @@ export default function Profile() {
     formData.append("resume", resumeFile);
     try {
       const res = await fetch(
-        "https://jobseeker-backend-jy1y.onrender.com/api/profile/upload-resume/",
+        "http://127.0.0.1:8010/api/profile/upload-resume/",
         {
           method: "PATCH",
           headers: {
@@ -702,14 +709,17 @@ export default function Profile() {
       state_id: profileData.personalInfo.stateId || null,
       city_id: profileData.personalInfo.cityId || null,
       experiences: profileData.experience,
-      educations: profileData.education,
+      educations: profileData.education.map((edu) => ({
+        ...edu,
+        score_type: edu.score_type?.toLowerCase() || "cgpa",
+      })),
       certifications: profileData.certifications,
       skills: profileData.skills.map((name) => ({ name })),
     };
     console.log("Payload:", payload);
     console.log("Token:", localStorage.getItem("auth_token"));
     const res = await fetch(
-      "https://jobseeker-backend-jy1y.onrender.com/api/profile/",
+      "http://127.0.0.1:8010/api/profile/",
       {
         method: "PUT",
         headers: {
@@ -907,7 +917,7 @@ export default function Profile() {
                       className="w-full text-sm lg:text-base h-10 lg:h-11"
                       onClick={() => {
                         if (profileData?.personalInfo?.resume) {
-                          window.open(`https://jobseeker-backend-jy1y.onrender.com${profileData.personalInfo.resume}`, "_blank");
+                          window.open(`http://127.0.0.1:8010${profileData.personalInfo.resume}`, "_blank");
                         } else {
                           alert("No resume uploaded.");
                         }
@@ -2095,7 +2105,16 @@ export default function Profile() {
                                 </p>
                                 <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 text-xs lg:text-sm text-gray-600 mt-1 gap-1 sm:gap-0">
                                   <span>Year: {edu.year}</span>
-                                  <span>Score: {edu.percentage}</span>
+                                  <span>
+                                  Score: {edu.percentage}{" "}
+                                  {edu.score_type === "percentage"
+                                    ? "(Percentage)"
+                                    : edu.score_type === "cgpa"
+                                    ? "(CGPA)"
+                                    : edu.score_type === "grade"
+                                    ? "(Grade)"
+                                    : ""}
+                                </span>
                                 </div>
                               </div>
                             </div>
@@ -2258,44 +2277,37 @@ export default function Profile() {
                                   Score
                                 </Label>
 
-                                <div className="flex items-center gap-3">
-                                  <select
-                                    id="scoreType"
-                                    value={educationForm.scoreType}
-                                    onChange={(e) =>
-                                      setEducationForm((prev) => ({
-                                        ...prev,
-                                        scoreType: e.target.value,
-                                      }))
-                                    }
-                                    className="h-10 border rounded px-2 text-sm w-32"
-                                  >
-                                    <option value="percentage">
-                                      Percentage
-                                    </option>
-                                    <option value="cgpa">CGPA</option>
-                                    <option value="grade">Grade</option>
-                                  </select>
+                                <Select
+                                value={educationForm.score_type}
+                                onValueChange={(value) =>
+                                  setEducationForm((prev) => ({
+                                    ...prev,
+                                    score_type: value,
+                                  }))
+                                }
+                              >
+                                <SelectTrigger className="mt-1 h-10">
+                                  <SelectValue placeholder="Select score type" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="percentage">Percentage</SelectItem>
+                                  <SelectItem value="cgpa">CGPA</SelectItem>
+                                  <SelectItem value="grade">Grade</SelectItem>
+                                </SelectContent>
+                              </Select>
 
-                                  <Input
-                                    id="percentage"
-                                    value={educationForm.percentage}
-                                    onChange={(e) =>
-                                      setEducationForm((prev) => ({
-                                        ...prev,
-                                        percentage: e.target.value,
-                                      }))
-                                    }
-                                    placeholder={
-                                      educationForm.scoreType === "percentage"
-                                        ? "85%"
-                                        : educationForm.scoreType === "cgpa"
-                                        ? "8.5"
-                                        : "A+"
-                                    }
-                                    className="flex-1 h-10"
-                                  />
-                                </div>
+                                <Input
+                                  id="percentage"
+                                  value={educationForm.percentage}
+                                  onChange={(e) =>
+                                    setEducationForm((prev) => ({
+                                      ...prev,
+                                      percentage: e.target.value,
+                                    }))
+                                  }
+                                  placeholder="e.g., 8.5 CGPA or 85%"
+                                  className="mt-1"
+                                />
                               </div>
                             </div>
                             <div className="flex justify-end space-x-2">
@@ -2588,7 +2600,7 @@ export default function Profile() {
                   if (!token) return;
                   try {
                     const res = await fetch(
-                      `https://jobseeker-backend-jy1y.onrender.com/api/saved-jobs/${savedJob.id}/`,
+                      `http://127.0.0.1:8010/api/saved-jobs/${savedJob.id}/`,
                       {
                         method: "DELETE",
                         headers: { Authorization: `Bearer ${token}` },
@@ -2717,7 +2729,7 @@ export default function Profile() {
                   if (!token) return;
                   try {
                     const res = await fetch(
-                      `https://jobseeker-backend-jy1y.onrender.com/api/saved-jobs/${savedJob.id}/`,
+                      `http://127.0.0.1:8010/api/saved-jobs/${savedJob.id}/`,
                       {
                         method: "DELETE",
                         headers: { Authorization: `Bearer ${token}` },
