@@ -1397,7 +1397,7 @@ const fetchUserData = async () => {
 
                   {/* Action Buttons */}
                   <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t">
-                    <Button
+                    {/* <Button
                       onClick={() => {
                         setIsJobDetailOpen(false);
                         handleApply(selectedJob);
@@ -1406,19 +1406,9 @@ const fetchUserData = async () => {
                     >
                       <Send className="w-4 h-4 mr-2" />
                       Apply Now
-                    </Button>
-                    {/* <Button
-                      variant="outline"
-                      onClick={() => handleBookmark(selectedJob.id)}
-                      className={`flex-1 ${
-                        selectedJob.isBookmarked
-                          ? "border-purple-600 text-purple-600"
-                          : ""
-                      }`}
-                    >
-                      <Bookmark className={`w-4 h-4 mr-2 ${selectedJob.isBookmarked ? 'fill-current' : ''}`} />
-                      {selectedJob.isBookmarked ? 'Bookmarked' : 'Bookmark'}
                     </Button> */}
+                    
+                   
 
                     <Button
                       variant="outline"

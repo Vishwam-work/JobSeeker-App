@@ -11,7 +11,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useSavedJobs } from "@/context/SavedJobsContext";
 import { BookmarkX } from "lucide-react";
 
-
 import {
   Select,
   SelectContent,
@@ -1336,10 +1335,8 @@ export default function Profile() {
                                   : 0
                               }
                             >
-                             
                               <CommandInput placeholder="Search country..." />
 
-                     
                               <CommandList>
                                 {countries.map((country) => (
                                   <CommandItem
@@ -1451,11 +1448,10 @@ export default function Profile() {
 
                                 <CommandGroup>
                                   {cities
-                                    .filter(
-                                      (city) =>
-                                        city.name
-                                          .toLowerCase()
-                                          .startsWith(citySearch.toLowerCase()) 
+                                    .filter((city) =>
+                                      city.name
+                                        .toLowerCase()
+                                        .startsWith(citySearch.toLowerCase())
                                     )
                                     .map((city) => (
                                       <CommandItem
@@ -2156,7 +2152,7 @@ export default function Profile() {
                                             .filter((m: any) =>
                                               m.name
                                                 .toLowerCase()
-                                                .includes(
+                                                .startsWith(
                                                   majorSearch.toLowerCase()
                                                 )
                                             )

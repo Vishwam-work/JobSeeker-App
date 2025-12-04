@@ -107,6 +107,7 @@ export default function EmployerDashboard() {
   const [locationFilter, setLocationFilter] = useState("All");
   const [salaryFilter, setSalaryFilter] = useState("All");
   const [experienceFilter, setExperienceFilter] = useState("All");
+  const [jobTitleFilter, setJobTitleFilter] = useState("All");
   const [searchJobTitle, setSearchJobTitle] = useState("");
   const [openSchedule, setOpenSchedule] = useState(false);
   const [interviewDate, setInterviewDate] = useState("");
@@ -674,6 +675,10 @@ export default function EmployerDashboard() {
       locationFilter === "All" ||
       c.location?.toLowerCase() === locationFilter.toLowerCase();
 
+    const jobTitleMatch =
+      jobTitleFilter === "All" ||
+      c.job_title?.toLowerCase() === jobTitleFilter.toLowerCase();
+
     const salary = parseInt(c.expectedSalary) || 0;
     const salaryMatch =
       salaryFilter === "All" ||
@@ -699,7 +704,14 @@ export default function EmployerDashboard() {
           c.experience?.includes("6") ||
           c.experience?.includes("7")));
 
-    return nameMatch && statusMatch && locationMatch && salaryMatch && expMatch;
+    return (
+      nameMatch &&
+      statusMatch &&
+      locationMatch &&
+      salaryMatch &&
+      expMatch &&
+      jobTitleMatch
+    );
   });
   const filteredCities = cities.filter((city) =>
     city.name.toLowerCase().startsWith(searchTerm.toLowerCase())
@@ -2602,6 +2614,28 @@ export default function EmployerDashboard() {
                       </SelectContent>
                     </Select>
                   </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                    <Select
+                      value={jobTitleFilter}
+                      onValueChange={setJobTitleFilter}
+                    >
+                      <SelectTrigger className="w-full h-10">
+                        <SelectValue placeholder="Job Title" />
+                      </SelectTrigger>
+
+                      <SelectContent>
+                        <SelectItem value="All">All Job Titles</SelectItem>
+
+                        {Array.from(new Set(candidates.map((c) => c.job_title)))
+                          .filter(Boolean)
+                          .map((title, i) => (
+                            <SelectItem key={i} value={title}>
+                              {title}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </CardHeader>
                 <CardContent className="p-0">
                   {/* {candidates.map((candidate) => (
@@ -2777,7 +2811,10 @@ export default function EmployerDashboard() {
                         </div>
                         <div className="flex items-center">
                           <Phone className="w-4 h-4 mr-2 text-gray-400" />
-                          <span>{selectedCandidate.phone}</span>
+                          <span>
+                            +{selectedCandidate.phoneCode}
+                            {selectedCandidate.phone}
+                          </span>
                         </div>
                       </div>
                     </div>
