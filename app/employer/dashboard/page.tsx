@@ -500,6 +500,60 @@ export default function EmployerDashboard() {
     }
   };
 
+  const handleApplicationsClick = async (jobId) => {
+    try {
+      const token = localStorage.getItem("auth_token");
+
+      const response = await fetch(
+        `https://jobseeker-backend-jy1y.onrender.com/employeer/api/employer/applications/job/${jobId}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = await response.json();
+      console.log("API RAW DATA:", data);
+
+      if (!Array.isArray(data)) {
+        console.error("API did not return list:", data);
+        alert("Failed to load candidates! (Unauthorized?)");
+        return;
+      }
+
+      const mappedCandidates = data.map((item) => ({
+        id: item.id,
+        name: item.profile?.full_name || item.full_name,
+        email: item.email || item.user_email,
+        phone: item.profile?.phone || item.phone,
+        location: item.profile?.city || item.city,
+        experience: item.profile?.experience || item.experience,
+        job_title: item.job_title,
+        resumeUrl: item.profile?.resume || item.resume,
+        skills: item.profile?.skills || item.skills,
+        certifications: item.profile?.certifications || item.certifications,
+        educationDetails: item.profile?.educations || item.educations,
+        workExperience: item.profile?.experiences || item.experiences,
+        status: item.application_status || "Under Review",
+        appliedDate: item.applied_at,
+        qa: item.answers?.map((ans) => ({
+          question_index: ans.question_index,
+          question_text: ans.question_text,
+          answer_text: ans.answer,
+        })),
+      }));
+
+      console.log("MAPPED CANDIDATES:", mappedCandidates);
+
+      setCandidates(mappedCandidates);
+      setActiveTab("candidates");
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   const handleAddQuestion = () => {
     if (newQuestion.trim() && !jobForm.questions.includes(newQuestion.trim())) {
       const updated = [...jobForm.questions, newQuestion.trim()];
@@ -677,7 +731,7 @@ export default function EmployerDashboard() {
 
     const jobTitleMatch =
       jobTitleFilter === "All" ||
-      c.job_title?.toLowerCase() === jobTitleFilter.toLowerCase();
+      c.appliedFor?.toLowerCase() === jobTitleFilter.toLowerCase();
 
     const salary = parseInt(c.expectedSalary) || 0;
     const salaryMatch =
@@ -1337,11 +1391,12 @@ export default function EmployerDashboard() {
                         {Array.isArray(jobCategories) &&
                         jobCategories.length > 0 ? (
                           jobCategories
-                            .filter((category) =>
-                              category?.name
+                            .filter((category) => {
+                              if (!searchTerm) return true; 
+                              return category?.name
                                 ?.toLowerCase()
-                                .startsWith(searchTerm.toLowerCase())
-                            )
+                                .startsWith(searchTerm.toLowerCase());
+                            })
                             .map((category) => (
                               <SelectItem
                                 key={category.id}
@@ -1465,21 +1520,27 @@ export default function EmployerDashboard() {
                               <CommandEmpty>No location found.</CommandEmpty>
                             ) : (
                               <CommandGroup>
-                                {filteredCities.map((city) => (
-                                  <CommandItem
-                                    key={city.id}
-                                    onSelect={() => {
-                                      setJobForm((prev: any) => ({
-                                        ...prev,
-                                        location: city.id.toString(),
-                                      }));
-                                      setSearch("");
-                                      setOpen(false);
-                                    }}
-                                  >
-                                    {city.name}
-                                  </CommandItem>
-                                ))}
+                                {filteredCities
+                                  .filter((city) =>
+                                    city.name
+                                      .toLowerCase()
+                                      .startsWith(search.toLowerCase())
+                                  )
+                                  .map((city) => (
+                                    <CommandItem
+                                      key={city.id}
+                                      onSelect={() => {
+                                        setJobForm((prev: any) => ({
+                                          ...prev,
+                                          location: city.id.toString(),
+                                        }));
+                                        setSearch("");
+                                        setOpen(false);
+                                      }}
+                                    >
+                                      {city.name}
+                                    </CommandItem>
+                                  ))}
                               </CommandGroup>
                             )}
                           </CommandList>
@@ -1953,10 +2014,14 @@ export default function EmployerDashboard() {
                             </div>
                           </div>
                           <div className="flex items-center space-x-6 text-sm">
-                            <div className="flex items-center text-blue-600">
+                            <div
+                              className="flex items-center text-blue-600 cursor-pointer"
+                              onClick={() => handleApplicationsClick(job.id)}
+                            >
                               <Users className="w-4 h-4 mr-1" />
                               <span>{job.applications} Applications</span>
                             </div>
+
                             <div className="flex items-center text-green-600">
                               <Eye className="w-4 h-4 mr-1" />
                               <span>{job.views} Views</span>
@@ -2626,7 +2691,9 @@ export default function EmployerDashboard() {
                       <SelectContent>
                         <SelectItem value="All">All Job Titles</SelectItem>
 
-                        {Array.from(new Set(candidates.map((c) => c.job_title)))
+                        {Array.from(
+                          new Set(candidates.map((c) => c.appliedFor))
+                        )
                           .filter(Boolean)
                           .map((title, i) => (
                             <SelectItem key={i} value={title}>
