@@ -122,14 +122,15 @@ export default function Profile() {
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [experienceForm, setExperienceForm] = useState({
     company: "",
-    category: "",
-    jobTitle: "",
+    category_id: "",
+    job_title_id: "",
+    location_id: "",
     startDate: null,
     endDate: null,
     isCurrentJob: false,
-    location: "",
     description: "",
   });
+  
   const [educationForm, setEducationForm] = useState({
     degree: "",
     field: "",
@@ -188,15 +189,16 @@ export default function Profile() {
   const resetExperienceForm = () => {
     setExperienceForm({
       company: "",
-      category: "",
-      jobTitle: "",
+      category_id: "",
+      job_title_id: "",
+      location_id: "",
       startDate: null,
       endDate: null,
       isCurrentJob: false,
-      location: "",
       description: "",
     });
   };
+  
 
   const resetEducationForm = () => {
     setEducationForm({
