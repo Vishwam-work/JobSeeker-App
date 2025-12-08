@@ -60,10 +60,10 @@ export default function Register() {
       full_name: fullName,
       email: email,
       password: password,
-      mobile_number: mobile,
+      mobile_number: profileData.personalInfo.phone,
       work_status: workStatus,
       receive_promotions: receivePromotions,
-      country_id: selectedCountry,
+      country_id: profileData.personalInfo.countryId,
     };
     console.log("DATA", data);
 
