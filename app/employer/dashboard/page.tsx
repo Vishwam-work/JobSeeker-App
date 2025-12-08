@@ -398,17 +398,6 @@ export default function EmployerDashboard() {
             },
           }
         );
-
-      const response = await fetch(
-        "https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-list-view/",
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
       if (!response.ok) {
         console.error("Failed to fetch jobs");
         return;
