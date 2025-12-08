@@ -1,60 +1,110 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Chrome, CheckCircle, Mail, Lock, Phone, User, Search } from 'lucide-react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Chrome,
+  CheckCircle,
+  Mail,
+  Lock,
+  Phone,
+  User,
+  Search,
+} from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandInput,
+  CommandList,
+  CommandItem,
+  CommandEmpty,
+  CommandGroup,
+} from "@/components/ui/command";
 
 export default function Register() {
-  const [workStatus, setWorkStatus] = useState('');
-  const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [mobile, setMobile] = useState('');
+  const [workStatus, setWorkStatus] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [mobile, setMobile] = useState("");
   const [receivePromotions, setReceivePromotions] = useState(false);
   const router = useRouter();
+  const [countries, setCountries] = useState<any[]>([]);
+  const [phoneCode, setPhoneCode] = useState("");
+  const [countrySearch, setCountrySearch] = useState("");
+  const [countryOpen, setCountryOpen] = useState(false);
+  const [selectedCountry, setSelectedCountry] = useState<number | null>(null);
+  const [profileData, setProfileData] = useState({
+    personalInfo: {
+      countryId: "",
+      stateId: "",
+      cityId: "",
+      phone: "",
+    },
+  });
 
   const handleRegister = async (e: React.FormEvent) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  const data = {
-    full_name: fullName,
-    email:email,
-    password: password,
-    mobile_number: mobile,
-    work_status: workStatus,
-    receive_promotions: receivePromotions,
-  };
-  console.log("DATA",data)
+    const data = {
+      full_name: fullName,
+      email: email,
+      password: password,
+      mobile_number: profileData.personalInfo.phone,
+      work_status: workStatus,
+      receive_promotions: receivePromotions,
+      country_id: profileData.personalInfo.countryId,
+    };
+    console.log("DATA", data);
 
-  try {
-    const response = await fetch('https://jobseeker-backend-jy1y.onrender.com/api/register/', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    });
+    try {
+      const response = await fetch(
+        "https://jobseeker-backend-jy1y.onrender.com/api/register/",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(data),
+        }
+      );
 
-    if (!response.ok) {
-      throw new Error('Failed to register');
+      if (!response.ok) {
+        throw new Error("Failed to register");
+      }
+
+      const result = await response.json();
+      console.log("Registration successful:", result);
+      router.push("/login");
+    } catch (error) {
+      console.error("Registration error:", error);
     }
+  };
 
-    const result = await response.json();
-    console.log('Registration successful:', result);
-    router.push('/login');
-
-  } catch (error) {
-    console.error('Registration error:', error);
-  }
-};
-
+  useEffect(() => {
+    const fetchCountries = async () => {
+      try {
+        const res = await fetch(
+          "https://jobseeker-backend-jy1y.onrender.com/master/api/countries/"
+        );
+        const data = await res.json();
+        setCountries(data);
+      } catch (error) {
+        console.error("Error fetching countries:", error);
+      }
+    };
+    fetchCountries();
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -71,8 +121,11 @@ export default function Register() {
               </span>
             </Link>
             <div className="text-sm text-gray-600 text-center sm:text-right">
-              Already Registered?{' '}
-              <Link href="/login" className="text-purple-600 hover:underline font-medium">
+              Already Registered?{" "}
+              <Link
+                href="/login"
+                className="text-purple-600 hover:underline font-medium"
+              >
                 Login here
               </Link>
             </div>
@@ -97,19 +150,25 @@ export default function Register() {
               <div className="flex items-start space-x-3">
                 <CheckCircle className="w-5 h-5 text-green-500 mt-1 flex-shrink-0" />
                 <div>
-                  <p className="font-medium text-gray-900 text-sm md:text-base">Build your profile and let recruiters find you</p>
+                  <p className="font-medium text-gray-900 text-sm md:text-base">
+                    Build your profile and let recruiters find you
+                  </p>
                 </div>
               </div>
               <div className="flex items-start space-x-3">
                 <CheckCircle className="w-5 h-5 text-green-500 mt-1 flex-shrink-0" />
                 <div>
-                  <p className="font-medium text-gray-900 text-sm md:text-base">Get job postings delivered right to your email</p>
+                  <p className="font-medium text-gray-900 text-sm md:text-base">
+                    Get job postings delivered right to your email
+                  </p>
                 </div>
               </div>
               <div className="flex items-start space-x-3">
                 <CheckCircle className="w-5 h-5 text-green-500 mt-1 flex-shrink-0" />
                 <div>
-                  <p className="font-medium text-gray-900 text-sm md:text-base">Find a job and grow your career</p>
+                  <p className="font-medium text-gray-900 text-sm md:text-base">
+                    Find a job and grow your career
+                  </p>
                 </div>
               </div>
             </div>
@@ -128,7 +187,10 @@ export default function Register() {
 
             <form className="space-y-4 md:space-y-6" onSubmit={handleRegister}>
               <div>
-                <Label htmlFor="fullName" className="text-sm font-medium text-gray-700">
+                <Label
+                  htmlFor="fullName"
+                  className="text-sm font-medium text-gray-700"
+                >
                   Full name*
                 </Label>
                 <div className="mt-1 relative">
@@ -144,7 +206,10 @@ export default function Register() {
               </div>
 
               <div>
-                <Label htmlFor="email" className="text-sm font-medium text-gray-700">
+                <Label
+                  htmlFor="email"
+                  className="text-sm font-medium text-gray-700"
+                >
                   Email ID*
                 </Label>
                 <div className="mt-1 relative">
@@ -164,7 +229,77 @@ export default function Register() {
               </div>
 
               <div>
-                <Label htmlFor="password" className="text-sm font-medium text-gray-700">
+                <Label className="text-sm font-medium text-gray-700">
+                  Country *
+                </Label>
+
+                <Popover open={countryOpen} onOpenChange={setCountryOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-between mt-1 h-12"
+                    >
+                      {profileData.personalInfo.countryId
+                        ? countries.find(
+                            (c) => c.id == profileData.personalInfo.countryId
+                          )?.name
+                        : "Select country"}
+                    </Button>
+                  </PopoverTrigger>
+
+                  <PopoverContent align="start" className="w-full p-0">
+                    <Command>
+                      <CommandInput
+                        placeholder="Search country..."
+                        value={countrySearch}
+                        onValueChange={setCountrySearch}
+                      />
+
+                      <CommandList className="max-h-60 overflow-y-auto">
+                        <CommandEmpty>No country found.</CommandEmpty>
+
+                        <CommandGroup>
+                          {countries
+                            .filter((country) =>
+                              country.name
+                                .toLowerCase()
+                                .startsWith(countrySearch.toLowerCase())
+                            )
+                            .map((country) => (
+                              <CommandItem
+                                key={country.id}
+                                value={country.name}
+                                onSelect={() => {
+                                  setProfileData((prev) => ({
+                                    ...prev,
+                                    personalInfo: {
+                                      ...prev.personalInfo,
+                                      countryId: country.id,
+                                      stateId: "",
+                                      cityId: "",
+                                    },
+                                  }));
+
+                                  setPhoneCode(country.phonecode);
+
+                                  setCountryOpen(false);
+                                }}
+                              >
+                                {country.name}
+                              </CommandItem>
+                            ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              <div>
+                <Label
+                  htmlFor="password"
+                  className="text-sm font-medium text-gray-700"
+                >
                   Password*
                 </Label>
                 <div className="mt-1 relative">
@@ -183,19 +318,36 @@ export default function Register() {
                 </p>
               </div>
 
-              <div>
-                <Label htmlFor="mobile" className="text-sm font-medium text-gray-700">
+              <div className="mt-1">
+                <Label
+                  htmlFor="mobile"
+                  className="text-sm font-medium text-gray-700"
+                >
                   Mobile number*
                 </Label>
-                <div className="mt-1 relative">
-                  <Phone className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-                  <Input
-                    id="mobile"
-                    placeholder="+91 Enter your mobile number"
-                    className="pl-10 h-12 border-gray-200 focus:border-purple-500 focus:ring-purple-500"
-                    value={mobile}
-                    onChange={(e) => setMobile(e.target.value)}
 
+                <div className="relative flex items-center gap-2 mt-2">
+                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+
+                  <input
+                    className="w-24 h-12 pl-10 border rounded-lg bg-gray-100 text-gray-700"
+                    value={`+${phoneCode}`}
+                    readOnly
+                  />
+
+                  <input
+                    className="flex-1 h-12 border rounded-lg px-3 focus:ring-purple-500 focus:border-purple-500"
+                    placeholder="Enter mobile number"
+                    value={profileData.personalInfo.phone}
+                    onChange={(e) =>
+                      setProfileData((prev) => ({
+                        ...prev,
+                        personalInfo: {
+                          ...prev.personalInfo,
+                          phone: e.target.value,
+                        },
+                      }))
+                    }
                   />
                 </div>
                 <p className="text-xs text-gray-500 mt-1">
@@ -210,13 +362,17 @@ export default function Register() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Card
                     className={`cursor-pointer transition-all ${
-                      workStatus === 'experienced' ? 'ring-2 ring-purple-500 bg-purple-50' : 'hover:bg-gray-50 border-gray-200'
+                      workStatus === "experienced"
+                        ? "ring-2 ring-purple-500 bg-purple-50"
+                        : "hover:bg-gray-50 border-gray-200"
                     }`}
-                    onClick={() => setWorkStatus('experienced')}
+                    onClick={() => setWorkStatus("experienced")}
                   >
                     <CardContent className="p-4 text-center">
                       <div className="text-2xl mb-2">💼</div>
-                      <h3 className="font-medium text-gray-900 mb-1 text-sm">I'm experienced</h3>
+                      <h3 className="font-medium text-gray-900 mb-1 text-sm">
+                        I'm experienced
+                      </h3>
                       <p className="text-xs text-gray-600">
                         I have work experience (excluding internships)
                       </p>
@@ -224,13 +380,17 @@ export default function Register() {
                   </Card>
                   <Card
                     className={`cursor-pointer transition-all ${
-                      workStatus === 'fresher' ? 'ring-2 ring-purple-500 bg-purple-50' : 'hover:bg-gray-50 border-gray-200'
+                      workStatus === "fresher"
+                        ? "ring-2 ring-purple-500 bg-purple-50"
+                        : "hover:bg-gray-50 border-gray-200"
                     }`}
-                    onClick={() => setWorkStatus('fresher')}
+                    onClick={() => setWorkStatus("fresher")}
                   >
                     <CardContent className="p-4 text-center">
                       <div className="text-2xl mb-2">🎓</div>
-                      <h3 className="font-medium text-gray-900 mb-1 text-sm">I'm a fresher</h3>
+                      <h3 className="font-medium text-gray-900 mb-1 text-sm">
+                        I'm a fresher
+                      </h3>
                       <p className="text-xs text-gray-600">
                         I am a student/ Haven't worked after graduation
                       </p>
@@ -240,14 +400,19 @@ export default function Register() {
               </div>
 
               <div className="flex items-start space-x-2">
-               <Checkbox
+                <Checkbox
                   id="updates"
                   className="mt-1"
                   checked={receivePromotions}
-                  onCheckedChange={(value) => setReceivePromotions(value === true)}
+                  onCheckedChange={(value) =>
+                    setReceivePromotions(value === true)
+                  }
                 />
-                <label htmlFor="updates" className="text-sm text-gray-600 leading-relaxed">
-                  Send me important updates & promotions via SMS, Email, and{' '}
+                <label
+                  htmlFor="updates"
+                  className="text-sm text-gray-600 leading-relaxed"
+                >
+                  Send me important updates & promotions via SMS, Email, and{" "}
                   <span className="text-green-600 font-medium">WhatsApp</span>
                 </label>
               </div>
@@ -265,20 +430,24 @@ export default function Register() {
                 </div>
               </div>
 
-              <Button variant="outline" className="w-full h-12 border-gray-200 hover:bg-gray-50" type="button">
+              <Button
+                variant="outline"
+                className="w-full h-12 border-gray-200 hover:bg-gray-50"
+                type="button"
+              >
                 <Chrome className="w-5 h-5 mr-2" />
                 Continue with Google
               </Button>
 
               <p className="text-xs text-gray-500 text-center leading-relaxed">
-                By clicking Register, you agree to the{' '}
+                By clicking Register, you agree to the{" "}
                 <Link href="#" className="text-purple-600 hover:underline">
                   Terms and Conditions
-                </Link>{' '}
-                &{' '}
+                </Link>{" "}
+                &{" "}
                 <Link href="#" className="text-purple-600 hover:underline">
                   Privacy Policy
-                </Link>{' '}
+                </Link>{" "}
                 of JobSeeker.com
               </p>
             </form>

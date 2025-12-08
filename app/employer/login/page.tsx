@@ -33,7 +33,7 @@ export default function EmployerLogin() {
     email: "",
     password: "",
   });
-  const router = useRouter(); 
+  const router = useRouter();
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {

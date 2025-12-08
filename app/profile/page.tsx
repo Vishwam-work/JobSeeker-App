@@ -9,10 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 
 import { useSavedJobs } from "@/context/SavedJobsContext";
-import {  BookmarkX } from "lucide-react";
-// import { Button } from "@/components/ui/button";
-// import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
-// import { Card, CardContent } from "@/components/ui/card";
+import { BookmarkX } from "lucide-react";
 
 import {
   Select,
@@ -28,6 +25,19 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Command,
+  CommandInput,
+  CommandList,
+  CommandEmpty,
+  CommandItem,
+  CommandGroup,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@/components/ui/popover";
 import {
   User,
   Mail,
@@ -95,6 +105,9 @@ export default function Profile() {
   const [isDialogOpen, setIsDialogOpen] = useState({
     resume: false,
   });
+  const [open, setOpen] = useState(false);
+  const [cityOpen, setCityOpen] = useState(false);
+  const [citySearch, setCitySearch] = useState("");
   const [newSkill, setNewSkill] = useState("");
 
   // States for inline forms
@@ -104,6 +117,8 @@ export default function Profile() {
   const [editingExperience, setEditingExperience] = useState(null);
   const [editingEducation, setEditingEducation] = useState(null);
   const [editingCertification, setEditingCertification] = useState(null);
+  const [majors, setMajors] = useState([]);
+  const [majorSearch, setMajorSearch] = useState("");
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [experienceForm, setExperienceForm] = useState({
     company: "",
@@ -121,6 +136,7 @@ export default function Profile() {
     institution: "",
     year: null,
     percentage: "",
+    scoreType: "percentage",
   });
 
   const [certificationForm, setCertificationForm] = useState({
@@ -148,7 +164,7 @@ export default function Profile() {
   const [activeSaveTab, setActiveSaveTab] = useState("SavedJobs");
 
   const [noticeRanges] = useState([
-    "0-15 days",
+    "1-15 days",
     "15-30 days",
     "30-60 days",
     "60-90 days",
@@ -431,6 +447,38 @@ export default function Profile() {
     }
   };
 
+  useEffect(() => {
+    const fetchMajors = async () => {
+      try {
+        const token = localStorage.getItem("auth_token");
+
+        if (!token) {
+          console.error("User not logged in — token missing");
+          return;
+        }
+
+        const res = await fetch(
+          "https://jobseeker-backend-jy1y.onrender.com/master/api/majors/",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        const data = await res.json();
+
+        console.log("MAJORS API DATA ---->", data);
+
+        setMajors(data);
+      } catch (error) {
+        console.error("Error fetching majors:", error);
+      }
+    };
+
+    fetchMajors();
+  }, []);
+
   // Fetch and send The Data From API
   // Fetch Profile Data
   useEffect(() => {
@@ -710,6 +758,54 @@ export default function Profile() {
       alert(`Error saving profile. ${errText}`);
     }
   };
+
+  // Fetch User Data for Profile Name, Email, Phone
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const token = localStorage.getItem("auth_token");
+        if (!token) {
+          console.warn("No auth token found");
+          return;
+        }
+
+        const res = await fetch(
+          "https://jobseeker-backend-jy1y.onrender.com/api/register/",
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (!res.ok) {
+          console.error("Failed to fetch user data");
+          return;
+        }
+
+        const data = await res.json();
+        console.log("Register API data:", data);
+
+        // ✅ Handle both single object or array API responses
+        const user = Array.isArray(data) ? data[0] : data;
+
+        setProfileData((prev) => ({
+          ...prev,
+          personalInfo: {
+            ...prev.personalInfo,
+            fullName: user.full_name || user.name || "",
+            email: user.email || "",
+            phone: user.phone || user.number || "",
+          },
+        }));
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      }
+    };
+
+    fetchUserProfile();
+  }, []);
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -1103,6 +1199,48 @@ export default function Profile() {
                           required={true}
                         />
                       </div>
+
+                      {/* <div>
+  <Label htmlFor="fullName" className="text-sm font-medium">
+    Full Name *
+  </Label>
+  <Input
+    id="fullName"
+    value={profileData.personalInfo.fullName}
+    onChange={(e) =>
+      setProfileData((prev) => ({
+        ...prev,
+        personalInfo: {
+          ...prev.personalInfo,
+          fullName: e.target.value,
+        },
+      }))
+    }
+    className="mt-1 h-10 lg:h-11"
+  />
+</div> */}
+
+                      {/* <div>
+  <Label htmlFor="email" className="text-sm font-medium">
+    Email Address *
+  </Label>
+  <Input
+    id="email"
+    type="email"
+    value={profileData.personalInfo.email}
+    onChange={(e) =>
+      setProfileData((prev) => ({
+        ...prev,
+        personalInfo: {
+          ...prev.personalInfo,
+          email: e.target.value,
+        },
+      }))
+    }
+    className="mt-1 h-10 lg:h-11"
+  />
+</div> */}
+
                       {/* <div>
                         <Label htmlFor="phone" className="text-sm font-medium">
                           Phone Number *
@@ -1174,97 +1312,172 @@ export default function Profile() {
                       </div>
                       <div>
                         <Label className="text-sm font-medium">Country *</Label>
-                        <Select
-                          value={profileData.personalInfo.countryId || ""}
-                          onValueChange={(value) =>
-                            setProfileData((prev) => ({
-                              ...prev,
-                              personalInfo: {
-                                ...prev.personalInfo,
-                                countryId: value,
-                                stateId: "",
-                                cityId: "",
-                              },
-                            }))
-                          }
-                          required={true}
-                        >
-                          <SelectTrigger className="mt-1 h-10 lg:h-11">
-                            <SelectValue placeholder="Select country" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {countries.map((country) => (
-                              <SelectItem
-                                key={country.id}
-                                value={country.id.toString()}
-                              >
-                                {country.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <button className="w-full mt-1 h-10 lg:h-11 border rounded px-3 text-left">
+                              {profileData.personalInfo.countryId
+                                ? countries.find(
+                                    (c) =>
+                                      c.id == profileData.personalInfo.countryId
+                                  )?.name
+                                : "Select country"}
+                            </button>
+                          </PopoverTrigger>
+
+                          <PopoverContent className="p-0 w-[300px]">
+                            <Command
+                              filter={(value, search) =>
+                                value
+                                  .toLowerCase()
+                                  .startsWith(search.toLowerCase())
+                                  ? 1
+                                  : 0
+                              }
+                            >
+                              <CommandInput placeholder="Search country..." />
+
+                              <CommandList>
+                                {countries.map((country) => (
+                                  <CommandItem
+                                    key={country.id}
+                                    value={country.name}
+                                    onSelect={() => {
+                                      setProfileData((prev) => ({
+                                        ...prev,
+                                        personalInfo: {
+                                          ...prev.personalInfo,
+                                          countryId: country.id,
+                                          stateId: "",
+                                          cityId: "",
+                                        },
+                                      }));
+                                    }}
+                                  >
+                                    {country.name}
+                                  </CommandItem>
+                                ))}
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
                       </div>
+
                       <div>
                         <Label className="text-sm font-medium">State *</Label>
-                        <Select
-                          value={profileData.personalInfo.stateId || ""}
-                          onValueChange={(value) =>
-                            setProfileData((prev) => ({
-                              ...prev,
-                              personalInfo: {
-                                ...prev.personalInfo,
-                                stateId: value,
-                                cityId: "",
-                              },
-                            }))
-                          }
-                          required={true}
-                        >
-                          <SelectTrigger className="mt-1 h-10 lg:h-11">
-                            <SelectValue placeholder="Select state" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {states.map((state) => (
-                              <SelectItem
-                                key={state.id}
-                                value={state.id.toString()}
-                              >
-                                {state.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <button className="w-full mt-1 h-10 lg:h-11 border rounded px-3 text-left">
+                              {profileData.personalInfo.stateId
+                                ? states.find(
+                                    (s) =>
+                                      s.id == profileData.personalInfo.stateId
+                                  )?.name
+                                : "Select state"}
+                            </button>
+                          </PopoverTrigger>
+
+                          <PopoverContent className="p-0 w-[300px]">
+                            <Command
+                              filter={(value, search) =>
+                                value
+                                  .toLowerCase()
+                                  .startsWith(search.toLowerCase())
+                                  ? 1
+                                  : 0
+                              }
+                            >
+                              <CommandInput placeholder="Search state..." />
+
+                              <CommandList>
+                                {states.map((state) => (
+                                  <CommandItem
+                                    key={state.id}
+                                    value={state.name}
+                                    onSelect={() => {
+                                      setProfileData((prev) => ({
+                                        ...prev,
+                                        personalInfo: {
+                                          ...prev.personalInfo,
+                                          stateId: state.id,
+                                          cityId: "",
+                                        },
+                                      }));
+                                    }}
+                                  >
+                                    {state.name}
+                                  </CommandItem>
+                                ))}
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
                       </div>
+
                       <div>
-                        <Label className="text-sm font-medium">City *</Label>
-                        <Select
-                          value={profileData.personalInfo.cityId || ""}
-                          onValueChange={(value) =>
-                            setProfileData((prev) => ({
-                              ...prev,
-                              personalInfo: {
-                                ...prev.personalInfo,
-                                cityId: value,
-                              },
-                            }))
-                          }
-                          required={true}
-                        >
-                          <SelectTrigger className="mt-1 h-10 lg:h-11">
-                            <SelectValue placeholder="Select city" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {cities.map((city) => (
-                              <SelectItem
-                                key={city.id}
-                                value={city.id.toString()}
-                              >
-                                {city.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <Label className="text-sm font-medium text-gray-700">
+                          City *
+                        </Label>
+
+                        <Popover open={cityOpen} onOpenChange={setCityOpen}>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              className="w-full justify-between mt-1 h-12"
+                            >
+                              {profileData.personalInfo.cityId
+                                ? cities.find(
+                                    (c) =>
+                                      c.id == profileData.personalInfo.cityId
+                                  )?.name
+                                : "Select city"}
+                            </Button>
+                          </PopoverTrigger>
+
+                          <PopoverContent align="start" className="w-full p-0">
+                            <Command>
+                              <CommandInput
+                                placeholder="Search city..."
+                                value={citySearch}
+                                onValueChange={setCitySearch}
+                              />
+
+                              <CommandList className="max-h-60 overflow-y-auto">
+                                <CommandEmpty>No city found.</CommandEmpty>
+
+                                <CommandGroup>
+                                  {cities
+                                    .filter((city) =>
+                                      city.name
+                                        .toLowerCase()
+                                        .startsWith(citySearch.toLowerCase())
+                                    )
+                                    .map((city) => (
+                                      <CommandItem
+                                        key={city.id}
+                                        value={city.name}
+                                        onSelect={() => {
+                                          setProfileData((prev) => ({
+                                            ...prev,
+                                            personalInfo: {
+                                              ...prev.personalInfo,
+                                              cityId: city.id,
+                                            },
+                                          }));
+                                          setCityOpen(false);
+                                        }}
+                                      >
+                                        {city.name}
+                                      </CommandItem>
+                                    ))}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
                       </div>
+
                       <div>
                         <Label
                           htmlFor="experience"
@@ -1334,7 +1547,7 @@ export default function Profile() {
                           htmlFor="currentSalary"
                           className="text-sm font-medium"
                         >
-                          Current Salary (LPA)
+                          Current Salary (PA)
                         </Label>
                         <div className="flex gap-2 mt-1">
                           <Select
@@ -1368,6 +1581,7 @@ export default function Profile() {
                           </Select>
                           <Input
                             id="currentSalary"
+                            type="number"
                             value={profileData.personalInfo.currentSalary}
                             onChange={(e) =>
                               setProfileData((prev) => ({
@@ -1380,6 +1594,7 @@ export default function Profile() {
                             }
                             className="flex-1 h-10 lg:h-11"
                             placeholder="Enter amount"
+                            max="0"
                           />
                         </div>
                       </div>
@@ -1388,7 +1603,7 @@ export default function Profile() {
                           htmlFor="expectedSalary"
                           className="text-sm font-medium"
                         >
-                          Expected Salary (LPA)
+                          Expected Salary (PA)
                         </Label>
                         <div className="flex gap-2 mt-1">
                           <Select
@@ -1422,6 +1637,7 @@ export default function Profile() {
                           </Select>
                           <Input
                             id="expectedSalary"
+                            type="number"
                             value={profileData.personalInfo.expectedSalary}
                             onChange={(e) =>
                               setProfileData((prev) => ({
@@ -1433,6 +1649,8 @@ export default function Profile() {
                               }))
                             }
                             className="flex-1 h-10 lg:h-11"
+                            placeholder="Enter amount"
+                            max="0"
                           />
                         </div>
                       </div>
@@ -1887,7 +2105,6 @@ export default function Profile() {
                         </div>
                       ))}
 
-                      {/* Add/Edit Education Form */}
                       {showAddEducation && (
                         <Card className="border-2 border-green-200">
                           <CardHeader className="pb-4">
@@ -1900,20 +2117,67 @@ export default function Profile() {
                           <CardContent className="space-y-4">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <div>
-                                <Label htmlFor="degree">Degree *</Label>
-                                <Input
-                                  id="degree"
-                                  value={educationForm.degree}
-                                  onChange={(e) =>
-                                    setEducationForm((prev) => ({
-                                      ...prev,
-                                      degree: e.target.value,
-                                    }))
-                                  }
-                                  placeholder="e.g., Bachelor of Technology"
-                                  className="mt-1"
-                                />
+                                <Label className="text-sm font-medium text-gray-700">
+                                  Degree *
+                                </Label>
+
+                                <Popover open={open} onOpenChange={setOpen}>
+                                  <PopoverTrigger asChild>
+                                    <Button
+                                      variant="outline"
+                                      className="w-full justify-between mt-1 h-12"
+                                    >
+                                      {educationForm.degree || "Select degree"}
+                                    </Button>
+                                  </PopoverTrigger>
+
+                                  <PopoverContent
+                                    align="start"
+                                    className="w-full p-0"
+                                  >
+                                    <Command>
+                                      <CommandInput
+                                        placeholder="Search degree..."
+                                        value={majorSearch}
+                                        onValueChange={setMajorSearch}
+                                      />
+
+                                      <CommandList className="max-h-60 overflow-y-auto">
+                                        <CommandEmpty>
+                                          No degree found.
+                                        </CommandEmpty>
+
+                                        <CommandGroup>
+                                          {majors
+                                            .filter((m: any) =>
+                                              m.name
+                                                .toLowerCase()
+                                                .startsWith(
+                                                  majorSearch.toLowerCase()
+                                                )
+                                            )
+                                            .map((major: any) => (
+                                              <CommandItem
+                                                key={major.id}
+                                                value={major.name}
+                                                onSelect={() => {
+                                                  setEducationForm((prev) => ({
+                                                    ...prev,
+                                                    degree: major.name,
+                                                  }));
+                                                  setOpen(false);
+                                                }}
+                                              >
+                                                {major.name}
+                                              </CommandItem>
+                                            ))}
+                                        </CommandGroup>
+                                      </CommandList>
+                                    </Command>
+                                  </PopoverContent>
+                                </Popover>
                               </div>
+
                               <div>
                                 <Label htmlFor="field">Field of Study *</Label>
                                 <Input
@@ -1974,21 +2238,48 @@ export default function Profile() {
                                 />
                               </div>
                               <div className="md:col-span-2">
-                                <Label htmlFor="percentage">
-                                  Grade/Percentage
+                                <Label className="text-sm font-medium text-gray-700">
+                                  Score
                                 </Label>
-                                <Input
-                                  id="percentage"
-                                  value={educationForm.percentage}
-                                  onChange={(e) =>
-                                    setEducationForm((prev) => ({
-                                      ...prev,
-                                      percentage: e.target.value,
-                                    }))
-                                  }
-                                  placeholder="e.g., 8.5 CGPA or 85%"
-                                  className="mt-1"
-                                />
+
+                                <div className="flex items-center gap-3">
+                                  <select
+                                    id="scoreType"
+                                    value={educationForm.scoreType}
+                                    onChange={(e) =>
+                                      setEducationForm((prev) => ({
+                                        ...prev,
+                                        scoreType: e.target.value,
+                                      }))
+                                    }
+                                    className="h-10 border rounded px-2 text-sm w-32"
+                                  >
+                                    <option value="percentage">
+                                      Percentage
+                                    </option>
+                                    <option value="cgpa">CGPA</option>
+                                    <option value="grade">Grade</option>
+                                  </select>
+
+                                  <Input
+                                    id="percentage"
+                                    value={educationForm.percentage}
+                                    onChange={(e) =>
+                                      setEducationForm((prev) => ({
+                                        ...prev,
+                                        percentage: e.target.value,
+                                      }))
+                                    }
+                                    placeholder={
+                                      educationForm.scoreType === "percentage"
+                                        ? "85%"
+                                        : educationForm.scoreType === "cgpa"
+                                        ? "8.5"
+                                        : "A+"
+                                    }
+                                    className="flex-1 h-10"
+                                  />
+                                </div>
                               </div>
                             </div>
                             <div className="flex justify-end space-x-2">

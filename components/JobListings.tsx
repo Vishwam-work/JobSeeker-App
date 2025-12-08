@@ -82,6 +82,19 @@ export default function JobListings() {
 
   const [isLoaded, setIsLoaded] = useState(false);
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
+  const [searchLocation, setSearchLocation] = useState("");
+  const [showCompanyDropdown, setShowCompanyDropdown] = useState(false);
+  const [searchCompany, setSearchCompany] = useState("");
+  const [showSkillsDropdown, setShowSkillsDropdown] = useState(false);
+  const [searchSkill, setSearchSkill] = useState("");
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const email = localStorage.getItem("user_email");
+      setUserEmail(email);
+    }
+  }, []);
 
   useEffect(() => {
     const storedApplied = localStorage.getItem("applied_jobs");
@@ -95,11 +108,14 @@ export default function JobListings() {
     const fetchCompanies = async () => {
       try {
         const res = await fetch(
-          "https://jobseeker-backend-jy1y.onrender.com/master/api/companies/"
+          "https://jobseeker-backend-jy1y.onrender.com/employeer/api/all-jobs/"
         );
         const data = await res.json();
 
-        const companyNames = data.map((item: any) => item.name);
+        const companyNames = [
+          ...new Set(data.map((item: any) => item.company).filter(Boolean)),
+        ];
+
         setCompanies(companyNames);
       } catch (error) {
         console.error("Error fetching companies:", error);
@@ -186,6 +202,28 @@ export default function JobListings() {
       fetchUserData();
     }, 1000);
   }, []);
+
+  // Load applied jobs per user
+  useEffect(() => {
+    const email = localStorage.getItem("user_email");
+
+    if (!email) {
+      setAppliedJobs([]);
+      return;
+    }
+
+    const saved = localStorage.getItem(`applied_jobs_${email}`);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved).map((id: any) => Number(id));
+        setAppliedJobs(parsed);
+      } catch {
+        setAppliedJobs([]);
+      }
+    } else {
+      setAppliedJobs([]);
+    }
+  }, [userEmail]);
 
   useEffect(() => {
     let filtered = jobs;
@@ -428,6 +466,16 @@ const unsaveJob = async (jobId: number) => {
   }
 };
 
+  useEffect(() => {
+    if (!userEmail) {
+      setAppliedJobs([]);
+      return;
+    }
+
+    const saved = localStorage.getItem(`applied_jobs_${userEmail}`);
+    setAppliedJobs(saved ? JSON.parse(saved) : []);
+  }, [userEmail]);
+
   const handleApply = (job) => {
     const token = localStorage.getItem("auth_token");
     if (!token) {
@@ -436,8 +484,8 @@ const unsaveJob = async (jobId: number) => {
       return;
     }
     setSelectedJob(job);
-    setAnswers({}); // Reset answers for new application
-    fetchUserData(); // Fetch user data when opening modal
+    setAnswers({});
+    fetchUserData();
     setIsApplyModalOpen(true);
   };
 
@@ -445,14 +493,6 @@ const unsaveJob = async (jobId: number) => {
     setSelectedJob(job);
     setIsJobDetailOpen(true);
   };
-
-  // const handleBookmark = (jobId) => {
-  //   setJobs(prevJobs =>
-  //     prevJobs.map(job =>
-  //       job.id === jobId ? { ...job, isBookmarked: !job.isBookmarked } : job
-  //     )
-  //   );
-  // };
 
   const handleShare = (job) => {
     if (navigator.share) {
@@ -467,34 +507,50 @@ const unsaveJob = async (jobId: number) => {
     }
   };
 
-  const fetchUserData = async () => {
-    setLoadingUserData(true);
-    try {
-      const token = localStorage.getItem("auth_token");
-      const response = await fetch(
-        "https://jobseeker-backend-jy1y.onrender.com/api/profile/",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
 
-      if (response.ok) {
-        const data = await response.json();
-        console.log("Data here:", data);
-        setUserData(data);
-      } else {
-        console.error("Failed to fetch user data");
+
+const fetchUserData = async () => {
+  setLoadingUserData(true);
+  try {
+    const token = localStorage.getItem("auth_token");
+    const email = localStorage.getItem("user_email");
+
+    const response = await fetch(
+      "https://jobseeker-backend-jy1y.onrender.com/employeer/api/employer/applications/all/",
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
       }
-    } catch (error) {
-      console.error("Error fetching user data:", error);
-    } finally {
-      setLoadingUserData(false);
-    }
-  };
+    );
 
+    if (!response.ok) {
+      console.log("Applied API failed:", response.status);
+      return;
+    }
+
+    const data = await response.json();
+    console.log("ALL applications from backend:", data);
+
+    const myApplications = data.filter(app => app.user_email === email);
+
+    console.log("MY Applications:", myApplications);
+
+    const appliedIDs = myApplications.map(app => Number(app.job));
+
+    localStorage.setItem(`applied_jobs_${email}`, JSON.stringify(appliedIDs));
+
+    setAppliedJobs(appliedIDs);
+
+    console.log("Saved my applied job IDs:", appliedIDs);
+
+  } catch (error) {
+    console.error("Fetch user data error:", error);
+  } finally {
+    setLoadingUserData(false);
+  }
+};
   const handleAnswerChange = (questionIndex, value) => {
     setAnswers((prev) => ({
       ...prev,
@@ -549,12 +605,21 @@ const unsaveJob = async (jobId: number) => {
         alert(`Application submitted successfully for ${selectedJob.title}!`);
         setIsApplyModalOpen(false);
         setSelectedJob(null);
+        fetchUserData();
         setAnswers({});
+
+        // SAVE APPLIED JOB PER USER
+        const email = localStorage.getItem("user_email");
+        const key = email ? `applied_jobs_${email}` : "applied_jobs";
+
         setAppliedJobs((prev) => {
-          const updated = [...prev, selectedJob.id]; // ✅ use selectedJob.id
-          localStorage.setItem("applied_jobs", JSON.stringify(updated));
+          const jobIdNum = Number(selectedJob.id);
+          const updated = prev.includes(jobIdNum) ? prev : [...prev, jobIdNum];
+          localStorage.setItem(key, JSON.stringify(updated));
           return updated;
         });
+
+       
       } else {
         alert(result.error || "Failed to submit application");
       }
@@ -671,34 +736,51 @@ const unsaveJob = async (jobId: number) => {
 
                     {showLocationDropdown && (
                       <div className="mt-3 space-y-2 max-h-56 overflow-y-auto">
+                        <div className="sticky top-0 bg-white z-10 p-1 border-b">
+                          <input
+                            type="text"
+                            placeholder="Search location..."
+                            value={searchLocation}
+                            onChange={(e) => setSearchLocation(e.target.value)}
+                            className="w-full h-8 text-sm border rounded px-2"
+                          />
+                        </div>
+
                         {loading ? (
                           <p className="text-sm text-gray-500">
                             Loading locations...
                           </p>
                         ) : (
-                          locations.map((location) => (
-                            <div
-                              key={location}
-                              className="flex items-center space-x-2"
-                            >
-                              <Checkbox
-                                id={`location-${location}`}
-                                checked={filters.location === location}
-                                onCheckedChange={(checked) =>
-                                  setFilters((prev) => ({
-                                    ...prev,
-                                    location: checked ? location : "All",
-                                  }))
-                                }
-                              />
-                              <Label
-                                htmlFor={`location-${location}`}
-                                className="text-sm text-gray-600 cursor-pointer"
-                              >
-                                {location}
-                              </Label>
-                            </div>
-                          ))
+                          locations
+                            .filter((location) =>
+                              location
+                                .toLowerCase()
+                                .startsWith(searchLocation.toLowerCase())
+                            )
+                            .map((location) => {
+                              const isSelected = filters.location === location;
+
+                              return (
+                                <div
+                                  key={location}
+                                  onClick={() =>
+                                    setFilters((prev) => ({
+                                      ...prev,
+                                      location: isSelected ? "All" : location,
+                                    }))
+                                  }
+                                  className={`p-2 rounded cursor-pointer text-sm
+                  ${
+                    isSelected
+                      ? "bg-blue-100 text-blue-700 font-medium"
+                      : "text-gray-700 hover:bg-gray-100"
+                  }
+                `}
+                                >
+                                  {location}
+                                </div>
+                              );
+                            })
                         )}
                       </div>
                     )}
@@ -779,7 +861,7 @@ const unsaveJob = async (jobId: number) => {
                   {/* Salary Range */}
                   <div>
                     <Label className="text-sm font-medium text-gray-700 mb-2 block">
-                      Salary Range (LPA)
+                      Salary Range (PA)
                     </Label>
                     <div className="px-2">
                       <Slider
@@ -793,8 +875,8 @@ const unsaveJob = async (jobId: number) => {
                         className="w-full"
                       />
                       <div className="flex justify-between text-xs text-gray-500 mt-1">
-                        <span>{filters.salaryRange[0]} LPA</span>
-                        <span>{filters.salaryRange[1]} LPA</span>
+                        <span>{filters.salaryRange[0]} PA</span>
+                        <span>{filters.salaryRange[1]} PA</span>
                       </div>
                     </div>
                   </div>
@@ -824,61 +906,111 @@ const unsaveJob = async (jobId: number) => {
                   </div>
 
                   {/* Companies */}
-                  <div>
-                    <Label className="text-sm font-medium text-gray-700 mb-2 block">
-                      Companies
-                    </Label>
-                    <div className="space-y-2 max-h-40 overflow-y-auto">
-                      {companies.map((company) => (
-                        <div
-                          key={company}
-                          className="flex items-center space-x-2"
-                        >
-                          <Checkbox
-                            id={`company-${company}`}
-                            checked={filters.companies.includes(company)}
-                            onCheckedChange={(checked) =>
-                              handleCompanyFilter(company, checked)
-                            }
+                  <div className="border rounded-lg p-3 bg-white shadow-sm">
+                    <button
+                      onClick={() => setShowCompanyDropdown((prev) => !prev)}
+                      className="w-full text-left font-semibold text-gray-700 flex justify-between items-center"
+                    >
+                      <span>Companies</span>
+                      <span className="text-gray-400">
+                        {showCompanyDropdown ? "▲" : "▼"}
+                      </span>
+                    </button>
+
+                    {showCompanyDropdown && (
+                      <div className="mt-3 space-y-2 max-h-56 overflow-y-auto">
+                        <div className="sticky top-0 bg-white z-10 p-1 border-b">
+                          <input
+                            type="text"
+                            placeholder="Search company..."
+                            value={searchCompany}
+                            onChange={(e) => setSearchCompany(e.target.value)}
+                            className="w-full h-8 text-sm border rounded px-2"
                           />
-                          <Label
-                            htmlFor={`company-${company}`}
-                            className="text-sm text-gray-600 cursor-pointer"
-                          >
-                            {company}
-                          </Label>
                         </div>
-                      ))}
-                    </div>
+
+                        {/* List */}
+                        {companies
+                          .filter((company) =>
+                            company
+                              .toLowerCase()
+                              .startsWith(searchCompany.toLowerCase())
+                          )
+                          .map((company) => (
+                            <div
+                              key={company}
+                              className="p-2 text-sm text-gray-700 cursor-pointer hover:bg-gray-100 rounded"
+                              onClick={() =>
+                                setFilters((prev) => ({
+                                  ...prev,
+                                  companies: [company],
+                                }))
+                              }
+                            >
+                              {company}
+                            </div>
+                          ))}
+                      </div>
+                    )}
                   </div>
 
                   {/* Skills */}
-                  <div>
-                    <Label className="text-sm font-medium text-gray-700 mb-2 block">
-                      Skills
-                    </Label>
-                    <div className="space-y-2 max-h-40 overflow-y-auto">
-                      {skillsList.map((skill) => (
-                        <div
-                          key={skill}
-                          className="flex items-center space-x-2"
-                        >
-                          <Checkbox
-                            id={`skill-${skill}`}
-                            checked={filters.skills.includes(skill)}
-                            onCheckedChange={(checked) =>
-                              handleSkillFilter(skill, checked)
-                            }
+                  <div className="border rounded-lg p-3 bg-white shadow-sm">
+                    <button
+                      onClick={() => setShowSkillsDropdown((prev) => !prev)}
+                      className="w-full text-left font-semibold text-gray-700 flex justify-between items-center"
+                    >
+                      <span>Skills</span>
+                      <span className="text-gray-400">
+                        {showSkillsDropdown ? "▲" : "▼"}
+                      </span>
+                    </button>
+
+                    {showSkillsDropdown && (
+                      <div className="mt-3 space-y-2 max-h-56 overflow-y-auto">
+                        <div className="sticky top-0 bg-white z-10 p-1 border-b">
+                          <input
+                            type="text"
+                            placeholder="Search skills..."
+                            value={searchSkill}
+                            onChange={(e) => setSearchSkill(e.target.value)}
+                            className="w-full h-8 text-sm border rounded px-2"
                           />
-                          <Label
-                            htmlFor={`skill-${skill}`}
-                            className="text-sm text-gray-600 cursor-pointer"
-                          >
-                            {skill}
-                          </Label>
                         </div>
-                      ))}
-                    </div>
+
+                        {/* List */}
+                        {skillsList
+                          .filter((skill) =>
+                            skill
+                              .toLowerCase()
+                              .startsWith(searchSkill.toLowerCase())
+                          )
+                          .map((skill) => {
+                            const isSelected = filters.skills.includes(skill);
+
+                            return (
+                              <div
+                                key={skill}
+                                className={`p-2 text-sm cursor-pointer rounded ${
+                                  isSelected
+                                    ? "bg-blue-100 text-blue-700 font-medium"
+                                    : "text-gray-700 hover:bg-gray-100"
+                                }`}
+                                onClick={() => {
+                                  setFilters((prev) => ({
+                                    ...prev,
+                                    skills: isSelected
+                                      ? prev.skills.filter((s) => s !== skill)
+                                      : [...prev.skills, skill],
+                                  }));
+                                }}
+                              >
+                                {skill}
+                              </div>
+                            );
+                          })}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1054,14 +1186,25 @@ const unsaveJob = async (jobId: number) => {
 
                         {/* Action Buttons */}
                         <div className="flex flex-col sm:flex-row lg:flex-col gap-2 lg:w-32">
-                          {!appliedJobs.includes(job.id) && (
-                            <Button
-                              onClick={() => handleApply(job)}
-                              className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
-                            >
-                              Apply Now
-                            </Button>
-                          )}
+                          {(() => {
+                            const token = localStorage.getItem("auth_token");
+                            const jobIdNum = Number(job.id);
+                            const appliedList = appliedJobs.map(Number);
+
+                            if (token && appliedList.includes(jobIdNum)) {
+                              return null;
+                            }
+
+                            return (
+                              <Button
+                                onClick={() => handleApply(job)}
+                                className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
+                              >
+                                Apply Now
+                              </Button>
+                            );
+                          })()}
+
                           <Button
                             variant="outline"
                             className="border-purple-200 text-purple-600 hover:bg-purple-50"
@@ -1254,7 +1397,7 @@ const unsaveJob = async (jobId: number) => {
 
                   {/* Action Buttons */}
                   <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t">
-                    <Button
+                    {/* <Button
                       onClick={() => {
                         setIsJobDetailOpen(false);
                         handleApply(selectedJob);
@@ -1263,19 +1406,9 @@ const unsaveJob = async (jobId: number) => {
                     >
                       <Send className="w-4 h-4 mr-2" />
                       Apply Now
-                    </Button>
-                    {/* <Button
-                      variant="outline"
-                      onClick={() => handleBookmark(selectedJob.id)}
-                      className={`flex-1 ${
-                        selectedJob.isBookmarked
-                          ? "border-purple-600 text-purple-600"
-                          : ""
-                      }`}
-                    >
-                      <Bookmark className={`w-4 h-4 mr-2 ${selectedJob.isBookmarked ? 'fill-current' : ''}`} />
-                      {selectedJob.isBookmarked ? 'Bookmarked' : 'Bookmark'}
                     </Button> */}
+                    
+                   
 
                     <Button
                       variant="outline"

@@ -59,7 +59,22 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { ChevronsUpDown } from "lucide-react";
 
 export default function EmployerDashboard() {
   const [activeTab, setActiveTab] = useState("post-job");
@@ -81,7 +96,28 @@ export default function EmployerDashboard() {
 
   const [filter, setFilter] = useState("All");
 
+  const [dateFilter, setDateFilter] = useState("all");
+  const [search, setSearch] = useState("");
+  const [open, setOpen] = useState(false);
   const router = useRouter();
+
+  const [selectedCity, setSelectedCity] = useState("");
+  const [selectedCountry, setSelectedCountry] = useState("");
+  const [statusFilter, setStatusFilter] = useState("All");
+  const [locationFilter, setLocationFilter] = useState("All");
+  const [salaryFilter, setSalaryFilter] = useState("All");
+  const [experienceFilter, setExperienceFilter] = useState("All");
+  const [jobTitleFilter, setJobTitleFilter] = useState("All");
+  const [searchJobTitle, setSearchJobTitle] = useState("");
+  const [openSchedule, setOpenSchedule] = useState(false);
+  const [interviewDate, setInterviewDate] = useState("");
+  const [interviewMode, setInterviewMode] = useState("Online");
+  const [interviewNotes, setInterviewNotes] = useState("");
+  const [hour, setHour] = useState("12");
+  const [minute, setMinute] = useState("00");
+  const [ampm, setAmPm] = useState("AM");
+  const interviewTime = `${hour}:${minute} ${ampm}`;
+
   // Sample data for posted jobs
   // const [postedJobs] = useState([
   //   {
@@ -90,7 +126,7 @@ export default function EmployerDashboard() {
   //     company: "Tech Solutions Pvt Ltd",
   //     location: "Mumbai",
   //     experience: "3-5 years",
-  //     salary: "8-12 LPA",
+  //     salary: "8-12 PA",
   //     jobType: "Full Time",
   //     postedDate: "2024-01-15",
   //     applications: 45,
@@ -103,7 +139,7 @@ export default function EmployerDashboard() {
   //     company: "Digital Innovations Inc",
   //     location: "Bangalore",
   //     experience: "2-4 years",
-  //     salary: "6-10 LPA",
+  //     salary: "6-10 PA",
   //     jobType: "Full Time",
   //     postedDate: "2024-01-10",
   //     applications: 32,
@@ -116,7 +152,7 @@ export default function EmployerDashboard() {
   //     company: "StartupXYZ",
   //     location: "Delhi",
   //     experience: "5-8 years",
-  //     salary: "15-20 LPA",
+  //     salary: "15-20 PA",
   //     jobType: "Full Time",
   //     postedDate: "2024-01-08",
   //     applications: 28,
@@ -325,7 +361,7 @@ export default function EmployerDashboard() {
           education: "",
           appliedFor: app.job_title,
           appliedDate: app.applied_at,
-          status: "Under Review",
+          status: app.application_status || "Under Review",
           resumeUrl: app.profile?.resume
             ? `https://jobseeker-backend-jy1y.onrender.com${app.profile.resume}`
             : "#",
@@ -344,10 +380,10 @@ export default function EmployerDashboard() {
     fetchApplications();
   }, []);
 
-  const filteredCandidates = candidates.filter((candidate) => {
-    if (filter === "All") return true;
-    return candidate.status === filter;
-  });
+  // const filteredCandidates = candidates.filter((candidate) => {
+  //   if (filter === "All") return true;
+  //   return candidate.status === filter;
+  // });
 
   const fetchPostedJobs = async () => {
     try {
@@ -461,6 +497,60 @@ export default function EmployerDashboard() {
         skills: [...prev.skills, newSkill.trim()],
       }));
       setNewSkill("");
+    }
+  };
+
+  const handleApplicationsClick = async (jobId) => {
+    try {
+      const token = localStorage.getItem("auth_token");
+
+      const response = await fetch(
+        `https://jobseeker-backend-jy1y.onrender.com/employeer/api/employer/applications/job/${jobId}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = await response.json();
+      console.log("API RAW DATA:", data);
+
+      if (!Array.isArray(data)) {
+        console.error("API did not return list:", data);
+        alert("Failed to load candidates! (Unauthorized?)");
+        return;
+      }
+
+      const mappedCandidates = data.map((item) => ({
+        id: item.id,
+        name: item.profile?.full_name || item.full_name,
+        email: item.email || item.user_email,
+        phone: item.profile?.phone || item.phone,
+        location: item.profile?.city || item.city,
+        experience: item.profile?.experience || item.experience,
+        job_title: item.job_title,
+        resumeUrl: item.profile?.resume || item.resume,
+        skills: item.profile?.skills || item.skills,
+        certifications: item.profile?.certifications || item.certifications,
+        educationDetails: item.profile?.educations || item.educations,
+        workExperience: item.profile?.experiences || item.experiences,
+        status: item.application_status || "Under Review",
+        appliedDate: item.applied_at,
+        qa: item.answers?.map((ans) => ({
+          question_index: ans.question_index,
+          question_text: ans.question_text,
+          answer_text: ans.answer,
+        })),
+      }));
+
+      console.log("MAPPED CANDIDATES:", mappedCandidates);
+
+      setCandidates(mappedCandidates);
+      setActiveTab("candidates");
+    } catch (error) {
+      console.error(error);
     }
   };
 
@@ -603,8 +693,83 @@ export default function EmployerDashboard() {
       job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       job.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
       job.location?.name.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesFilter && matchesSearch;
+
+    // Date filter
+    let matchesDate = true;
+    if (dateFilter !== "all" && job.created_at) {
+      const jobDate = new Date(job.created_at);
+      const now = new Date();
+
+      if (dateFilter === "today") {
+        matchesDate = jobDate.toDateString() === now.toDateString();
+      } else if (dateFilter === "week") {
+        const weekAgo = new Date();
+        weekAgo.setDate(now.getDate() - 7);
+        matchesDate = jobDate >= weekAgo;
+      } else if (dateFilter === "month") {
+        const monthAgo = new Date();
+        monthAgo.setMonth(now.getMonth() - 1);
+        matchesDate = jobDate >= monthAgo;
+      }
+    }
+    return matchesFilter && matchesSearch && matchesDate;
   });
+
+  const filteredCategories = candidates.filter((c) => {
+    const nameMatch =
+      c.name?.toLowerCase().startsWith(searchTerm.toLowerCase()) ||
+      c.currentRole?.toLowerCase().startsWith(searchTerm.toLowerCase()) ||
+      c.appliedFor?.toLowerCase().startsWith(searchTerm.toLowerCase());
+
+    const statusMatch =
+      statusFilter === "All" ||
+      c.status?.toLowerCase() === statusFilter.toLowerCase();
+
+    const locationMatch =
+      locationFilter === "All" ||
+      c.location?.toLowerCase() === locationFilter.toLowerCase();
+
+    const jobTitleMatch =
+      jobTitleFilter === "All" ||
+      c.appliedFor?.toLowerCase() === jobTitleFilter.toLowerCase();
+
+    const salary = parseInt(c.expectedSalary) || 0;
+    const salaryMatch =
+      salaryFilter === "All" ||
+      (salaryFilter === "Below 20000" && salary < 20000) ||
+      (salaryFilter === "20000-50000" && salary >= 20000 && salary <= 50000) ||
+      (salaryFilter === "Above 50000" && salary > 50000);
+
+    const expMatch =
+      experienceFilter === "All" ||
+      (experienceFilter === "Fresher" &&
+        (c.experience?.toLowerCase().includes("fresher") ||
+          c.experience?.includes("0"))) ||
+      (experienceFilter === "1-3 Years" &&
+        (c.experience?.includes("1") ||
+          c.experience?.includes("2") ||
+          c.experience?.includes("3"))) ||
+      (experienceFilter === "3-5 Years" &&
+        (c.experience?.includes("3") ||
+          c.experience?.includes("4") ||
+          c.experience?.includes("5"))) ||
+      (experienceFilter === "5+ Years" &&
+        (c.experience?.includes("5") ||
+          c.experience?.includes("6") ||
+          c.experience?.includes("7")));
+
+    return (
+      nameMatch &&
+      statusMatch &&
+      locationMatch &&
+      salaryMatch &&
+      expMatch &&
+      jobTitleMatch
+    );
+  });
+  const filteredCities = cities.filter((city) =>
+    city.name.toLowerCase().startsWith(searchTerm.toLowerCase())
+  );
 
   const handleViewJob = async (job) => {
     try {
@@ -832,18 +997,13 @@ export default function EmployerDashboard() {
 
   // SHORTLIST
   const handleShortlistCandidate = async (candidate) => {
-    if (!candidate?.id) {
-      alert("Candidate ID missing");
-      return;
-    }
-
-    const token = localStorage.getItem("auth_token");
-    if (!token) {
-      alert("You must be logged in to shortlist a candidate.");
-      return;
-    }
-
     try {
+      const token = localStorage.getItem("auth_token");
+      if (!token) {
+        alert("Token missing");
+        return;
+      }
+
       const response = await fetch(
         `https://jobseeker-backend-jy1y.onrender.com/employeer/api/employer/applications/${candidate.id}/update/`,
         {
@@ -852,62 +1012,172 @@ export default function EmployerDashboard() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ status: "shortlisted" }),
+          body: JSON.stringify({
+            application_status: "shortlisted",
+          }),
         }
       );
 
+      const updated = await response.json();
+      console.log("Updated Response:", updated);
+
       if (!response.ok) {
-        const errorData = await response.json();
-        console.error("Failed to shortlist:", errorData);
-        alert(`Error: ${errorData.detail || "Unable to shortlist candidate"}`);
+        alert(updated.error || "Update failed");
         return;
       }
 
-      const updatedCandidate = await response.json();
-
       setCandidates((prev) =>
         prev.map((c) =>
-          c.id === updatedCandidate.id
-            ? { ...c, status: updatedCandidate.status }
-            : c
+          c.id === updated.id ? { ...c, status: updated.application_status } : c
         )
       );
 
-      alert("Candidate shortlisted successfully!");
+      setSelectedCandidate((prev) =>
+        prev && prev.id === updated.id
+          ? { ...prev, status: updated.application_status }
+          : prev
+      );
+
+      // setSelectedCandidate((prev) =>
+      //   prev && prev.id === updated.id
+      //     ? { ...prev, status: updated.application_status }
+      //     : prev
+      // );
+      console.log("Now>>>>>>>", selectedCandidate);
+
+      alert("Candidate Shortlisted!");
     } catch (err) {
-      console.error("Error shortlisting candidate:", err);
-      alert("Network error. Please try again.");
+      console.log("Shortlist error:", err);
+      alert("Network error");
     }
   };
 
   /* REJECT */
   const handleRejectCandidate = async (candidate) => {
-    const token = localStorage.getItem("auth_token");
-    if (!token) return alert("Not logged in");
-
-    const url = `https://jobseeker-backend-jy1y.onrender.com/employeer/job-postings/${candidate.id}/update/`;
-    const payload = { status: "Rejected" };
-
     try {
-      const res = await fetch(url, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
-      });
+      console.log("Rejecting candidate: ", candidate);
 
-      if (res.ok) {
-        alert(`${candidate.name} rejected successfully`);
-      } else {
-        const errText = await res.text();
-        console.error("Failed:", res.status, errText);
-        alert(`Failed to reject: ${res.status}`);
+      if (!candidate?.id) {
+        alert("Candidate ID missing");
+        return;
       }
-    } catch (e) {
-      console.error("Network error:", e);
-      alert("Network error. Please try again.");
+
+      const token = localStorage.getItem("auth_token");
+      if (!token) {
+        alert("Token missing");
+        return;
+      }
+
+      const response = await fetch(
+        `https://jobseeker-backend-jy1y.onrender.com/employeer/api/employer/applications/${candidate.id}/update/`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            application_status: "Rejected",
+          }),
+        }
+      );
+
+      const text = await response.text();
+      console.log("Raw Response → ", text);
+
+      let data = null;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        console.log("HTML Error Response Received");
+      }
+
+      if (!response.ok) {
+        alert(data?.detail || "Update failed");
+        return;
+      }
+
+      setCandidates((prev) =>
+        prev.map((c) =>
+          c.id === data.id ? { ...c, status: data.application_status } : c
+        )
+      );
+
+      setSelectedCandidate((prev) =>
+        prev && prev.id === data.id
+          ? { ...prev, status: data.application_status }
+          : prev
+      );
+
+      // setSelectedCandidate((prev) =>
+      //   prev && prev.id === data.id
+      //     ? { ...prev, status: data.application_status }
+      //     : prev
+      // );
+
+      alert("Candidate Rejected!");
+    } catch (err) {
+      console.log("Reject error: ", err);
+      alert("Network error");
+    }
+  };
+
+  // INTERVIEW SCHEDULE
+  const handleScheduleInterview = (candidate) => {
+    setSelectedCandidate(candidate);
+    setOpenSchedule(true);
+  };
+
+  const handleScheduleSubmit = async () => {
+    try {
+      const token = localStorage.getItem("auth_token");
+      if (!token) return alert("Token missing");
+
+      if (!selectedCandidate?.id) {
+        return alert("Candidate ID missing!!");
+      }
+
+      const res = await fetch(
+        `https://jobseeker-backend-jy1y.onrender.com/employeer/api/employer/applications/${selectedCandidate.id}/update/`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            interview_date: interviewDate,
+            interview_time: interviewTime,
+            interview_mode: interviewMode,
+            notes: interviewNotes,
+            application_status: "Interview Scheduled",
+          }),
+        }
+      );
+
+      const data = await res.json();
+      console.log("Response:", data);
+
+      if (!res.ok) {
+        return alert("Failed: " + JSON.stringify(data));
+      }
+      setCandidates((prev) =>
+        prev.map((c) =>
+          c.id === data.id ? { ...c, status: data.application_status } : c
+        )
+      );
+
+      setSelectedCandidate((prev) =>
+        prev && prev.id === data.id
+          ? { ...prev, status: data.application_status }
+          : prev
+      );
+
+      alert("Interview Scheduled!");
+      setOpenSchedule(false);
+    } catch (err) {
+      console.log(err);
+      alert("Network Error");
     }
   };
 
@@ -954,6 +1224,38 @@ export default function EmployerDashboard() {
   //  selectedJob.requirements.map((req, index) => (
   //                        )
   // }
+
+  useEffect(() => {
+    const fetchCompany = async () => {
+      try {
+        const token = localStorage.getItem("auth_token");
+        if (!token) return;
+
+        const res = await fetch(
+          "https://jobseeker-backend-jy1y.onrender.com/employeer/api/employeer_register/",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        const data = await res.json();
+        console.log("Company API → ", data);
+
+        if (data?.company_name) {
+          setJobForm((prev) => ({
+            ...prev,
+            company: data.company_name,
+          }));
+        }
+      } catch (err) {
+        console.error("Company fetch error:", err);
+      }
+    };
+
+    fetchCompany();
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -1055,6 +1357,7 @@ export default function EmployerDashboard() {
                     <Label className="text-sm font-medium">
                       Job Category *
                     </Label>
+
                     <Select
                       value={selectedCategory}
                       onValueChange={(value) => {
@@ -1067,17 +1370,48 @@ export default function EmployerDashboard() {
                       }}
                     >
                       <SelectTrigger className="mt-1">
-                        <SelectValue placeholder="Select job category" />
+                        <SelectValue placeholder="Select job category">
+                          {jobCategories.find(
+                            (category) =>
+                              category.id?.toString() === selectedCategory
+                          )?.name || "Select job category"}
+                        </SelectValue>
                       </SelectTrigger>
+
                       <SelectContent>
-                        {jobCategories.map((category) => (
-                          <SelectItem
-                            key={category.id}
-                            value={category.id.toString()}
-                          >
-                            {category.name}
-                          </SelectItem>
-                        ))}
+                        <div className="p-2 sticky top-0 bg-white z-10 border-b">
+                          <Input
+                            placeholder="Search category..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="h-8 text-sm"
+                          />
+                        </div>
+
+                        {Array.isArray(jobCategories) &&
+                        jobCategories.length > 0 ? (
+                          jobCategories
+                            .filter((category) => {
+                              if (!searchTerm) return true; 
+                              return category?.name
+                                ?.toLowerCase()
+                                .startsWith(searchTerm.toLowerCase());
+                            })
+                            .map((category) => (
+                              <SelectItem
+                                key={category.id}
+                                value={category.id?.toString()}
+                              >
+                                {category.name}
+                              </SelectItem>
+                            ))
+                        ) : (
+                          <div className="p-2 text-sm text-gray-500">
+                            {jobCategories.length === 0
+                              ? "No categories found"
+                              : "No matching results"}
+                          </div>
+                        )}
                       </SelectContent>
                     </Select>
                   </div>
@@ -1102,15 +1436,39 @@ export default function EmployerDashboard() {
                           }
                         />
                       </SelectTrigger>
+
                       <SelectContent>
-                        {jobTitles.map((title) => (
-                          <SelectItem
-                            key={title.id}
-                            value={title.id.toString()}
-                          >
-                            {title.title}
-                          </SelectItem>
-                        ))}
+                        <div className="p-2 sticky top-0 bg-white z-10 border-b">
+                          <Input
+                            placeholder="Search job title..."
+                            value={searchJobTitle}
+                            onChange={(e) => setSearchJobTitle(e.target.value)}
+                            className="h-8 text-sm"
+                          />
+                        </div>
+
+                        {Array.isArray(jobTitles) && jobTitles.length > 0 ? (
+                          jobTitles
+                            .filter((title) =>
+                              title?.title
+                                ?.toLowerCase()
+                                .startsWith(searchJobTitle.toLowerCase())
+                            )
+                            .map((title) => (
+                              <SelectItem
+                                key={title.id}
+                                value={title.id.toString()}
+                              >
+                                {title.title}
+                              </SelectItem>
+                            ))
+                        ) : (
+                          <div className="p-2 text-sm text-gray-500">
+                            {jobTitles.length === 0
+                              ? "No job titles found"
+                              : "No matching results"}
+                          </div>
+                        )}
                       </SelectContent>
                     </Select>
                   </div>
@@ -1135,24 +1493,60 @@ export default function EmployerDashboard() {
                   </div>
 
                   <div>
-                    <Label className="text-sm font-medium">Location *</Label>
-                    <Select
-                      value={jobForm.location}
-                      onValueChange={(value) =>
-                        setJobForm((prev) => ({ ...prev, location: value }))
-                      }
-                    >
-                      <SelectTrigger className="mt-1">
-                        <SelectValue placeholder="Select location" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {cities.map((city) => (
-                          <SelectItem key={city.id} value={city.id.toString()}>
-                            {city.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Label className="text-sm font-medium">
+                      Job Location *
+                    </Label>
+                    <Popover open={open} onOpenChange={setOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          className="w-full justify-between mt-1 h-10 lg:h-11"
+                        >
+                          {selectedCity || "Select location"}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+
+                      <PopoverContent className="w-full p-0">
+                        <Command>
+                          <CommandInput
+                            placeholder="Search location..."
+                            value={search}
+                            onValueChange={setSearch}
+                          />
+                          <CommandList>
+                            {filteredCities.length === 0 ? (
+                              <CommandEmpty>No location found.</CommandEmpty>
+                            ) : (
+                              <CommandGroup>
+                                {filteredCities
+                                  .filter((city) =>
+                                    city.name
+                                      .toLowerCase()
+                                      .startsWith(search.toLowerCase())
+                                  )
+                                  .map((city) => (
+                                    <CommandItem
+                                      key={city.id}
+                                      onSelect={() => {
+                                        setJobForm((prev: any) => ({
+                                          ...prev,
+                                          location: city.id.toString(),
+                                        }));
+                                        setSearch("");
+                                        setOpen(false);
+                                      }}
+                                    >
+                                      {city.name}
+                                    </CommandItem>
+                                  ))}
+                              </CommandGroup>
+                            )}
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
                   </div>
 
                   <div>
@@ -1180,7 +1574,7 @@ export default function EmployerDashboard() {
 
                   <div>
                     <Label htmlFor="salary" className="text-sm font-medium">
-                      Salary Range (LPA)
+                      Salary Range (PA)
                     </Label>
                     {/* <div className="flex gap-2 mt-1">
                       <Select defaultValue="INR">
@@ -1227,7 +1621,7 @@ export default function EmployerDashboard() {
                             salary: e.target.value,
                           }))
                         }
-                        placeholder="e.g., 5-8 LPA"
+                        placeholder="e.g., 5-8 PA"
                         className="flex-1"
                       />
                     </div>
@@ -1521,6 +1915,20 @@ export default function EmployerDashboard() {
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <CardTitle>Manage Your Jobs</CardTitle>
                 <div className="flex items-center space-x-2">
+                  {/*  Date Filter */}
+                  <Select value={dateFilter} onValueChange={setDateFilter}>
+                    <SelectTrigger className="w-32">
+                      <SelectValue placeholder="Filter by Date" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Date</SelectItem>
+                      <SelectItem value="today">Today</SelectItem>
+                      <SelectItem value="week">This Week</SelectItem>
+                      <SelectItem value="month">This Month</SelectItem>
+                      <SelectItem value="year">This Year</SelectItem>
+                    </SelectContent>
+                  </Select>
+
                   <Select value={jobFilter} onValueChange={setJobFilter}>
                     <SelectTrigger className="w-32">
                       <SelectValue />
@@ -1591,7 +1999,7 @@ export default function EmployerDashboard() {
                             </div>
                             <div className="flex items-center">
                               <Briefcase className="w-4 h-4 mr-1" />
-                              <span>{job.experience}</span>
+                              <span>{job.experience} Years</span>
                             </div>
                             <div className="flex items-center">
                               <DollarSign className="w-4 h-4 mr-1" />
@@ -1606,10 +2014,14 @@ export default function EmployerDashboard() {
                             </div>
                           </div>
                           <div className="flex items-center space-x-6 text-sm">
-                            <div className="flex items-center text-blue-600">
+                            <div
+                              className="flex items-center text-blue-600 cursor-pointer"
+                              onClick={() => handleApplicationsClick(job.id)}
+                            >
                               <Users className="w-4 h-4 mr-1" />
                               <span>{job.applications} Applications</span>
                             </div>
+
                             <div className="flex items-center text-green-600">
                               <Eye className="w-4 h-4 mr-1" />
                               <span>{job.views} Views</span>
@@ -2154,33 +2566,146 @@ export default function EmployerDashboard() {
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-lg">Applications</CardTitle>
-                    <select
-                      value={filter}
-                      onChange={(e) => setFilter(e.target.value)}
-                      className="border border-gray-300 rounded-md px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="All">All</option>
-                      <option value="Shortlisted">Shortlisted</option>
-                      <option value="Rejected">Rejected</option>
-                      <option value="Under Review">Under Review</option>
-                    </select>
                     <Badge variant="secondary">
-                      {filteredCandidates.length}
+                      {filteredCategories.length}
                     </Badge>
-
-                    <Badge variant="secondary">{candidates.length}</Badge>
                   </div>
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <Input
-                      placeholder="Search candidates..."
-                      className="pl-10"
-                    />
+
+                  {/*  Search Bar  */}
+                  <div className="mb-4">
+                    <div className="relative">
+                      <Input
+                        type="text"
+                        placeholder="Search by name, role or applied job..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full h-11 pl-10"
+                      />
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M21 21l-4.35-4.35M11 18a7 7 0 100-14 7 7 0 000 14z"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+
+                  {/*  Filters */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                    {/*  Status Filter */}
+                    <Select
+                      value={statusFilter}
+                      onValueChange={setStatusFilter}
+                    >
+                      <SelectTrigger className="w-full h-10">
+                        <SelectValue placeholder="Status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="All">All Status</SelectItem>
+                        <SelectItem value="Under Review">
+                          Under Review
+                        </SelectItem>
+                        <SelectItem value="Shortlisted">Shortlisted</SelectItem>
+                        <SelectItem value="Rejected">Rejected</SelectItem>
+                      </SelectContent>
+                    </Select>
+
+                    {/* Location Filter */}
+                    <Select
+                      value={locationFilter}
+                      onValueChange={setLocationFilter}
+                    >
+                      <SelectTrigger className="w-full h-10">
+                        <SelectValue placeholder="Location" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="All">All Locations</SelectItem>
+                        {Array.from(new Set(candidates.map((c) => c.location)))
+                          .filter(Boolean)
+                          .map((loc, i) => (
+                            <SelectItem key={i} value={loc}>
+                              {loc}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                    {/*  Salary Filter */}
+                    <Select
+                      value={salaryFilter}
+                      onValueChange={setSalaryFilter}
+                    >
+                      <SelectTrigger className="w-full h-10">
+                        <SelectValue placeholder="Salary" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="All">All Salaries</SelectItem>
+                        <SelectItem value="Below 20000">
+                          Below ₹20,000
+                        </SelectItem>
+                        <SelectItem value="20000-50000">
+                          ₹20,000–₹50,000
+                        </SelectItem>
+                        <SelectItem value="Above 50000">
+                          Above ₹50,000
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+
+                    {/* Experience Filter */}
+                    <Select
+                      value={experienceFilter}
+                      onValueChange={setExperienceFilter}
+                    >
+                      <SelectTrigger className="w-full h-10">
+                        <SelectValue placeholder="Experience" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="All">All Experience</SelectItem>
+                        <SelectItem value="Fresher">Fresher</SelectItem>
+                        <SelectItem value="1-3 Years">1–3 Years</SelectItem>
+                        <SelectItem value="3-5 Years">3–5 Years</SelectItem>
+                        <SelectItem value="5+ Years">5+ Years</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                    <Select
+                      value={jobTitleFilter}
+                      onValueChange={setJobTitleFilter}
+                    >
+                      <SelectTrigger className="w-full h-10">
+                        <SelectValue placeholder="Job Title" />
+                      </SelectTrigger>
+
+                      <SelectContent>
+                        <SelectItem value="All">All Job Titles</SelectItem>
+
+                        {Array.from(
+                          new Set(candidates.map((c) => c.appliedFor))
+                        )
+                          .filter(Boolean)
+                          .map((title, i) => (
+                            <SelectItem key={i} value={title}>
+                              {title}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </CardHeader>
                 <CardContent className="p-0">
-                  <div className="space-y-1">
-                    {candidates.map((candidate) => (
+                  {/* {candidates.map((candidate) => (
                       <div
                         key={candidate.id}
                         onClick={() => {
@@ -2224,8 +2749,58 @@ export default function EmployerDashboard() {
                           </div>
                         </div>
                       </div>
-                    ))}
-                  </div>
+                    ))} */}
+
+                  {filteredCategories.length > 0 ? (
+                    filteredCategories.map((candidate) => (
+                      <div
+                        key={candidate.id}
+                        onClick={() => {
+                          setSelectedCandidate(candidate);
+                          setIsCandidateModalOpen(true);
+                        }}
+                        className={`p-4 cursor-pointer hover:bg-gray-50 border-l-4 transition-colors ${
+                          selectedCandidate?.id === candidate.id
+                            ? "border-l-blue-500 bg-blue-50"
+                            : "border-l-transparent"
+                        }`}
+                      >
+                        <div className="flex items-start space-x-3">
+                          <div className="w-10 h-10 bg-gradient-to-br from-purple-100 to-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                            <Users className="w-5 h-5 text-purple-600" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-medium text-gray-900 truncate">
+                              {candidate.name}
+                            </h4>
+                            <p className="text-sm text-gray-600 truncate">
+                              {candidate.currentRole}
+                            </p>
+                            <p className="text-sm text-gray-500 truncate">
+                              {candidate.appliedFor}
+                            </p>
+                            <div className="flex items-center justify-between mt-2">
+                              <Badge
+                                className={`text-xs ${getStatusColor(
+                                  candidate.status
+                                )}`}
+                              >
+                                {candidate.status}
+                              </Badge>
+                              <span className="text-xs text-gray-500">
+                                {new Date(
+                                  candidate.appliedDate
+                                ).toLocaleDateString()}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-gray-500 text-sm">No candidates found</p>
+                  )}
+                  <div className="flex flex-wrap gap-3 mb-4 items-center"></div>
                 </CardContent>
               </Card>
             </div>
@@ -2303,7 +2878,10 @@ export default function EmployerDashboard() {
                         </div>
                         <div className="flex items-center">
                           <Phone className="w-4 h-4 mr-2 text-gray-400" />
-                          <span>{selectedCandidate.phone}</span>
+                          <span>
+                            +{selectedCandidate.phoneCode}
+                            {selectedCandidate.phone}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -2488,40 +3066,190 @@ export default function EmployerDashboard() {
 
                     {/* Action Buttons */}
                     <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t">
-                      {/* <Button className="bg-green-600 hover:bg-green-700 flex-1">
-                        <CheckCircle className="w-4 h-4 mr-2" />
-                        Shortlist Candidate
-                      </Button>
-                      <Button
-                        variant="outline"
-                        className="border-red-600 text-red-600 hover:bg-red-50 flex-1"
-                      >
-                        <XCircle className="w-4 h-4 mr-2" />
-                        Reject Application
-                      </Button> */}
-                      <Button
-                        className="bg-green-600 hover:bg-green-700 flex-1"
-                        onClick={() =>
-                          handleShortlistCandidate(selectedCandidate)
-                        }
-                      >
-                        <CheckCircle className="w-4 h-4 mr-2" />
-                        Shortlist Candidate
-                      </Button>
+                      <div className="flex flex-col sm:flex-row gap-3 mt-4">
+                        {/* UNDER REVIEW */}
+                        {selectedCandidate?.status === "Under Review" && (
+                          <>
+                            <Button
+                              className="bg-green-600 hover:bg-green-700 flex-1"
+                              onClick={() =>
+                                handleShortlistCandidate(selectedCandidate)
+                              }
+                            >
+                              <CheckCircle className="w-4 h-4 mr-2" />
+                              Shortlist Candidate
+                            </Button>
 
-                      <Button
-                        variant="outline"
-                        className="border-red-600 text-red-600 hover:bg-red-50 flex-1"
-                        onClick={() => handleRejectCandidate(selectedCandidate)}
-                      >
-                        <XCircle className="w-4 h-4 mr-2" />
-                        Reject Application
-                      </Button>
+                            <Button
+                              variant="outline"
+                              className="border-red-600 text-red-600 hover:bg-red-50 flex-1"
+                              onClick={() =>
+                                handleRejectCandidate(selectedCandidate)
+                              }
+                            >
+                              <XCircle className="w-4 h-4 mr-2" />
+                              Reject Application
+                            </Button>
+                          </>
+                        )}
 
-                      <Button variant="outline" className="flex-1">
-                        <ExternalLink className="w-4 h-4 mr-2" />
-                        Schedule Interview
-                      </Button>
+                        {/* SHORTLISTED */}
+                        {selectedCandidate?.status === "shortlisted" && (
+                          <Button
+                            variant="outline"
+                            className="flex-1 border-blue-600 text-blue-600"
+                            onClick={() =>
+                              handleScheduleInterview(selectedCandidate)
+                            }
+                          >
+                            <ExternalLink className="w-4 h-4 mr-2" />
+                            Schedule Interview
+                          </Button>
+                        )}
+
+                        {/* REJECTED */}
+                        {selectedCandidate?.status === "Rejected" && (
+                          <Button
+                            disabled
+                            variant="outline"
+                            className="border-red-600 text-red-600 flex-1 opacity-50 cursor-not-allowed"
+                          >
+                            <XCircle className="w-4 h-4 mr-2" />
+                            Application Rejected
+                          </Button>
+                        )}
+                      </div>
+
+                      {openSchedule && (
+                        <Dialog
+                          open={openSchedule}
+                          onOpenChange={() => setOpenSchedule(false)}
+                        >
+                          <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto rounded-xl">
+                            <DialogHeader>
+                              <DialogTitle className="text-lg font-semibold">
+                                Schedule Interview
+                              </DialogTitle>
+                            </DialogHeader>
+
+                            <div className="space-y-4 mt-3">
+                              {/* Candidate Name */}
+                              <div className="bg-gray-50 p-3 rounded-lg border">
+                                <p className="text-xs text-gray-500">
+                                  Candidate
+                                </p>
+                                <p className="font-semibold text-gray-800">
+                                  {selectedCandidate?.name}
+                                </p>
+                              </div>
+
+                              {/* Candidate Email */}
+                              <div className="bg-gray-50 p-3 rounded-lg border">
+                                <p className="text-xs text-gray-500">Email</p>
+                                <p className="font-semibold text-gray-800">
+                                  {selectedCandidate?.email}
+                                </p>
+                              </div>
+
+                              {/* Date */}
+                              <div>
+                                <label className="text-sm font-medium">
+                                  Interview Date
+                                </label>
+                                <input
+                                  type="date"
+                                  className="w-full border rounded-lg p-2 mt-1 focus:ring-2 focus:ring-blue-500"
+                                  value={interviewDate}
+                                  onChange={(e) =>
+                                    setInterviewDate(e.target.value)
+                                  }
+                                />
+                              </div>
+
+                              {/* Time */}
+                              <div className="flex space-x-2">
+                                <label className="text-sm font-medium">
+                                  Interview Time
+                                </label>
+                                <input
+                                  type="number"
+                                  min="1"
+                                  max="12"
+                                  value={hour}
+                                  onChange={(e) => setHour(e.target.value)}
+                                  className="w-16 border rounded-lg p-2"
+                                />
+                                <span>:</span>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  max="59"
+                                  value={minute}
+                                  onChange={(e) => setMinute(e.target.value)}
+                                  className="w-16 border rounded-lg p-2"
+                                />
+                                <select
+                                  value={ampm}
+                                  onChange={(e) => setAmPm(e.target.value)}
+                                  className="border rounded-lg p-2"
+                                >
+                                  <option>AM</option>
+                                  <option>PM</option>
+                                </select>
+                              </div>
+
+                              {/* Mode */}
+                              <div>
+                                <label className="text-sm font-medium">
+                                  Interview Mode
+                                </label>
+                                <select
+                                  className="w-full border rounded-lg p-2 mt-1 focus:ring-2 focus:ring-blue-500"
+                                  value={interviewMode}
+                                  onChange={(e) =>
+                                    setInterviewMode(e.target.value)
+                                  }
+                                >
+                                  <option>Online</option>
+                                  <option>Office</option>
+                                  <option>Phone Call</option>
+                                </select>
+                              </div>
+
+                              {/* Notes */}
+                              <div className="mt-4">
+                                <p className="text-sm text-gray-700 mb-1">
+                                  Google Meet link
+                                </p>
+                                <textarea
+                                  className="w-full border rounded-md p-2 text-sm focus:ring-2 focus:ring-blue-500"
+                                  rows={3}
+                                  placeholder="Enter interview instructions or notes..."
+                                  value={interviewNotes}
+                                  onChange={(e) =>
+                                    setInterviewNotes(e.target.value)
+                                  }
+                                />
+                              </div>
+                            </div>
+
+                            <DialogFooter className="mt-3">
+                              <Button
+                                variant="outline"
+                                onClick={() => setOpenSchedule(false)}
+                              >
+                                Cancel
+                              </Button>
+                              <Button
+                                className="bg-blue-600 hover:bg-blue-700"
+                                onClick={handleScheduleSubmit}
+                              >
+                                Schedule
+                              </Button>
+                            </DialogFooter>
+                          </DialogContent>
+                        </Dialog>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
