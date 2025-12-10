@@ -507,19 +507,7 @@ const unsaveJob = async (jobId: number) => {
     }
   };
 
-  const fetchUserData = async () => {
-    setLoadingUserData(true);
-    try {
-      const token = localStorage.getItem("auth_token");
-      const response = await fetch(
-        "https://jobseeker-backend-jy1y.onrender.com/api/profile/",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+  
 
 
 const fetchUserData = async () => {
