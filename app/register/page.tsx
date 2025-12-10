@@ -98,6 +98,15 @@ export default function Register() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+  try {
+    const response = await fetch('https://jobseeker-backend-jy1y.onrender.com/api/register/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+      credentials: 'include',
+    });
 
     const data = {
       full_name: fullName,
@@ -148,26 +157,56 @@ export default function Register() {
   }
 };
 
-const handlesendotp = async(email: string) =>{
-   const response = await fetch('',{
-    method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(email),
-   })
-   
-   if (!response.ok){
-    throw new Error('Error in sending OTP');
-   }
+const handlesendotp = async () => {
+  try {
+    const res = await fetch("https://jobseeker-backend-jy1y.onrender.com/api/send_otp/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+      credentials: "include",
+    });
 
-   const data = await response.json()
-   console.log(data)
-}
+    const data = await res.json();
 
-const handleVerifyOTP = async() =>{
-  
-}
+    if (!res.ok) {
+      alert(data.error || "Failed to send OTP");
+      return;
+    }
+
+    alert("OTP sent to your email");
+    setIsOtpOpen(true);
+
+  } catch (err) {
+    console.error(err);
+    alert("Something went wrong while sending OTP");
+  }
+};
+
+
+const handleVerifyOTP = async () => {
+  try {
+    const res = await fetch("https://jobseeker-backend-jy1y.onrender.com/api/verify-otp/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, otp }),
+      credentials: "include",
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      alert(data.error || "Invalid OTP");
+      return;
+    }
+
+    setIsOtpVerified(true);
+    setIsOtpOpen(false);
+    alert("OTP Verified Successfully!");
+
+  } catch (err) {
+    console.error(err);
+  }
+};
 
   useEffect(() => {
     const fetchCountries = async () => {
@@ -625,6 +664,7 @@ const handleVerifyOTP = async() =>{
                     onClick={() => {
                       if(email.includes('@')){
                         setIsOtpOpen(true)
+                        handlesendotp(email)
                       }
                       if(!email.includes('@')){
                         alert("Email Must include @ .")
@@ -676,7 +716,7 @@ const handleVerifyOTP = async() =>{
                     onChange={(e) => setMobile(e.target.value)}
 
                   />
-                  <Button
+                  {/* <Button
                     type="button"
 
 //changes here for otp of mobile number
@@ -687,7 +727,7 @@ const handleVerifyOTP = async() =>{
                     className="mt-2 bg-indigo-600 text-white"
                   >
                     Verify OTP
-                  </Button>
+                  </Button> */}
                 </div>
                 <p className="text-xs text-gray-500 mt-1">
                   Recruiters will contact you on this number
@@ -899,34 +939,7 @@ const handleVerifyOTP = async() =>{
 
     <button
       className="w-full bg-indigo-600 text-white py-3 rounded-xl"
-      onClick={()=>
-        //async () => {
-      //   try {
-      //     const res = await fetch("http://127.0.0.1:8010/api/verify-otp/", {
-      //       method: "POST",
-      //       headers: { "Content-Type": "application/json" },
-      //       body: JSON.stringify({ email, otp }),
-      //     });
-
-      //     const data = await res.json();
-
-      //     if (!res.ok) {
-      //       alert(data.error || "Invalid OTP");
-      //       return;
-      //     }
-
-      //     // OTP Success
-      //     setIsOtpVerified(true);
-      //     setIsOtpOpen(false);
-      //     alert("OTP Verified Successfully!");
-
-      //   } catch (err) {
-      //     console.error(err);
-      //   }
-      // }
-      console.log(otp)
-      }
-    >
+      onClick={()=> handleVerifyOTP()}>
       Verify
     </button>
 
