@@ -553,12 +553,15 @@ export default function Profile() {
     const fetchSavedJobs = async () => {
       const token = localStorage.getItem("auth_token");
       if (!token) return;
-  
+
       try {
-        const res = await fetch("https://jobseeker-backend-jy1y.onrender.com/api/saved-jobs-all/", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-  
+        const res = await fetch(
+          "https://jobseeker-backend-jy1y.onrender.com/api/saved-jobs-all/",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
         if (res.ok) {
           const data = await res.json();
           console.log("Saved jobs data:", data);
@@ -570,10 +573,9 @@ export default function Profile() {
         console.error("Error fetching saved jobs:", err);
       }
     };
-  
+
     fetchSavedJobs();
   }, []);
-
 
   useEffect(() => {
     fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/currencies/")
@@ -1121,7 +1123,7 @@ export default function Profile() {
               {/* Desktop Navigation Tabs */}
               <div className="hidden lg:block bg-white rounded-lg shadow-sm mb-6 overflow-x-auto">
                 <div className="flex border-b">
-                <div className="flex border-b relative">
+                  <div className="flex border-b relative">
                     {sections.map((tab) => {
                       const IconComponent = tab.icon;
 
@@ -1129,38 +1131,47 @@ export default function Profile() {
                       if (tab.id === "save") {
                         return (
                           <div key={tab.id} className="relative group">
-                          <button
-                            className={`flex items-center space-x-2 px-4 xl:px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
-                              ["SavedJobs", "AppliedJobs"].includes(activeSection)
-                                ? "border-purple-600 text-purple-600"
-                                : "border-transparent text-gray-600 hover:text-purple-600"
-                            }`}
-                          >
-                            <IconComponent className="w-4 h-4" />
-                            <span className="hidden xl:inline">{tab.label}</span>
-                          </button>
-                        
-                          {/* 👇 fixed dropdown - detached from clipped container */}
-                          <div
-                            className="hidden group-hover:block fixed bg-white border border-gray-200 rounded-lg shadow-lg w-56 z-[9999] mt-1"
-                            style={{ transform: "translateX(-10px)", top: "70px" }}
-                          >
-                            <ul className="text-sm text-gray-700">
-                              <li
-                                onClick={() => setActiveSection("SavedJobs")}
-                                className="px-4 py-2 hover:bg-purple-50 cursor-pointer"
-                              >
-                                Saved Jobs
-                              </li>
-                              <li
-                                onClick={() => setActiveSection("AppliedJobs")}
-                                className="px-4 py-2 hover:bg-purple-50 cursor-pointer"
-                              >
-                                Applied Jobs
-                              </li>
-                            </ul>
+                            <button
+                              className={`flex items-center space-x-2 px-4 xl:px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                                ["SavedJobs", "AppliedJobs"].includes(
+                                  activeSection
+                                )
+                                  ? "border-purple-600 text-purple-600"
+                                  : "border-transparent text-gray-600 hover:text-purple-600"
+                              }`}
+                            >
+                              <IconComponent className="w-4 h-4" />
+                              <span className="hidden xl:inline">
+                                {tab.label}
+                              </span>
+                            </button>
+
+                            {/* 👇 fixed dropdown - detached from clipped container */}
+                            <div
+                              className="hidden group-hover:block fixed bg-white border border-gray-200 rounded-lg shadow-lg w-56 z-[9999] mt-1"
+                              style={{
+                                transform: "translateX(-10px)",
+                                top: "70px",
+                              }}
+                            >
+                              <ul className="text-sm text-gray-700">
+                                <li
+                                  onClick={() => setActiveSection("SavedJobs")}
+                                  className="px-4 py-2 hover:bg-purple-50 cursor-pointer"
+                                >
+                                  Saved Jobs
+                                </li>
+                                <li
+                                  onClick={() =>
+                                    setActiveSection("AppliedJobs")
+                                  }
+                                  className="px-4 py-2 hover:bg-purple-50 cursor-pointer"
+                                >
+                                  Applied Jobs
+                                </li>
+                              </ul>
+                            </div>
                           </div>
-                        </div>
                         );
                       }
 
@@ -1177,12 +1188,13 @@ export default function Profile() {
                         >
                           <IconComponent className="w-4 h-4" />
                           <span className="hidden xl:inline">{tab.label}</span>
-                          <span className="xl:hidden">{tab.label.split(" ")[0]}</span>
+                          <span className="xl:hidden">
+                            {tab.label.split(" ")[0]}
+                          </span>
                         </button>
                       );
                     })}
                   </div>
-
                 </div>
               </div>
 
@@ -1283,26 +1295,7 @@ export default function Profile() {
   />
 </div> */}
 
-                      {/* <div>
-                        <Label htmlFor="phone" className="text-sm font-medium">
-                          Phone Number *
-                        </Label>
-                        <Input
-                          id="phone"
-                          value={profileData.personalInfo.phone}
-                          onChange={(e) =>
-                            setProfileData((prev) => ({
-                              ...prev,
-                              personalInfo: {
-                                ...prev.personalInfo,
-                                phone: e.target.value,
-                              },
-                            }))
-                          }
-                          className="mt-1 h-10 lg:h-11"
-                          required={true}
-                        />
-                      </div> */}
+                     
                       <div>
                         <Label htmlFor="phone" className="text-sm font-medium">
                           Phone Number *
@@ -1310,6 +1303,7 @@ export default function Profile() {
                         <div className="flex gap-2 mt-1">
                           <Select
                             value={profileData.personalInfo.phoneCode || "+91"}
+                            disabled
                             onValueChange={(value) =>
                               setProfileData((prev) => ({
                                 ...prev,
@@ -1392,6 +1386,7 @@ export default function Profile() {
                                           countryId: country.id,
                                           stateId: "",
                                           cityId: "",
+                                          phoneCode: country.phonecode,
                                         },
                                       }));
                                     }}
@@ -2579,136 +2574,145 @@ export default function Profile() {
                 </Card>
               )}
 
-{activeSection === "SavedJobs" && (
-  <Card>
-    <CardHeader>
-      <CardTitle className="flex items-center gap-2 text-lg lg:text-xl">
-        <Bookmark className="w-5 h-5" />
-        <span>Saved Jobs</span>
-      </CardTitle>
-    </CardHeader>
+              {activeSection === "SavedJobs" && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-lg lg:text-xl">
+                      <Bookmark className="w-5 h-5" />
+                      <span>Saved Jobs</span>
+                    </CardTitle>
+                  </CardHeader>
 
-    <CardContent>
-      {savedJobsData.length > 0 ? (
-        savedJobsData.map((savedJob) => (
-          <div
-            key={savedJob.id}
-            className="border rounded-lg p-4 mb-4 hover:shadow-md transition-shadow"
-          >
-            <div className="flex justify-between items-start">
-              <div>
-                <h3 className="font-semibold text-base lg:text-lg text-gray-900">
-                  {savedJob.job_title || "No title"}
-                </h3>
-                <p className="text-purple-600 font-medium text-sm">
-                  {savedJob.job?.company || "Unknown Company"}
-                </p>
-                <p className="text-gray-600 text-xs">
-                  {savedJob.job?.location?.name || "Location not available"}
-                </p>
-              </div>
+                  <CardContent>
+                    {savedJobsData.length > 0 ? (
+                      savedJobsData.map((savedJob) => (
+                        <div
+                          key={savedJob.id}
+                          className="border rounded-lg p-4 mb-4 hover:shadow-md transition-shadow"
+                        >
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h3 className="font-semibold text-base lg:text-lg text-gray-900">
+                                {savedJob.job_title || "No title"}
+                              </h3>
+                              <p className="text-purple-600 font-medium text-sm">
+                                {savedJob.job?.company || "Unknown Company"}
+                              </p>
+                              <p className="text-gray-600 text-xs">
+                                {savedJob.job?.location?.name ||
+                                  "Location not available"}
+                              </p>
+                            </div>
 
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={async () => {
-                  const token = localStorage.getItem("auth_token");
-                  if (!token) return;
-                  try {
-                    const res = await fetch(
-                      `https://jobseeker-backend-jy1y.onrender.com/api/saved-jobs/${savedJob.id}/`,
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={async () => {
+                                const token =
+                                  localStorage.getItem("auth_token");
+                                if (!token) return;
+                                try {
+                                  const res = await fetch(
+                                    `https://jobseeker-backend-jy1y.onrender.com/api/saved-jobs/${savedJob.id}/`,
+                                    {
+                                      method: "DELETE",
+                                      headers: {
+                                        Authorization: `Bearer ${token}`,
+                                      },
+                                    }
+                                  );
+                                  if (res.ok) {
+                                    setSavedJobsData((prev) =>
+                                      prev.filter((j) => j.id !== savedJob.id)
+                                    );
+                                  }
+                                } catch (err) {
+                                  console.error(
+                                    "Error deleting saved job:",
+                                    err
+                                  );
+                                }
+                              }}
+                              className="text-red-500 border-red-200 hover:bg-red-50"
+                            >
+                              <BookmarkX className="w-4 h-4 mr-2" />
+                              Remove
+                            </Button>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-gray-500 text-sm">
+                        No saved jobs yet.
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
+              {activeSection === "AppliedJobs" && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-lg lg:text-xl">
+                      <Bookmark className="w-5 h-5" />
+                      <span>Applied Jobs</span>
+                    </CardTitle>
+                  </CardHeader>
+
+                  <CardContent>
+                    {[
                       {
-                        method: "DELETE",
-                        headers: { Authorization: `Bearer ${token}` },
-                      }
-                    );
-                    if (res.ok) {
-                      setSavedJobsData((prev) =>
-                        prev.filter((j) => j.id !== savedJob.id)
-                      );
-                    }
-                  } catch (err) {
-                    console.error("Error deleting saved job:", err);
-                  }
-                }}
-                className="text-red-500 border-red-200 hover:bg-red-50"
-              >
-                <BookmarkX className="w-4 h-4 mr-2" />
-                Remove
-              </Button>
-            </div>
-          </div>
-        ))
-      ) : (
-        <p className="text-gray-500 text-sm">No saved jobs yet.</p>
-      )}
-    </CardContent>
-  </Card>
-)}
+                        id: 1,
+                        job_title: "Backend Developer",
+                        job: {
+                          company: "TechNova Pvt. Ltd.",
+                          location: { name: "Bangalore" },
+                        },
+                      },
+                      {
+                        id: 2,
+                        job_title: "Full Stack Engineer",
+                        job: {
+                          company: "NextCore Technologies",
+                          location: { name: "Hyderabad" },
+                        },
+                      },
+                      {
+                        id: 3,
+                        job_title: "Data Engineer",
+                        job: {
+                          company: "Cloudify Systems",
+                          location: { name: "Remote" },
+                        },
+                      },
+                    ].map((appliedJob) => (
+                      <div
+                        key={appliedJob.id}
+                        className="border rounded-lg p-4 mb-4 hover:shadow-md transition-shadow"
+                      >
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h3 className="font-semibold text-base lg:text-lg text-gray-900">
+                              {appliedJob.job_title}
+                            </h3>
+                            <p className="text-purple-600 font-medium text-sm">
+                              {appliedJob.job.company}
+                            </p>
+                            <p className="text-gray-600 text-xs">
+                              {appliedJob.job.location.name}
+                            </p>
+                          </div>
+                          <div className="text-green-600 text-xs font-medium bg-green-50 px-3 py-1 rounded-full">
+                            Applied
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              )}
 
-{activeSection === "AppliedJobs" && (
-  <Card>
-    <CardHeader>
-      <CardTitle className="flex items-center gap-2 text-lg lg:text-xl">
-        <Bookmark className="w-5 h-5" />
-        <span>Applied Jobs</span>
-      </CardTitle>
-    </CardHeader>
-
-    <CardContent>
-      {[
-        {
-          id: 1,
-          job_title: "Backend Developer",
-          job: {
-            company: "TechNova Pvt. Ltd.",
-            location: { name: "Bangalore" },
-          },
-        },
-        {
-          id: 2,
-          job_title: "Full Stack Engineer",
-          job: {
-            company: "NextCore Technologies",
-            location: { name: "Hyderabad" },
-          },
-        },
-        {
-          id: 3,
-          job_title: "Data Engineer",
-          job: {
-            company: "Cloudify Systems",
-            location: { name: "Remote" },
-          },
-        },
-      ].map((appliedJob) => (
-        <div
-          key={appliedJob.id}
-          className="border rounded-lg p-4 mb-4 hover:shadow-md transition-shadow"
-        >
-          <div className="flex justify-between items-start">
-            <div>
-              <h3 className="font-semibold text-base lg:text-lg text-gray-900">
-                {appliedJob.job_title}
-              </h3>
-              <p className="text-purple-600 font-medium text-sm">
-                {appliedJob.job.company}
-              </p>
-              <p className="text-gray-600 text-xs">
-                {appliedJob.job.location.name}
-              </p>
-            </div>
-            <div className="text-green-600 text-xs font-medium bg-green-50 px-3 py-1 rounded-full">
-              Applied
-            </div>
-          </div>
-        </div>
-      ))}
-    </CardContent>
-  </Card>
-)}
-
-{/* {activeSection === "save" && (
+              {/* {activeSection === "save" && (
   <Card>
     <CardHeader>
       <CardTitle className="flex items-center gap-2 text-lg lg:text-xl">
@@ -2774,7 +2778,6 @@ export default function Profile() {
     </CardContent>
   </Card>
 )} */}
-
             </div>
           </div>
         </div>
