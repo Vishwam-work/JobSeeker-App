@@ -321,8 +321,6 @@ export default function EmployerDashboard() {
   const [currency, setCurrency] = useState([]);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-
-
   useEffect(() => {
     const token = localStorage.getItem("auth_token");
     console.log("LOG TOKEN:", token);
@@ -419,26 +417,26 @@ export default function EmployerDashboard() {
     fetchApplications();
   }, []);
 
-   const exportToExcel = async () => {
-  const XLSX = await import("xlsx");
+  const exportToExcel = async () => {
+    const XLSX = await import("xlsx");
 
-  const data = filteredCategories.map((c) => ({
-    name: c.name || "",
-    email: c.email || "",
-    phone: `+${c.phoneCode}${c.phone}` || "",
-    appliedFor: c.appliedFor || c.job_title || "",
-    status: c.status || "",
-    experience: c.experience || "",
-    location: c.location || "",
-  }));
+    const data = filteredCategories.map((c) => ({
+      name: c.name || "",
+      email: c.email || "",
+      phone: `+${c.phoneCode}${c.phone}` || "",
+      appliedFor: c.appliedFor || c.job_title || "",
+      status: c.status || "",
+      experience: c.experience || "",
+      location: c.location || "",
+    }));
 
-  const ws = XLSX.utils.json_to_sheet(data);
-  const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
 
-  XLSX.utils.book_append_sheet(wb, ws, "Candidates");
+    XLSX.utils.book_append_sheet(wb, ws, "Candidates");
 
-  XLSX.writeFile(wb, "filtered_candidates.xlsx");
-};
+    XLSX.writeFile(wb, "filtered_candidates.xlsx");
+  };
   const fetchPostedJobs = async () => {
     try {
       const token = localStorage.getItem("auth_token");
@@ -1552,6 +1550,7 @@ export default function EmployerDashboard() {
                     <Label className="text-sm font-medium">
                       Job Location *
                     </Label>
+
                     <Popover open={open} onOpenChange={setOpen}>
                       <PopoverTrigger asChild>
                         <Button
@@ -1586,10 +1585,13 @@ export default function EmployerDashboard() {
                                     <CommandItem
                                       key={city.id}
                                       onSelect={() => {
+                                        setSelectedCity(city.name);
+
                                         setJobForm((prev: any) => ({
                                           ...prev,
                                           location: city.id.toString(),
                                         }));
+
                                         setSearch("");
                                         setOpen(false);
                                       }}
