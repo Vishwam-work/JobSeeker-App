@@ -727,8 +727,80 @@ export default function EmployerDashboard() {
       job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       job.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
       job.location?.name.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesFilter && matchesSearch;
+    let matchesDate = true;
+    if (dateFilter !== "all" && job.created_at) {
+      const jobDate = new Date(job.created_at);
+      const now = new Date();
+
+      if (dateFilter === "today") {
+        matchesDate = jobDate.toDateString() === now.toDateString();
+      } else if (dateFilter === "week") {
+        const weekAgo = new Date();
+        weekAgo.setDate(now.getDate() - 7);
+        matchesDate = jobDate >= weekAgo;
+      } else if (dateFilter === "month") {
+        const monthAgo = new Date();
+        monthAgo.setMonth(now.getMonth() - 1);
+        matchesDate = jobDate >= monthAgo;
+      }
+    }
+    return matchesFilter && matchesSearch && matchesDate;
   });
+  const filteredCategories = candidates.filter((c) => {
+    const nameMatch =
+      c.name?.toLowerCase().startsWith(searchTerm.toLowerCase()) ||
+      c.currentRole?.toLowerCase().startsWith(searchTerm.toLowerCase()) ||
+      c.appliedFor?.toLowerCase().startsWith(searchTerm.toLowerCase());
+
+    const statusMatch =
+      statusFilter === "All" ||
+      c.status?.toLowerCase() === statusFilter.toLowerCase();
+
+    const locationMatch =
+      locationFilter === "All" ||
+      c.location?.toLowerCase() === locationFilter.toLowerCase();
+
+    const jobTitleMatch =
+      jobTitleFilter === "All" ||
+      c.appliedFor?.toLowerCase() === jobTitleFilter.toLowerCase();
+
+    const salary = parseInt(c.expectedSalary) || 0;
+    const salaryMatch =
+      salaryFilter === "All" ||
+      (salaryFilter === "Below 20000" && salary < 20000) ||
+      (salaryFilter === "20000-50000" && salary >= 20000 && salary <= 50000) ||
+      (salaryFilter === "Above 50000" && salary > 50000);
+
+    const expMatch =
+      experienceFilter === "All" ||
+      (experienceFilter === "Fresher" &&
+        (c.experience?.toLowerCase().includes("fresher") ||
+          c.experience?.includes("0"))) ||
+      (experienceFilter === "1-3 Years" &&
+        (c.experience?.includes("1") ||
+          c.experience?.includes("2") ||
+          c.experience?.includes("3"))) ||
+      (experienceFilter === "3-5 Years" &&
+        (c.experience?.includes("3") ||
+          c.experience?.includes("4") ||
+          c.experience?.includes("5"))) ||
+      (experienceFilter === "5+ Years" &&
+        (c.experience?.includes("5") ||
+          c.experience?.includes("6") ||
+          c.experience?.includes("7")));
+
+    return (
+      nameMatch &&
+      statusMatch &&
+      locationMatch &&
+      salaryMatch &&
+      expMatch &&
+      jobTitleMatch
+    );
+  });
+  const filteredCities = cities.filter((city) =>
+    city.name.toLowerCase().startsWith(searchTerm.toLowerCase())
+  );
 
     const handleViewJob = async (job) => {
       try {
