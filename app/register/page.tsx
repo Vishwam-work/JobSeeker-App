@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import Header from '@/components/Header';
 import {
   Chrome,
   CheckCircle,
@@ -15,15 +14,18 @@ import {
   Phone,
   User,
   Search,
-  Bell,
+  ArrowRight,
 } from "lucide-react";
+
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+
 import {
   Popover,
   PopoverTrigger,
   PopoverContent,
 } from "@/components/ui/popover";
+
 import {
   Command,
   CommandInput,
@@ -38,75 +40,103 @@ import {
   InputOTPGroup,
   InputOTPSeparator,
   InputOTPSlot,
-} from "@/components/ui/input-otp"
-
+} from "@/components/ui/input-otp";
 
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  InputOTP,
-  InputOTPGroup,
-  InputOTPSeparator,
-  InputOTPSlot,
-} from "@/components/ui/input-otp"
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-
-
 
 export default function Register() {
+  const router = useRouter();
+
+  // Form states
   const [workStatus, setWorkStatus] = useState("");
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [mobile, setMobile] = useState("");
   const [receivePromotions, setReceivePromotions] = useState(false);
-  const router = useRouter();
+
+  // Country / Phone
   const [countries, setCountries] = useState<any[]>([]);
-  const [phoneCode, setPhoneCode] = useState("");
-  const [countrySearch, setCountrySearch] = useState("");
   const [countryOpen, setCountryOpen] = useState(false);
-  const [selectedCountry, setSelectedCountry] = useState<number | null>(null);
+  const [countrySearch, setCountrySearch] = useState("");
+  const [phoneCode, setPhoneCode] = useState("");
+
   const [profileData, setProfileData] = useState({
     personalInfo: {
       countryId: "",
-      stateId: "",
-      cityId: "",
       phone: "",
     },
   });
-  
-  // Verification States: 'idle' | 'sending' | 'sent' | 'verifying' | 'verified'
-  const [emailStatus, setEmailStatus] = useState('idle');
-  const [phoneStatus, setPhoneStatus] = useState('idle');
-  const [isEmailOtp, setisEmailOtp] = useState(false);
+
+  // OTP Modal
+  const [isOtpOpen, setIsOtpOpen] = useState(false);
   const [otp, setOtp] = useState("");
   const [isOtpVerified, setIsOtpVerified] = useState(false);
-  
-  const router = useRouter();
 
-  const handleRegister = async (e: React.FormEvent) => {
-  e.preventDefault();
+  // ----------------------------
+  // SEND OTP
+  // ----------------------------
+  const handlesendotp = async () => {
+    try {
+      const res = await fetch(
+        "https://jobseeker-backend-jy1y.onrender.com/api/send_otp/",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email }),
+        }
+      );
 
-  const [emailOtp, setEmailOtp] = useState(['', '', '', '']);
-  const [phoneOtp, setPhoneOtp] = useState(['', '', '', '']);
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || "Failed to send OTP");
+        return;
+      }
 
+      setIsOtpOpen(true);
+      alert("OTP Sent Successfully");
+    } catch (error) {
+      console.error(error);
+      alert("Something went wrong");
+    }
+  };
+
+  // ----------------------------
+  // VERIFY OTP
+  // ----------------------------
+  const handleVerifyOTP = async () => {
+    try {
+      const res = await fetch(
+        "https://jobseeker-backend-jy1y.onrender.com/api/verify-otp/",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, otp }),
+        }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.error || "Invalid OTP");
+        return;
+      }
+
+      setIsOtpVerified(true);
+      setIsOtpOpen(false);
+      alert("OTP Verified Successfully!");
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // ----------------------------
+  // REGISTER
+  // ----------------------------
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-  try {
-    const response = await fetch('https://jobseeker-backend-jy1y.onrender.com/api/register/', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-      credentials: 'include',
-    });
 
     const data = {
       full_name: fullName,
@@ -117,97 +147,31 @@ export default function Register() {
       receive_promotions: receivePromotions,
       country_id: profileData.personalInfo.countryId,
     };
-    console.log("DATA", data);
 
     try {
-      const response = await fetch(
+      const res = await fetch(
         "https://jobseeker-backend-jy1y.onrender.com/api/register/",
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(data),
         }
       );
 
-      if (!response.ok) {
-        throw new Error("Failed to register");
-      }
+      if (!res.ok) throw new Error("Registration failed");
 
-      const result = await response.json();
-      console.log("Registration successful:", result);
+      const result = await res.json();
+      console.log("Registration Successful:", result);
+
       router.push("/login");
     } catch (error) {
       console.error("Registration error:", error);
-  // Mock Send OTP Action
-  const sendOtp = (type) => {
-    const setStatus = type === 'email' ? setEmailStatus : setPhoneStatus;
-    if (type === 'email' && !formData.email.includes('@')) {
-      alert('Please enter a valid email address');
-      return;
     }
+  };
 
-    const result = await response.json();
-    console.log('Registration successful:', result);
-    router.push('/login');
-
-  } catch (error) {
-    console.error('Registration error:', error);
-  }
-};
-
-const handlesendotp = async () => {
-  try {
-    const res = await fetch("https://jobseeker-backend-jy1y.onrender.com/api/send_otp/", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email }),
-      credentials: "include",
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      alert(data.error || "Failed to send OTP");
-      return;
-    }
-
-    alert("OTP sent to your email");
-    setIsOtpOpen(true);
-
-  } catch (err) {
-    console.error(err);
-    alert("Something went wrong while sending OTP");
-  }
-};
-
-
-const handleVerifyOTP = async () => {
-  try {
-    const res = await fetch("https://jobseeker-backend-jy1y.onrender.com/api/verify-otp/", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, otp }),
-      credentials: "include",
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      alert(data.error || "Invalid OTP");
-      return;
-    }
-
-    setIsOtpVerified(true);
-    setIsOtpOpen(false);
-    alert("OTP Verified Successfully!");
-
-  } catch (err) {
-    console.error(err);
-  }
-};
-
+  // ----------------------------
+  // FETCH COUNTRIES
+  // ----------------------------
   useEffect(() => {
     const fetchCountries = async () => {
       try {
@@ -216,744 +180,284 @@ const handleVerifyOTP = async () => {
         );
         const data = await res.json();
         setCountries(data);
-      } catch (error) {
-        console.error("Error fetching countries:", error);
+      } catch (err) {
+        console.error(err);
       }
     };
     fetchCountries();
   }, []);
 
+  // ----------------------------
+  // RETURN JSX
+  // ----------------------------
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-            <Link href="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
-                <Search className="w-4 h-4 text-white" />
-              </div>
-              <span className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-                jobseeker
-              </span>
-            </Link>
-            <div className="text-sm text-gray-600 text-center sm:text-right">
-              Already Registered?{" "}
-              <Link
-                href="/login"
-                className="text-purple-600 hover:underline font-medium"
-              >
-                Login here
-              </Link>
+        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+          <Link href="/" className="flex items-center space-x-2">
+            <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
+              <Search className="w-4 h-4 text-white" />
             </div>
+            <span className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+              jobseeker
+            </span>
+          </Link>
+
+          <div className="text-sm text-gray-600">
+            Already Registered?{" "}
+            <Link href="/login" className="text-purple-600 font-medium">
+              Login here
+            </Link>
           </div>
         </div>
       </div>
-              
-              <h1 className="text-3xl font-bold text-slate-800 mb-2">Create your profile</h1>n3
-              <p className="text-slate-500 mb-8">Join millions of professionals finding their dream jobs.</p>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
-        <div className="grid lg:grid-cols-2 gap-6 md:gap-8">
-          {/* Left Side - Benefits */}
-          <div className="bg-white rounded-xl shadow-lg p-6 md:p-8 order-2 lg:order-1">
-            <div className="text-center mb-6 md:mb-8">
-              <div className="w-20 h-20 md:w-24 md:h-24 bg-gradient-to-br from-purple-100 to-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <User className="w-10 h-10 md:w-12 md:h-12 text-purple-600" />
-              </div>
-              <span className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-                jobseeker
-              </span>
-            </Link>
-            <div className="text-sm text-gray-600 text-center sm:text-right">
-              Already Registered?{' '}
-              <Link href="/login" className="text-purple-600 hover:underline font-medium">
-                Login here
-              </Link>
+      {/* MAIN GRID */}
+      <div className="max-w-6xl mx-auto px-4 py-8 grid lg:grid-cols-2 gap-8">
+        {/* LEFT BENEFITS */}
+        <div className="bg-white p-8 rounded-xl shadow">
+          <div className="text-center mb-6">
+            <div className="w-24 h-24 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <User className="w-12 h-12 text-purple-600" />
             </div>
-
-            <div className="space-y-4 md:space-y-6">
-              <div className="flex items-start space-x-3">
-                <CheckCircle className="w-5 h-5 text-green-500 mt-1 flex-shrink-0" />
-                <div>
-                  <p className="font-medium text-gray-900 text-sm md:text-base">
-                    Build your profile and let recruiters find you
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-start space-x-3">
-                <CheckCircle className="w-5 h-5 text-green-500 mt-1 flex-shrink-0" />
-                <div>
-                  <p className="font-medium text-gray-900 text-sm md:text-base">
-                    Get job postings delivered right to your email
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-start space-x-3">
-                <CheckCircle className="w-5 h-5 text-green-500 mt-1 flex-shrink-0" />
-                <div>
-                  <p className="font-medium text-gray-900 text-sm md:text-base">
-                    Find a job and grow your career
-                  </p>
-                </div>
-              </div>
-            </div>
+            <h2 className="text-xl font-bold">On registering, you can</h2>
           </div>
 
-          {/* Right Side - Registration Form */}
-          <div className="bg-white rounded-xl shadow-lg p-6 md:p-8 order-1 lg:order-2">
-            <div className="mb-6">
-              <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-2">
-                Create your JobSeeker profile
-              </h1>
-              <p className="text-gray-600 text-sm md:text-base">
-                Search & apply to jobs from India's No.1 Job Site
-              </p>
+          <div className="space-y-4">
+            <div className="flex items-start space-x-3">
+              <CheckCircle className="w-5 h-5 text-green-500 mt-1" />
+              <p>Build your profile and let recruiters find you</p>
             </div>
 
-            <form className="space-y-4 md:space-y-6" onSubmit={handleRegister}>
-              <div>
-                <Label
-                  htmlFor="fullName"
-                  className="text-sm font-medium text-gray-700"
-                >
-                  Full name*
-                </Label>
-                <div className="mt-1 relative">
-                  <User className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-                  <Input
-                    id="fullName"
-                    placeholder="What is your name?"
-                    className="pl-10 h-12 border-gray-200 focus:border-purple-500 focus:ring-purple-500"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                  />
-                </div>
-              </div>
+            <div className="flex items-start space-x-3">
+              <CheckCircle className="w-5 h-5 text-green-500 mt-1" />
+              <p>Get job postings delivered to your email</p>
+            </div>
 
-              <div>
-                <Label
-                  htmlFor="email"
-                  className="text-sm font-medium text-gray-700"
-                >
-                  Email ID*
-                </Label>
-                <div className="mt-1 relative">
-                  <Mail className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="Tell us your Email ID"
-                    className="pl-10 h-12 border-gray-200 focus:border-purple-500 focus:ring-purple-500"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
-                </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  We'll send relevant jobs and updates to this email
-                </p>
-              </div>
+            <div className="flex items-start space-x-3">
+              <CheckCircle className="w-5 h-5 text-green-500 mt-1" />
+              <p>Find a job and grow your career</p>
+            </div>
+          </div>
+        </div>
 
-              <div>
-                <Label className="text-sm font-medium text-gray-700">
-                  Country *
-                </Label>
+        {/* RIGHT FORM */}
+        <div className="bg-white p-8 rounded-xl shadow">
+          <form className="space-y-5" onSubmit={handleRegister}>
+            {/* Full name */}
+            <div>
+              <Label>Full Name *</Label>
+              <Input
+                className="mt-1 h-12"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                placeholder="Enter your full name"
+              />
+            </div>
 
-                <Popover open={countryOpen} onOpenChange={setCountryOpen}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="w-full justify-between mt-1 h-12"
-                    >
-                      {profileData.personalInfo.countryId
-                        ? countries.find(
-                            (c) => c.id == profileData.personalInfo.countryId
-                          )?.name
-                        : "Select country"}
-                    </Button>
-                  </PopoverTrigger>
-
-                  <PopoverContent align="start" className="w-full p-0">
-                    <Command>
-                      <CommandInput
-                        placeholder="Search country..."
-                        value={countrySearch}
-                        onValueChange={setCountrySearch}
-                      />
-
-                      <CommandList className="max-h-60 overflow-y-auto">
-                        <CommandEmpty>No country found.</CommandEmpty>
-
-                        <CommandGroup>
-                          {countries
-                            .filter((country) =>
-                              country.name
-                                .toLowerCase()
-                                .startsWith(countrySearch.toLowerCase())
-                            )
-                            .map((country) => (
-                              <CommandItem
-                                key={country.id}
-                                value={country.name}
-                                onSelect={() => {
-                                  setProfileData((prev) => ({
-                                    ...prev,
-                                    personalInfo: {
-                                      ...prev.personalInfo,
-                                      countryId: country.id,
-                                      stateId: "",
-                                      cityId: "",
-                                    },
-                                  }));
-
-                                  setPhoneCode(country.phonecode);
-
-                                  setCountryOpen(false);
-                                }}
-                              >
-                                {country.name}
-                              </CommandItem>
-                            ))}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
-              </div>
-
-              <div>
-                <Label
-                  htmlFor="password"
-                  className="text-sm font-medium text-gray-700"
-                >
-                  Password*
-                </Label>
-                <div className="mt-1 relative">
-                  <Lock className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="(Minimum 6 characters)"
-                    className="pl-10 h-12 border-gray-200 focus:border-purple-500 focus:ring-purple-500"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
-                </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  This helps your account stay protected
-                </p>
-              </div>
-
-              <div className="mt-1">
-                <Label
-                  htmlFor="mobile"
-                  className="text-sm font-medium text-gray-700"
-                >
-                  Mobile number*
-                </Label>
-
-                <div className="relative flex items-center gap-2 mt-2">
-                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-
-                  <input
-                    className="w-24 h-12 pl-10 border rounded-lg bg-gray-100 text-gray-700"
-                    value={`+${phoneCode}`}
-                    readOnly
-                  />
-
-                  <input
-                    className="flex-1 h-12 border rounded-lg px-3 focus:ring-purple-500 focus:border-purple-500"
-                    placeholder="Enter mobile number"
-                    value={profileData.personalInfo.phone}
-                    onChange={(e) =>
-                      setProfileData((prev) => ({
-                        ...prev,
-                        personalInfo: {
-                          ...prev.personalInfo,
-                          phone: e.target.value,
-                        },
-                      }))
-                    }
-                  />
-                </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  Recruiters will contact you on this number
-                </p>
-              </div>
-
-              <div>
-                <Label className="text-sm font-medium text-gray-700 mb-3 block">
-                  Work status*
-                </Label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <Card
-                    className={`cursor-pointer transition-all ${
-                      workStatus === "experienced"
-                        ? "ring-2 ring-purple-500 bg-purple-50"
-                        : "hover:bg-gray-50 border-gray-200"
-                    }`}
-                    onClick={() => setWorkStatus("experienced")}
-                  >
-                    <CardContent className="p-4 text-center">
-                      <div className="text-2xl mb-2">💼</div>
-                      <h3 className="font-medium text-gray-900 mb-1 text-sm">
-                        I'm experienced
-                      </h3>
-                      <p className="text-xs text-gray-600">
-                        I have work experience (excluding internships)
-                      </p>
-                    </CardContent>
-                  </Card>
-                  <Card
-                    className={`cursor-pointer transition-all ${
-                      workStatus === "fresher"
-                        ? "ring-2 ring-purple-500 bg-purple-50"
-                        : "hover:bg-gray-50 border-gray-200"
-                    }`}
-                    onClick={() => setWorkStatus("fresher")}
-                  >
-                    <CardContent className="p-4 text-center">
-                      <div className="text-2xl mb-2">🎓</div>
-                      <h3 className="font-medium text-gray-900 mb-1 text-sm">
-                        I'm a fresher
-                      </h3>
-                      <p className="text-xs text-gray-600">
-                        I am a student/ Haven't worked after graduation
-                      </p>
-                    </CardContent>
-                  </Card>
-                </div>
-              </div>
-
-              <div className="flex items-start space-x-2">
-                <Checkbox
-                  id="updates"
-                  className="mt-1"
-                  checked={receivePromotions}
-                  onCheckedChange={(value) =>
-                    setReceivePromotions(value === true)
-                  }
-                />
-                <label
-                  htmlFor="updates"
-                  className="text-sm text-gray-600 leading-relaxed"
-                >
-                  Send me important updates & promotions via SMS, Email, and{" "}
-                  <span className="text-green-600 font-medium">WhatsApp</span>
-                </label>
-              </div>
-
-                  {/* Register Button */}
-                  <div className="pt-4">
-                    <button 
-                      type="submit" 
-                      className="w-full bg-violet-600 text-white font-bold py-4 rounded-xl hover:bg-violet-700 active:scale-[0.99] transition-all shadow-lg shadow-violet-200 flex items-center justify-center gap-2 group"
-                    >
-                      Register Now
-                      <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-                    </button>
-                    <p className="text-center text-xs text-slate-400 mt-4">
-                      By clicking Register, you agree to the <a href="#" className="text-violet-600 hover:underline">Terms and Conditions</a> & <a href="#" className="text-violet-600 hover:underline">Privacy Policy</a>
-                    </p>
-                  </div>
+            {/* Email */}
+            <div>
+              <Label>Email *</Label>
+              <Input
+                className="mt-1 h-12"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter your email"
+                type="email"
+              />
 
               <Button
-                variant="outline"
-                className="w-full h-12 border-gray-200 hover:bg-gray-50"
                 type="button"
+                className="mt-2"
+                disabled={!email.includes("@")}
+                onClick={handlesendotp}
               >
-                <Chrome className="w-5 h-5 mr-2" />
-                Continue with Google
+                Verify Email OTP
               </Button>
-
-              <p className="text-xs text-gray-500 text-center leading-relaxed">
-                By clicking Register, you agree to the{" "}
-                <Link href="#" className="text-purple-600 hover:underline">
-                  Terms and Conditions
-                </Link>{" "}
-                &{" "}
-                <Link href="#" className="text-purple-600 hover:underline">
-                  Privacy Policy
-                </Link>{" "}
-                of JobSeeker.com
-              </p>
-            </form>
-          </div>
-        </div>
-      </div>
-
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
-        <div className="grid lg:grid-cols-2 gap-6 md:gap-8">
-          {/* Left Side - Benefits */}
-          <div className="bg-white rounded-xl shadow-lg p-6 md:p-8 order-2 lg:order-1">
-            <div className="text-center mb-6 md:mb-8">
-              <div className="w-20 h-20 md:w-24 md:h-24 bg-gradient-to-br from-purple-100 to-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <User className="w-10 h-10 md:w-12 md:h-12 text-purple-600" />
-              </div>
-              <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-2">
-                On registering, you can
-              </h2>
             </div>
 
-            <div className="space-y-4 md:space-y-6">
-              <div className="flex items-start space-x-3">
-                <CheckCircle className="w-5 h-5 text-green-500 mt-1 flex-shrink-0" />
-                <div>
-                  <p className="font-medium text-gray-900 text-sm md:text-base">Build your profile and let recruiters find you</p>
-                </div>
-              </div>
-              <div className="flex items-start space-x-3">
-                <CheckCircle className="w-5 h-5 text-green-500 mt-1 flex-shrink-0" />
-                <div>
-                  <p className="font-medium text-gray-900 text-sm md:text-base">Get job postings delivered right to your email</p>
-                </div>
-              </div>
-              <div className="flex items-start space-x-3">
-                <CheckCircle className="w-5 h-5 text-green-500 mt-1 flex-shrink-0" />
-                <div>
-                  <p className="font-medium text-gray-900 text-sm md:text-base">Find a job and grow your career</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Right Side - Registration Form */}
-          <div className="bg-white rounded-xl shadow-lg p-6 md:p-8 order-1 lg:order-2">
-            <div className="mb-6">
-              <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-2">
-                Create your JobSeeker profile
-              </h1>
-              <p className="text-gray-600 text-sm md:text-base">
-                Search & apply to jobs from India's No.1 Job Site
-              </p>
+            {/* Password */}
+            <div>
+              <Label>Password *</Label>
+              <Input
+                className="mt-1 h-12"
+                type="password"
+                placeholder="Minimum 6 characters"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
             </div>
 
-            <form className="space-y-4 md:space-y-6" onSubmit={handleRegister}>
-              <div>
-                <Label htmlFor="fullName" className="text-sm font-medium text-gray-700">
-                  Full name*
-                </Label>
-                <div className="mt-1 relative">
-                  <User className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-                  <Input
-                    id="fullName"
-                    placeholder="What is your name?"
-                    className="pl-10 h-12 border-gray-200 focus:border-purple-500 focus:ring-purple-500"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                  />
-                </div>
-              </div>
+            {/* Country */}
+            <div>
+              <Label>Country *</Label>
 
-              <div>
-                <Label htmlFor="email" className="text-sm font-medium text-gray-700">
-                  Email ID*
-                </Label>
-                <div className="mt-1 relative">
-                  <Mail className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="Tell us your Email ID"
-                    className="pl-10 h-12 border-gray-200 focus:border-purple-500 focus:ring-purple-500"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
-                  <Button
-                    type="button"
-                    onClick={() => {
-                      if(email.includes('@')){
-                        setIsOtpOpen(true)
-                        handlesendotp(email)
-                      }
-                      if(!email.includes('@')){
-                        alert("Email Must include @ .")
-                      }}
-                    }
-                    disabled ={!email}
-                    className="mt-2 bg-indigo-600 text-white"
-                  >
-                    {/* handlesendotp(email) */}
-                    Verify OTP
+              <Popover open={countryOpen} onOpenChange={setCountryOpen}>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="w-full h-12 mt-1">
+                    {profileData.personalInfo.countryId
+                      ? countries.find(
+                          (c) =>
+                            c.id == profileData.personalInfo.countryId
+                        )?.name
+                      : "Select Country"}
                   </Button>
-                </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  We'll send relevant jobs and updates to this email
-                </p>
-              </div>
+                </PopoverTrigger>
 
-              <div>
-                <Label htmlFor="password" className="text-sm font-medium text-gray-700">
-                  Password*
-                </Label>
-                <div className="mt-1 relative">
-                  <Lock className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="(Minimum 6 characters)"
-                    className="pl-10 h-12 border-gray-200 focus:border-purple-500 focus:ring-purple-500"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
-                </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  This helps your account stay protected
-                </p>
-              </div>
+                <PopoverContent className="w-full p-0">
+                  <Command>
+                    <CommandInput
+                      placeholder="Search country..."
+                      value={countrySearch}
+                      onValueChange={setCountrySearch}
+                    />
 
-              <div>
-                <Label htmlFor="mobile" className="text-sm font-medium text-gray-700">
-                  Mobile number*
-                </Label>
-                <div className="mt-1 relative">
-                  <Phone className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-                  <Input
-                    id="mobile"
-                    placeholder="+91 Enter your mobile number"
-                    className="pl-10 h-12 border-gray-200 focus:border-purple-500 focus:ring-purple-500"
-                    value={mobile}
-                    onChange={(e) => setMobile(e.target.value)}
+                    <CommandList className="max-h-60 overflow-y-auto">
+                      <CommandEmpty>No country found.</CommandEmpty>
 
-                  />
-                  {/* <Button
-                    type="button"
+                      <CommandGroup>
+                        {countries
+                          .filter((c) =>
+                            c.name
+                              .toLowerCase()
+                              .startsWith(countrySearch.toLowerCase())
+                          )
+                          .map((country) => (
+                            <CommandItem
+                              key={country.id}
+                              value={country.name}
+                              onSelect={() => {
+                                setProfileData((prev) => ({
+                                  ...prev,
+                                  personalInfo: {
+                                    ...prev.personalInfo,
+                                    countryId: country.id,
+                                  },
+                                }));
+                                setPhoneCode(country.phonecode);
+                                setCountryOpen(false);
+                              }}
+                            >
+                              {country.name}
+                            </CommandItem>
+                          ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+            </div>
 
-//changes here for otp of mobile number
-                    // onClick={() => setIsOtpOpen(true)}
-
-
-                    disabled ={!mobile}
-                    className="mt-2 bg-indigo-600 text-white"
-                  >
-                    Verify OTP
-                  </Button> */}
-                </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  Recruiters will contact you on this number
-                </p>
-              </div>
-
-              <div>
-                <Label className="text-sm font-medium text-gray-700 mb-3 block">
-                  Work status*
-                </Label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <Card
-                    className={`cursor-pointer transition-all ${
-                      workStatus === 'experienced' ? 'ring-2 ring-purple-500 bg-purple-50' : 'hover:bg-gray-50 border-gray-200'
-                    }`}
-                    onClick={() => setWorkStatus('experienced')}
-                  >
-                    <CardContent className="p-4 text-center">
-                      <div className="text-2xl mb-2">💼</div>
-                      <h3 className="font-medium text-gray-900 mb-1 text-sm">I'm experienced</h3>
-                      <p className="text-xs text-gray-600">
-                        I have work experience (excluding internships)
-                      </p>
-                    </CardContent>
-                  </Card>
-                  <Card
-                    className={`cursor-pointer transition-all ${
-                      workStatus === 'fresher' ? 'ring-2 ring-purple-500 bg-purple-50' : 'hover:bg-gray-50 border-gray-200'
-                    }`}
-                    onClick={() => setWorkStatus('fresher')}
-                  >
-                    <CardContent className="p-4 text-center">
-                      <div className="text-2xl mb-2">🎓</div>
-                      <h3 className="font-medium text-gray-900 mb-1 text-sm">I'm a fresher</h3>
-                      <p className="text-xs text-gray-600">
-                        I am a student/ Haven't worked after graduation
-                      </p>
-                    </CardContent>
-                  </Card>
-                </div>
-              </div>
-
-              <div className="flex items-start space-x-2">
-               <Checkbox
-                  id="updates"
-                  className="mt-1"
-                  checked={receivePromotions}
-                  onCheckedChange={(value) => setReceivePromotions(value === true)}
+            {/* Mobile Number */}
+            <div>
+              <Label>Mobile *</Label>
+              <div className="flex gap-2 mt-1">
+                <Input
+                  className="w-24 h-12 bg-gray-100"
+                  value={`+${phoneCode}`}
+                  readOnly
                 />
-                <label htmlFor="updates" className="text-sm text-gray-600 leading-relaxed">
-                  Send me important updates & promotions via SMS, Email, and{' '}
-                  <span className="text-green-600 font-medium">WhatsApp</span>
-                </label>
+                <Input
+                  className="h-12"
+                  placeholder="Enter mobile number"
+                  value={profileData.personalInfo.phone}
+                  onChange={(e) =>
+                    setProfileData((prev) => ({
+                      ...prev,
+                      personalInfo: {
+                        ...prev.personalInfo,
+                        phone: e.target.value,
+                      },
+                    }))
+                  }
+                />
               </div>
+            </div>
 
-              <Button 
-                disabled={!isOtpVerified}
-                className="w-full bg-gradient-to-r from-purple-600 to-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
-              >
-                Register for Free
-              </Button>
+            {/* Work Status */}
+            <div>
+              <Label>Work Status *</Label>
 
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-300" />
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white text-gray-500">Or</span>
-                </div>
+              <div className="grid grid-cols-2 gap-4 mt-2">
+                <Card
+                  className={`cursor-pointer ${
+                    workStatus === "experienced"
+                      ? "ring-2 ring-purple-500 bg-purple-50"
+                      : ""
+                  }`}
+                  onClick={() => setWorkStatus("experienced")}
+                >
+                  <CardContent className="p-4">
+                    <div className="text-2xl">💼</div>
+                    <p className="font-medium">I'm experienced</p>
+                  </CardContent>
+                </Card>
+
+                <Card
+                  className={`cursor-pointer ${
+                    workStatus === "fresher"
+                      ? "ring-2 ring-purple-500 bg-purple-50"
+                      : ""
+                  }`}
+                  onClick={() => setWorkStatus("fresher")}
+                >
+                  <CardContent className="p-4">
+                    <div className="text-2xl">🎓</div>
+                    <p className="font-medium">I'm a fresher</p>
+                  </CardContent>
+                </Card>
               </div>
+            </div>
 
-              <Button variant="outline" className="w-full h-12 border-gray-200 hover:bg-gray-50" type="button">
-                <Chrome className="w-5 h-5 mr-2" />
-                Continue with Google
-              </Button>
-
-              <p className="text-xs text-gray-500 text-center leading-relaxed">
-                By clicking Register, you agree to the{' '}
-                <Link href="#" className="text-purple-600 hover:underline">
-                  Terms and Conditions
-                </Link>{' '}
-                &{' '}
-                <Link href="#" className="text-purple-600 hover:underline">
-                  Privacy Policy
-                </Link>{' '}
-                of JobSeeker.com
+            {/* Promotions */}
+            <div className="flex items-start gap-2 mt-2">
+              <Checkbox
+                checked={receivePromotions}
+                onCheckedChange={(val) =>
+                  setReceivePromotions(val === true)
+                }
+              />
+              <p className="text-sm text-gray-600">
+                Send me important updates via Email, SMS, and WhatsApp.
               </p>
-            </form>
-            {/* <Dialog open={IsotpModalOpen} onOpenChange={setIsotpModalOpen}>
-                <DialogContent className="sm:max-w-md w-full bg-white rounded-2xl shadow-2xl overflow-hidden p-0 border border-slate-100">
-                    <div className="bg-gradient-to-b from-indigo-50/80 to-white px-6 pt-8 pb-4 flex flex-col items-center text-center">
-                      <div className="h-16 w-16 bg-white rounded-full flex items-center justify-center shadow-sm mb-4 ring-4 ring-indigo-50 text-indigo-600">
-                      </div>
-                      <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Enter Your OTP</h1>
-                      <p className="text-sm text-slate-500 mt-2">
-                        We sent a code to <span className="font-medium text-slate-700">user@email.com</span>
-                      </p>
-                    </div>
-                   <div className="flex justify-center my-6">
-                    <InputOTP maxLength={6} >
-                      <InputOTPGroup>
-                        <InputOTPSlot index={0} />
-                        <InputOTPSlot index={1} />
-                        <InputOTPSlot index={2} />
-                        <InputOTPSlot index={3} />
-                        <InputOTPSlot index={4} />
-                        <InputOTPSlot index={5} />
-                      </InputOTPGroup>
-                    </InputOTP>
-                  </div>
-                
-                  <button 
-                    className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-100 disabled:text-slate-400 text-white font-medium py-3 rounded-lg transition-all shadow-md hover:shadow-lg disabled:shadow-none flex items-center justify-center gap-2"
-                  >
-                    Verify
-                  </button>
+            </div>
 
-                  <div className="mt-6 text-center text-sm">
-                  <p className="text-slate-500 flex items-center justify-center gap-1">
-                    Didn't receive it? 
-                    ( <button className="text-indigo-600 font-semibold hover:underline">
-                        Resend Code
-                      </button>
-                    ) : (
-                      <span className="text-slate-400 font-medium">Resend in 00</span>
-                    )
-                  </p>
-                </div>
-              </DialogContent>
-            </Dialog> */}
-
-{/* <Dialog open={IsotpModalOpen} onOpenChange={setIsotpModalOpen}>
-  <DialogContent className="sm:max-w-md w-full bg-white rounded-2xl shadow-[0_8px_35px_rgba(0,0,0,0.15)] overflow-hidden p-0 border border-slate-200/60 backdrop-blur-xl">
-   
-    
-
-    
-    <div className="flex justify-center my-6">
-      <InputOTP maxLength={6}>
-        <InputOTPGroup className="gap-2">
-          <InputOTPSlot index={0} className="h-12 w-10 rounded-md border border-slate-300 text-lg shadow-sm focus:ring-2 focus:ring-indigo-500 transition-all" />
-          <InputOTPSlot index={1} className="h-12 w-10 rounded-md border border-slate-300 text-lg shadow-sm focus:ring-2 focus:ring-indigo-500 transition-all" />
-          <InputOTPSlot index={2} className="h-12 w-10 rounded-md border border-slate-300 text-lg shadow-sm focus:ring-2 focus:ring-indigo-500 transition-all" />
-          <InputOTPSlot index={3} className="h-12 w-10 rounded-md border border-slate-300 text-lg shadow-sm focus:ring-2 focus:ring-indigo-500 transition-all" />
-          <InputOTPSlot index={4} className="h-12 w-10 rounded-md border border-slate-300 text-lg shadow-sm focus:ring-2 focus:ring-indigo-500 transition-all" />
-          <InputOTPSlot index={5} className="h-12 w-10 rounded-md border border-slate-300 text-lg shadow-sm focus:ring-2 focus:ring-indigo-500 transition-all" />
-        </InputOTPGroup>
-      </InputOTP>
-    </div>
-
-    
-    <button
-      className="w-40 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-200 disabled:text-slate-400
-      text-white font-semibold py-3 rounded-xl transition-all
-      shadow-lg hover:shadow-xl active:scale-[0.98] mx-auto block"
-    >
-      Verify
-    </button>
-
-    <div className="mt-6 text-center text-sm pb-6">
-      <p className="text-slate-600 flex items-center justify-center gap-1">
-        Didn’t receive it? 
-        <button className="text-indigo-600 font-semibold hover:underline underline-offset-2">
-          Resend Code
-        </button>
-      </p>
-    </div>
-
-  </DialogContent>
-</Dialog> */}
-
-
-<Dialog open={isOtpOpen} onOpenChange={setIsOtpOpen}>
-  <DialogContent>
-
-    <div className="bg-gradient-to-b from-indigo-100/50 to-white px-6 pt-10 pb-6 flex flex-col items-center text-center">
-          <div className="h-20 w-20 bg-white rounded-full flex items-center justify-center shadow-md mb-4 ring-8 ring-indigo-50">
-
-
-            {/* logo of the portal here */}
-
-
-          </div>
-
-          <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">
-            Enter Your OTP
-          </h1>
-          <p className="text-sm text-slate-600 mt-2">
-            We sent a code to 
-            <span className="font-semibold text-slate-800"> user@email.com </span>
-          </p>
-      </div>
-    <div className="flex justify-center my-6">
-      <InputOTP
-        maxLength={6}
-        value={otp}
-        onChange={(val) => setOtp(val)}
-      >
-        <InputOTPGroup>
-          <InputOTPSlot index={0}/>
-          <InputOTPSlot index={1}/>
-          <InputOTPSlot index={2}/>
-          <InputOTPSlot index={3}/>
-          <InputOTPSlot index={4}/>
-          <InputOTPSlot index={5}/>
-        </InputOTPGroup>
-      </InputOTP>
-    </div>
-
-    <button
-      className="w-full bg-indigo-600 text-white py-3 rounded-xl"
-      onClick={()=> handleVerifyOTP()}>
-      Verify
-    </button>
-
-  </DialogContent>
-</Dialog>
-
-
-
-          </div>
+            {/* Register Button */}
+            <Button
+              type="submit"
+              disabled={!isOtpVerified}
+              className="w-full h-12 text-lg bg-purple-600 text-white"
+            >
+              Register Now
+            </Button>
+          </form>
         </div>
       </div>
+
+      {/* OTP Modal */}
+      <Dialog open={isOtpOpen} onOpenChange={setIsOtpOpen}>
+        <DialogContent>
+          <div className="text-center">
+            <h1 className="text-xl font-bold mb-4">Enter OTP</h1>
+
+            <InputOTP maxLength={6} value={otp} onChange={setOtp}>
+              <InputOTPGroup>
+                {[0, 1, 2, 3, 4, 5].map((i) => (
+                  <InputOTPSlot key={i} index={i} />
+                ))}
+              </InputOTPGroup>
+            </InputOTP>
+
+            <Button
+              className="w-full mt-4 bg-indigo-600 text-white"
+              onClick={handleVerifyOTP}
+            >
+              Verify
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
-
-// Sub-component for OTP Inputs (The "Interactive" part
-
