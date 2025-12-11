@@ -507,6 +507,7 @@ const unsaveJob = async (jobId: number) => {
     }
   };
 
+  
 
 
 const fetchUserData = async () => {
@@ -588,7 +589,7 @@ const fetchUserData = async () => {
       };
 
       const response = await fetch(
-        "https://jobseeker-backend-jy1y.onrender.com/employeer/api/applications/submit/",
+        "https://jobseeker-backend-jy1y.onrender.com//employeer/api/applications/submit/",
         {
           method: "POST",
           headers: {
@@ -598,9 +599,10 @@ const fetchUserData = async () => {
           body: JSON.stringify(applicationData),
         }
       );
-
+      console.log("Here is the data",response) 
       const result = await response.json();
-
+      console.log("Serialised data for error :",result)
+      
       if (response.ok) {
         alert(`Application submitted successfully for ${selectedJob.title}!`);
         setIsApplyModalOpen(false);

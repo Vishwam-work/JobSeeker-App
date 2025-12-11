@@ -10,10 +10,10 @@ import { Chrome, CheckCircle, Eye, EyeOff, Search } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession, signIn, signOut } from "next-auth/react";
-
 import CookieConsent from "@/components/Cookie";
 
 export default function Login() {
+  
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

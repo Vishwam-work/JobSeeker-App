@@ -52,7 +52,7 @@ import {
   XCircle,
 } from "lucide-react";
 import Link from "next/link";
-
+import { jwtDecode } from "jwt-decode";
 import {
   Dialog,
   DialogContent,
@@ -93,7 +93,7 @@ export default function EmployerDashboard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState(null);
   const [isEditMode, setIsEditMode] = useState(false);
-
+  const [CompanyName, setCompanyName] = useState("");
   const [filter, setFilter] = useState("All");
 
   const [dateFilter, setDateFilter] = useState("all");
@@ -325,6 +325,40 @@ export default function EmployerDashboard() {
   }, []);
 
   useEffect(() => {
+    const run = async () => {
+      try {
+        const token = localStorage.getItem("auth_token");
+        if (!token) return;
+  
+        const decoded = jwtDecode(token);
+        console.log("DECODED:", decoded);
+        console.log("Employer ID:", decoded.user_id);
+  
+        const res = await fetch(
+          `https://jobseeker-backend-jy1y.onrender.com/employeer/api/companies/${decoded.user_id}/`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+  
+        if (!res.ok) {
+          console.error("FETCH FAILED:", res.status);
+          return;
+        }
+     
+        const data = await res.json();
+        console.log("Applications:", data);
+        setCompanyName(data.company_name)
+        console.log(data.company_name)
+      } catch (err) {
+        console.error("Error:", err);
+      }
+    };
+  
+    run();
+  }, []);
+
+  useEffect(() => {
     const fetchApplications = async () => {
       try {
         const token = localStorage.getItem("auth_token");
@@ -398,12 +432,23 @@ export default function EmployerDashboard() {
             },
           }
         );
+
+      // const response = await fetch(
+      //   "https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-list-view/",
+      //   {
+      //     method: "GET",
+      //     headers: {
+      //       Authorization: `Bearer ${token}`,
+      //     },
+      //   }
+      // );
+
       if (!response.ok) {
         console.error("Failed to fetch jobs");
         return;
       }
-
       const data = await response.json();
+      console.log("Here is the Job-list-view-data:",data)
       setPostedJobs(data); // Set jobs into state
     } catch (error) {
       console.error("Error fetching jobs:", error);
@@ -617,61 +662,61 @@ export default function EmployerDashboard() {
         return;
       }
 
-      const data = await response.json();
-      console.log("Job posted successfully:", data);
-      setPostedJobs((prev) => [...prev, data]);
-      alert("Job posted successfully!");
-      await fetchPostedJobs();
+  const data = await response.json();
+  console.log("Job posted successfully:", data);
+  setPostedJobs((prev) => [...prev, data]);
+  alert("Job posted successfully!");
+  await fetchPostedJobs();
 
       // Reset form
-      setJobForm({
-        title: "",
-        category: "",
-        jobTitle: "",
-        company: "",
-        location: "",
-        experience: "",
-        salary: "",
-        currency: "",
-        job_type: "",
-        workMode: "",
-        description: "",
-        requirements: "",
-        benefits: "",
-        skills: [],
-        applicationDeadline: "",
-        vacancies: "",
-        isUrgent: false,
-        isRemote: false,
-        questions: [],
-      });
-      setSelectedCategory("");
-      setQuestions([]);
-      setAskQuestionEnabled(false); // uncheck the checkbox
-      setNewSkill("");
-      setNewQuestion("");
-    } catch (error) {
-      console.error("Error submitting job:", error);
-      alert("An error occurred while posting the job.");
-    }
-  };
+        setJobForm({
+          title: "",
+          category: "",
+          jobTitle: "",
+          company: "",
+          location: "",
+          experience: "",
+          salary: "",
+          currency: "",
+          job_type: "",
+          workMode: "",
+          description: "",
+          requirements: "",
+          benefits: "",
+          skills: [],
+          applicationDeadline: "",
+          vacancies: "",
+          isUrgent: false,
+          isRemote: false,
+          questions: [],
+        });
+        setSelectedCategory("");
+        setQuestions([]);
+        setAskQuestionEnabled(false); // uncheck the checkbox
+        setNewSkill("");
+        setNewQuestion("");
+      } catch (error) {
+        console.error("Error submitting job:", error);
+        alert("An error occurred while posting the job.");
+      }
+    };
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "active":
-        return "bg-green-100 text-green-800";
-      case "closed":
-        return "bg-red-100 text-red-800";
-      case "Under Review":
-        return "bg-yellow-100 text-yellow-800";
-      case "Shortlisted":
-        return "bg-blue-100 text-blue-800";
-      case "Rejected":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
+    const getStatusColor = (status) => {
+      switch (status) {
+        case "active":
+          return "bg-green-100 text-green-800";
+        case "closed":
+          return "bg-red-100 text-red-800";
+        case "Under Review":
+          return "bg-yellow-100 text-yellow-800";
+        case "Shortlisted":
+          return "bg-blue-100 text-blue-800";
+        case "Rejected":
+          return "bg-red-100 text-red-800";
+        default:
+          return "bg-gray-100 text-gray-800";
+      }
+    };
 
   // Filter jobs based on status and search term
   const filteredJobs = postedJobs.filter((job) => {
@@ -682,8 +727,6 @@ export default function EmployerDashboard() {
       job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       job.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
       job.location?.name.toLowerCase().includes(searchTerm.toLowerCase());
-
-    // Date filter
     let matchesDate = true;
     if (dateFilter !== "all" && job.created_at) {
       const jobDate = new Date(job.created_at);
@@ -703,7 +746,6 @@ export default function EmployerDashboard() {
     }
     return matchesFilter && matchesSearch && matchesDate;
   });
-
   const filteredCategories = candidates.filter((c) => {
     const nameMatch =
       c.name?.toLowerCase().startsWith(searchTerm.toLowerCase()) ||
@@ -760,43 +802,43 @@ export default function EmployerDashboard() {
     city.name.toLowerCase().startsWith(searchTerm.toLowerCase())
   );
 
-  const handleViewJob = async (job) => {
-    try {
-      const token = localStorage.getItem("auth_token");
-      const response = await fetch(
-        `https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-list-view/${job.id}/`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+    const handleViewJob = async (job) => {
+      try {
+        const token = localStorage.getItem("auth_token");
+        const response = await fetch(
+          `https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-list-view/${job.id}/`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-      const data = await response.json();
-      console.log("Job details:", data);
-      setSelectedJob(data);
-      setIsEditMode(false);
-      setIsModalOpen(true);
-    } catch (err) {
-      console.error("Error fetching job details", err);
-    }
-  };
-//https://jobseeker-backend-jy1y.onrender.com
-  const handleEditJob = async (job) => {
-    try {
-      const token = localStorage.getItem("auth_token");
-      const response = await fetch(
-        `https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-list-view/${job.id}/`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
         }
-      );
-      // https://jobseeker-backend-jy1y.onrender.com
-      const data = await response.json();
-      console.log("Data is prefill");
-      // Prefill the form
-      setJobForm({
+        const data = await response.json();
+        console.log("Job details:", data);
+        setSelectedJob(data);
+        setIsEditMode(false);
+        setIsModalOpen(true);
+      } catch (err) {
+        console.error("Error fetching job details", err);
+      }
+    };
+  //https://jobseeker-backend-jy1y.onrender.com
+    const handleEditJob = async (job) => {
+      try {
+        const token = localStorage.getItem("auth_token");
+        const response = await fetch(
+          `https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-list-view/${job.id}/`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        // https://jobseeker-backend-jy1y.onrender.com
+        const data = await response.json();
+        console.log("Data is prefill");
+        // Prefill the form
+    setJobForm({
         title: data.title || "",
         category: data.category?.id?.toString() || data.category || "",
         jobTitle: data.job_title?.id?.toString() || data.job_title || "",
@@ -1122,9 +1164,8 @@ export default function EmployerDashboard() {
       const token = localStorage.getItem("auth_token");
       if (!token) return alert("Token missing");
 
-      if (!selectedCandidate?.id) {
-        return alert("Candidate ID missing!!");
-      }
+    const url = `https://jobseeker-backend-jy1y.onrender.com/employeer/job-postings/${candidate.id}/update/`;
+    const payload = { status: "Rejected" };
 
       const res = await fetch(
         `https://jobseeker-backend-jy1y.onrender.com/employeer/api/employer/applications/${selectedCandidate.id}/update/`,
@@ -1468,7 +1509,7 @@ export default function EmployerDashboard() {
                     </Label>
                     <Input
                       id="company"
-                      value={jobForm.company}
+                      value={CompanyName}
                       onChange={(e) =>
                         setJobForm((prev) => ({
                           ...prev,
@@ -2008,7 +2049,7 @@ export default function EmployerDashboard() {
                               onClick={() => handleApplicationsClick(job.id)}
                             >
                               <Users className="w-4 h-4 mr-1" />
-                              <span>{job.applications} Applications</span>
+                              <span>{job.applicants} Applications</span>
                             </div>
 
                             <div className="flex items-center text-green-600">

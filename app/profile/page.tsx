@@ -122,21 +122,22 @@ export default function Profile() {
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [experienceForm, setExperienceForm] = useState({
     company: "",
-    category: "",
-    jobTitle: "",
+    category_id: "",
+    job_title_id: "",
+    location_id: "",
     startDate: null,
     endDate: null,
     isCurrentJob: false,
-    location: "",
     description: "",
   });
+  
   const [educationForm, setEducationForm] = useState({
     degree: "",
     field: "",
     institution: "",
     year: null,
     percentage: "",
-    scoreType: "percentage",
+    score_type: "",
   });
 
   const [certificationForm, setCertificationForm] = useState({
@@ -188,15 +189,16 @@ export default function Profile() {
   const resetExperienceForm = () => {
     setExperienceForm({
       company: "",
-      category: "",
-      jobTitle: "",
+      category_id: "",
+      job_title_id: "",
+      location_id: "",
       startDate: null,
       endDate: null,
       isCurrentJob: false,
-      location: "",
       description: "",
     });
   };
+  
 
   const resetEducationForm = () => {
     setEducationForm({
@@ -205,6 +207,7 @@ export default function Profile() {
       institution: "",
       year: null,
       percentage: "",
+      score_type: "",
     });
   };
 
@@ -227,12 +230,12 @@ export default function Profile() {
 
     setExperienceForm({
       company: exp.company || "",
-      job_title_id: exp.job_title?.toString() || "",
+      job_title_id: exp.job_title?.id?.toString() || "",
       startDate: startDate,
       endDate: endDate,
       isCurrentJob: !exp.end_date,
       location_id: exp.location?.id?.toString() || "",
-      category_id: exp.category?.toString() || "",
+      category_id: exp.category?.id?.toString() || "",
       description: exp.description || "",
     });
     setEditingExperience(exp);
@@ -304,6 +307,7 @@ export default function Profile() {
       institution: edu.institution,
       year: edu.year ? dayjs(edu.year, "YYYY") : null,
       percentage: edu.percentage,
+      score_type: edu.score_type ? edu.score_type.toLowerCase() : "",
     });
     setEditingEducation(edu);
     setShowAddEducation(true);
@@ -313,7 +317,8 @@ export default function Profile() {
     if (
       !educationForm.degree ||
       !educationForm.field ||
-      !educationForm.institution
+      !educationForm.institution ||
+      !educationForm.score_type
     ) {
       alert("Please fill in all required fields");
       return;
@@ -326,6 +331,7 @@ export default function Profile() {
       institution: educationForm.institution,
       year: educationForm.year ? educationForm.year.format("YYYY") : "",
       percentage: educationForm.percentage,
+      score_type : educationForm.score_type,
     };
 
     if (editingEducation) {
@@ -442,8 +448,7 @@ export default function Profile() {
     const file = event.target.files?.[0];
     if (file) {
       setResumeFile(file);
-      alert(`Resume "${file.name}" uploaded successfully!`);
-      setIsDialogOpen((prev) => ({ ...prev, resume: false }));
+      alert(`Selected: ${file.name}`);
     }
   };
 
@@ -508,19 +513,27 @@ export default function Profile() {
               email: data.email || "",
               phone: data.phone || "",
               phoneCode: data.phone_code || "",
-              countryId: data.country.id?.toString() || "",
-              stateId: data.state.id?.toString() || "",
-              cityId: data.city.id?.toString() || "",
+              countryId: data?.country?.id?.toString() ?? "",
+              stateId: data?.state?.id?.toString() ?? "",
+              cityId: data?.city?.id?.toString() ?? "",
               experience: data.experience || "",
               currentSalary: data.current_salary || "",
               expectedSalary: data.expected_salary || "",
-              currentcurrency: data.current_currency.id?.toString() || "",
-              expectedCurrency: data.expected_currency.id?.toString() || "",
-              noticePeriod: data.notice_period || "",
+              currentcurrency: data?.current_currency?.id?.toString() ?? "",
+              expectedCurrency: data?.expected_currency?.id?.toString() ?? "",
+              noticePeriod: data?.notice_period || "",
               resume: data.resume,
             },
-            experience: data.experiences || [],
-            education: data.educations || [],
+            experience: (data.experiences || []).map(exp => ({
+              ...exp,
+              category_id: exp.category?.id ?? "",
+              job_title_id: exp.job_title?.id ?? "",
+              location_id: exp.location?.id ?? "",
+            })),
+            education: (data.educations || []).map(e => ({
+              ...e,
+              score_type: e.score_type?.toLowerCase() || "cgpa",
+            })),
             skills: (data.skills || []).map((skill) => skill.name),
             certifications: data.certifications || [],
             summary: "", // Optional: if you use a summary field
@@ -665,6 +678,8 @@ export default function Profile() {
             resume: data.resume_url || data.resume,
           },
         }));
+        setIsDialogOpen(prev => ({ ...prev, resume: false }));
+        setResumeFile(null);
         return true;
       } else {
         const error = await res.json();
@@ -700,8 +715,20 @@ export default function Profile() {
       country_id: profileData.personalInfo.countryId || null,
       state_id: profileData.personalInfo.stateId || null,
       city_id: profileData.personalInfo.cityId || null,
-      experiences: profileData.experience,
-      educations: profileData.education,
+      experiences: profileData.experience.map(exp => ({
+        id: exp.id,
+        company: exp.company,
+        category_id: Number(exp.category_id),
+        job_title_id: Number(exp.job_title_id),
+        location_id: exp.location_id ? Number(exp.location_id) : null,
+        start_date: exp.start_date,
+        end_date: exp.end_date,
+        description: exp.description,
+      })),
+      educations: profileData.education.map((edu) => ({
+        ...edu,
+        score_type: edu.score_type?.toLowerCase() || "cgpa",
+      })),
       certifications: profileData.certifications,
       skills: profileData.skills.map((name) => ({ name })),
     };
@@ -956,6 +983,12 @@ export default function Profile() {
                             </p>
                           )}
 
+                          {resumeFile && (
+                              <p className="text-sm font-medium text-blue-600 truncate">
+                                Selected File: <span className="text-gray-700">{resumeFile.name}</span>
+                              </p>
+                            )}
+
                           <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
                             <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                             <p className="text-sm text-gray-600 mb-4">
@@ -982,6 +1015,15 @@ export default function Profile() {
                               PDF, DOC, DOCX up to 5MB
                             </p>
                           </div>
+                          <Button
+                            onClick={uploadResume}
+                            disabled={!resumeFile}
+                            className={`w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600
+                            hover:from-purple-700 hover:to-blue-700 h-10 lg:h-11 mt-6
+                            ${!resumeFile ? "opacity-50 cursor-not-allowed" : ""}`}
+                          >
+                            SUBMIT
+                          </Button>
                         </div>
                       </DialogContent>
                     </Dialog>
@@ -1699,14 +1741,14 @@ export default function Profile() {
                               </div>
                               <div className="min-w-0 flex-1">
                                 <h3 className="font-semibold text-base lg:text-lg text-gray-900 break-words">
-                                  {getJobTitleName(exp.job_title)}
+                                  {getJobTitleName(exp.job_title_id)}
                                 </h3>
                                 <p className="text-purple-600 font-medium text-sm lg:text-base break-words">
                                   {exp.company}
                                 </p>
                                 {exp.category && (
                                   <p className="text-gray-600 text-sm break-words">
-                                    {getCategoryName(exp.category)}
+                                    {getCategoryName(exp.category_id)}
                                   </p>
                                 )}
                                 <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 text-xs lg:text-sm text-gray-600 mt-1 gap-1 sm:gap-0">
@@ -2079,7 +2121,16 @@ export default function Profile() {
                                 </p>
                                 <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 text-xs lg:text-sm text-gray-600 mt-1 gap-1 sm:gap-0">
                                   <span>Year: {edu.year}</span>
-                                  <span>Score: {edu.percentage}</span>
+                                  <span>
+                                  Score: {edu.percentage}{" "}
+                                  {edu.score_type === "percentage"
+                                    ? "(Percentage)"
+                                    : edu.score_type === "cgpa"
+                                    ? "(CGPA)"
+                                    : edu.score_type === "grade"
+                                    ? "(Grade)"
+                                    : ""}
+                                </span>
                                 </div>
                               </div>
                             </div>
@@ -2242,44 +2293,37 @@ export default function Profile() {
                                   Score
                                 </Label>
 
-                                <div className="flex items-center gap-3">
-                                  <select
-                                    id="scoreType"
-                                    value={educationForm.scoreType}
-                                    onChange={(e) =>
-                                      setEducationForm((prev) => ({
-                                        ...prev,
-                                        scoreType: e.target.value,
-                                      }))
-                                    }
-                                    className="h-10 border rounded px-2 text-sm w-32"
-                                  >
-                                    <option value="percentage">
-                                      Percentage
-                                    </option>
-                                    <option value="cgpa">CGPA</option>
-                                    <option value="grade">Grade</option>
-                                  </select>
+                                <Select
+                                value={educationForm.score_type}
+                                onValueChange={(value) =>
+                                  setEducationForm((prev) => ({
+                                    ...prev,
+                                    score_type: value,
+                                  }))
+                                }
+                              >
+                                <SelectTrigger className="mt-1 h-10">
+                                  <SelectValue placeholder="Select score type" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="percentage">Percentage</SelectItem>
+                                  <SelectItem value="cgpa">CGPA</SelectItem>
+                                  <SelectItem value="grade">Grade</SelectItem>
+                                </SelectContent>
+                              </Select>
 
-                                  <Input
-                                    id="percentage"
-                                    value={educationForm.percentage}
-                                    onChange={(e) =>
-                                      setEducationForm((prev) => ({
-                                        ...prev,
-                                        percentage: e.target.value,
-                                      }))
-                                    }
-                                    placeholder={
-                                      educationForm.scoreType === "percentage"
-                                        ? "85%"
-                                        : educationForm.scoreType === "cgpa"
-                                        ? "8.5"
-                                        : "A+"
-                                    }
-                                    className="flex-1 h-10"
-                                  />
-                                </div>
+                                <Input
+                                  id="percentage"
+                                  value={educationForm.percentage}
+                                  onChange={(e) =>
+                                    setEducationForm((prev) => ({
+                                      ...prev,
+                                      percentage: e.target.value,
+                                    }))
+                                  }
+                                  placeholder="e.g., 8.5 CGPA or 85%"
+                                  className="mt-1"
+                                />
                               </div>
                             </div>
                             <div className="flex justify-end space-x-2">
