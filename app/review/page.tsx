@@ -72,6 +72,7 @@ export default function ProfileReview() {
         console.log("Profile Data: before", data);
         setProfileData({
           personalInfo: {
+            profile_image: data.profile_image,
             fullName: data.full_name,
             email: data.email,
             phone: data.phone,
@@ -181,8 +182,16 @@ export default function ProfileReview() {
             <CardContent>
               <div className="flex flex-col lg:flex-row gap-6">
                 <div className="flex-shrink-0">
-                  <div className="w-24 h-24 lg:w-32 lg:h-32 bg-gradient-to-br from-purple-100 to-blue-100 rounded-full flex items-center justify-center">
-                    <User className="w-12 h-12 lg:w-16 lg:h-16 text-purple-600" />
+                  <div className="w-24 h-24 lg:w-32 lg:h-32 bg-gradient-to-br from-purple-100 to-blue-100 rounded-full flex items-center justify-center overflow-hidden">
+                   {profileData.personalInfo.profile_image ? (
+                    <img
+                     src={profileData.personalInfo.profile_image}
+                     alt="Profile"
+                     className="w-full h-full object-cover"
+                    />
+                   ) : (
+                   <User className="w-12 h-12 lg:w-16 lg:h-16 text-purple-600" />
+                    )}
                   </div>
                 </div>
                 <div className="flex-1">

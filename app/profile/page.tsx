@@ -99,7 +99,8 @@ export default function Profile() {
     certifications: [],
     summary: "",
   });
-
+  const [profileImage, setProfileImage] = useState(null);
+const [selectedImage, setSelectedImage] = useState(null); 
   const [activeSection, setActiveSection] = useState("personal");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState({
@@ -523,6 +524,9 @@ export default function Profile() {
               expectedCurrency: data?.expected_currency?.id?.toString() ?? "",
               noticePeriod: data?.notice_period || "",
               resume: data.resume,
+
+                  profile_image: data.profile_image || profileData.personalInfo.profile_image,
+
             },
             experience: (data.experiences || []).map(exp => ({
               ...exp,
@@ -696,6 +700,27 @@ export default function Profile() {
     }
   };
 
+ const uploadProfileImage = async () => {
+  if (!selectedImage) return true;
+
+  const formData = new FormData();
+  formData.append("profile_image", selectedImage);
+
+  const res = await fetch(
+    "https://jobseeker-backend-jy1y.onrender.com/api/profile/",
+    {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
+      },
+      body: formData,
+    }
+  );
+
+  return res.ok;
+};
+
+
   // Save Api
   const handleSaveProfile = async () => {
     const resumeUploaded = await uploadResume();
@@ -703,6 +728,16 @@ export default function Profile() {
       alert("Resume upload failed. Please try again.");
       return;
     }
+    if (selectedImage) {
+ 
+  const imageUploaded = await uploadProfileImage();
+  if (!imageUploaded) {
+    alert("Image upload failed");
+    return;
+  }
+}
+
+
     const payload = {
       full_name: profileData.personalInfo.fullName,
       email: profileData.personalInfo.email,
@@ -734,6 +769,7 @@ export default function Profile() {
       certifications: profileData.certifications,
       skills: profileData.skills.map((name) => ({ name })),
     };
+ 
     console.log("Payload:", payload);
     console.log("Token:", localStorage.getItem("auth_token"));
     const res = await fetch(
@@ -769,6 +805,7 @@ export default function Profile() {
             expectedCurrency: data.expected_currency?.id?.toString() || "",
             noticePeriod: data.notice_period || "",
             resume: data.resume || profileData.personalInfo.resume,
+            profile_image: data.profile_image || profileData.personalInfo.profile_image,
           },
           experience: data.experiences || [],
           education: data.educations || [],
@@ -848,14 +885,44 @@ export default function Profile() {
               <Card className="lg:sticky lg:top-24">
                 <CardContent className="p-4 lg:p-6">
                   <div className="text-center mb-4 lg:mb-6">
-                    <div className="relative inline-block">
-                      <div className="w-20 h-20 lg:w-24 lg:h-24 bg-gradient-to-br from-purple-100 to-blue-100 rounded-full flex items-center justify-center mx-auto mb-3 lg:mb-4">
-                        <User className="w-10 h-10 lg:w-12 lg:h-12 text-purple-600" />
-                      </div>
-                      <button className="absolute bottom-0 right-0 w-6 h-6 lg:w-8 lg:h-8 bg-purple-600 rounded-full flex items-center justify-center text-white hover:bg-purple-700 transition-colors">
-                        <Camera className="w-3 h-3 lg:w-4 lg:h-4" />
-                      </button>
-                    </div>
+            
+                  <div className="relative inline-block">
+                <div className="w-20 h-20 lg:w-24 lg:h-24 bg-gray-100 rounded-full overflow-hidden flex items-center justify-center mx-auto mb-3 lg:mb-4">
+    
+                   {selectedImage ? (
+                    <img
+                    src={URL.createObjectURL(selectedImage)}
+                    className="w-full h-full object-cover"
+                    alt="Profile Preview"
+                    />
+                  ) : profileData.personalInfo.profile_image ? (
+                  <img
+                   src={profileData.personalInfo.profile_image}
+                   className="w-full h-full object-cover"
+                   alt="Profile"
+                  />
+                  ) : (
+                  <User className="w-10 h-10 lg:w-12 lg:h-12 text-purple-600" />
+                  )}
+                </div>
+
+                  <label className="absolute bottom-0 right-0 w-6 h-6 lg:w-8 lg:h-8 bg-purple-600 rounded-full flex items-center justify-center text-white hover:bg-purple-700 transition-colors cursor-pointer">
+                   <Camera className="w-3 h-3 lg:w-4 lg:h-4" />
+                   <input
+                   type="file"
+                   accept="image/*"
+                   className="hidden"
+                   onChange={(e) => {
+                   const file = e.target.files[0];
+                   if (file) setSelectedImage(file);
+                    }}
+                    />
+                  </label>
+             </div>
+
+
+
+
                     <h2 className="text-lg lg:text-xl font-bold text-gray-900 mb-1">
                       {profileData.personalInfo.fullName}
                     </h2>
@@ -1692,12 +1759,21 @@ export default function Profile() {
                         </div>
                       </div>
                     </div>
+                    <div className="flex justify-between mt-6">
+                    <Button
+                      onClick={handleSaveProfile}
+                      className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-10 lg:h-11 mt-6"
+                    >
+                      SUBMIT
+                    </Button>
                     <Button
                       onClick={handleNext}
-                      className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-10 lg:h-11"
+                      className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-10 lg:h-11 mt-6"
                     >
                       Next
                     </Button>
+                    
+                  </div>
                   </CardContent>
                 </Card>
               )}
@@ -2062,12 +2138,21 @@ export default function Profile() {
                         </Card>
                       )}
                     </div>
+                    <div className="flex justify-between mt-6">
+                    <Button
+                      onClick={handleSaveProfile}
+                      className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-10 lg:h-11 mt-6"
+                    >
+                      SUBMIT
+                    </Button>
                     <Button
                       onClick={handleNext}
                       className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-10 lg:h-11 mt-6"
                     >
                       Next
                     </Button>
+                   
+                    </div>
                   </CardContent>
                 </Card>
               )}
@@ -2338,12 +2423,21 @@ export default function Profile() {
                         </Card>
                       )}
                     </div>
+                    <div className="flex justify-between mt-6">
+                    <Button
+                      onClick={handleSaveProfile}
+                      className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-10 lg:h-11 mt-6"
+                    >
+                      SUBMIT
+                    </Button>
                     <Button
                       onClick={handleNext}
                       className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-10 lg:h-11 mt-6"
                     >
                       Next
                     </Button>
+                    
+                  </div>
                   </CardContent>
                 </Card>
               )}
@@ -2397,12 +2491,21 @@ export default function Profile() {
                         ))}
                       </div>
                     </div>
+                    <div className="flex justify-between mt-6">
+                     <Button
+                      onClick={handleSaveProfile}
+                      className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-10 lg:h-11 mt-6"
+                    >
+                      SUBMIT
+                    </Button>
                     <Button
                       onClick={handleNext}
                       className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-10 lg:h-11 mt-6"
                     >
                       Next
                     </Button>
+                    
+                    </div>
                   </CardContent>
                 </Card>
               )}

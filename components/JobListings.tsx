@@ -538,6 +538,17 @@ const fetchUserData = async () => {
 
     console.log("MY Applications:", myApplications);
 
+     if (myApplications.length > 0) {
+     const profile = myApplications[0].profile;
+
+      setUserData({
+       ...profile,
+       resume: profile.resume
+        ? `https://jobseeker-backend-jy1y.onrender.com${profile.resume}`
+        : null,
+        });
+      }
+
     const appliedIDs = myApplications.map(app => Number(app.job));
 
     localStorage.setItem(`applied_jobs_${email}`, JSON.stringify(appliedIDs));
@@ -1480,15 +1491,15 @@ const fetchUserData = async () => {
                             </h4>
                             <div className="text-sm text-gray-600 space-y-1">
                               <p>
-                                <span className="font-medium">Name:</span>{" "}
+                                <span className="font-medium">Name:</span>
                                 {userData.name || userData.full_name}
                               </p>
                               <p>
-                                <span className="font-medium">Email:</span>{" "}
+                                <span className="font-medium">Email:</span>
                                 {userData.email}
                               </p>
                               <p>
-                                <span className="font-medium">Phone:</span>{" "}
+                                <span className="font-medium">Phone:</span>
                                 {userData.phone || "Not provided"}
                               </p>
                             </div>

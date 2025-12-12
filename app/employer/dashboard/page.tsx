@@ -1293,7 +1293,7 @@ export default function EmployerDashboard() {
         if (data?.company_name) {
           setJobForm((prev) => ({
             ...prev,
-            company: data.company_name,
+            company: prev.company ? prev.company : data.company_name
           }));
         }
       } catch (err) {
