@@ -60,6 +60,7 @@ export default function JobListings() {
   const [appliedJobs, setAppliedJobs] = useState([]);
   const { savedJobs, addJob, removeJob } = useSavedJobs();
   const [savedJobIds, setSavedJobIds] = useState<number[]>([]);
+  const [visibleCount, setVisibleCount] = useState(3);
 
 
   // Filter states
@@ -226,6 +227,11 @@ export default function JobListings() {
   }, [userEmail]);
 
   useEffect(() => {
+  setVisibleCount(3);
+}, [filters]);
+
+
+  useEffect(() => {
     let filtered = jobs;
 
     // Search filter
@@ -251,6 +257,7 @@ export default function JobListings() {
             .includes(filters.location.toLowerCase())
       );
     }
+
 
     // Experience filter
     if (filters.experience && filters.experience !== "All") {
@@ -279,6 +286,7 @@ export default function JobListings() {
         return maxJobExp >= minFilterExp && minJobExp <= maxFilterExp;
       });
     }
+
 
     // Work Mode filter
     if (filters.workMode && filters.workMode !== "All") {
@@ -1057,7 +1065,9 @@ const fetchUserData = async () => {
                   </p>
                 </div>
               ) : (
-                filteredJobs.map((job) => (
+                filteredJobs
+                .slice(0, visibleCount)
+                .map((job) => (
                   <Card
                     key={job.id}
                     className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-transparent hover:border-l-purple-500"
@@ -1235,13 +1245,18 @@ const fetchUserData = async () => {
             </div>
 
             {/* Load More Button */}
-            {filteredJobs.length > 0 && (
+            {visibleCount < filteredJobs.length && (
               <div className="text-center mt-8">
-                <Button variant="outline" className="px-8 py-3">
+                <Button
+                  variant="outline"
+                  className="px-8 py-3"
+                  onClick={() => setVisibleCount((prev) => prev + 3)}
+                >
                   Load More Jobs
                 </Button>
               </div>
             )}
+
           </div>
         </div>
 

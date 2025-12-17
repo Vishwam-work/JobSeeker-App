@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Snackbar, Alert } from "@mui/material";
 import { Card, CardContent } from "@/components/ui/card";
-import { Chrome, CheckCircle, Eye, EyeOff, Search } from "lucide-react";
+import { Chrome, CheckCircle, Eye, EyeOff,  ChevronDown, Search } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession, signIn, signOut } from "next-auth/react";
@@ -20,6 +20,8 @@ export default function Login() {
   const [alertMessage, setAlertMessage] = useState("");
   const [alertOpen, setAlertOpen] = useState(false);
   const [alertType, setAlertType] = useState<"success" | "error">("success");
+    const [isEmployerDropdownOpen, setIsEmployerDropdownOpen] = useState(false);
+  
   const router = useRouter();
 
   // Email/Password login
@@ -136,7 +138,50 @@ export default function Login() {
           {alertMessage}
         </Alert>
       </Snackbar>
-
+      <div className="bg-white shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+            <Link href="/" className="flex items-center space-x-2">
+              <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
+                <Search className="w-4 h-4 text-white" />
+              </div>
+              <span className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+                jobseeker
+              </span>
+            </Link>
+              <div className="relative">
+              <button
+                className="flex items-center space-x-1 text-gray-700 hover:text-purple-600 cursor-pointer transition-colors"
+                onClick={() =>
+                  setIsEmployerDropdownOpen(!isEmployerDropdownOpen)
+                }
+                onBlur={() =>
+                  setTimeout(() => setIsEmployerDropdownOpen(false), 200)
+                }
+              >
+                <span className="text-sm font-medium">For employers</span>
+                <ChevronDown className="w-4 h-4" />
+              </button>
+              {isEmployerDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                  <Link
+                    href="/employer/login"
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-colors"
+                  >
+                    Employer Login
+                  </Link>
+                  <Link
+                    href="/employer/register"
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-colors"
+                  >
+                    Register as Employer
+                  </Link>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
       <div className="min-h-screen bg-gray-50 flex items-center justify-center py-8 md:py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl w-full">
           <div className="grid lg:grid-cols-2 gap-6 md:gap-8">
@@ -263,22 +308,22 @@ export default function Login() {
                     Login
                   </Button>
 
-                  <Button
+                  {/* <Button
                     variant="outline"
                     className="w-full h-12 border-gray-200 hover:bg-gray-50"
                     type="button"
                   >
                     Use OTP to Login
-                  </Button>
+                  </Button> */}
 
                   {/* Or divider */}
                   <div className="relative">
                     <div className="absolute inset-0 flex items-center">
                       <div className="w-full border-t border-gray-300" />
                     </div>
-                    <div className="relative flex justify-center text-sm">
+                    {/* <div className="relative flex justify-center text-sm">
                       <span className="px-2 bg-white text-gray-500">Or</span>
-                    </div>
+                    </div> */}
                   </div>
 
                   {/* Google Login */}

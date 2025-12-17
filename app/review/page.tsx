@@ -31,6 +31,7 @@ export default function ProfileReview() {
   const [profileData, setProfileData] = useState(null);
   const [jobTitles, setJobTitles] = useState([]);
   const [jobCategories, setJobCategories] = useState([]);
+  const [isPDF, setIsPDF] = useState(false);
 
     useEffect(() => {
       fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_title/")
@@ -58,6 +59,8 @@ export default function ProfileReview() {
     console.log("jobTitles", jobTitles);
     return jobTitles.find((t) => t.id === id)?.title || "";
   };
+
+
   useEffect(() => {
     const loadProfile = async () => {
       const res = await fetch("https://jobseeker-backend-jy1y.onrender.com/api/profile/", {
@@ -67,12 +70,19 @@ export default function ProfileReview() {
         },
       });
 
+    
+
+
       if (res.ok) {
         const data = await res.json();
         console.log("Profile Data: before", data);
+
+ 
+
         setProfileData({
           personalInfo: {
-            profile_image: data.profile_image,
+            profile_image: data.profile_image || null,
+
             fullName: data.full_name,
             email: data.email,
             phone: data.phone,
@@ -85,10 +95,10 @@ export default function ProfileReview() {
           experience: data.experiences.map((exp) => ({
             id: exp.id,
             company: exp.company,
-            position: exp.job_title || "N/A",
+            position: exp.job_title?.title || "N/A",  
+            category: exp.category?.name || "N/A",
             duration: `${exp.start_date} - ${exp.end_date || "Present"}`,
             location: exp.location?.name || "N/A",
-            category: exp.category || "N/A",
             description: exp.description,
           })),
           education: data.educations.map((edu) => ({
@@ -145,6 +155,80 @@ export default function ProfileReview() {
 
   // const completionPercentage = calculateCompletionPercentage();
 
+ const hideElementsForPDF = (container: HTMLElement) => {
+  const hidden: HTMLElement[] = [];
+
+  // Hide profile image box completely
+  container.querySelectorAll(".profile-image-box").forEach((el) => {
+    const h = el as HTMLElement;
+    hidden.push(h);
+    h.style.display = "none";
+  });
+
+  // Hide all SVG icons
+  container.querySelectorAll("svg").forEach((el) => {
+    const h = el as HTMLElement;
+    hidden.push(h);
+    h.style.display = "none";
+  });
+
+  return hidden;
+};
+
+const restoreElements = (elements: HTMLElement[]) => {
+  elements.forEach((el) => {
+    el.style.display = "";
+  });
+};  
+
+const handleDownloadPDF = async () => {
+  setIsPDF(true);
+  await new Promise((r) => setTimeout(r, 300));
+
+  const html2canvas = (await import("html2canvas")).default;
+  const jsPDF = (await import("jspdf")).default;
+
+  const pdf = new jsPDF("p", "mm", "a4");
+  const pdfWidth = pdf.internal.pageSize.getWidth();
+  const pdfHeight = pdf.internal.pageSize.getHeight();
+
+  const container = document.getElementById("profile-review-ui");
+  const hidden = hideElementsForPDF(container);
+
+  const pages = ["pdf-page-1", "pdf-page-2"];
+
+  for (let i = 0; i < pages.length; i++) {
+    const page = document.getElementById(pages[i]);
+    if (!page) continue;
+
+    const canvas = await html2canvas(page, {
+      scale: 1.3,          
+      useCORS: true,
+      backgroundColor: "#fff",
+      scrollY: -window.scrollY,
+    });
+
+    const imgData = canvas.toDataURL("image/jpeg", 0.85); 
+    const imgHeight = (canvas.height * pdfWidth) / canvas.width;
+
+    if (i > 0) pdf.addPage();
+
+    pdf.addImage(
+      imgData,
+      "JPEG",
+      0,
+      0,
+      pdfWidth,
+      Math.min(imgHeight, pdfHeight)
+    );
+  }
+
+  pdf.save("profile.pdf");
+
+  restoreElements(hidden);
+  setIsPDF(false);
+};
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
@@ -162,27 +246,43 @@ export default function ProfileReview() {
               </Link>
             </div>
             <div className="flex flex-col sm:flex-row gap-2">
-              <Button variant="outline" className="w-full sm:w-auto">
+              <Button
+              variant="outline"
+              className="w-full sm:w-auto"
+              onClick={handleDownloadPDF}
+              >
                 <Download className="w-4 h-4 mr-2" />
                 Download PDF
               </Button>
+
             </div>
           </div>
         </div>
 
-        <div className="space-y-6">
+        <div>    
+          <div  className="space-y-6 bg-white px-6 pb-6 pt-10" >
+            <div
+              id="profile-review-ui"
+              className={`space-y-6 bg-white px-6 pb-6 pt-10 ${
+              isPDF ? "pdf-mode" : ""
+              }`}
+            >
+      <div id="pdf-page-1">
+        {/* COMPLETE REVIEW UI */}
           {/* Personal Information */}
           <Card>
             <CardHeader className="pb-4">
               <CardTitle className="flex items-center space-x-2">
                 <User className="w-5 h-5 text-purple-600" />
+
                 <span>Personal Information</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex flex-col lg:flex-row gap-6">
                 <div className="flex-shrink-0">
-                  <div className="w-24 h-24 lg:w-32 lg:h-32 bg-gradient-to-br from-purple-100 to-blue-100 rounded-full flex items-center justify-center overflow-hidden">
+                  <div className="profile-image-box w-24 h-24 lg:w-32 lg:h-32 bg-gradient-to-br from-purple-100 to-blue-100 rounded-full flex items-center justify-center overflow-hidden">
+
                    {profileData.personalInfo.profile_image ? (
                     <img
                      src={profileData.personalInfo.profile_image}
@@ -256,7 +356,7 @@ export default function ProfileReview() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-6">
+              <div  className="space-y-6">
                 {profileData.experience.map((exp, index) => (
                   <div key={exp.id} className="relative">
                     {index !== profileData.experience.length - 1 && (
@@ -355,6 +455,7 @@ export default function ProfileReview() {
             </CardContent>
           </Card>
 
+
           {/* Certifications */}
           <Card>
             <CardHeader className="pb-4">
@@ -383,7 +484,9 @@ export default function ProfileReview() {
               </div>
             </CardContent>
           </Card>
-
+       
+          </div>
+          </div>
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 pt-6">
             <Link href="/profile" className="flex-1">
@@ -398,8 +501,10 @@ export default function ProfileReview() {
             </Button>
            </Link>
           </div>
+          
         </div>
       </div>
+    </div>
     </div>
   );
 }
