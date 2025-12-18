@@ -4,10 +4,10 @@ import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 import Header from "@/components/Header";
 import SearchSection from "@/components/SearchSection";
 import HeroCarousel from "@/components/Carousel";
-// import Image from "next/image";
 import Footer from "@/components/Footer";
 
 export default function CompaniesPage() {
@@ -43,7 +43,6 @@ export default function CompaniesPage() {
           locations: [item.city, item.state].filter(Boolean),
           rating: Math.floor(Math.random() * 2) + 3,
           reviews: Math.floor(Math.random() * 200) + 10,
-          // logo: "/placeholder-company.png",
           founded: item.founded_year || null,
         }));
 
@@ -95,7 +94,7 @@ export default function CompaniesPage() {
     );
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div  className="min-h-screen bg-gray-50">
       <Header />
       <HeroCarousel />
 
@@ -119,14 +118,13 @@ export default function CompaniesPage() {
         ) : (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredCompanies.slice(0, visibleCount).map((company, i) => (
-                <a
-                  key={i}
-                  href={`/companies/detail?id=${company.id}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block"
-                >
+             {filteredCompanies.slice(0, visibleCount).map((company) => (
+              <Link
+               href={`/companies/detail?id=${company.id}`}
+               target="_blank"
+               className="block"
+               >
+
                   <Card className="p-4 cursor-pointer hover:shadow-md transition">
                     <CardContent className="flex items-center gap-4 p-0">
                       {/* <Image
@@ -153,7 +151,7 @@ export default function CompaniesPage() {
                       </div>
                     </CardContent>
                   </Card>
-                </a>
+                </Link>
               ))}
             </div>
 

@@ -123,10 +123,7 @@ export default function JobListings() {
       } finally {
         setLoading(false);
       }
-    };
-
-    const fetchSavedJobs = async () => {
-      try {
+    }; const fetchSavedJobs = async () => { try {
         const token = localStorage.getItem("auth_token");
         if (!token) return;
     
@@ -791,12 +788,12 @@ const fetchUserData = async () => {
                                     }))
                                   }
                                   className={`p-2 rounded cursor-pointer text-sm
-                  ${
-                    isSelected
-                      ? "bg-blue-100 text-blue-700 font-medium"
-                      : "text-gray-700 hover:bg-gray-100"
-                  }
-                `}
+                                            ${
+                                              isSelected
+                                                ? "bg-blue-100 text-blue-700 font-medium"
+                                                : "text-gray-700 hover:bg-gray-100"
+                                            }
+                                          `}
                                 >
                                   {location}
                                 </div>
@@ -1513,7 +1510,7 @@ const fetchUserData = async () => {
                                 <span className="font-medium">Email:</span>
                                 {userData.email}
                               </p>
-                              <p>
+                              <p>                             
                                 <span className="font-medium">Phone:</span>
                                 {userData.phone || "Not provided"}
                               </p>

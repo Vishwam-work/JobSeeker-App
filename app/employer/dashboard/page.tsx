@@ -384,6 +384,8 @@ export default function EmployerDashboard() {
           name: app.profile?.full_name || app.user_email || "Unknown",
           email: app.profile?.email || app.user_email,
           phone: app.profile?.phone || "Not provided",
+          phoneCode: app.profile?.phone_code || "",
+
           location: [
             app.profile?.city,
             app.profile?.state,
@@ -398,7 +400,13 @@ export default function EmployerDashboard() {
           education: "",
           appliedFor: app.job_title,
           appliedDate: app.applied_at,
-          status: app.application_status || "Under Review",
+          // status: app.application_status || "Under Review",
+          status:
+             app.application_status &&
+             app.application_status !== "application_status"
+             ? app.application_status
+             : "Under Review",
+
           resumeUrl: app.profile?.resume
             ? `https://jobseeker-backend-jy1y.onrender.com${app.profile.resume}`
             : "#",
@@ -423,7 +431,8 @@ export default function EmployerDashboard() {
     const data = filteredCategories.map((c) => ({
       name: c.name || "",
       email: c.email || "",
-      phone: `+${c.phoneCode}${c.phone}` || "",
+      // phone: `+${c.phoneCode}${c.phone}` || "",
+      phone: `+${c.phone || ""}`,
       appliedFor: c.appliedFor || c.job_title || "",
       status: c.status || "",
       experience: c.experience || "",
@@ -578,8 +587,9 @@ export default function EmployerDashboard() {
       const mappedCandidates = data.map((item) => ({
         id: item.id,
         name: item.profile?.full_name || item.full_name,
-        email: item.email || item.user_email,
+        email: item.email || item.user_email, 
         phone: item.profile?.phone || item.phone,
+        phoneCode: item.profile?.phone_code || item.phone_code,
         location: item.profile?.city || item.city,
         experience: item.profile?.experience || item.experience,
         job_title: item.job_title,
@@ -2950,8 +2960,9 @@ export default function EmployerDashboard() {
                         </div>
                         <div className="flex items-center">
                           <Phone className="w-4 h-4 mr-2 text-gray-400" />
+                           
                           <span>
-                            +{selectedCandidate.phoneCode}
+                           +{selectedCandidate.phoneCode}
                             {selectedCandidate.phone}
                           </span>
                         </div>

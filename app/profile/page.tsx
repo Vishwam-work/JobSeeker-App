@@ -1369,7 +1369,7 @@ const [selectedImage, setSelectedImage] = useState(null);
                         </Label>
                         <div className="flex gap-2 mt-1">
                           <Select
-                            value={profileData.personalInfo.phoneCode || "+91"}
+                            value={profileData.personalInfo.phoneCode || ""}
                             disabled
                             onValueChange={(value) =>
                               setProfileData((prev) => ({

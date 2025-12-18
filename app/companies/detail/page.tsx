@@ -54,7 +54,11 @@ export default function CompanyDetailPage() {
 
         const mappedCompany = {
           id: companyData.id,
-          name: companyData.company_name,
+          // name: companyData.company_name,
+            name:
+           companyData.company_name ||
+           companyData.name ||
+           "Company name not available",
           type: companyData.company_type,
           industry: companyData.industry,
           size: companyData.company_size,
@@ -159,13 +163,18 @@ export default function CompanyDetailPage() {
   if (!company) return <p className="p-6">Company not found.</p>;
 
   return (
-    <div className="w-full min-h-screen bg-gray-50">
+   <div key={id} className="w-full min-h-screen bg-gray-50">
+
       <Header />
 
       <div className="px-4 sm:px-6 md:px-10 py-6 w-full max-w-7xl mx-auto">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 border-b pb-6 w-full">
           <div className="flex-1">
-            <h1 className="text-2xl sm:text-3xl font-bold">{company.name}</h1>
+            {/* <h1 className="text-2xl sm:text-3xl font-bold">{company.name}</h1> */}
+            <h1 className="text-2xl sm:text-3xl font-bold">
+             {company?.name || "Company name not available"}
+            </h1>
+
             <p className="text-gray-600 text-sm sm:text-base">
               {company.industry} • {company.type}
             </p>
