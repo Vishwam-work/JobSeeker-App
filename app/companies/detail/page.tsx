@@ -51,7 +51,7 @@ export default function CompanyDetailPage() {
 
         const companyData = await companyRes.json();
         const jobsData = await jobsRes.json();
-
+        console.log("Company Data:", companyData);
         const mappedCompany = {
           id: companyData.id,
           // name: companyData.company_name,

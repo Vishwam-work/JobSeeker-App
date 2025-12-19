@@ -123,7 +123,9 @@ export default function JobListings() {
       } finally {
         setLoading(false);
       }
-    }; const fetchSavedJobs = async () => { try {
+    };
+    const fetchSavedJobs = async () => {
+      try {
         const token = localStorage.getItem("auth_token");
         if (!token) return;
     
@@ -788,12 +790,12 @@ const fetchUserData = async () => {
                                     }))
                                   }
                                   className={`p-2 rounded cursor-pointer text-sm
-                                            ${
-                                              isSelected
-                                                ? "bg-blue-100 text-blue-700 font-medium"
-                                                : "text-gray-700 hover:bg-gray-100"
-                                            }
-                                          `}
+                                     ${
+                                       isSelected
+                                         ? "bg-blue-100 text-blue-700 font-medium"
+                                         : "text-gray-700 hover:bg-gray-100"
+                                     }
+                                   `}
                                 >
                                   {location}
                                 </div>
@@ -1432,29 +1434,29 @@ const fetchUserData = async () => {
                       <Send className="w-4 h-4 mr-2" />
                       Apply Now
                     </Button> */}
-                    
-                   
 
-                    <Button
-                      variant="outline"
-                      onClick={() => handleSaveJob(selectedJob)}
-                      className={`flex-1 ${
-                        savedJobs.some((j) => j.id === selectedJob.id)
-                          ? "border-purple-600 text-purple-600"
-                          : ""
-                      }`}
+                   <Button
+                    variant="outline"
+                    onClick={() =>
+                      savedJobIds.includes(selectedJob.id)
+                        ? unsaveJob(selectedJob.id)
+                        : saveJob(selectedJob.id)
+                                      }
+                    className={`flex-1 ${
+                      savedJobIds.includes(selectedJob.id)
+                        ? "border-purple-600 text-purple-600"
+                        : ""
+                    }`}
                     >
-                      <Bookmark
-                        className={`w-4 h-4 mr-2 ${
-                          savedJobs.some((j) => j.id === selectedJob.id)
-                            ? "fill-current"
-                            : ""
-                        }`}
-                      />
-                      {savedJobs.some((j) => j.id === selectedJob.id)
-                        ? "Saved"
-                        : "Save Job"}
-                    </Button>
+                    <Bookmark
+                      className={`w-4 h-4 mr-2 ${
+                        savedJobIds.includes(selectedJob.id) ? "fill-current" : ""
+                      }`}
+                    />
+                    {savedJobIds.includes(selectedJob.id) ? "Saved" : "Save Job"}
+                  </Button>
+
+
 
                     <Button
                       variant="outline"
