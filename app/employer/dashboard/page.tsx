@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect,useReducer } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -117,6 +117,9 @@ export default function EmployerDashboard() {
   const [minute, setMinute] = useState("00");
   const [ampm, setAmPm] = useState("AM");
   const interviewTime = `${hour}:${minute} ${ampm}`;
+  
+
+
 
   // Sample data for posted jobs
   // const [postedJobs] = useState([
@@ -1163,12 +1166,9 @@ export default function EmployerDashboard() {
     try {
       const token = localStorage.getItem("auth_token");
       if (!token) return alert("Token missing");
-
-    const url = `https://jobseeker-backend-jy1y.onrender.com/employeer/job-postings/${candidate.id}/update/`;
-    const payload = { status: "Rejected" };
-
+  
       const res = await fetch(
-        `https://jobseeker-backend-jy1y.onrender.com/employeer/api/employer/applications/${selectedCandidate.id}/update/`,
+        `https://jobseeker-backend-jy1y.onrender.com/employeer/api/employer/applications/${selectedCandidate.id}/schedule-interview/`,
         {
           method: "PATCH",
           headers: {
@@ -1180,36 +1180,38 @@ export default function EmployerDashboard() {
             interview_time: interviewTime,
             interview_mode: interviewMode,
             notes: interviewNotes,
-            application_status: "Interview Scheduled",
           }),
         }
       );
-
-      const data = await res.json();
-      console.log("Response:", data);
-
+   // meet_link: meetLink,
       if (!res.ok) {
-        return alert("Failed: " + JSON.stringify(data));
+        const text = await res.text();
+        console.error("Backend error:", text);
+        return alert("Failed to schedule interview");
       }
+  
+      const data = await res.json();
+  
       setCandidates((prev) =>
         prev.map((c) =>
           c.id === data.id ? { ...c, status: data.application_status } : c
         )
       );
-
+  
       setSelectedCandidate((prev) =>
         prev && prev.id === data.id
           ? { ...prev, status: data.application_status }
           : prev
       );
-
+  
       alert("Interview Scheduled!");
       setOpenSchedule(false);
     } catch (err) {
-      console.log(err);
-      alert("Network Error");
+      console.error(err);
+      alert("Network error");
     }
   };
+  
 
   const handleLogout = () => {
     localStorage.removeItem("auth_token");
@@ -3151,135 +3153,129 @@ export default function EmployerDashboard() {
                       </div>
 
                       {openSchedule && (
-                        <Dialog
-                          open={openSchedule}
-                          onOpenChange={() => setOpenSchedule(false)}
-                        >
-                          <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto rounded-xl">
-                            <DialogHeader>
-                              <DialogTitle className="text-lg font-semibold">
-                                Schedule Interview
-                              </DialogTitle>
-                            </DialogHeader>
+  <Dialog open={openSchedule} onOpenChange={() => setOpenSchedule(false)}>
+    <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto rounded-xl">
+      <DialogHeader>
+        <DialogTitle className="text-lg font-semibold">
+          Schedule Interview
+        </DialogTitle>
+      </DialogHeader>
 
-                            <div className="space-y-4 mt-3">
-                              {/* Candidate Name */}
-                              <div className="bg-gray-50 p-3 rounded-lg border">
-                                <p className="text-xs text-gray-500">
-                                  Candidate
-                                </p>
-                                <p className="font-semibold text-gray-800">
-                                  {selectedCandidate?.name}
-                                </p>
-                              </div>
+      <div className="space-y-4 mt-3">
+        {/* Candidate Name */}
+        <div className="bg-gray-50 p-3 rounded-lg border">
+          <p className="text-xs text-gray-500">Candidate</p>
+          <p className="font-semibold text-gray-800">
+            {selectedCandidate?.name}
+          </p>
+        </div>
 
-                              {/* Candidate Email */}
-                              <div className="bg-gray-50 p-3 rounded-lg border">
-                                <p className="text-xs text-gray-500">Email</p>
-                                <p className="font-semibold text-gray-800">
-                                  {selectedCandidate?.email}
-                                </p>
-                              </div>
+        {/* Candidate Email */}
+        <div className="bg-gray-50 p-3 rounded-lg border">
+          <p className="text-xs text-gray-500">Email</p>
+          <p className="font-semibold text-gray-800">
+            {selectedCandidate?.email}
+          </p>
+        </div>
 
-                              {/* Date */}
-                              <div>
-                                <label className="text-sm font-medium">
-                                  Interview Date
-                                </label>
-                                <input
-                                  type="date"
-                                  className="w-full border rounded-lg p-2 mt-1 focus:ring-2 focus:ring-blue-500"
-                                  value={interviewDate}
-                                  onChange={(e) =>
-                                    setInterviewDate(e.target.value)
-                                  }
-                                />
-                              </div>
+        {/* Interview Date */}
+        <div>
+          <label className="text-sm font-medium">Interview Date</label>
+          <input
+            type="date"
+            className="w-full border rounded-lg p-2 mt-1 focus:ring-2 focus:ring-blue-500"
+            value={interviewDate}
+            onChange={(e) => setInterviewDate(e.target.value)}
+          />
+        </div>
 
-                              {/* Time */}
-                              <div className="flex space-x-2">
-                                <label className="text-sm font-medium">
-                                  Interview Time
-                                </label>
-                                <input
-                                  type="number"
-                                  min="1"
-                                  max="12"
-                                  value={hour}
-                                  onChange={(e) => setHour(e.target.value)}
-                                  className="w-16 border rounded-lg p-2"
-                                />
-                                <span>:</span>
-                                <input
-                                  type="number"
-                                  min="0"
-                                  max="59"
-                                  value={minute}
-                                  onChange={(e) => setMinute(e.target.value)}
-                                  className="w-16 border rounded-lg p-2"
-                                />
-                                <select
-                                  value={ampm}
-                                  onChange={(e) => setAmPm(e.target.value)}
-                                  className="border rounded-lg p-2"
-                                >
-                                  <option>AM</option>
-                                  <option>PM</option>
-                                </select>
-                              </div>
+        {/* Interview Time */}
+        <div className="flex space-x-2 items-center">
+          <label className="text-sm font-medium">Interview Time</label>
 
-                              {/* Mode */}
-                              <div>
-                                <label className="text-sm font-medium">
-                                  Interview Mode
-                                </label>
-                                <select
-                                  className="w-full border rounded-lg p-2 mt-1 focus:ring-2 focus:ring-blue-500"
-                                  value={interviewMode}
-                                  onChange={(e) =>
-                                    setInterviewMode(e.target.value)
-                                  }
-                                >
-                                  <option>Online</option>
-                                  <option>Office</option>
-                                  <option>Phone Call</option>
-                                </select>
-                              </div>
+          <input
+            type="number"
+            min="1"
+            max="12"
+            className="w-16 border rounded-lg p-2"
+            value={hour}
+            onChange={(e) => setHour(e.target.value)}
+          />
 
-                              {/* Notes */}
-                              <div className="mt-4">
-                                <p className="text-sm text-gray-700 mb-1">
-                                  Google Meet link
-                                </p>
-                                <textarea
-                                  className="w-full border rounded-md p-2 text-sm focus:ring-2 focus:ring-blue-500"
-                                  rows={3}
-                                  placeholder="Enter interview instructions or notes..."
-                                  value={interviewNotes}
-                                  onChange={(e) =>
-                                    setInterviewNotes(e.target.value)
-                                  }
-                                />
-                              </div>
-                            </div>
+          <span>:</span>
 
-                            <DialogFooter className="mt-3">
-                              <Button
-                                variant="outline"
-                                onClick={() => setOpenSchedule(false)}
-                              >
-                                Cancel
-                              </Button>
-                              <Button
-                                className="bg-blue-600 hover:bg-blue-700"
-                                onClick={handleScheduleSubmit}
-                              >
-                                Schedule
-                              </Button>
-                            </DialogFooter>
-                          </DialogContent>
-                        </Dialog>
-                      )}
+          <input
+            type="number"
+            min="0"
+            max="59"
+            className="w-16 border rounded-lg p-2"
+            value={minute}
+            onChange={(e) => setMinute(e.target.value)}
+          />
+
+          <select
+            className="border rounded-lg p-2"
+            value={ampm}
+            onChange={(e) => setAmPm(e.target.value)}
+          >
+            <option>AM</option>
+            <option>PM</option>
+          </select>
+        </div>
+
+        {/* Interview Mode */}
+        <div>
+          <label className="text-sm font-medium">Interview Mode</label>
+          <select
+            className="w-full border rounded-lg p-2 mt-1 focus:ring-2 focus:ring-blue-500"
+            value={interviewMode}
+            onChange={(e) => setInterviewMode(e.target.value)}
+          >
+            <option>Online</option>
+            <option>Office</option>
+            <option>Phone Call</option>
+          </select>
+        </div>
+
+        {/* Meet Link */}
+        {/* <div>
+          <label className="text-sm text-gray-700">Google Meet link</label>
+          <input
+            className="w-full border rounded-md p-2 text-sm focus:ring-2 focus:ring-blue-500"
+            placeholder="Enter meet link..."
+            value={meetLink}
+            onChange={(e) => setMeetLink(e.target.value)}
+          />
+        </div> */}
+
+        {/* Notes */}
+        <div>
+          <label className="text-sm text-gray-700">Notes</label>
+          <textarea
+            className="w-full border rounded-md p-2 mt-1 text-sm focus:ring-2 focus:ring-blue-500"
+            rows={3}
+            placeholder="Enter instructions or notes..."
+            value={interviewNotes}
+            onChange={(e) => setInterviewNotes(e.target.value)}
+          />
+        </div>
+      </div>
+
+      <DialogFooter className="mt-3">
+        <Button variant="outline" onClick={() => setOpenSchedule(false)}>
+          Cancel
+        </Button>
+        <Button
+          className="bg-blue-600 hover:bg-blue-700"
+          onClick={handleScheduleSubmit}
+        >
+          Schedule
+        </Button>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
+)}
+
                     </div>
                   </CardContent>
                 </Card>
