@@ -1528,57 +1528,54 @@ export default function EmployerDashboard() {
                     <Label className="text-sm font-medium">
                       Job Location *
                     </Label>
-                    <Popover open={open} onOpenChange={setOpen}>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          className="w-full justify-between mt-1 h-10 lg:h-11"
-                        >
-                          {selectedCity || "Select location"}
-                          <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
-                        </Button>
-                      </PopoverTrigger>
+                  <Popover open={open} onOpenChange={setOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        className="w-full justify-between"
+                      >
+                        {search || "Select location"}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
 
-                      <PopoverContent className="w-full p-0">
-                        <Command>
-                          <CommandInput
-                            placeholder="Search location..."
-                            value={search}
-                            onValueChange={setSearch}
-                          />
-                          <CommandList>
-                            {filteredCities.length === 0 ? (
-                              <CommandEmpty>No location found.</CommandEmpty>
-                            ) : (
-                              <CommandGroup>
-                                {filteredCities
-                                  .filter((city) =>
-                                    city.name
-                                      .toLowerCase()
-                                      .startsWith(search.toLowerCase())
-                                  )
-                                  .map((city) => (
-                                    <CommandItem
-                                      key={city.id}
-                                      onSelect={() => {
-                                        setJobForm((prev: any) => ({
-                                          ...prev,
-                                          location: city.id.toString(),
-                                        }));
-                                        setSearch("");
-                                        setOpen(false);
-                                      }}
-                                    >
-                                      {city.name}
-                                    </CommandItem>
-                                  ))}
-                              </CommandGroup>
-                            )}
-                          </CommandList>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
+                    <PopoverContent className="w-full p-0">
+                      <Command>
+                        <CommandInput
+                          placeholder="Search location..."
+                          value={search}
+                          onValueChange={setSearch}
+                        />
+
+                        <CommandList>
+                          {filteredCities.length === 0 ? (
+                            <CommandEmpty>No location found.</CommandEmpty>
+                          ) : (
+                            <CommandGroup>
+                              {filteredCities.map((city) => (
+                                <CommandItem
+                                  key={city.id}
+                                  value={city.name}
+                                  onSelect={(value) => {
+                                    setJobForm((prev) => ({
+                                      ...prev,
+                                      location: city.id.toString(),
+                                    }));
+                                    setSearch(value); // show selected city
+                                    setOpen(false);
+                                  }}
+                                >
+                                  {city.name}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          )}
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+  
                   </div>
 
                   <div>
