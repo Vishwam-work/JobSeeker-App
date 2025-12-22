@@ -627,7 +627,7 @@ export default function EmployerDashboard() {
         title: jobForm.title,
         category_id: parseInt(jobForm.category),
         job_title: parseInt(jobForm.jobTitle),
-        company: jobForm.company,
+        company: CompanyName,
         location_id: parseInt(jobForm.location),
         currency_id: parseInt(jobForm.currency),
         experience: jobForm.experience,
