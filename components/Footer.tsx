@@ -40,14 +40,12 @@ export default function Footer() {
             <li>
               <Link href="/" className="hover:text-black transition">Jobs</Link>
             </li>
-            <li>
-              <Link href="/" className="hover:text-black transition">About</Link>
-            </li>
+          
           </ul>
         </div>
 
         {/* Resources */}
-        <div>
+        {/* <div>
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Resources</h3>
           <ul className="space-y-2">
             <li>
@@ -60,7 +58,7 @@ export default function Footer() {
               <Link href="/" className="hover:text-black transition">Support</Link>
             </li>
           </ul>
-        </div>
+        </div> */}
 
         {/* Contact */}
         <div>

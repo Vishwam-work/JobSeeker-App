@@ -60,6 +60,7 @@ export default function JobListings() {
   const [appliedJobs, setAppliedJobs] = useState([]);
   const { savedJobs, addJob, removeJob } = useSavedJobs();
   const [savedJobIds, setSavedJobIds] = useState<number[]>([]);
+  const [visibleCount, setVisibleCount] = useState(3);
 
 
   // Filter states
@@ -123,7 +124,6 @@ export default function JobListings() {
         setLoading(false);
       }
     };
-
     const fetchSavedJobs = async () => {
       try {
         const token = localStorage.getItem("auth_token");
@@ -226,6 +226,11 @@ export default function JobListings() {
   }, [userEmail]);
 
   useEffect(() => {
+  setVisibleCount(3);
+}, [filters]);
+
+
+  useEffect(() => {
     let filtered = jobs;
 
     // Search filter
@@ -251,6 +256,7 @@ export default function JobListings() {
             .includes(filters.location.toLowerCase())
       );
     }
+
 
     // Experience filter
     if (filters.experience && filters.experience !== "All") {
@@ -279,6 +285,7 @@ export default function JobListings() {
         return maxJobExp >= minFilterExp && minJobExp <= maxFilterExp;
       });
     }
+
 
     // Work Mode filter
     if (filters.workMode && filters.workMode !== "All") {
@@ -538,6 +545,17 @@ const fetchUserData = async () => {
 
     console.log("MY Applications:", myApplications);
 
+     if (myApplications.length > 0) {
+     const profile = myApplications[0].profile;
+
+      setUserData({
+       ...profile,
+       resume: profile.resume
+        ? `https://jobseeker-backend-jy1y.onrender.com${profile.resume}`
+        : null,
+        });
+      }
+
     const appliedIDs = myApplications.map(app => Number(app.job));
 
     localStorage.setItem(`applied_jobs_${email}`, JSON.stringify(appliedIDs));
@@ -772,12 +790,12 @@ const fetchUserData = async () => {
                                     }))
                                   }
                                   className={`p-2 rounded cursor-pointer text-sm
-                  ${
-                    isSelected
-                      ? "bg-blue-100 text-blue-700 font-medium"
-                      : "text-gray-700 hover:bg-gray-100"
-                  }
-                `}
+                                     ${
+                                       isSelected
+                                         ? "bg-blue-100 text-blue-700 font-medium"
+                                         : "text-gray-700 hover:bg-gray-100"
+                                     }
+                                   `}
                                 >
                                   {location}
                                 </div>
@@ -1046,7 +1064,9 @@ const fetchUserData = async () => {
                   </p>
                 </div>
               ) : (
-                filteredJobs.map((job) => (
+                filteredJobs
+                .slice(0, visibleCount)
+                .map((job) => (
                   <Card
                     key={job.id}
                     className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-transparent hover:border-l-purple-500"
@@ -1224,13 +1244,18 @@ const fetchUserData = async () => {
             </div>
 
             {/* Load More Button */}
-            {filteredJobs.length > 0 && (
+            {visibleCount < filteredJobs.length && (
               <div className="text-center mt-8">
-                <Button variant="outline" className="px-8 py-3">
+                <Button
+                  variant="outline"
+                  className="px-8 py-3"
+                  onClick={() => setVisibleCount((prev) => prev + 3)}
+                >
                   Load More Jobs
                 </Button>
               </div>
             )}
+
           </div>
         </div>
 
@@ -1409,29 +1434,29 @@ const fetchUserData = async () => {
                       <Send className="w-4 h-4 mr-2" />
                       Apply Now
                     </Button> */}
-                    
-                   
 
-                    <Button
-                      variant="outline"
-                      onClick={() => handleSaveJob(selectedJob)}
-                      className={`flex-1 ${
-                        savedJobs.some((j) => j.id === selectedJob.id)
-                          ? "border-purple-600 text-purple-600"
-                          : ""
-                      }`}
+                   <Button
+                    variant="outline"
+                    onClick={() =>
+                      savedJobIds.includes(selectedJob.id)
+                        ? unsaveJob(selectedJob.id)
+                        : saveJob(selectedJob.id)
+                                      }
+                    className={`flex-1 ${
+                      savedJobIds.includes(selectedJob.id)
+                        ? "border-purple-600 text-purple-600"
+                        : ""
+                    }`}
                     >
-                      <Bookmark
-                        className={`w-4 h-4 mr-2 ${
-                          savedJobs.some((j) => j.id === selectedJob.id)
-                            ? "fill-current"
-                            : ""
-                        }`}
-                      />
-                      {savedJobs.some((j) => j.id === selectedJob.id)
-                        ? "Saved"
-                        : "Save Job"}
-                    </Button>
+                    <Bookmark
+                      className={`w-4 h-4 mr-2 ${
+                        savedJobIds.includes(selectedJob.id) ? "fill-current" : ""
+                      }`}
+                    />
+                    {savedJobIds.includes(selectedJob.id) ? "Saved" : "Save Job"}
+                  </Button>
+
+
 
                     <Button
                       variant="outline"
@@ -1480,15 +1505,15 @@ const fetchUserData = async () => {
                             </h4>
                             <div className="text-sm text-gray-600 space-y-1">
                               <p>
-                                <span className="font-medium">Name:</span>{" "}
+                                <span className="font-medium">Name:</span>
                                 {userData.name || userData.full_name}
                               </p>
                               <p>
-                                <span className="font-medium">Email:</span>{" "}
+                                <span className="font-medium">Email:</span>
                                 {userData.email}
                               </p>
-                              <p>
-                                <span className="font-medium">Phone:</span>{" "}
+                              <p>                             
+                                <span className="font-medium">Phone:</span>
                                 {userData.phone || "Not provided"}
                               </p>
                             </div>

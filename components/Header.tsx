@@ -12,15 +12,19 @@ import {
   X,
 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 // import { useSession, signOut } from "next-auth/react"; 
+import Loader from "./Loader";
 
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isEmployerDropdownOpen, setIsEmployerDropdownOpen] = useState(false);
+  const [pageLoading, setPageLoading] = useState(false);
+
   const router = useRouter();
+  const pathname = usePathname();
 
   // const { data: session } = useSession(); 
 
@@ -39,14 +43,31 @@ export default function Header() {
   const handleLogout = () => {
     localStorage.removeItem("auth_token");
     localStorage.removeItem("user_name");   
-localStorage.removeItem("user_email");
-localStorage.removeItem("user_id");
+    localStorage.removeItem("user_email");
+    localStorage.removeItem("user_id");
 
     setIsAuthenticated(false);
     router.push("/login");
   };
 
+  useEffect(() => {
+  setPageLoading(false);
+}, [pathname]);
+
+ const handleProfileNavigate = () => {
+  if (pathname === "/profile") {
+    return;
+  }
+  setPageLoading(true);
+  router.push("/profile");
+};
+
+
+
   return (
+    <>
+  <Loader show={pageLoading} text="Loding..." />
+
     <header className="bg-white shadow-sm border-b sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
@@ -105,11 +126,13 @@ localStorage.removeItem("user_id");
                   Logout
                 </Button>
 
-                <Link href="/profile">
-                  <Button className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white">
-                    Make Profile
-                  </Button>
-                </Link>
+                   <Button
+                  onClick={handleProfileNavigate}
+                  className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white"
+                >
+                  Make Profile
+                </Button>
+                
               </div>
             ) : (
               <>
@@ -226,11 +249,12 @@ localStorage.removeItem("user_id");
                     >
                       Logout
                     </Button>
-                    <Link href="/profile">
-                      <Button className="w-full bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white">
+                      <Button
+                        onClick={handleProfileNavigate}
+                        className="w-full bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white"
+                      >
                         Make Profile
                       </Button>
-                    </Link>
                   </>
                 ) : (
                   <>
@@ -255,5 +279,6 @@ localStorage.removeItem("user_id");
         )}
       </div>
     </header>
+    </>
   );
 }

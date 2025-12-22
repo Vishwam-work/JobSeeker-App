@@ -384,6 +384,8 @@ export default function EmployerDashboard() {
           name: app.profile?.full_name || app.user_email || "Unknown",
           email: app.profile?.email || app.user_email,
           phone: app.profile?.phone || "Not provided",
+          phoneCode: app.profile?.phone_code || "",
+
           location: [
             app.profile?.city,
             app.profile?.state,
@@ -398,7 +400,13 @@ export default function EmployerDashboard() {
           education: "",
           appliedFor: app.job_title,
           appliedDate: app.applied_at,
-          status: app.application_status || "Under Review",
+          // status: app.application_status || "Under Review",
+          status:
+             app.application_status &&
+             app.application_status !== "application_status"
+             ? app.application_status
+             : "Under Review",
+
           resumeUrl: app.profile?.resume
             ? `https://jobseeker-backend-jy1y.onrender.com${app.profile.resume}`
             : "#",
@@ -417,11 +425,27 @@ export default function EmployerDashboard() {
     fetchApplications();
   }, []);
 
-  // const filteredCandidates = candidates.filter((candidate) => {
-  //   if (filter === "All") return true;
-  //   return candidate.status === filter;
-  // });
+  const exportToExcel = async () => {
+    const XLSX = await import("xlsx");
 
+    const data = filteredCategories.map((c) => ({
+      name: c.name || "",
+      email: c.email || "",
+      // phone: `+${c.phoneCode}${c.phone}` || "",
+      phone: `+${c.phone || ""}`,
+      appliedFor: c.appliedFor || c.job_title || "",
+      status: c.status || "",
+      experience: c.experience || "",
+      location: c.location || "",
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(wb, ws, "Candidates");
+
+    XLSX.writeFile(wb, "filtered_candidates.xlsx");
+  };
   const fetchPostedJobs = async () => {
     try {
       const token = localStorage.getItem("auth_token");
@@ -563,8 +587,9 @@ export default function EmployerDashboard() {
       const mappedCandidates = data.map((item) => ({
         id: item.id,
         name: item.profile?.full_name || item.full_name,
-        email: item.email || item.user_email,
+        email: item.email || item.user_email, 
         phone: item.profile?.phone || item.phone,
+        phoneCode: item.profile?.phone_code || item.phone_code,
         location: item.profile?.city || item.city,
         experience: item.profile?.experience || item.experience,
         job_title: item.job_title,
@@ -1278,7 +1303,7 @@ export default function EmployerDashboard() {
         if (data?.company_name) {
           setJobForm((prev) => ({
             ...prev,
-            company: data.company_name,
+            company: prev.company ? prev.company : data.company_name
           }));
         }
       } catch (err) {
@@ -1321,13 +1346,20 @@ export default function EmployerDashboard() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Welcome Section */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Welcome to your Dashboard
-          </h1>
-          <p className="text-gray-600">
-            Manage your job postings and find the perfect candidates
-          </p>
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              Welcome to your Dashboard
+            </h1>
+            <p className="text-gray-600">
+              Manage your job postings and find the perfect candidates
+            </p>
+          </div>
+          {activeTab === "candidates" && (
+            <Button onClick={exportToExcel} className="bg-green-600 text-white">
+              Export Excel
+            </Button>
+          )}
         </div>
 
         {/* Navigation Tabs */}
@@ -1424,7 +1456,7 @@ export default function EmployerDashboard() {
                         jobCategories.length > 0 ? (
                           jobCategories
                             .filter((category) => {
-                              if (!searchTerm) return true; 
+                              if (!searchTerm) return true;
                               return category?.name
                                 ?.toLowerCase()
                                 .startsWith(searchTerm.toLowerCase());
@@ -1528,6 +1560,7 @@ export default function EmployerDashboard() {
                     <Label className="text-sm font-medium">
                       Job Location *
                     </Label>
+
                     <Popover open={open} onOpenChange={setOpen}>
                       <PopoverTrigger asChild>
                         <Button
@@ -1562,10 +1595,13 @@ export default function EmployerDashboard() {
                                     <CommandItem
                                       key={city.id}
                                       onSelect={() => {
+                                        setSelectedCity(city.name);
+
                                         setJobForm((prev: any) => ({
                                           ...prev,
                                           location: city.id.toString(),
                                         }));
+
                                         setSearch("");
                                         setOpen(false);
                                       }}
@@ -1924,9 +1960,6 @@ export default function EmployerDashboard() {
 
                 {/* Submit Button */}
                 <div className="flex justify-end space-x-4">
-                  <Button type="button" variant="outline">
-                    Save as Draft
-                  </Button>
                   <Button
                     type="submit"
                     className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
@@ -1980,14 +2013,14 @@ export default function EmployerDashboard() {
                       className="pl-10 w-48"
                     />
                   </div>
-                  <Button variant="outline" size="sm">
+                  {/* <Button variant="outline" size="sm">
                     <Filter className="w-4 h-4 mr-2" />
                     Filter
                   </Button>
                   <Button variant="outline" size="sm">
                     <Download className="w-4 h-4 mr-2" />
                     Export
-                  </Button>
+                  </Button> */}
                 </div>
               </div>
             </CardHeader>
@@ -2597,10 +2630,26 @@ export default function EmployerDashboard() {
               <Card className="h-full">
                 <CardHeader>
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg">Applications</CardTitle>
-                    <Badge variant="secondary">
-                      {filteredCategories.length}
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                      <CardTitle className="text-lg">Applications</CardTitle>
+
+                      <Badge variant="secondary">
+                        {filteredCategories.length}
+                      </Badge>
+                    </div>
+
+                    <button
+                      onClick={() => {
+                        setStatusFilter("All");
+                        setLocationFilter("All");
+                        setSalaryFilter("All");
+                        setExperienceFilter("All");
+                        setJobTitleFilter("All");
+                      }}
+                      className="text-sm px-3 py-1 border rounded-md hover:bg-gray-100"
+                    >
+                      Clear Filters
+                    </button>
                   </div>
 
                   {/*  Search Bar  */}
@@ -2878,6 +2927,7 @@ export default function EmployerDashboard() {
                           <Phone className="w-4 h-4 mr-2" />
                           Call
                         </Button>
+
                         <Button variant="outline" size="sm">
                           {selectedCandidate.resumeUrl ? (
                             <a
@@ -2910,8 +2960,9 @@ export default function EmployerDashboard() {
                         </div>
                         <div className="flex items-center">
                           <Phone className="w-4 h-4 mr-2 text-gray-400" />
+                           
                           <span>
-                            +{selectedCandidate.phoneCode}
+                           +{selectedCandidate.phoneCode}
                             {selectedCandidate.phone}
                           </span>
                         </div>
