@@ -99,7 +99,7 @@ export default function Profile() {
     summary: "",
   });
   const [profileImage, setProfileImage] = useState(null);
-const [selectedImage, setSelectedImage] = useState(null); 
+  const [selectedImage, setSelectedImage] = useState(null); 
   const [activeSection, setActiveSection] = useState("personal");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState({
@@ -163,6 +163,7 @@ const [selectedImage, setSelectedImage] = useState(null);
   const [currency, setCurrency] = useState([]);
   const [savedJobsData, setSavedJobsData] = useState([]);
   const [activeSaveTab, setActiveSaveTab] = useState("SavedJobs");
+  const [isProfileSubmitted, setIsProfileSubmitted] = useState(false);
 
   const [noticeRanges] = useState([
     "1-15 days",
@@ -719,6 +720,13 @@ const [selectedImage, setSelectedImage] = useState(null);
   return res.ok;
 };
 
+useEffect(() => {
+  const submitted = localStorage.getItem("profile_submitted");
+  if (submitted === "true") {
+    setIsProfileSubmitted(true);
+  }
+}, []);
+
 
   // Save Api
   const handleSaveProfile = async () => {
@@ -816,6 +824,8 @@ const [selectedImage, setSelectedImage] = useState(null);
         // If response has no JSON body, silently skip state update
         console.warn("Profile saved; response body parse skipped", e);
       }
+      localStorage.setItem("profile_submitted", "true");
+      setIsProfileSubmitted(true);
       alert("Profile saved successfully!");
     } else {
       const errText = await res.text();
@@ -1113,15 +1123,17 @@ const [selectedImage, setSelectedImage] = useState(null);
                     </a>
 
                     {/* PREVIEW BUTTON */}
-                    <Link href="/review">
-                      <Button
-                        variant="outline"
-                        className="w-full text-sm lg:text-base h-10 lg:h-11"
-                      >
-                        <Eye className="w-4 h-4 mr-2" />
-                        Preview Profile
-                      </Button>
-                    </Link>
+                   {isProfileSubmitted && (
+                      <Link href="/review">
+                        <Button
+                          variant="outline"
+                          className="w-full text-sm lg:text-base h-10 lg:h-11"
+                        >
+                         <Eye className="w-4 h-4 mr-2" />
+                          Preview Profile
+                        </Button>
+                      </Link>
+                   )}
                   </div>
                 </CardContent>
               </Card>

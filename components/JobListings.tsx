@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -61,6 +62,8 @@ export default function JobListings() {
   const { savedJobs, addJob, removeJob } = useSavedJobs();
   const [savedJobIds, setSavedJobIds] = useState<number[]>([]);
   const [visibleCount, setVisibleCount] = useState(3);
+  const searchParams = useSearchParams();
+  const searchFromUrl = searchParams.get("search");
 
 
   // Filter states
@@ -89,6 +92,7 @@ export default function JobListings() {
   const [showSkillsDropdown, setShowSkillsDropdown] = useState(false);
   const [searchSkill, setSearchSkill] = useState("");
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [showLoginPopup, setShowLoginPopup] = useState(false);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -103,6 +107,15 @@ export default function JobListings() {
       setAppliedJobs(JSON.parse(storedApplied));
     }
   }, []);
+  useEffect(() => {
+  if (searchFromUrl) {
+    setFilters((prev) => ({
+      ...prev,
+      search: searchFromUrl,
+    }));
+  }
+}, [searchFromUrl]);
+
 
   // Fetch companies from API
   useEffect(() => {
@@ -486,8 +499,9 @@ const unsaveJob = async (jobId: number) => {
   const handleApply = (job) => {
     const token = localStorage.getItem("auth_token");
     if (!token) {
-      alert("Please login to apply for jobs");
-      window.location.href = "/login";
+      // alert("Please login to apply for jobs");
+      // window.location.href = "/login";
+        setShowLoginPopup(true);
       return;
     }
     setSelectedJob(job);
@@ -1596,6 +1610,56 @@ const fetchUserData = async () => {
             )}
           </DialogContent>
         </Dialog>
+
+       
+          {/* Login Required Popup */}
+        <Dialog open={showLoginPopup} onOpenChange={setShowLoginPopup}>          
+           <DialogContent className="max-w-md rounded-2xl p-0 overflow-hidden">
+               {/* Header */}
+            <div className="bg-gradient-to-r from-purple-600 to-blue-600 p-6 text-white">
+              <h2 className="text-xl font-semibold">Login Required</h2>
+              <p className="text-sm opacity-90 mt-1">
+                You need to login before applying for jobs
+              </p>
+            </div>
+        
+            {/* Body */}
+            <div className="p-6 space-y-4">
+              <div className="flex items-start gap-3 bg-purple-50 border border-purple-100 rounded-lg p-4">
+                <div className="flex-shrink-0">
+                  <Eye className="w-5 h-5 text-purple-600" />
+                </div>
+                <p className="text-sm text-gray-700 leading-relaxed">
+                  Login to apply for jobs, track your applications, and get personalized
+                  job recommendations.
+                </p>
+              </div>
+
+               {/* Buttons */}
+               <div className="flex gap-3 pt-2">
+                 <Button
+                   className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 shadow-md"
+                   onClick={() => {
+                     setShowLoginPopup(false);
+                     window.location.href = "/login";
+                   }}
+                 >
+                   Login Now
+                 </Button>
+         
+                 <Button
+                   variant="outline"
+                   className="flex-1"
+                   onClick={() => setShowLoginPopup(false)}
+                 >
+                   Cancel
+                 </Button>
+               </div>
+             </div>
+           </DialogContent>
+       </Dialog>
+
+
       </div>
     </section>
   );
