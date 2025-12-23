@@ -753,17 +753,29 @@ useEffect(() => {
       experience: profileData.personalInfo.experience,
       current_salary: profileData.personalInfo.currentSalary,
       expected_salary: profileData.personalInfo.expectedSalary,
-      current_currency_id: profileData.personalInfo.currentcurrency || null,
-      expected_currency_id: profileData.personalInfo.expectedCurrency || null,
+      current_currency_id: profileData.personalInfo.currentcurrency
+        ? Number(profileData.personalInfo.currentcurrency)
+        : null,
+
+      expected_currency_id: profileData.personalInfo.expectedCurrency
+        ? Number(profileData.personalInfo.expectedCurrency)
+        : null,
+
       notice_period: profileData.personalInfo.noticePeriod,
-      country_id: profileData.personalInfo.countryId || null,
-      state_id: profileData.personalInfo.stateId || null,
-      city_id: profileData.personalInfo.cityId || null,
+      country_id: profileData.personalInfo.countryId
+        ? Number(profileData.personalInfo.countryId)
+        : null,
+      state_id: profileData.personalInfo.stateId
+        ? Number(profileData.personalInfo.stateId)
+        : null,
+      city_id: profileData.personalInfo.cityId
+        ? Number(profileData.personalInfo.cityId)
+        : null,
       experiences: profileData.experience.map(exp => ({
         id: exp.id,
         company: exp.company,
-        category_id: Number(exp.category_id),
-        job_title_id: Number(exp.job_title_id),
+        category_id: exp.category_id ? Number(exp.category_id) : null,
+        job_title_id: exp.job_title_id ? Number(exp.job_title_id) : null,
         location_id: exp.location_id ? Number(exp.location_id) : null,
         start_date: exp.start_date,
         end_date: exp.end_date,
@@ -786,7 +798,6 @@ useEffect(() => {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
-          // Authorization: `Token ${localStorage.getItem("auth_token")}`,
         },
         body: JSON.stringify(payload),
       }
