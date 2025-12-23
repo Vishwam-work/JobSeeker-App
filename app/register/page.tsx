@@ -78,7 +78,8 @@ export default function Register() {
   // ----------------------------
   // SEND OTP
   // ----------------------------
-  const handlesendotp = async () => {
+  const handlesendotp = async (e) => {
+    e.preventDefault();
     try {
       const res = await fetch(
         "https://jobseeker-backend-jy1y.onrender.com/api/send_otp/",
