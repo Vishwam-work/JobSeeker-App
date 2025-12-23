@@ -493,6 +493,7 @@ export default function EmployerDashboard() {
       }
       const data = await response.json();
       console.log("Here is the Job-list-view-data:",data)
+      console.log(data.category)
       setPostedJobs(data); // Set jobs into state
     } catch (error) {
       console.error("Error fetching jobs:", error);
@@ -888,16 +889,16 @@ export default function EmployerDashboard() {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
-        // https://jobseeker-backend-jy1y.onrender.com
+      
         const data = await response.json();
-        console.log("Data is prefill");
+        console.log("Data is prefill", data);
         // Prefill the form
     setJobForm({
         title: data.title || "",
-        category: data.category?.id?.toString() || data.category || "",
+        category: data.category?.name?.toString() || data.category || "",
         jobTitle: data.job_title?.id?.toString() || data.job_title || "",
         company: data.company || "",
-        location: data.location?.id?.toString() || data.location || "",
+        location: data.location?.name?.toString() || data.location || "",
         experience: data.experience || "",
         salary: data.salary || "",
         currency: data.currency?.id?.toString() || data.currency || "",
@@ -2516,7 +2517,7 @@ export default function EmployerDashboard() {
                   <Label>Category</Label>
                   <Input
                     name="category"
-                    value={jobForm.category?.name || ""}
+                    value={jobForm.category || ""}
                     onChange={(e) =>
                       setJobForm({
                         ...jobForm,
@@ -2555,7 +2556,7 @@ export default function EmployerDashboard() {
                   <Label>Location</Label>
                   <Input
                     name="location"
-                    value={jobForm.location?.name || ""}
+                    value={jobForm.location || ""}
                     onChange={(e) =>
                       setJobForm({
                         ...jobForm,
