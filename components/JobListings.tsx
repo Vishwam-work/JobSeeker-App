@@ -10,6 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
 import { useSavedJobs } from "@/context/SavedJobsContext";
+import { toast } from "sonner";
+
 import {
   Select,
   SelectContent,
@@ -430,7 +432,10 @@ export default function JobListings() {
 const saveJob = async (jobId: number) => {
   const token = localStorage.getItem("auth_token");
   if (!token) {
-    alert("Please log in first.");
+    toast.warning("Please login to save jobs", {
+    description: "You need to be logged in to save a job.",
+   });
+
     return;
   }
 
@@ -499,8 +504,6 @@ const unsaveJob = async (jobId: number) => {
   const handleApply = (job) => {
     const token = localStorage.getItem("auth_token");
     if (!token) {
-      // alert("Please login to apply for jobs");
-      // window.location.href = "/login";
         setShowLoginPopup(true);
       return;
     }
@@ -524,7 +527,10 @@ const unsaveJob = async (jobId: number) => {
       });
     } else {
       navigator.clipboard.writeText(window.location.href);
-      alert("Job link copied to clipboard!");
+      toast("Link copied!", {
+        description: "Job link is copied to clipboard",
+      });
+
     }
   };
 
@@ -596,7 +602,10 @@ const fetchUserData = async () => {
       const token = localStorage.getItem("auth_token");
 
       if (!token) {
-        alert("Please login to apply");
+        toast("Login required", {
+        description: "Please login to continue with your application.",
+      });
+
         return;
       }
 
@@ -606,7 +615,10 @@ const fetchUserData = async () => {
           (_, index) => !answers[index]?.trim()
         );
         if (unanswered) {
-          alert("Please answer all questions before submitting");
+          toast("Incomplete Application", {
+           description: "Please answer all required questions before submitting.",
+        });
+
           return;
         }
       }
@@ -636,7 +648,10 @@ const fetchUserData = async () => {
       console.log("Serialised data for error :",result)
       
       if (response.ok) {
-        alert(`Application submitted successfully for ${selectedJob.title}!`);
+        toast.success("Application Submitted", {
+        description: `Your application for ${selectedJob.title} has been sent successfully.`,
+      });
+
         setIsApplyModalOpen(false);
         setSelectedJob(null);
         fetchUserData();
@@ -655,11 +670,17 @@ const fetchUserData = async () => {
 
        
       } else {
-        alert(result.error || "Failed to submit application");
+        toast.error("Application Failed", {
+        description: result?.error || "Something went wrong. Please try again.",
+      });
+
       }
     } catch (error) {
       console.error("Error submitting application:", error);
-      alert("Network error. Please try again.");
+      toast("Network error", {
+      description: "Please check your internet connection and try again",
+     });
+
     }
   };
 

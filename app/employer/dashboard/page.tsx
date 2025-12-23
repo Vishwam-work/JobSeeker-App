@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 import {
   Select,
   SelectContent,
@@ -580,7 +581,9 @@ export default function EmployerDashboard() {
 
       if (!Array.isArray(data)) {
         console.error("API did not return list:", data);
-        alert("Failed to load candidates! (Unauthorized?)");
+        toast.error("Failed to load candidates! (Unauthorized?)", {
+        description: "You might not have permission. Please log in or check your access."
+        });
         return;
       }
 
@@ -645,7 +648,9 @@ export default function EmployerDashboard() {
     try {
       const token = localStorage.getItem("auth_token");
       if (!token) {
-        alert("You must be logged in to post a job.");
+        toast.error("You must be logged in to post a job.", {
+        description: "Please log in to continue."
+        });
         return;
       }
       const payload = {
@@ -686,14 +691,17 @@ export default function EmployerDashboard() {
       if (!response.ok) {
         const errorData = await response.json();
         console.error("Error posting job:", errorData);
-        alert(`Failed to post job: ${errorData.detail || "Unknown error"}`);
+        toast.error("Failed to post job", {
+        description: errorData.detail || "Unknown error. Please try again.",
+        });
+
         return;
       }
 
   const data = await response.json();
   console.log("Job posted successfully:", data);
   setPostedJobs((prev) => [...prev, data]);
-  alert("Job posted successfully!");
+  toast.success("Job posted successfully!");
   await fetchPostedJobs();
 
       // Reset form
@@ -725,8 +733,10 @@ export default function EmployerDashboard() {
         setNewQuestion("");
       } catch (error) {
         console.error("Error submitting job:", error);
-        alert("An error occurred while posting the job.");
-      }
+        toast.error("An error occurred while posting the job.", {
+        description: "Please try again or check your internet connection."
+        });    
+       }
     };
 
     const getStatusColor = (status) => {
@@ -905,7 +915,10 @@ export default function EmployerDashboard() {
       ) {
         console.log("Deleting job:", job);
 
-        alert(`Job deleted: ${job.title}`);
+        toast.success("Job deleted", {
+        description: `The job "${job.title}" has been successfully removed.`
+        });
+
       }
       const response = await fetch(
         `https://jobseeker-backend-jy1y.onrender.com/employeer/job-postings/${job.id}/delete/`,
@@ -918,10 +931,15 @@ export default function EmployerDashboard() {
       );
       if (response.ok) {
         setPostedJobs((prev) => prev.filter((j) => j.id !== job.id));
-        alert(`Job deleted: ${job.title}`);
+        toast.success("Job deleted", {
+        description: `The job "${job.title}" has been successfully removed.`
+        });
+
       } else {
         console.error("Failed to delete job");
-        alert("Failed to delete job");
+        toast.error("Failed to delete job", {
+        description: "Please try again or check your internet connection."
+        });
       }
     } catch (err) {
       console.error("Error fetching job details for edit", err);
@@ -939,7 +957,9 @@ export default function EmployerDashboard() {
     const token = localStorage.getItem("auth_token");
 
     if (!token) {
-      alert("You are not logged in. Please log in again.");
+      toast.error("You are not logged in. Please log in again.", {
+      description: "Your session may have expired."
+      });
       return;
     }
 
@@ -965,14 +985,17 @@ export default function EmployerDashboard() {
         setPostedJobs((prev) =>
           prev.map((j) => (j.id === job.id ? { ...j, status: newStatus } : j))
         );
-        alert(`Job status changed to: ${newStatus}`);
+        toast.success(`Job status changed to: ${newStatus}`);
       } else {
         console.error("Failed to update job status:", result);
-        alert(result.detail || JSON.stringify(result));
+        
+        toast.error(result.detail || "Failed to update job status", {
+       description: "Please check and try again.",
+       });
       }
     } catch (err) {
       console.error("Error updating job status:", err);
-      alert("Network error. Please try again.");
+      toast.error("Network error. Please try again.");
     }
   };
 
@@ -1009,14 +1032,18 @@ export default function EmployerDashboard() {
   // Added the New Handle UpdateJob
   const handleUpdateJob = async () => {
     if (!selectedJob?.id) {
-      alert("No job selected for update");
+      toast.error("No job selected for update", {
+      description: "Please select a job and try again."
+     });
       return;
     }
 
     try {
       const token = localStorage.getItem("auth_token");
       if (!token) {
-        alert("You must be logged in to update a job.");
+        toast.error("You must be logged in to update a job.", {
+        description: "Please log in and try again."
+        });
         return;
       }
 
@@ -1035,7 +1062,9 @@ export default function EmployerDashboard() {
       if (!response.ok) {
         const errorData = await response.json();
         console.error("Failed to update job:", errorData);
-        alert(`Error: ${errorData.detail || "Unable to update job"}`);
+        toast.error(`Error: ${errorData.detail || "Unable to update job"}`, {
+        description: "Please try again or check your network connection."
+        });
         return;
       }
 
@@ -1047,10 +1076,13 @@ export default function EmployerDashboard() {
       );
 
       setIsEditMode(false); // Close the dialog
-      alert("Job updated successfully!");
+      
+      toast.success("Job updated successfully!");
     } catch (err) {
       console.error("Update job error:", err);
-      alert("An error occurred while updating the job.");
+      toast.error("An error occurred while updating the job.", {
+      description: "Please try again or check your network connection."
+      });
     }
   };
 
@@ -1059,7 +1091,9 @@ export default function EmployerDashboard() {
     try {
       const token = localStorage.getItem("auth_token");
       if (!token) {
-        alert("Token missing");
+        toast.error("Token missing", {
+        description: "Please log in again to continue."
+        });
         return;
       }
 
@@ -1081,7 +1115,9 @@ export default function EmployerDashboard() {
       console.log("Updated Response:", updated);
 
       if (!response.ok) {
-        alert(updated.error || "Update failed");
+         toast.error(updated.error || "Update failed", {
+         description: "Please check and try again."
+         });
         return;
       }
 
@@ -1104,10 +1140,10 @@ export default function EmployerDashboard() {
       // );
       console.log("Now>>>>>>>", selectedCandidate);
 
-      alert("Candidate Shortlisted!");
+      toast.success("Candidate Shortlisted!");
     } catch (err) {
       console.log("Shortlist error:", err);
-      alert("Network error");
+      toast.error("Network error. Please try again.");
     }
   };
 
@@ -1117,13 +1153,17 @@ export default function EmployerDashboard() {
       console.log("Rejecting candidate: ", candidate);
 
       if (!candidate?.id) {
-        alert("Candidate ID missing");
+        toast.error("Candidate ID missing", {
+        description: "Please select a candidate and try again."
+        });
         return;
       }
 
       const token = localStorage.getItem("auth_token");
       if (!token) {
-        alert("Token missing");
+        toast.error("Token missing", {
+         description: "Please log in again to continue."
+        });
         return;
       }
 
@@ -1152,7 +1192,9 @@ export default function EmployerDashboard() {
       }
 
       if (!response.ok) {
-        alert(data?.detail || "Update failed");
+        toast.error(data?.detail || "Update failed", {
+        description: "Please check and try again."
+        });
         return;
       }
 
@@ -1174,10 +1216,10 @@ export default function EmployerDashboard() {
       //     : prev
       // );
 
-      alert("Candidate Rejected!");
+      toast.success("Candidate Rejected!");
     } catch (err) {
       console.log("Reject error: ", err);
-      alert("Network error");
+      toast.error("Network error. Please try again.");
     }
   };
 
@@ -1190,7 +1232,9 @@ export default function EmployerDashboard() {
   const handleScheduleSubmit = async () => {
     try {
       const token = localStorage.getItem("auth_token");
-      if (!token) return alert("Token missing");
+      if (!token) return toast.error("Token missing", {
+                         description: "Please log in again to continue."
+                         });
   
       const res = await fetch(
         `https://jobseeker-backend-jy1y.onrender.com/employeer/api/employer/applications/${selectedCandidate.id}/schedule-interview/`,
@@ -1212,7 +1256,10 @@ export default function EmployerDashboard() {
       if (!res.ok) {
         const text = await res.text();
         console.error("Backend error:", text);
-        return alert("Failed to schedule interview");
+        return toast.error("Failed to schedule interview", {
+        description: "Please try again or check your network connection."
+         });
+
       }
   
       const data = await res.json();
@@ -1229,11 +1276,11 @@ export default function EmployerDashboard() {
           : prev
       );
   
-      alert("Interview Scheduled!");
+      toast.success("Interview Scheduled!");
       setOpenSchedule(false);
     } catch (err) {
       console.error(err);
-      alert("Network error");
+      toast.error("Network error. Please try again.");
     }
   };
   

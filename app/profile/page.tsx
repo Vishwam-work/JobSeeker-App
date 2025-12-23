@@ -8,8 +8,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useSavedJobs } from "@/context/SavedJobsContext";
-import { BookmarkX } from "lucide-react";
-
+import { BookmarkX , Check, ChevronsUpDown } from "lucide-react";
+import { jwtDecode } from "jwt-decode";
+import { toast } from "sonner";
 import {
   Select,
   SelectContent,
@@ -164,7 +165,7 @@ export default function Profile() {
   const [savedJobsData, setSavedJobsData] = useState([]);
   const [activeSaveTab, setActiveSaveTab] = useState("SavedJobs");
   const [isProfileSubmitted, setIsProfileSubmitted] = useState(false);
-
+  
   const [noticeRanges] = useState([
     "1-15 days",
     "15-30 days",
@@ -172,6 +173,22 @@ export default function Profile() {
     "60-90 days",
     "90+ days",
   ]);
+
+  const token =
+  typeof window !== "undefined"
+    ? localStorage.getItem("auth_token")
+    : null;
+
+const getUserKey = () => {
+  if (!token) return null;
+  try {
+    const decoded: any = jwtDecode(token);
+    return decoded.user_id || decoded.id || decoded.email;
+  } catch {
+    return null;
+  }
+};
+
 
   const fileInputRef = useRef(null);
   // Give the refrence to the Resume button
@@ -250,7 +267,11 @@ export default function Profile() {
       !experienceForm.job_title_id ||
       !experienceForm.startDate
     ) {
-      alert("Please fill in all required fields");
+      
+      toast("Incomplete form", {
+       description: "Please fill in all required fields before continuing.",
+      });
+
       return;
     }
 
@@ -321,7 +342,11 @@ export default function Profile() {
       !educationForm.institution ||
       !educationForm.score_type
     ) {
-      alert("Please fill in all required fields");
+      
+      toast("Incomplete form", {
+       description: "Please fill in all required fields before continuing.",
+      });
+
       return;
     }
 
@@ -378,7 +403,11 @@ export default function Profile() {
 
   const handleSaveCertification = () => {
     if (!certificationForm.name || !certificationForm.issuer) {
-      alert("Please fill in all required fields");
+      
+      toast("Incomplete form", {
+      description: "Please fill in all required fields before continuing.",
+      });
+
       return;
     }
 
@@ -449,7 +478,7 @@ export default function Profile() {
     const file = event.target.files?.[0];
     if (file) {
       setResumeFile(file);
-      alert(`Selected: ${file.name}`);
+      toast.info(`Selected file: ${file.name}`);
     }
   };
 
@@ -690,12 +719,16 @@ export default function Profile() {
       } else {
         const error = await res.json();
         console.error("Failed to upload resume:", error);
-        alert(`Resume upload failed: ${error.message || "Unknown error"}`);
+        
+        toast.error("Resume upload failed", {
+        description: error?.message || "Unknown error. Please try again.",
+        });
+
         return false;
       }
     } catch (error) {
       console.error("Error uploading resume:", error);
-      alert("Network error while uploading resume");
+      toast.error("Network error while uploading resume");
       return false;
     }
   };
@@ -720,26 +753,37 @@ export default function Profile() {
   return res.ok;
 };
 
+
 useEffect(() => {
-  const submitted = localStorage.getItem("profile_submitted");
-  if (submitted === "true") {
-    setIsProfileSubmitted(true);
+  const userKey = getUserKey();
+  if (!userKey) {
+    setIsProfileSubmitted(false);
+    return;
   }
+
+  const submitted = localStorage.getItem(
+    `profile_submitted_${userKey}`
+  );
+
+  setIsProfileSubmitted(submitted === "true");
 }, []);
+
 
 
   // Save Api
   const handleSaveProfile = async () => {
     const resumeUploaded = await uploadResume();
     if (!resumeUploaded) {
-      alert("Resume upload failed. Please try again.");
+      toast.error("Resume upload failed. Please try again.");
       return;
     }
     if (selectedImage) {
  
   const imageUploaded = await uploadProfileImage();
   if (!imageUploaded) {
-    alert("Image upload failed");
+    toast.error("Image upload failed", {
+    description: error?.message || "Please try again.",
+    });
     return;
   }
 }
@@ -835,13 +879,21 @@ useEffect(() => {
         // If response has no JSON body, silently skip state update
         console.warn("Profile saved; response body parse skipped", e);
       }
-      localStorage.setItem("profile_submitted", "true");
-      setIsProfileSubmitted(true);
-      alert("Profile saved successfully!");
+      const userKey = getUserKey();
+  if (userKey) {
+    localStorage.setItem(
+      `profile_submitted_${userKey}`,
+      "true"
+    );
+    setIsProfileSubmitted(true);
+  }
+      toast.success("Profile saved successfully!", {
+      description: "Your changes have been saved.",
+      });
     } else {
       const errText = await res.text();
       console.error("Save profile failed:", errText);
-      alert(`Error saving profile. ${errText}`);
+      toast.error(`Error saving profile. ${errText}`);
     }
   };
 
@@ -1024,7 +1076,7 @@ useEffect(() => {
                         if (profileData?.personalInfo?.resume) {
                           window.open(`https://jobseeker-backend-jy1y.onrender.com${profileData.personalInfo.resume}`, "_blank");
                         } else {
-                          alert("No resume uploaded.");
+                          
                         }
                       }}
                     >
@@ -1901,69 +1953,94 @@ useEffect(() => {
                             </CardTitle>
                           </CardHeader>
                           <CardContent className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">                           
                               <div>
-                                <Label className="text-sm font-medium">
-                                  Company *
-                                </Label>
-                                <Select
-                                  value={experienceForm.company || ""}
-                                  onValueChange={(value) =>
-                                    setExperienceForm((prev) => ({
-                                      ...prev,
-                                      company: value,
-                                    }))
-                                  }
-                                >
-                                  <SelectTrigger className="mt-1 h-10 lg:h-11">
-                                    <SelectValue placeholder="Select company" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {companies.length === 0 && (
-                                      <SelectItem value="loading" disabled>
-                                        Loading companies...
-                                      </SelectItem>
-                                    )}
-                                    {companies.map((company) => (
-                                      <SelectItem
-                                        key={company.id}
-                                        value={company.name}
-                                      >
-                                        {company.name}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              </div>
+                               <Label className="text-sm font-medium">Company *</Label>
+                             
+                               <Popover>
+                                 <PopoverTrigger asChild>
+                                   <button className="w-full mt-1 h-10 lg:h-11 border rounded px-3 text-left">
+                                     {experienceForm.company || "Select company"}
+                                   </button>
+                                 </PopoverTrigger>
+                             
+                                 <PopoverContent className="p-0 w-[300px]">
+                                   <Command
+                                     filter={(value, search) =>
+                                       value.toLowerCase().startsWith(search.toLowerCase()) ? 1 : 0
+                                     }
+                                   >
+                                     <CommandInput placeholder="Search company..." />
+                             
+                                     <CommandList>
+                                       {companies.length === 0 && (
+                                         <CommandItem disabled>No companies found</CommandItem>
+                                       )}
+                             
+                                       {companies.map((company) => (
+                                         <CommandItem
+                                           key={company.id}
+                                           value={company.name}
+                                           onSelect={() =>
+                                             setExperienceForm((prev) => ({
+                                               ...prev,
+                                               company: company.name,
+                                             }))
+                                           }
+                                         >
+                                           {company.name}
+                                         </CommandItem>
+                                       ))}
+                                     </CommandList>
+                                   </Command>
+                                 </PopoverContent>
+                               </Popover>
+                              </div>                           
+                              <div>
+                                <Label className="text-sm font-medium">Location *</Label>
 
-                              <div>
-                                <Label htmlFor="expLocation">Location *</Label>
-                                <Select
-                                  value={
-                                    experienceForm.location_id.toString() || ""
-                                  }
-                                  onValueChange={(value) =>
-                                    setExperienceForm((prev) => ({
-                                      ...prev,
-                                      location_id: value,
-                                    }))
-                                  }
-                                  placeholder="Select Location"
-                                >
-                                  <SelectTrigger className="mt-1 h-10 lg:h-11">
-                                    <SelectValue placeholder="Select Location" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {countries.map((location) => (
-                                      <SelectItem
-                                        key={location.id}
-                                        value={location.id.toString()}
-                                      >
-                                        {location.name}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
+                                <Popover>
+                                  <PopoverTrigger asChild>
+                                    <button className="w-full mt-1 h-10 lg:h-11 border rounded px-3 text-left">
+                                      {experienceForm.location_id
+                                        ? countries.find(
+                                            (c) => c.id == experienceForm.location_id
+                                          )?.name
+                                        : "Select location"}
+                                    </button>
+                                  </PopoverTrigger>
+                              
+                                  <PopoverContent className="p-0 w-[300px]">
+                                    <Command
+                                      filter={(value, search) =>
+                                        value.toLowerCase().startsWith(search.toLowerCase()) ? 1 : 0
+                                      }
+                                    >
+                                      <CommandInput placeholder="Search location..." />
+                              
+                                      <CommandList>
+                                        {countries.length === 0 && (
+                                          <CommandItem disabled>No locations found</CommandItem>
+                                        )}
+                              
+                                        {countries.map((location) => (
+                                          <CommandItem
+                                            key={location.id}
+                                            value={location.name}
+                                            onSelect={() =>
+                                              setExperienceForm((prev) => ({
+                                                ...prev,
+                                                location_id: location.id,
+                                              }))
+                                            }
+                                          >
+                                            {location.name}
+                                          </CommandItem>
+                                        ))}
+                                      </CommandList>
+                                    </Command>
+                                  </PopoverContent>
+                                </Popover>
                               </div>
                               <div>
                                 <Label className="text-sm font-medium">
