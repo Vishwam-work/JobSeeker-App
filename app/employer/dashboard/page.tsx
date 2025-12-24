@@ -453,7 +453,7 @@ export default function EmployerDashboard() {
       const data = await response.json();
       console.log("Here is the Job-list-view-data:",data)
       console.log(data.category)
-      setPostedJobs(data); // Set jobs into state
+      setPostedJobs(data); // Set jobs into stateq
     } catch (error) {
       console.error("Error fetching jobs:", error);
     }
