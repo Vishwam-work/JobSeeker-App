@@ -46,6 +46,16 @@ import {
   CommandItem,
   CommandEmpty,
 } from "@/components/ui/command";
+import {
+  Dialog,
+  DialogContent,
+} from "@/components/ui/dialog";
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSeparator,
+  InputOTPSlot,
+} from "@/components/ui/input-otp";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -63,9 +73,13 @@ export default function EmployerRegister() {
   const [stateOpen, setStateOpen] = useState(false);
   const [cityOpen, setCityOpen] = useState(false);
   const [citySearch, setCitySearch] = useState("");
-
+  const [isOtpOpen,setIsOtpOpen] =useState(false);
+  const [otp,setOtp] = useState("");
+  const [IsOtpVerified,setIsOtpVerified] =useState(false);
+  const [IsRegDisabled,setIsRegDisabled] = useState(false);
   const router = useRouter();
-
+  const [email,setemail] = useState("");
+  const [showText,setShowText] =useState(false)
   const [formData, setFormData] = useState({
     // Company Information
     companyName: "",
@@ -78,7 +92,7 @@ export default function EmployerRegister() {
     // Contact Information
     contactPersonName: "",
     designation: "",
-    email: "",
+    email: email,
     phone: "",
     phoneCode: "",
 
@@ -203,15 +217,26 @@ export default function EmployerRegister() {
     // console.log("Form Data:", formData);
   };
 
+  const handleEmailChange = (value:string) => {
+    setemail(value);
+    // console.log("Form Data:", formData);
+  };
+
   const handleNext = () => {
     if (currentStep < 3) {
       setCurrentStep(currentStep + 1);
+    }
+    if(currentStep == 1 && !IsOtpVerified){
+      setIsRegDisabled(true)  
     }
   };
 
   const handlePrevious = () => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
+    }
+    if(currentStep!=1){
+      setIsRegDisabled(false)
     }
   };
 
@@ -298,6 +323,58 @@ export default function EmployerRegister() {
       ))}
     </div>
   );
+
+  const handlesendotp = async () => {
+    try {
+      const res = await fetch(
+        "https://jobseeker-backend-jy1y.onrender.com/api/send_otp/",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email }),
+        }
+      );
+
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || "Failed to send OTP");
+        return;
+      }
+
+      setIsOtpOpen(true);
+      alert("OTP Sent Successfully");
+    } catch (error) {
+      console.error(error);
+      alert("Something went wrong");
+    }
+  };
+
+  const handleVerifyOTP = async () => {
+    try {
+      const res = await fetch(
+      //   // "https://jobseeker-backend-jy1y.onrender.com/api/verify-otp/",
+      //   {
+      //     method: "POST",
+      //     headers: { "Content-Type": "application/json" },
+      //     body: JSON.stringify({ email, otp }),
+      //   }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.error || "Invalid OTP");
+        return;
+      }
+
+      setIsOtpVerified(true);
+      setIsOtpOpen(false);
+      alert("OTP Verified Successfully!");
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
@@ -807,14 +884,23 @@ export default function EmployerRegister() {
                           <Input
                             id="email"
                             type="email"
-                            value={formData.email}
+                            value={email}
                             onChange={(e) =>
-                              handleInputChange("email", e.target.value)
+                              handleEmailChange(e.target.value)
                             }
                             placeholder="Enter email address"
                             className="mt-1 h-12"
                             required
                           />
+
+                          <Button
+                            type="button"
+                            className="mt-2"
+                            disabled={!email.includes("@")}
+                            onClick={handlesendotp}
+                          >
+                            Verify Email OTP
+                          </Button>
                         </div>
                         <div>
                           <div>
@@ -1058,13 +1144,17 @@ export default function EmployerRegister() {
                     )}
 
                     {currentStep < 3 ? (
+                      
                       <Button
                         type="button"
                         onClick={handleNext}
+                        disabled= {IsRegDisabled}
                         className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 h-12 px-6 ml-auto"
                       >
                         Next
+                      
                       </Button>
+                    
                     ) : (
                       <Button
                         type="submit"
@@ -1075,7 +1165,7 @@ export default function EmployerRegister() {
                     )}
                   </div>
                 </form>
-
+                  
                 <div className="mt-8 pt-6 border-t border-gray-200">
                   <div className="flex items-center justify-center space-x-2 text-sm text-gray-600">
                     <CheckCircle className="w-4 h-4 text-green-500" />
@@ -1087,6 +1177,28 @@ export default function EmployerRegister() {
           </div>
         </div>
       </div>
+      <Dialog open={isOtpOpen} onOpenChange={setIsOtpOpen}>
+        <DialogContent>
+          <div className="text-center">
+            <h1 className="text-xl font-bold mb-4">Enter OTP</h1>
+
+            <InputOTP maxLength={6} value={otp} onChange={setOtp}>
+              <InputOTPGroup>
+                {[0, 1, 2, 3, 4, 5].map((i) => (
+                  <InputOTPSlot key={i} index={i} />
+                ))}
+              </InputOTPGroup>
+            </InputOTP>
+
+            <Button
+              className="w-full mt-4 bg-indigo-600 text-white"
+              onClick={handleVerifyOTP}
+            >
+              Verify
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
