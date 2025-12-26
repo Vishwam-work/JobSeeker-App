@@ -165,7 +165,9 @@ export default function Profile() {
   const [savedJobsData, setSavedJobsData] = useState([]);
   const [activeSaveTab, setActiveSaveTab] = useState("SavedJobs");
   const [isProfileSubmitted, setIsProfileSubmitted] = useState(false);
-  
+  const [appliedJobs, setAppliedJobs] = useState<any[]>([]);
+  const [loadingAppliedJobs, setLoadingAppliedJobs] = useState(false);
+
   const [noticeRanges] = useState([
     "1-15 days",
     "15-30 days",
@@ -944,6 +946,83 @@ useEffect(() => {
 
     fetchUserProfile();
   }, []);
+
+  const fetchAppliedJobs = async () => {
+  try {
+    setLoadingAppliedJobs(true);
+
+    const token = localStorage.getItem("auth_token");
+    if (!token) {
+      toast.warning("Please login to view applied jobs");
+      return;
+    }
+
+    const response = await fetch(
+      "https://jobseeker-backend-jy1y.onrender.com/api/my-applied-jobs/",
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      toast.error("Failed to load applied jobs");
+      return;
+    }
+
+    const data = await response.json();
+    console.log("Applied jobs data:", data);
+    setAppliedJobs(data || []);
+  } catch (error) {
+    console.error(error);
+    toast.error("Network error while loading applied jobs");
+  } finally {
+    setLoadingAppliedJobs(false);
+  }
+};
+
+useEffect(() => {
+  if (activeSection === "AppliedJobs") {
+    fetchAppliedJobs();
+  }
+}, [activeSection]);
+
+const removeAppliedJob = async (applicationId: number) => {
+  try {
+    const token = localStorage.getItem("auth_token");
+    if (!token) {
+      toast.error("Please login again");
+      return;
+    }
+
+    const response = await fetch(
+      `https://jobseeker-backend-jy1y.onrender.com/api/my-applied-jobs/${applicationId}/`,
+      {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      toast.error("Failed to remove applied job");
+      return;
+    }
+
+    toast.success("Application removed");
+
+    // UI update
+    setAppliedJobs((prev) =>
+      prev.filter((job) => job.id !== applicationId)
+    );
+  } catch (error) {
+    console.error(error);
+    toast.error("Network error. Please try again.");
+  }
+};
+
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -2853,66 +2932,63 @@ useEffect(() => {
               )}
 
               {activeSection === "AppliedJobs" && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-lg lg:text-xl">
-                      <Bookmark className="w-5 h-5" />
-                      <span>Applied Jobs</span>
-                    </CardTitle>
-                  </CardHeader>
-
-                  <CardContent>
-                    {[
-                      {
-                        id: 1,
-                        job_title: "Backend Developer",
-                        job: {
-                          company: "TechNova Pvt. Ltd.",
-                          location: { name: "Bangalore" },
-                        },
-                      },
-                      {
-                        id: 2,
-                        job_title: "Full Stack Engineer",
-                        job: {
-                          company: "NextCore Technologies",
-                          location: { name: "Hyderabad" },
-                        },
-                      },
-                      {
-                        id: 3,
-                        job_title: "Data Engineer",
-                        job: {
-                          company: "Cloudify Systems",
-                          location: { name: "Remote" },
-                        },
-                      },
-                    ].map((appliedJob) => (
-                      <div
-                        key={appliedJob.id}
-                        className="border rounded-lg p-4 mb-4 hover:shadow-md transition-shadow"
-                      >
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <h3 className="font-semibold text-base lg:text-lg text-gray-900">
-                              {appliedJob.job_title}
-                            </h3>
-                            <p className="text-purple-600 font-medium text-sm">
-                              {appliedJob.job.company}
-                            </p>
-                            <p className="text-gray-600 text-xs">
-                              {appliedJob.job.location.name}
-                            </p>
-                          </div>
-                          <div className="text-green-600 text-xs font-medium bg-green-50 px-3 py-1 rounded-full">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-lg lg:text-xl">
+                          <Bookmark className="w-5 h-5" />
+                          <span>Applied Jobs</span>
+                        </CardTitle>
+                      </CardHeader>
+                  
+                      <CardContent>
+                        {loadingAppliedJobs && (
+                          <p className="text-sm text-gray-500">Loading applied jobs...</p>
+                        )}
+                  
+                        {!loadingAppliedJobs && appliedJobs.length === 0 && (
+                          <p className="text-sm text-gray-500">No applied jobs found.</p>
+                        )}
+                  
+                        {appliedJobs.map((appliedJob) => (
+                          <div
+                            key={appliedJob.id}
+                            className="border rounded-lg p-4 mb-4 hover:shadow-md transition-shadow"
+                          >
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <h3 className="font-semibold text-base lg:text-lg text-gray-900">
+                                  {appliedJob.job_title}
+                                </h3>
+                  
+                                <p className="text-purple-600 font-medium text-sm">
+                                  {appliedJob.job?.company}
+                                </p>
+                  
+                                <p className="text-gray-600 text-xs">
+                                  {appliedJob.job?.location?.name}
+                                </p>
+                              </div>
+                  
+                             <div className="flex items-center gap-2">
+                          <span className="text-green-600 text-xs font-medium bg-green-50 px-3 py-1 rounded-full">
                             Applied
-                          </div>
+                          </span>
+                  
+                          <button
+                            onClick={() => removeAppliedJob(appliedJob.id)}
+                            className="text-red-600 text-xs font-medium bg-red-50 px-3 py-1 rounded-full hover:bg-red-100 transition"
+                          >
+                            Remove
+                          </button>
                         </div>
-                      </div>
-                    ))}
-                  </CardContent>
-                </Card>
+                  
+                            </div>
+                          </div>
+                        ))}
+                      </CardContent>
+                    </Card>
               )}
+
 
               {/* {activeSection === "save" && (
   <Card>
