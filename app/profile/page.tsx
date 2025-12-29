@@ -1013,15 +1013,14 @@ const removeAppliedJob = async (applicationId: number) => {
 
     toast.success("Application removed");
 
-    // UI update
     setAppliedJobs((prev) =>
       prev.filter((job) => job.id !== applicationId)
     );
   } catch (error) {
-    console.error(error);
     toast.error("Network error. Please try again.");
   }
 };
+
 
 
   return (
