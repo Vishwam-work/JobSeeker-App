@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
 import { useSavedJobs } from "@/context/SavedJobsContext";
+import { toast } from "sonner";
+
 import {
   Select,
   SelectContent,
@@ -61,6 +64,8 @@ export default function JobListings() {
   const { savedJobs, addJob, removeJob } = useSavedJobs();
   const [savedJobIds, setSavedJobIds] = useState<number[]>([]);
   const [visibleCount, setVisibleCount] = useState(3);
+  const searchParams = useSearchParams();
+  const searchFromUrl = searchParams.get("search");
 
 
   // Filter states
@@ -89,6 +94,7 @@ export default function JobListings() {
   const [showSkillsDropdown, setShowSkillsDropdown] = useState(false);
   const [searchSkill, setSearchSkill] = useState("");
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [showLoginPopup, setShowLoginPopup] = useState(false);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -103,6 +109,15 @@ export default function JobListings() {
       setAppliedJobs(JSON.parse(storedApplied));
     }
   }, []);
+  useEffect(() => {
+  if (searchFromUrl) {
+    setFilters((prev) => ({
+      ...prev,
+      search: searchFromUrl,
+    }));
+  }
+}, [searchFromUrl]);
+
 
   // Fetch companies from API
   useEffect(() => {
@@ -417,7 +432,10 @@ export default function JobListings() {
 const saveJob = async (jobId: number) => {
   const token = localStorage.getItem("auth_token");
   if (!token) {
-    alert("Please log in first.");
+    toast.warning("Please login to save jobs", {
+    description: "You need to be logged in to save a job.",
+   });
+
     return;
   }
 
@@ -486,8 +504,7 @@ const unsaveJob = async (jobId: number) => {
   const handleApply = (job) => {
     const token = localStorage.getItem("auth_token");
     if (!token) {
-      alert("Please login to apply for jobs");
-      window.location.href = "/login";
+        setShowLoginPopup(true);
       return;
     }
     setSelectedJob(job);
@@ -510,7 +527,10 @@ const unsaveJob = async (jobId: number) => {
       });
     } else {
       navigator.clipboard.writeText(window.location.href);
-      alert("Job link copied to clipboard!");
+      toast("Link copied!", {
+        description: "Job link is copied to clipboard",
+      });
+
     }
   };
 
@@ -582,7 +602,10 @@ const fetchUserData = async () => {
       const token = localStorage.getItem("auth_token");
 
       if (!token) {
-        alert("Please login to apply");
+        toast("Login required", {
+        description: "Please login to continue with your application.",
+      });
+
         return;
       }
 
@@ -592,7 +615,10 @@ const fetchUserData = async () => {
           (_, index) => !answers[index]?.trim()
         );
         if (unanswered) {
-          alert("Please answer all questions before submitting");
+          toast("Incomplete Application", {
+           description: "Please answer all required questions before submitting.",
+        });
+
           return;
         }
       }
@@ -622,7 +648,10 @@ const fetchUserData = async () => {
       console.log("Serialised data for error :",result)
       
       if (response.ok) {
-        alert(`Application submitted successfully for ${selectedJob.title}!`);
+        toast.success("Application Submitted", {
+        description: `Your application for ${selectedJob.title} has been sent successfully.`,
+      });
+
         setIsApplyModalOpen(false);
         setSelectedJob(null);
         fetchUserData();
@@ -641,11 +670,17 @@ const fetchUserData = async () => {
 
        
       } else {
-        alert(result.error || "Failed to submit application");
+        toast.error("Application Failed", {
+        description: result?.error || "Something went wrong. Please try again.",
+      });
+
       }
     } catch (error) {
       console.error("Error submitting application:", error);
-      alert("Network error. Please try again.");
+      toast("Network error", {
+      description: "Please check your internet connection and try again",
+     });
+
     }
   };
 
@@ -1596,6 +1631,56 @@ const fetchUserData = async () => {
             )}
           </DialogContent>
         </Dialog>
+
+       
+          {/* Login Required Popup */}
+        <Dialog open={showLoginPopup} onOpenChange={setShowLoginPopup}>          
+           <DialogContent className="max-w-md rounded-2xl p-0 overflow-hidden">
+               {/* Header */}
+            <div className="bg-gradient-to-r from-purple-600 to-blue-600 p-6 text-white">
+              <h2 className="text-xl font-semibold">Login Required</h2>
+              <p className="text-sm opacity-90 mt-1">
+                You need to login before applying for jobs
+              </p>
+            </div>
+        
+            {/* Body */}
+            <div className="p-6 space-y-4">
+              <div className="flex items-start gap-3 bg-purple-50 border border-purple-100 rounded-lg p-4">
+                <div className="flex-shrink-0">
+                  <Eye className="w-5 h-5 text-purple-600" />
+                </div>
+                <p className="text-sm text-gray-700 leading-relaxed">
+                  Login to apply for jobs, track your applications, and get personalized
+                  job recommendations.
+                </p>
+              </div>
+
+               {/* Buttons */}
+               <div className="flex gap-3 pt-2">
+                 <Button
+                   className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 shadow-md"
+                   onClick={() => {
+                     setShowLoginPopup(false);
+                     window.location.href = "/login";
+                   }}
+                 >
+                   Login Now
+                 </Button>
+         
+                 <Button
+                   variant="outline"
+                   className="flex-1"
+                   onClick={() => setShowLoginPopup(false)}
+                 >
+                   Cancel
+                 </Button>
+               </div>
+             </div>
+           </DialogContent>
+       </Dialog>
+
+
       </div>
     </section>
   );

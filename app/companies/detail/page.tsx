@@ -2,7 +2,7 @@
 
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams ,useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   Dialog,
@@ -18,7 +18,7 @@ import { CheckCircle, ExternalLink, Send } from "lucide-react";
 export default function CompanyDetailPage() {
   const searchParams = useSearchParams();
   const id = searchParams.get("id");
-
+  const router = useRouter(); 
   const [company, setCompany] = useState(null);
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -28,6 +28,8 @@ export default function CompanyDetailPage() {
   const [userData, setUserData] = useState(null);
   const [loadingUserData, setLoadingUserData] = useState(false);
   const [answers, setAnswers] = useState([]);
+
+ 
 
   useEffect(() => {
     const fetchCompanyDetails = async () => {
@@ -97,43 +99,48 @@ export default function CompanyDetailPage() {
     if (id) fetchCompanyDetails();
   }, [id]);
 
-  const handleApply = async (job) => {
-    setSelectedJob(job);
-    setIsApplyModalOpen(true);
-    setLoadingUserData(true);
+   const redirectToHomeWithSearch = (jobTitle) => {
+  router.push(`/?search=${encodeURIComponent(jobTitle)}`);
+};
 
-    try {
-      const token = localStorage.getItem("auth_token");
-      if (!token) return;
 
-      const response = await fetch(
-        "https://jobseeker-backend-jy1y.onrender.com/jobseeker/api/profile/",
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      const data = await response.json();
-      setUserData(data);
-    } catch (error) {
-      console.error("Error fetching user data:", error);
-    } finally {
-      setLoadingUserData(false);
-    }
-  };
+  // const handleApply = async (job) => {
+  //   setSelectedJob(job);
+  //   setIsApplyModalOpen(true);
+  //   setLoadingUserData(true);
 
-  const handleAnswerChange = (index, value) => {
-    const updatedAnswers = [...answers];
-    updatedAnswers[index] = value;
-    setAnswers(updatedAnswers);
-  };
+  //   try {
+  //     const token = localStorage.getItem("auth_token");
+  //     if (!token) return;
 
-  const submitApplication = async () => {
-    alert(`Application submitted for: ${selectedJob.title}`);
-    setIsApplyModalOpen(false);
-  };
+  //     const response = await fetch(
+  //       "https://jobseeker-backend-jy1y.onrender.com/jobseeker/api/profile/",
+  //       {
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //       }
+  //     );
+  //     const data = await response.json();
+  //     setUserData(data);
+  //   } catch (error) {
+  //     console.error("Error fetching user data:", error);
+  //   } finally {
+  //     setLoadingUserData(false);
+  //   }
+  // };
+
+  // const handleAnswerChange = (index, value) => {
+  //   const updatedAnswers = [...answers];
+  //   updatedAnswers[index] = value;
+  //   setAnswers(updatedAnswers);
+  // };
+
+  // const submitApplication = async () => {
+  //   alert(`Application submitted for: ${selectedJob.title}`);
+  //   setIsApplyModalOpen(false);
+  // };
 
   if (loading)
     return (
@@ -224,7 +231,7 @@ export default function CompanyDetailPage() {
 
                 <div className="mt-3 sm:mt-0 sm:ml-4">
                   <button
-                    onClick={() => handleApply(job)}
+                    onClick={() => redirectToHomeWithSearch(job.title)}
                     className="bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded-md hover:bg-blue-700 transition w-full sm:w-auto"
                   >
                     Apply Now
@@ -239,7 +246,7 @@ export default function CompanyDetailPage() {
       </div>
 
       {/* ✅ Apply Modal */}
-      <Dialog open={isApplyModalOpen} onOpenChange={setIsApplyModalOpen}>
+      {/* <Dialog open={isApplyModalOpen} onOpenChange={setIsApplyModalOpen}>
         <DialogContent className="max-w-2xl w-full max-h-[85vh] overflow-y-auto p-6">
           {selectedJob && (
             <>
@@ -312,7 +319,6 @@ export default function CompanyDetailPage() {
                   )}
                 </div>
 
-                {/* Additional Questions */}
                 {Array.isArray(selectedJob?.questions) &&
                   selectedJob.questions.length > 0 && (
                     <div className="space-y-4">
@@ -361,7 +367,7 @@ export default function CompanyDetailPage() {
             </>
           )}
         </DialogContent>
-      </Dialog>
+      </Dialog> */}
 
       <Footer />
     </div>

@@ -8,8 +8,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useSavedJobs } from "@/context/SavedJobsContext";
-import { BookmarkX } from "lucide-react";
-
+import { BookmarkX , Check, ChevronsUpDown } from "lucide-react";
+import { jwtDecode } from "jwt-decode";
+import { toast } from "sonner";
 import {
   Select,
   SelectContent,
@@ -99,7 +100,7 @@ export default function Profile() {
     summary: "",
   });
   const [profileImage, setProfileImage] = useState(null);
-const [selectedImage, setSelectedImage] = useState(null); 
+  const [selectedImage, setSelectedImage] = useState(null); 
   const [activeSection, setActiveSection] = useState("personal");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState({
@@ -163,6 +164,9 @@ const [selectedImage, setSelectedImage] = useState(null);
   const [currency, setCurrency] = useState([]);
   const [savedJobsData, setSavedJobsData] = useState([]);
   const [activeSaveTab, setActiveSaveTab] = useState("SavedJobs");
+  const [isProfileSubmitted, setIsProfileSubmitted] = useState(false);
+  const [appliedJobs, setAppliedJobs] = useState<any[]>([]);
+  const [loadingAppliedJobs, setLoadingAppliedJobs] = useState(false);
 
   const [noticeRanges] = useState([
     "1-15 days",
@@ -171,6 +175,22 @@ const [selectedImage, setSelectedImage] = useState(null);
     "60-90 days",
     "90+ days",
   ]);
+
+  const token =
+  typeof window !== "undefined"
+    ? localStorage.getItem("auth_token")
+    : null;
+
+const getUserKey = () => {
+  if (!token) return null;
+  try {
+    const decoded: any = jwtDecode(token);
+    return decoded.user_id || decoded.id || decoded.email;
+  } catch {
+    return null;
+  }
+};
+
 
   const fileInputRef = useRef(null);
   // Give the refrence to the Resume button
@@ -249,7 +269,11 @@ const [selectedImage, setSelectedImage] = useState(null);
       !experienceForm.job_title_id ||
       !experienceForm.startDate
     ) {
-      alert("Please fill in all required fields");
+      
+      toast("Incomplete form", {
+       description: "Please fill in all required fields before continuing.",
+      });
+
       return;
     }
 
@@ -320,7 +344,11 @@ const [selectedImage, setSelectedImage] = useState(null);
       !educationForm.institution ||
       !educationForm.score_type
     ) {
-      alert("Please fill in all required fields");
+      
+      toast("Incomplete form", {
+       description: "Please fill in all required fields before continuing.",
+      });
+
       return;
     }
 
@@ -377,7 +405,11 @@ const [selectedImage, setSelectedImage] = useState(null);
 
   const handleSaveCertification = () => {
     if (!certificationForm.name || !certificationForm.issuer) {
-      alert("Please fill in all required fields");
+      
+      toast("Incomplete form", {
+      description: "Please fill in all required fields before continuing.",
+      });
+
       return;
     }
 
@@ -448,7 +480,7 @@ const [selectedImage, setSelectedImage] = useState(null);
     const file = event.target.files?.[0];
     if (file) {
       setResumeFile(file);
-      alert(`Selected: ${file.name}`);
+      toast.info(`Selected file: ${file.name}`);
     }
   };
 
@@ -689,12 +721,16 @@ const [selectedImage, setSelectedImage] = useState(null);
       } else {
         const error = await res.json();
         console.error("Failed to upload resume:", error);
-        alert(`Resume upload failed: ${error.message || "Unknown error"}`);
+        
+        toast.error("Resume upload failed", {
+        description: error?.message || "Unknown error. Please try again.",
+        });
+
         return false;
       }
     } catch (error) {
       console.error("Error uploading resume:", error);
-      alert("Network error while uploading resume");
+      toast.error("Network error while uploading resume");
       return false;
     }
   };
@@ -720,18 +756,36 @@ const [selectedImage, setSelectedImage] = useState(null);
 };
 
 
+useEffect(() => {
+  const userKey = getUserKey();
+  if (!userKey) {
+    setIsProfileSubmitted(false);
+    return;
+  }
+
+  const submitted = localStorage.getItem(
+    `profile_submitted_${userKey}`
+  );
+
+  setIsProfileSubmitted(submitted === "true");
+}, []);
+
+
+
   // Save Api
   const handleSaveProfile = async () => {
     const resumeUploaded = await uploadResume();
     if (!resumeUploaded) {
-      alert("Resume upload failed. Please try again.");
+      toast.error("Resume upload failed. Please try again.");
       return;
     }
     if (selectedImage) {
  
   const imageUploaded = await uploadProfileImage();
   if (!imageUploaded) {
-    alert("Image upload failed");
+    toast.error("Image upload failed", {
+    description: error?.message || "Please try again.",
+    });
     return;
   }
 }
@@ -745,17 +799,29 @@ const [selectedImage, setSelectedImage] = useState(null);
       experience: profileData.personalInfo.experience,
       current_salary: profileData.personalInfo.currentSalary,
       expected_salary: profileData.personalInfo.expectedSalary,
-      current_currency_id: profileData.personalInfo.currentcurrency || null,
-      expected_currency_id: profileData.personalInfo.expectedCurrency || null,
+      current_currency_id: profileData.personalInfo.currentcurrency
+        ? Number(profileData.personalInfo.currentcurrency)
+        : null,
+
+      expected_currency_id: profileData.personalInfo.expectedCurrency
+        ? Number(profileData.personalInfo.expectedCurrency)
+        : null,
+
       notice_period: profileData.personalInfo.noticePeriod,
-      country_id: profileData.personalInfo.countryId || null,
-      state_id: profileData.personalInfo.stateId || null,
-      city_id: profileData.personalInfo.cityId || null,
+      country_id: profileData.personalInfo.countryId
+        ? Number(profileData.personalInfo.countryId)
+        : null,
+      state_id: profileData.personalInfo.stateId
+        ? Number(profileData.personalInfo.stateId)
+        : null,
+      city_id: profileData.personalInfo.cityId
+        ? Number(profileData.personalInfo.cityId)
+        : null,
       experiences: profileData.experience.map(exp => ({
         id: exp.id,
         company: exp.company,
-        category_id: Number(exp.category_id),
-        job_title_id: Number(exp.job_title_id),
+        category_id: exp.category_id ? Number(exp.category_id) : null,
+        job_title_id: exp.job_title_id ? Number(exp.job_title_id) : null,
         location_id: exp.location_id ? Number(exp.location_id) : null,
         start_date: exp.start_date,
         end_date: exp.end_date,
@@ -778,7 +844,6 @@ const [selectedImage, setSelectedImage] = useState(null);
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
-          // Authorization: `Token ${localStorage.getItem("auth_token")}`,
         },
         body: JSON.stringify(payload),
       }
@@ -816,11 +881,21 @@ const [selectedImage, setSelectedImage] = useState(null);
         // If response has no JSON body, silently skip state update
         console.warn("Profile saved; response body parse skipped", e);
       }
-      alert("Profile saved successfully!");
+      const userKey = getUserKey();
+  if (userKey) {
+    localStorage.setItem(
+      `profile_submitted_${userKey}`,
+      "true"
+    );
+    setIsProfileSubmitted(true);
+  }
+      toast.success("Profile saved successfully!", {
+      description: "Your changes have been saved.",
+      });
     } else {
       const errText = await res.text();
       console.error("Save profile failed:", errText);
-      alert(`Error saving profile. ${errText}`);
+      toast.error(`Error saving profile. ${errText}`);
     }
   };
 
@@ -871,6 +946,82 @@ const [selectedImage, setSelectedImage] = useState(null);
 
     fetchUserProfile();
   }, []);
+
+  const fetchAppliedJobs = async () => {
+  try {
+    setLoadingAppliedJobs(true);
+
+    const token = localStorage.getItem("auth_token");
+    if (!token) {
+      toast.warning("Please login to view applied jobs");
+      return;
+    }
+
+    const response = await fetch(
+      "https://jobseeker-backend-jy1y.onrender.com/api/my-applied-jobs/",
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      toast.error("Failed to load applied jobs");
+      return;
+    }
+
+    const data = await response.json();
+    console.log("Applied jobs data:", data);
+    setAppliedJobs(data || []);
+  } catch (error) {
+    console.error(error);
+    toast.error("Network error while loading applied jobs");
+  } finally {
+    setLoadingAppliedJobs(false);
+  }
+};
+
+useEffect(() => {
+  if (activeSection === "AppliedJobs") {
+    fetchAppliedJobs();
+  }
+}, [activeSection]);
+
+const removeAppliedJob = async (applicationId: number) => {
+  try {
+    const token = localStorage.getItem("auth_token");
+    if (!token) {
+      toast.error("Please login again");
+      return;
+    }
+
+    const response = await fetch(
+      `https://jobseeker-backend-jy1y.onrender.com/api/my-applied-jobs/${applicationId}/`,
+      {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      toast.error("Failed to remove applied job");
+      return;
+    }
+
+    toast.success("Application removed");
+
+    setAppliedJobs((prev) =>
+      prev.filter((job) => job.id !== applicationId)
+    );
+  } catch (error) {
+    toast.error("Network error. Please try again.");
+  }
+};
+
+
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -1003,7 +1154,7 @@ const [selectedImage, setSelectedImage] = useState(null);
                         if (profileData?.personalInfo?.resume) {
                           window.open(`https://jobseeker-backend-jy1y.onrender.com${profileData.personalInfo.resume}`, "_blank");
                         } else {
-                          alert("No resume uploaded.");
+                          
                         }
                       }}
                     >
@@ -1113,15 +1264,17 @@ const [selectedImage, setSelectedImage] = useState(null);
                     </a>
 
                     {/* PREVIEW BUTTON */}
-                    <Link href="/review">
-                      <Button
-                        variant="outline"
-                        className="w-full text-sm lg:text-base h-10 lg:h-11"
-                      >
-                        <Eye className="w-4 h-4 mr-2" />
-                        Preview Profile
-                      </Button>
-                    </Link>
+                   {isProfileSubmitted && (
+                      <Link href="/review">
+                        <Button
+                          variant="outline"
+                          className="w-full text-sm lg:text-base h-10 lg:h-11"
+                        >
+                         <Eye className="w-4 h-4 mr-2" />
+                          Preview Profile
+                        </Button>
+                      </Link>
+                   )}
                   </div>
                 </CardContent>
               </Card>
@@ -1878,69 +2031,94 @@ const [selectedImage, setSelectedImage] = useState(null);
                             </CardTitle>
                           </CardHeader>
                           <CardContent className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">                           
                               <div>
-                                <Label className="text-sm font-medium">
-                                  Company *
-                                </Label>
-                                <Select
-                                  value={experienceForm.company || ""}
-                                  onValueChange={(value) =>
-                                    setExperienceForm((prev) => ({
-                                      ...prev,
-                                      company: value,
-                                    }))
-                                  }
-                                >
-                                  <SelectTrigger className="mt-1 h-10 lg:h-11">
-                                    <SelectValue placeholder="Select company" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {companies.length === 0 && (
-                                      <SelectItem value="loading" disabled>
-                                        Loading companies...
-                                      </SelectItem>
-                                    )}
-                                    {companies.map((company) => (
-                                      <SelectItem
-                                        key={company.id}
-                                        value={company.name}
-                                      >
-                                        {company.name}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              </div>
+                               <Label className="text-sm font-medium">Company *</Label>
+                             
+                               <Popover>
+                                 <PopoverTrigger asChild>
+                                   <button className="w-full mt-1 h-10 lg:h-11 border rounded px-3 text-left">
+                                     {experienceForm.company || "Select company"}
+                                   </button>
+                                 </PopoverTrigger>
+                             
+                                 <PopoverContent className="p-0 w-[300px]">
+                                   <Command
+                                     filter={(value, search) =>
+                                       value.toLowerCase().startsWith(search.toLowerCase()) ? 1 : 0
+                                     }
+                                   >
+                                     <CommandInput placeholder="Search company..." />
+                             
+                                     <CommandList>
+                                       {companies.length === 0 && (
+                                         <CommandItem disabled>No companies found</CommandItem>
+                                       )}
+                             
+                                       {companies.map((company) => (
+                                         <CommandItem
+                                           key={company.id}
+                                           value={company.name}
+                                           onSelect={() =>
+                                             setExperienceForm((prev) => ({
+                                               ...prev,
+                                               company: company.name,
+                                             }))
+                                           }
+                                         >
+                                           {company.name}
+                                         </CommandItem>
+                                       ))}
+                                     </CommandList>
+                                   </Command>
+                                 </PopoverContent>
+                               </Popover>
+                              </div>                           
+                              <div>
+                                <Label className="text-sm font-medium">Location *</Label>
 
-                              <div>
-                                <Label htmlFor="expLocation">Location *</Label>
-                                <Select
-                                  value={
-                                    experienceForm.location_id.toString() || ""
-                                  }
-                                  onValueChange={(value) =>
-                                    setExperienceForm((prev) => ({
-                                      ...prev,
-                                      location_id: value,
-                                    }))
-                                  }
-                                  placeholder="Select Location"
-                                >
-                                  <SelectTrigger className="mt-1 h-10 lg:h-11">
-                                    <SelectValue placeholder="Select Location" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {countries.map((location) => (
-                                      <SelectItem
-                                        key={location.id}
-                                        value={location.id.toString()}
-                                      >
-                                        {location.name}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
+                                <Popover>
+                                  <PopoverTrigger asChild>
+                                    <button className="w-full mt-1 h-10 lg:h-11 border rounded px-3 text-left">
+                                      {experienceForm.location_id
+                                        ? countries.find(
+                                            (c) => c.id == experienceForm.location_id
+                                          )?.name
+                                        : "Select location"}
+                                    </button>
+                                  </PopoverTrigger>
+                              
+                                  <PopoverContent className="p-0 w-[300px]">
+                                    <Command
+                                      filter={(value, search) =>
+                                        value.toLowerCase().startsWith(search.toLowerCase()) ? 1 : 0
+                                      }
+                                    >
+                                      <CommandInput placeholder="Search location..." />
+                              
+                                      <CommandList>
+                                        {countries.length === 0 && (
+                                          <CommandItem disabled>No locations found</CommandItem>
+                                        )}
+                              
+                                        {countries.map((location) => (
+                                          <CommandItem
+                                            key={location.id}
+                                            value={location.name}
+                                            onSelect={() =>
+                                              setExperienceForm((prev) => ({
+                                                ...prev,
+                                                location_id: location.id,
+                                              }))
+                                            }
+                                          >
+                                            {location.name}
+                                          </CommandItem>
+                                        ))}
+                                      </CommandList>
+                                    </Command>
+                                  </PopoverContent>
+                                </Popover>
                               </div>
                               <div>
                                 <Label className="text-sm font-medium">
@@ -2753,66 +2931,63 @@ const [selectedImage, setSelectedImage] = useState(null);
               )}
 
               {activeSection === "AppliedJobs" && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-lg lg:text-xl">
-                      <Bookmark className="w-5 h-5" />
-                      <span>Applied Jobs</span>
-                    </CardTitle>
-                  </CardHeader>
-
-                  <CardContent>
-                    {[
-                      {
-                        id: 1,
-                        job_title: "Backend Developer",
-                        job: {
-                          company: "TechNova Pvt. Ltd.",
-                          location: { name: "Bangalore" },
-                        },
-                      },
-                      {
-                        id: 2,
-                        job_title: "Full Stack Engineer",
-                        job: {
-                          company: "NextCore Technologies",
-                          location: { name: "Hyderabad" },
-                        },
-                      },
-                      {
-                        id: 3,
-                        job_title: "Data Engineer",
-                        job: {
-                          company: "Cloudify Systems",
-                          location: { name: "Remote" },
-                        },
-                      },
-                    ].map((appliedJob) => (
-                      <div
-                        key={appliedJob.id}
-                        className="border rounded-lg p-4 mb-4 hover:shadow-md transition-shadow"
-                      >
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <h3 className="font-semibold text-base lg:text-lg text-gray-900">
-                              {appliedJob.job_title}
-                            </h3>
-                            <p className="text-purple-600 font-medium text-sm">
-                              {appliedJob.job.company}
-                            </p>
-                            <p className="text-gray-600 text-xs">
-                              {appliedJob.job.location.name}
-                            </p>
-                          </div>
-                          <div className="text-green-600 text-xs font-medium bg-green-50 px-3 py-1 rounded-full">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-lg lg:text-xl">
+                          <Bookmark className="w-5 h-5" />
+                          <span>Applied Jobs</span>
+                        </CardTitle>
+                      </CardHeader>
+                  
+                      <CardContent>
+                        {loadingAppliedJobs && (
+                          <p className="text-sm text-gray-500">Loading applied jobs...</p>
+                        )}
+                  
+                        {!loadingAppliedJobs && appliedJobs.length === 0 && (
+                          <p className="text-sm text-gray-500">No applied jobs found.</p>
+                        )}
+                  
+                        {appliedJobs.map((appliedJob) => (
+                          <div
+                            key={appliedJob.id}
+                            className="border rounded-lg p-4 mb-4 hover:shadow-md transition-shadow"
+                          >
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <h3 className="font-semibold text-base lg:text-lg text-gray-900">
+                                  {appliedJob.job_title}
+                                </h3>
+                  
+                                <p className="text-purple-600 font-medium text-sm">
+                                  {appliedJob.job?.company}
+                                </p>
+                  
+                                <p className="text-gray-600 text-xs">
+                                  {appliedJob.job?.location?.name}
+                                </p>
+                              </div>
+                  
+                             <div className="flex items-center gap-2">
+                          <span className="text-green-600 text-xs font-medium bg-green-50 px-3 py-1 rounded-full">
                             Applied
-                          </div>
+                          </span>
+                  
+                          <button
+                            onClick={() => removeAppliedJob(appliedJob.id)}
+                            className="text-red-600 text-xs font-medium bg-red-50 px-3 py-1 rounded-full hover:bg-red-100 transition"
+                          >
+                            Remove
+                          </button>
                         </div>
-                      </div>
-                    ))}
-                  </CardContent>
-                </Card>
+                  
+                            </div>
+                          </div>
+                        ))}
+                      </CardContent>
+                    </Card>
               )}
+
 
               {/* {activeSection === "save" && (
   <Card>

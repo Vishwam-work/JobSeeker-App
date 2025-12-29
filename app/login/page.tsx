@@ -9,7 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Chrome, CheckCircle, Eye, EyeOff,  ChevronDown, Search } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useSession, signIn, signOut } from "next-auth/react";
+// import { useSession, signIn, signOut } from "next-auth/react";
 import CookieConsent from "@/components/Cookie";
 
 export default function Login() {

@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import { toast } from "sonner";
 import {
   Chrome,
   CheckCircle,
@@ -92,15 +93,15 @@ export default function Register() {
 
       const data = await res.json();
       if (!res.ok) {
-        alert(data.error || "Failed to send OTP");
+        toast.error(data.error || "Failed to send OTP");
         return;
       }
 
       setIsOtpOpen(true);
-      alert("OTP Sent Successfully");
+      toast.success("OTP Sent Successfully");
     } catch (error) {
       console.error(error);
-      alert("Something went wrong");
+      toast.warning("Something went wrong");  
     }
   };
 
@@ -121,13 +122,13 @@ export default function Register() {
       const data = await res.json();
 
       if (!res.ok) {
-        alert(data.error || "Invalid OTP");
+        toast.error(data.error || "Invalid OTP");
         return;
       }
 
       setIsOtpVerified(true);
       setIsOtpOpen(false);
-      alert("OTP Verified Successfully!");
+      toast.success("OTP Verified Successfully!");
     } catch (err) {
       console.error(err);
     }

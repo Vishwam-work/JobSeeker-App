@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { toast } from "sonner";
 import {
   Select,
   SelectContent,
@@ -217,12 +218,12 @@ export default function EmployerRegister() {
     e.preventDefault();
 
     if (formData.password !== formData.confirmPassword) {
-      alert("Passwords do not match");
+      toast.warning("Passwords do not match");
       return;
     }
 
     if (!formData.agreeTerms) {
-      alert("Please agree to the terms and conditions");
+      toast.warning("Please agree to the terms and conditions");
       return;
     }
 
