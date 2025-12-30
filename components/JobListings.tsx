@@ -1510,7 +1510,7 @@ const fetchUserData = async () => {
 
         {/* Apply Modal */}
         <Dialog open={isApplyModalOpen} onOpenChange={setIsApplyModalOpen}>
-          <DialogContent className="max-w-2xl w-full max-h-[85vh] overflow-y-auto p-6">
+          <DialogContent className="max-w-2xl w-full h-[90vh] overflow-y-auto p-6">
             {selectedJob && (
               <>
                 <DialogHeader>
@@ -1518,7 +1518,6 @@ const fetchUserData = async () => {
                     Apply for {selectedJob.title}
                   </DialogTitle>
                 </DialogHeader>
-                <div className="space-y-4 max-h-[70vh] overflow-y-auto">
                   <div className="space-y-3">
                     <p className="text-sm text-gray-700">
                       Your profile and resume will be sent to the employer.
@@ -1626,7 +1625,6 @@ const fetchUserData = async () => {
                       Cancel
                     </Button>
                   </div>
-                </div>
               </>
             )}
           </DialogContent>

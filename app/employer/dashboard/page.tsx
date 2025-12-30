@@ -1216,7 +1216,7 @@ export default function EmployerDashboard() {
       //     : prev
       // );
 
-      toast.success("Candidate Rejected!");
+      toast.error("Candidate Rejected!");
     } catch (err) {
       console.log("Reject error: ", err);
       toast.error("Network error. Please try again.");
@@ -2768,28 +2768,6 @@ export default function EmployerDashboard() {
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-                    {/*  Salary Filter */}
-                    <Select
-                      value={salaryFilter}
-                      onValueChange={setSalaryFilter}
-                    >
-                      <SelectTrigger className="w-full h-10">
-                        <SelectValue placeholder="Salary" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="All">All Salaries</SelectItem>
-                        <SelectItem value="Below 20000">
-                          Below ₹20,000
-                        </SelectItem>
-                        <SelectItem value="20000-50000">
-                          ₹20,000–₹50,000
-                        </SelectItem>
-                        <SelectItem value="Above 50000">
-                          Above ₹50,000
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-
                     {/* Experience Filter */}
                     <Select
                       value={experienceFilter}
@@ -2806,8 +2784,7 @@ export default function EmployerDashboard() {
                         <SelectItem value="5+ Years">5+ Years</SelectItem>
                       </SelectContent>
                     </Select>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                   
                     <Select
                       value={jobTitleFilter}
                       onValueChange={setJobTitleFilter}

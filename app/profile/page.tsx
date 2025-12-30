@@ -73,10 +73,11 @@ import { TextField } from "@mui/material";
 import dayjs from "dayjs";
 import exp from "node:constants";
 
+
 export default function Profile() {
   // Form states, data, and functions, etc.
   const { savedJobs, removeSavedJob } = useSavedJobs();
-
+  const [loading, setLoading] = useState(true);
   const [profileData, setProfileData] = useState({
     personalInfo: {
       fullName: "",
@@ -579,6 +580,9 @@ const getUserKey = () => {
       } catch (error) {
         console.error("Error fetching profile:", error);
       }
+      finally { 
+         setLoading(false);
+      }
     };
 
     fetchProfile();
@@ -1021,8 +1025,6 @@ const removeAppliedJob = async (applicationId: number) => {
   }
 };
 
-
-
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <div className="min-h-screen bg-gray-50">
@@ -1416,9 +1418,17 @@ const removeAppliedJob = async (applicationId: number) => {
                   </div>
                 </div>
               </div>
-
-              {/* Personal Information Section */}
-              {activeSection === "personal" && (
+{loading ? (
+  <div className="p-6 max-w-5xl mx-auto space-y-6 animate-pulse">
+    <div className="h-8 bg-gray-200 rounded w-1/3"></div>
+    <div className="space-y-4">
+      {[...Array(6)].map((_, i) => (
+        <div key={i} className="h-12 bg-gray-200 rounded"></div>
+      ))}
+    </div>
+  </div>
+) : (
+  activeSection === "personal" && (
                 <Card>
                   <CardHeader className="pb-4">
                     <CardTitle className="flex items-center space-x-2 text-lg lg:text-xl">
@@ -1472,48 +1482,6 @@ const removeAppliedJob = async (applicationId: number) => {
                           required={true}
                         />
                       </div>
-
-                      {/* <div>
-  <Label htmlFor="fullName" className="text-sm font-medium">
-    Full Name *
-  </Label>
-  <Input
-    id="fullName"
-    value={profileData.personalInfo.fullName}
-    onChange={(e) =>
-      setProfileData((prev) => ({
-        ...prev,
-        personalInfo: {
-          ...prev.personalInfo,
-          fullName: e.target.value,
-        },
-      }))
-    }
-    className="mt-1 h-10 lg:h-11"
-  />
-</div> */}
-
-                      {/* <div>
-  <Label htmlFor="email" className="text-sm font-medium">
-    Email Address *
-  </Label>
-  <Input
-    id="email"
-    type="email"
-    value={profileData.personalInfo.email}
-    onChange={(e) =>
-      setProfileData((prev) => ({
-        ...prev,
-        personalInfo: {
-          ...prev.personalInfo,
-          email: e.target.value,
-        },
-      }))
-    }
-    className="mt-1 h-10 lg:h-11"
-  />
-</div> */}
-
                      
                       <div>
                         <Label htmlFor="phone" className="text-sm font-medium">
@@ -1522,7 +1490,7 @@ const removeAppliedJob = async (applicationId: number) => {
                         <div className="flex gap-2 mt-1">
                           <Select
                             value={profileData.personalInfo.phoneCode || ""}
-                            disabled
+                            // disabled
                             onValueChange={(value) =>
                               setProfileData((prev) => ({
                                 ...prev,
@@ -1928,6 +1896,7 @@ const removeAppliedJob = async (applicationId: number) => {
                   </div>
                   </CardContent>
                 </Card>
+              )
               )}
 
               {/* Experience Section */}
