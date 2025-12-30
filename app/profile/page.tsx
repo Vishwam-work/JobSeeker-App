@@ -7,6 +7,10 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useSavedJobs } from "@/context/SavedJobsContext";
+import { BookmarkX , Check, ChevronsUpDown } from "lucide-react";
+import { jwtDecode } from "jwt-decode";
+import { toast } from "sonner";
 import {
   Select,
   SelectContent,
@@ -21,6 +25,19 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Command,
+  CommandInput,
+  CommandList,
+  CommandEmpty,
+  CommandItem,
+  CommandGroup,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@/components/ui/popover";
 import {
   User,
   Mail,
@@ -44,6 +61,7 @@ import {
   Upload,
   Trash2,
   Save,
+  Bookmark,
   Ambulance as Cancel,
 } from "lucide-react";
 import Header from "@/components/Header";
@@ -57,6 +75,8 @@ import exp from "node:constants";
 
 export default function Profile() {
   // Form states, data, and functions, etc.
+  const { savedJobs, removeSavedJob } = useSavedJobs();
+
   const [profileData, setProfileData] = useState({
     personalInfo: {
       fullName: "",
@@ -79,12 +99,16 @@ export default function Profile() {
     certifications: [],
     summary: "",
   });
-
+  const [profileImage, setProfileImage] = useState(null);
+  const [selectedImage, setSelectedImage] = useState(null); 
   const [activeSection, setActiveSection] = useState("personal");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState({
     resume: false,
   });
+  const [open, setOpen] = useState(false);
+  const [cityOpen, setCityOpen] = useState(false);
+  const [citySearch, setCitySearch] = useState("");
   const [newSkill, setNewSkill] = useState("");
 
   // States for inline forms
@@ -94,24 +118,27 @@ export default function Profile() {
   const [editingExperience, setEditingExperience] = useState(null);
   const [editingEducation, setEditingEducation] = useState(null);
   const [editingCertification, setEditingCertification] = useState(null);
+  const [majors, setMajors] = useState([]);
+  const [majorSearch, setMajorSearch] = useState("");
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [experienceForm, setExperienceForm] = useState({
     company: "",
-    category: "",
-    jobTitle: "",
+    category_id: "",
+    job_title_id: "",
+    location_id: "",
     startDate: null,
     endDate: null,
     isCurrentJob: false,
-    location: "",
     description: "",
   });
-
+  
   const [educationForm, setEducationForm] = useState({
     degree: "",
     field: "",
     institution: "",
     year: null,
     percentage: "",
+    score_type: "",
   });
 
   const [certificationForm, setCertificationForm] = useState({
@@ -126,6 +153,7 @@ export default function Profile() {
     { id: "education", label: "Education", icon: GraduationCap },
     { id: "skills", label: "Skills", icon: Award },
     { id: "certifications", label: "Certifications", icon: Award },
+    { id: "save", label: "Jobs", icon: Briefcase },
   ];
   const [countries, setCountries] = useState([]);
   const [states, setStates] = useState([]);
@@ -134,14 +162,35 @@ export default function Profile() {
   const [jobTitles, setJobTitles] = useState([]);
   const [jobCategories, setJobCategories] = useState([]);
   const [currency, setCurrency] = useState([]);
+  const [savedJobsData, setSavedJobsData] = useState([]);
+  const [activeSaveTab, setActiveSaveTab] = useState("SavedJobs");
+  const [isProfileSubmitted, setIsProfileSubmitted] = useState(false);
+  const [appliedJobs, setAppliedJobs] = useState<any[]>([]);
+  const [loadingAppliedJobs, setLoadingAppliedJobs] = useState(false);
 
   const [noticeRanges] = useState([
-    "0-15 days",
+    "1-15 days",
     "15-30 days",
     "30-60 days",
     "60-90 days",
     "90+ days",
   ]);
+
+  const token =
+  typeof window !== "undefined"
+    ? localStorage.getItem("auth_token")
+    : null;
+
+const getUserKey = () => {
+  if (!token) return null;
+  try {
+    const decoded: any = jwtDecode(token);
+    return decoded.user_id || decoded.id || decoded.email;
+  } catch {
+    return null;
+  }
+};
+
 
   const fileInputRef = useRef(null);
   // Give the refrence to the Resume button
@@ -157,19 +206,19 @@ export default function Profile() {
   const getJobTitleName = (id) =>
     jobTitles.find((t) => t.id === id)?.title || "";
 
-
   const resetExperienceForm = () => {
     setExperienceForm({
       company: "",
-      category: "",
-      jobTitle: "",
+      category_id: "",
+      job_title_id: "",
+      location_id: "",
       startDate: null,
       endDate: null,
       isCurrentJob: false,
-      location: "",
       description: "",
     });
   };
+  
 
   const resetEducationForm = () => {
     setEducationForm({
@@ -178,6 +227,7 @@ export default function Profile() {
       institution: "",
       year: null,
       percentage: "",
+      score_type: "",
     });
   };
 
@@ -200,12 +250,12 @@ export default function Profile() {
 
     setExperienceForm({
       company: exp.company || "",
-      jobTitle: exp.job_title?.toString() || "",
+      job_title_id: exp.job_title?.id?.toString() || "",
       startDate: startDate,
       endDate: endDate,
       isCurrentJob: !exp.end_date,
-      location: exp.location?.id?.toString() || "",
-      category: exp.category?.toString() || "",
+      location_id: exp.location?.id?.toString() || "",
+      category_id: exp.category?.id?.toString() || "",
       description: exp.description || "",
     });
     setEditingExperience(exp);
@@ -215,11 +265,15 @@ export default function Profile() {
   const handleSaveExperience = () => {
     if (
       !experienceForm.company ||
-      !experienceForm.category ||
-      !experienceForm.jobTitle ||
+      !experienceForm.category_id ||
+      !experienceForm.job_title_id ||
       !experienceForm.startDate
     ) {
-      alert("Please fill in all required fields");
+      
+      toast("Incomplete form", {
+       description: "Please fill in all required fields before continuing.",
+      });
+
       return;
     }
 
@@ -231,11 +285,11 @@ export default function Profile() {
     const newExperience = {
       id: editingExperience ? editingExperience.id : Date.now(),
       company: experienceForm.company,
-      category: experienceForm.category,
-      job_title: experienceForm.jobTitle,
+      category_id: experienceForm.category_id,
+      job_title_id: experienceForm.job_title_id,
       start_date: formattedStart,
       end_date: formattedEnd,
-      location: experienceForm.location,
+      location_id: experienceForm.location_id,
       description: experienceForm.description,
     };
 
@@ -277,6 +331,7 @@ export default function Profile() {
       institution: edu.institution,
       year: edu.year ? dayjs(edu.year, "YYYY") : null,
       percentage: edu.percentage,
+      score_type: edu.score_type ? edu.score_type.toLowerCase() : "",
     });
     setEditingEducation(edu);
     setShowAddEducation(true);
@@ -286,9 +341,14 @@ export default function Profile() {
     if (
       !educationForm.degree ||
       !educationForm.field ||
-      !educationForm.institution
+      !educationForm.institution ||
+      !educationForm.score_type
     ) {
-      alert("Please fill in all required fields");
+      
+      toast("Incomplete form", {
+       description: "Please fill in all required fields before continuing.",
+      });
+
       return;
     }
 
@@ -299,6 +359,7 @@ export default function Profile() {
       institution: educationForm.institution,
       year: educationForm.year ? educationForm.year.format("YYYY") : "",
       percentage: educationForm.percentage,
+      score_type : educationForm.score_type,
     };
 
     if (editingEducation) {
@@ -344,7 +405,11 @@ export default function Profile() {
 
   const handleSaveCertification = () => {
     if (!certificationForm.name || !certificationForm.issuer) {
-      alert("Please fill in all required fields");
+      
+      toast("Incomplete form", {
+      description: "Please fill in all required fields before continuing.",
+      });
+
       return;
     }
 
@@ -415,10 +480,41 @@ export default function Profile() {
     const file = event.target.files?.[0];
     if (file) {
       setResumeFile(file);
-      alert(`Resume "${file.name}" uploaded successfully!`);
-      setIsDialogOpen((prev) => ({ ...prev, resume: false }));
+      toast.info(`Selected file: ${file.name}`);
     }
   };
+
+  useEffect(() => {
+    const fetchMajors = async () => {
+      try {
+        const token = localStorage.getItem("auth_token");
+
+        if (!token) {
+          console.error("User not logged in — token missing");
+          return;
+        }
+
+        const res = await fetch(
+          "https://jobseeker-backend-jy1y.onrender.com/master/api/majors/",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        const data = await res.json();
+
+        console.log("MAJORS API DATA ---->", data);
+
+        setMajors(data);
+      } catch (error) {
+        console.error("Error fetching majors:", error);
+      }
+    };
+
+    fetchMajors();
+  }, []);
 
   // Fetch and send The Data From API
   // Fetch Profile Data
@@ -428,13 +524,16 @@ export default function Profile() {
       if (!token) return;
 
       try {
-        const res = await fetch("https://jobseeker-backend-jy1y.onrender.com/api/profile/", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const res = await fetch(
+          "https://jobseeker-backend-jy1y.onrender.com/api/profile/",
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
         if (res.ok) {
           const data = await res.json();
@@ -446,19 +545,30 @@ export default function Profile() {
               email: data.email || "",
               phone: data.phone || "",
               phoneCode: data.phone_code || "",
-              countryId: data.country.id?.toString() || "",
-              stateId: data.state.id?.toString() || "",
-              cityId: data.city.id?.toString() || "",
+              countryId: data?.country?.id?.toString() ?? "",
+              stateId: data?.state?.id?.toString() ?? "",
+              cityId: data?.city?.id?.toString() ?? "",
               experience: data.experience || "",
               currentSalary: data.current_salary || "",
               expectedSalary: data.expected_salary || "",
-              currentcurrency: data.current_currency.id?.toString() || "",
-              expectedCurrency: data.expected_currency.id?.toString() || "",
-              noticePeriod: data.notice_period || "",
+              currentcurrency: data?.current_currency?.id?.toString() ?? "",
+              expectedCurrency: data?.expected_currency?.id?.toString() ?? "",
+              noticePeriod: data?.notice_period || "",
               resume: data.resume,
+
+                  profile_image: data.profile_image || profileData.personalInfo.profile_image,
+
             },
-            experience: data.experiences || [],
-            education: data.educations || [],
+            experience: (data.experiences || []).map(exp => ({
+              ...exp,
+              category_id: exp.category?.id ?? "",
+              job_title_id: exp.job_title?.id ?? "",
+              location_id: exp.location?.id ?? "",
+            })),
+            education: (data.educations || []).map(e => ({
+              ...e,
+              score_type: e.score_type?.toLowerCase() || "cgpa",
+            })),
             skills: (data.skills || []).map((skill) => skill.name),
             certifications: data.certifications || [],
             summary: "", // Optional: if you use a summary field
@@ -475,6 +585,34 @@ export default function Profile() {
   }, []);
 
   useEffect(() => {
+    const fetchSavedJobs = async () => {
+      const token = localStorage.getItem("auth_token");
+      if (!token) return;
+
+      try {
+        const res = await fetch(
+          "https://jobseeker-backend-jy1y.onrender.com/api/saved-jobs-all/",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
+        if (res.ok) {
+          const data = await res.json();
+          console.log("Saved jobs data:", data);
+          setSavedJobsData(data);
+        } else {
+          console.error("Failed to fetch saved jobs");
+        }
+      } catch (err) {
+        console.error("Error fetching saved jobs:", err);
+      }
+    };
+
+    fetchSavedJobs();
+  }, []);
+
+  useEffect(() => {
     fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/currencies/")
       .then((res) => res.json())
       .then((data) => {
@@ -482,7 +620,6 @@ export default function Profile() {
         setCurrency(data);
       });
   }, []);
-  console.log("Currency", currency);
   useEffect(() => {
     fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/countries/")
       .then((res) => res.json())
@@ -527,7 +664,9 @@ export default function Profile() {
   }, []);
 
   useEffect(() => {
-    fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_category/")
+    fetch(
+      "https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_category/"
+    )
       .then((res) => res.json())
       .then((data) => {
         setJobCategories(data);
@@ -536,9 +675,9 @@ export default function Profile() {
   }, []);
 
   useEffect(() => {
-    if (experienceForm.category) {
+    if (experienceForm.category_id) {
       fetch(
-        `https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_title/?category=${experienceForm.category}`
+        `https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_title/?category=${experienceForm.category_id}`
       )
         .then((res) => res.json())
         .then((data) => {
@@ -546,42 +685,112 @@ export default function Profile() {
         })
         .catch((err) => console.error(err));
     }
-  }, [experienceForm.category]);
+  }, [experienceForm.category_id]);
 
   const uploadResume = async () => {
     if (!resumeFile) return true;
 
     const formData = new FormData();
     formData.append("resume", resumeFile);
+    try {
+      const res = await fetch(
+        "https://jobseeker-backend-jy1y.onrender.com/api/profile/upload-resume/",
+        {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
+          },
+          body: formData,
+        }
+      );
 
-    const res = await fetch(
-      "https://jobseeker-backend-jy1y.onrender.com/api/profile/upload-resume/",
-      {
-        method: "PATCH",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
-        },
-        body: formData,
+      if (res.ok) {
+        const data = await res.json();
+        console.log("Resume uploaded:", data.resume_url);
+        console.log("Resume Data uploaded:", data);
+        setProfileData((prev) => ({
+          ...prev,
+          personalInfo: {
+            ...prev.personalInfo,
+            resume: data.resume_url || data.resume,
+          },
+        }));
+        setIsDialogOpen(prev => ({ ...prev, resume: false }));
+        setResumeFile(null);
+        return true;
+      } else {
+        const error = await res.json();
+        console.error("Failed to upload resume:", error);
+        
+        toast.error("Resume upload failed", {
+        description: error?.message || "Unknown error. Please try again.",
+        });
+
+        return false;
       }
-    );
-
-    if (res.ok) {
-      const data = await res.json();
-      console.log("Resume uploaded:", data.resume_url);
-      return true;
-    } else {
-      console.error("Failed to upload resume");
+    } catch (error) {
+      console.error("Error uploading resume:", error);
+      toast.error("Network error while uploading resume");
       return false;
     }
   };
+
+ const uploadProfileImage = async () => {
+  if (!selectedImage) return true;
+
+  const formData = new FormData();
+  formData.append("profile_image", selectedImage);
+
+  const res = await fetch(
+    "https://jobseeker-backend-jy1y.onrender.com/api/profile/",
+    {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
+      },
+      body: formData,
+    }
+  );
+
+  return res.ok;
+};
+
+
+useEffect(() => {
+  const userKey = getUserKey();
+  if (!userKey) {
+    setIsProfileSubmitted(false);
+    return;
+  }
+
+  const submitted = localStorage.getItem(
+    `profile_submitted_${userKey}`
+  );
+
+  setIsProfileSubmitted(submitted === "true");
+}, []);
+
+
 
   // Save Api
   const handleSaveProfile = async () => {
     const resumeUploaded = await uploadResume();
     if (!resumeUploaded) {
-      alert("Resume upload failed. Please try again.");
+      toast.error("Resume upload failed. Please try again.");
       return;
     }
+    if (selectedImage) {
+ 
+  const imageUploaded = await uploadProfileImage();
+  if (!imageUploaded) {
+    toast.error("Image upload failed", {
+    description: error?.message || "Please try again.",
+    });
+    return;
+  }
+}
+
+
     const payload = {
       full_name: profileData.personalInfo.fullName,
       email: profileData.personalInfo.email,
@@ -590,35 +799,229 @@ export default function Profile() {
       experience: profileData.personalInfo.experience,
       current_salary: profileData.personalInfo.currentSalary,
       expected_salary: profileData.personalInfo.expectedSalary,
-      current_currency: profileData.personalInfo.currentcurrency,
-      expected_currency: profileData.personalInfo.expectedCurrency,
+      current_currency_id: profileData.personalInfo.currentcurrency
+        ? Number(profileData.personalInfo.currentcurrency)
+        : null,
+
+      expected_currency_id: profileData.personalInfo.expectedCurrency
+        ? Number(profileData.personalInfo.expectedCurrency)
+        : null,
+
       notice_period: profileData.personalInfo.noticePeriod,
-      country: profileData.personalInfo.countryId,
-      state: profileData.personalInfo.stateId,
-      city: profileData.personalInfo.cityId,
-      experiences: profileData.experience,
-      educations: profileData.education,
+      country_id: profileData.personalInfo.countryId
+        ? Number(profileData.personalInfo.countryId)
+        : null,
+      state_id: profileData.personalInfo.stateId
+        ? Number(profileData.personalInfo.stateId)
+        : null,
+      city_id: profileData.personalInfo.cityId
+        ? Number(profileData.personalInfo.cityId)
+        : null,
+      experiences: profileData.experience.map(exp => ({
+        id: exp.id,
+        company: exp.company,
+        category_id: exp.category_id ? Number(exp.category_id) : null,
+        job_title_id: exp.job_title_id ? Number(exp.job_title_id) : null,
+        location_id: exp.location_id ? Number(exp.location_id) : null,
+        start_date: exp.start_date,
+        end_date: exp.end_date,
+        description: exp.description,
+      })),
+      educations: profileData.education.map((edu) => ({
+        ...edu,
+        score_type: edu.score_type?.toLowerCase() || "cgpa",
+      })),
       certifications: profileData.certifications,
       skills: profileData.skills.map((name) => ({ name })),
     };
+ 
     console.log("Payload:", payload);
     console.log("Token:", localStorage.getItem("auth_token"));
-    const res = await fetch("https://jobseeker-backend-jy1y.onrender.com/api/profile/", {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
-        // Authorization: `Token ${localStorage.getItem("auth_token")}`,
-      },
-      body: JSON.stringify(payload),
-    });
+    const res = await fetch(
+      "https://jobseeker-backend-jy1y.onrender.com/api/profile/",
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
+        },
+        body: JSON.stringify(payload),
+      }
+    );
     console.log("Response:", res);
     if (res.ok) {
-      alert("Profile saved successfully!");
+      try {
+        const data = await res.json();
+        // Normalize and set freshly returned data so the UI reflects what is persisted
+        setProfileData({
+          personalInfo: {
+            fullName: data.full_name || "",
+            email: data.email || "",
+            phone: data.phone || "",
+            phoneCode: data.phone_code || "",
+            countryId: data.country?.id?.toString() || "",
+            stateId: data.state?.id?.toString() || "",
+            cityId: data.city?.id?.toString() || "",
+            experience: data.experience || "",
+            currentSalary: data.current_salary || "",
+            expectedSalary: data.expected_salary || "",
+            currentcurrency: data.current_currency?.id?.toString() || "",
+            expectedCurrency: data.expected_currency?.id?.toString() || "",
+            noticePeriod: data.notice_period || "",
+            resume: data.resume || profileData.personalInfo.resume,
+            profile_image: data.profile_image || profileData.personalInfo.profile_image,
+          },
+          experience: data.experiences || [],
+          education: data.educations || [],
+          skills: (data.skills || []).map((s) => s.name),
+          certifications: data.certifications || [],
+          summary: profileData.summary,
+        });
+      } catch (e) {
+        // If response has no JSON body, silently skip state update
+        console.warn("Profile saved; response body parse skipped", e);
+      }
+      const userKey = getUserKey();
+  if (userKey) {
+    localStorage.setItem(
+      `profile_submitted_${userKey}`,
+      "true"
+    );
+    setIsProfileSubmitted(true);
+  }
+      toast.success("Profile saved successfully!", {
+      description: "Your changes have been saved.",
+      });
     } else {
-      alert("Error saving profile.");
+      const errText = await res.text();
+      console.error("Save profile failed:", errText);
+      toast.error(`Error saving profile. ${errText}`);
     }
   };
+
+  // Fetch User Data for Profile Name, Email, Phone
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const token = localStorage.getItem("auth_token");
+        if (!token) {
+          console.warn("No auth token found");
+          return;
+        }
+
+        const res = await fetch(
+          "https://jobseeker-backend-jy1y.onrender.com/api/register/",
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (!res.ok) {
+          console.error("Failed to fetch user data");
+          return;
+        }
+
+        const data = await res.json();
+        console.log("Register API data:", data);
+
+        // ✅ Handle both single object or array API responses
+        const user = Array.isArray(data) ? data[0] : data;
+
+        setProfileData((prev) => ({
+          ...prev,
+          personalInfo: {
+            ...prev.personalInfo,
+            fullName: user.full_name || user.name || "",
+            email: user.email || "",
+            phone: user.phone || user.number || "",
+          },
+        }));
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      }
+    };
+
+    fetchUserProfile();
+  }, []);
+
+  const fetchAppliedJobs = async () => {
+  try {
+    setLoadingAppliedJobs(true);
+
+    const token = localStorage.getItem("auth_token");
+    if (!token) {
+      toast.warning("Please login to view applied jobs");
+      return;
+    }
+
+    const response = await fetch(
+      "https://jobseeker-backend-jy1y.onrender.com/api/my-applied-jobs/",
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      toast.error("Failed to load applied jobs");
+      return;
+    }
+
+    const data = await response.json();
+    console.log("Applied jobs data:", data);
+    setAppliedJobs(data || []);
+  } catch (error) {
+    console.error(error);
+    toast.error("Network error while loading applied jobs");
+  } finally {
+    setLoadingAppliedJobs(false);
+  }
+};
+
+useEffect(() => {
+  if (activeSection === "AppliedJobs") {
+    fetchAppliedJobs();
+  }
+}, [activeSection]);
+
+const removeAppliedJob = async (applicationId: number) => {
+  try {
+    const token = localStorage.getItem("auth_token");
+    if (!token) {
+      toast.error("Please login again");
+      return;
+    }
+
+    const response = await fetch(
+      `https://jobseeker-backend-jy1y.onrender.com/api/my-applied-jobs/${applicationId}/`,
+      {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      toast.error("Failed to remove applied job");
+      return;
+    }
+
+    toast.success("Application removed");
+
+    setAppliedJobs((prev) =>
+      prev.filter((job) => job.id !== applicationId)
+    );
+  } catch (error) {
+    toast.error("Network error. Please try again.");
+  }
+};
+
+
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -632,14 +1035,44 @@ export default function Profile() {
               <Card className="lg:sticky lg:top-24">
                 <CardContent className="p-4 lg:p-6">
                   <div className="text-center mb-4 lg:mb-6">
-                    <div className="relative inline-block">
-                      <div className="w-20 h-20 lg:w-24 lg:h-24 bg-gradient-to-br from-purple-100 to-blue-100 rounded-full flex items-center justify-center mx-auto mb-3 lg:mb-4">
-                        <User className="w-10 h-10 lg:w-12 lg:h-12 text-purple-600" />
-                      </div>
-                      <button className="absolute bottom-0 right-0 w-6 h-6 lg:w-8 lg:h-8 bg-purple-600 rounded-full flex items-center justify-center text-white hover:bg-purple-700 transition-colors">
-                        <Camera className="w-3 h-3 lg:w-4 lg:h-4" />
-                      </button>
-                    </div>
+            
+                  <div className="relative inline-block">
+                <div className="w-20 h-20 lg:w-24 lg:h-24 bg-gray-100 rounded-full overflow-hidden flex items-center justify-center mx-auto mb-3 lg:mb-4">
+    
+                   {selectedImage ? (
+                    <img
+                    src={URL.createObjectURL(selectedImage)}
+                    className="w-full h-full object-cover"
+                    alt="Profile Preview"
+                    />
+                  ) : profileData.personalInfo.profile_image ? (
+                  <img
+                   src={profileData.personalInfo.profile_image}
+                   className="w-full h-full object-cover"
+                   alt="Profile"
+                  />
+                  ) : (
+                  <User className="w-10 h-10 lg:w-12 lg:h-12 text-purple-600" />
+                  )}
+                </div>
+
+                  <label className="absolute bottom-0 right-0 w-6 h-6 lg:w-8 lg:h-8 bg-purple-600 rounded-full flex items-center justify-center text-white hover:bg-purple-700 transition-colors cursor-pointer">
+                   <Camera className="w-3 h-3 lg:w-4 lg:h-4" />
+                   <input
+                   type="file"
+                   accept="image/*"
+                   className="hidden"
+                   onChange={(e) => {
+                   const file = e.target.files[0];
+                   if (file) setSelectedImage(file);
+                    }}
+                    />
+                  </label>
+             </div>
+
+
+
+
                     <h2 className="text-lg lg:text-xl font-bold text-gray-900 mb-1">
                       {profileData.personalInfo.fullName}
                     </h2>
@@ -721,7 +1154,7 @@ export default function Profile() {
                         if (profileData?.personalInfo?.resume) {
                           window.open(`https://jobseeker-backend-jy1y.onrender.com${profileData.personalInfo.resume}`, "_blank");
                         } else {
-                          alert("No resume uploaded.");
+                          
                         }
                       }}
                     >
@@ -769,6 +1202,12 @@ export default function Profile() {
                             </p>
                           )}
 
+                          {resumeFile && (
+                              <p className="text-sm font-medium text-blue-600 truncate">
+                                Selected File: <span className="text-gray-700">{resumeFile.name}</span>
+                              </p>
+                            )}
+
                           <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
                             <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                             <p className="text-sm text-gray-600 mb-4">
@@ -795,6 +1234,15 @@ export default function Profile() {
                               PDF, DOC, DOCX up to 5MB
                             </p>
                           </div>
+                          <Button
+                            onClick={uploadResume}
+                            disabled={!resumeFile}
+                            className={`w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600
+                            hover:from-purple-700 hover:to-blue-700 h-10 lg:h-11 mt-6
+                            ${!resumeFile ? "opacity-50 cursor-not-allowed" : ""}`}
+                          >
+                            SUBMIT
+                          </Button>
                         </div>
                       </DialogContent>
                     </Dialog>
@@ -816,15 +1264,17 @@ export default function Profile() {
                     </a>
 
                     {/* PREVIEW BUTTON */}
-                    <Link href="/review">
-                      <Button
-                        variant="outline"
-                        className="w-full text-sm lg:text-base h-10 lg:h-11"
-                      >
-                        <Eye className="w-4 h-4 mr-2" />
-                        Preview Profile
-                      </Button>
-                    </Link>
+                   {isProfileSubmitted && (
+                      <Link href="/review">
+                        <Button
+                          variant="outline"
+                          className="w-full text-sm lg:text-base h-10 lg:h-11"
+                        >
+                         <Eye className="w-4 h-4 mr-2" />
+                          Preview Profile
+                        </Button>
+                      </Link>
+                   )}
                   </div>
                 </CardContent>
               </Card>
@@ -892,26 +1342,78 @@ export default function Profile() {
               {/* Desktop Navigation Tabs */}
               <div className="hidden lg:block bg-white rounded-lg shadow-sm mb-6 overflow-x-auto">
                 <div className="flex border-b">
-                  {sections.map((tab) => {
-                    const IconComponent = tab.icon;
-                    return (
-                      <button
-                        key={tab.id}
-                        onClick={() => setActiveSection(tab.id)}
-                        className={`flex items-center space-x-2 px-4 xl:px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
-                          activeSection === tab.id
-                            ? "border-purple-600 text-purple-600"
-                            : "border-transparent text-gray-600 hover:text-purple-600"
-                        }`}
-                      >
-                        <IconComponent className="w-4 h-4" />
-                        <span className="hidden xl:inline">{tab.label}</span>
-                        <span className="xl:hidden">
-                          {tab.label.split(" ")[0]}
-                        </span>
-                      </button>
-                    );
-                  })}
+                  <div className="flex border-b relative">
+                    {sections.map((tab) => {
+                      const IconComponent = tab.icon;
+
+                      // ✅ Normal hover dropdown for "Save"
+                      if (tab.id === "save") {
+                        return (
+                          <div key={tab.id} className="relative group">
+                            <button
+                              className={`flex items-center space-x-2 px-4 xl:px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                                ["SavedJobs", "AppliedJobs"].includes(
+                                  activeSection
+                                )
+                                  ? "border-purple-600 text-purple-600"
+                                  : "border-transparent text-gray-600 hover:text-purple-600"
+                              }`}
+                            >
+                              <IconComponent className="w-4 h-4" />
+                              <span className="hidden xl:inline">
+                                {tab.label}
+                              </span>
+                            </button>
+
+                            {/* 👇 fixed dropdown - detached from clipped container */}
+                            <div
+                              className="hidden group-hover:block fixed bg-white border border-gray-200 rounded-lg shadow-lg w-56 z-[9999] mt-1"
+                              style={{
+                                transform: "translateX(-10px)",
+                                top: "70px",
+                              }}
+                            >
+                              <ul className="text-sm text-gray-700">
+                                <li
+                                  onClick={() => setActiveSection("SavedJobs")}
+                                  className="px-4 py-2 hover:bg-purple-50 cursor-pointer"
+                                >
+                                  Saved Jobs
+                                </li>
+                                <li
+                                  onClick={() =>
+                                    setActiveSection("AppliedJobs")
+                                  }
+                                  className="px-4 py-2 hover:bg-purple-50 cursor-pointer"
+                                >
+                                  Applied Jobs
+                                </li>
+                              </ul>
+                            </div>
+                          </div>
+                        );
+                      }
+
+                      // ✅ Default tab buttons
+                      return (
+                        <button
+                          key={tab.id}
+                          onClick={() => setActiveSection(tab.id)}
+                          className={`flex items-center space-x-2 px-4 xl:px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                            activeSection === tab.id
+                              ? "border-purple-600 text-purple-600"
+                              : "border-transparent text-gray-600 hover:text-purple-600"
+                          }`}
+                        >
+                          <IconComponent className="w-4 h-4" />
+                          <span className="hidden xl:inline">{tab.label}</span>
+                          <span className="xl:hidden">
+                            {tab.label.split(" ")[0]}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
 
@@ -970,33 +1472,57 @@ export default function Profile() {
                           required={true}
                         />
                       </div>
+
                       {/* <div>
-                        <Label htmlFor="phone" className="text-sm font-medium">
-                          Phone Number *
-                        </Label>
-                        <Input
-                          id="phone"
-                          value={profileData.personalInfo.phone}
-                          onChange={(e) =>
-                            setProfileData((prev) => ({
-                              ...prev,
-                              personalInfo: {
-                                ...prev.personalInfo,
-                                phone: e.target.value,
-                              },
-                            }))
-                          }
-                          className="mt-1 h-10 lg:h-11"
-                          required={true}
-                        />
-                      </div> */}
+  <Label htmlFor="fullName" className="text-sm font-medium">
+    Full Name *
+  </Label>
+  <Input
+    id="fullName"
+    value={profileData.personalInfo.fullName}
+    onChange={(e) =>
+      setProfileData((prev) => ({
+        ...prev,
+        personalInfo: {
+          ...prev.personalInfo,
+          fullName: e.target.value,
+        },
+      }))
+    }
+    className="mt-1 h-10 lg:h-11"
+  />
+</div> */}
+
+                      {/* <div>
+  <Label htmlFor="email" className="text-sm font-medium">
+    Email Address *
+  </Label>
+  <Input
+    id="email"
+    type="email"
+    value={profileData.personalInfo.email}
+    onChange={(e) =>
+      setProfileData((prev) => ({
+        ...prev,
+        personalInfo: {
+          ...prev.personalInfo,
+          email: e.target.value,
+        },
+      }))
+    }
+    className="mt-1 h-10 lg:h-11"
+  />
+</div> */}
+
+                     
                       <div>
                         <Label htmlFor="phone" className="text-sm font-medium">
                           Phone Number *
                         </Label>
                         <div className="flex gap-2 mt-1">
                           <Select
-                            value={profileData.personalInfo.phoneCode || "+91"}
+                            value={profileData.personalInfo.phoneCode || ""}
+                            disabled
                             onValueChange={(value) =>
                               setProfileData((prev) => ({
                                 ...prev,
@@ -1041,97 +1567,173 @@ export default function Profile() {
                       </div>
                       <div>
                         <Label className="text-sm font-medium">Country *</Label>
-                        <Select
-                          value={profileData.personalInfo.countryId || ""}
-                          onValueChange={(value) =>
-                            setProfileData((prev) => ({
-                              ...prev,
-                              personalInfo: {
-                                ...prev.personalInfo,
-                                countryId: value,
-                                stateId: "",
-                                cityId: "",
-                              },
-                            }))
-                          }
-                          required={true}
-                        >
-                          <SelectTrigger className="mt-1 h-10 lg:h-11">
-                            <SelectValue placeholder="Select country" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {countries.map((country) => (
-                              <SelectItem
-                                key={country.id}
-                                value={country.id.toString()}
-                              >
-                                {country.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <button className="w-full mt-1 h-10 lg:h-11 border rounded px-3 text-left">
+                              {profileData.personalInfo.countryId
+                                ? countries.find(
+                                    (c) =>
+                                      c.id == profileData.personalInfo.countryId
+                                  )?.name
+                                : "Select country"}
+                            </button>
+                          </PopoverTrigger>
+
+                          <PopoverContent className="p-0 w-[300px]">
+                            <Command
+                              filter={(value, search) =>
+                                value
+                                  .toLowerCase()
+                                  .startsWith(search.toLowerCase())
+                                  ? 1
+                                  : 0
+                              }
+                            >
+                              <CommandInput placeholder="Search country..." />
+
+                              <CommandList>
+                                {countries.map((country) => (
+                                  <CommandItem
+                                    key={country.id}
+                                    value={country.name}
+                                    onSelect={() => {
+                                      setProfileData((prev) => ({
+                                        ...prev,
+                                        personalInfo: {
+                                          ...prev.personalInfo,
+                                          countryId: country.id,
+                                          stateId: "",
+                                          cityId: "",
+                                          phoneCode: country.phonecode,
+                                        },
+                                      }));
+                                    }}
+                                  >
+                                    {country.name}
+                                  </CommandItem>
+                                ))}
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
                       </div>
+
                       <div>
                         <Label className="text-sm font-medium">State *</Label>
-                        <Select
-                          value={profileData.personalInfo.stateId || ""}
-                          onValueChange={(value) =>
-                            setProfileData((prev) => ({
-                              ...prev,
-                              personalInfo: {
-                                ...prev.personalInfo,
-                                stateId: value,
-                                cityId: "",
-                              },
-                            }))
-                          }
-                          required={true}
-                        >
-                          <SelectTrigger className="mt-1 h-10 lg:h-11">
-                            <SelectValue placeholder="Select state" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {states.map((state) => (
-                              <SelectItem
-                                key={state.id}
-                                value={state.id.toString()}
-                              >
-                                {state.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <button className="w-full mt-1 h-10 lg:h-11 border rounded px-3 text-left">
+                              {profileData.personalInfo.stateId
+                                ? states.find(
+                                    (s) =>
+                                      s.id == profileData.personalInfo.stateId
+                                  )?.name
+                                : "Select state"}
+                            </button>
+                          </PopoverTrigger>
+
+                          <PopoverContent className="p-0 w-[300px]">
+                            <Command
+                              filter={(value, search) =>
+                                value
+                                  .toLowerCase()
+                                  .startsWith(search.toLowerCase())
+                                  ? 1
+                                  : 0
+                              }
+                            >
+                              <CommandInput placeholder="Search state..." />
+
+                              <CommandList>
+                                {states.map((state) => (
+                                  <CommandItem
+                                    key={state.id}
+                                    value={state.name}
+                                    onSelect={() => {
+                                      setProfileData((prev) => ({
+                                        ...prev,
+                                        personalInfo: {
+                                          ...prev.personalInfo,
+                                          stateId: state.id,
+                                          cityId: "",
+                                        },
+                                      }));
+                                    }}
+                                  >
+                                    {state.name}
+                                  </CommandItem>
+                                ))}
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
                       </div>
+
                       <div>
-                        <Label className="text-sm font-medium">City *</Label>
-                        <Select
-                          value={profileData.personalInfo.cityId || ""}
-                          onValueChange={(value) =>
-                            setProfileData((prev) => ({
-                              ...prev,
-                              personalInfo: {
-                                ...prev.personalInfo,
-                                cityId: value,
-                              },
-                            }))
-                          }
-                          required={true}
-                        >
-                          <SelectTrigger className="mt-1 h-10 lg:h-11">
-                            <SelectValue placeholder="Select city" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {cities.map((city) => (
-                              <SelectItem
-                                key={city.id}
-                                value={city.id.toString()}
-                              >
-                                {city.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <Label className="text-sm font-medium text-gray-700">
+                          City *
+                        </Label>
+
+                        <Popover open={cityOpen} onOpenChange={setCityOpen}>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              className="w-full justify-between mt-1 h-12"
+                            >
+                              {profileData.personalInfo.cityId
+                                ? cities.find(
+                                    (c) =>
+                                      c.id == profileData.personalInfo.cityId
+                                  )?.name
+                                : "Select city"}
+                            </Button>
+                          </PopoverTrigger>
+
+                          <PopoverContent align="start" className="w-full p-0">
+                            <Command>
+                              <CommandInput
+                                placeholder="Search city..."
+                                value={citySearch}
+                                onValueChange={setCitySearch}
+                              />
+
+                              <CommandList className="max-h-60 overflow-y-auto">
+                                <CommandEmpty>No city found.</CommandEmpty>
+
+                                <CommandGroup>
+                                  {cities
+                                    .filter((city) =>
+                                      city.name
+                                        .toLowerCase()
+                                        .startsWith(citySearch.toLowerCase())
+                                    )
+                                    .map((city) => (
+                                      <CommandItem
+                                        key={city.id}
+                                        value={city.name}
+                                        onSelect={() => {
+                                          setProfileData((prev) => ({
+                                            ...prev,
+                                            personalInfo: {
+                                              ...prev.personalInfo,
+                                              cityId: city.id,
+                                            },
+                                          }));
+                                          setCityOpen(false);
+                                        }}
+                                      >
+                                        {city.name}
+                                      </CommandItem>
+                                    ))}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
                       </div>
+
                       <div>
                         <Label
                           htmlFor="experience"
@@ -1201,7 +1803,7 @@ export default function Profile() {
                           htmlFor="currentSalary"
                           className="text-sm font-medium"
                         >
-                          Current Salary (LPA)
+                          Current Salary (PA)
                         </Label>
                         <div className="flex gap-2 mt-1">
                           <Select
@@ -1235,6 +1837,7 @@ export default function Profile() {
                           </Select>
                           <Input
                             id="currentSalary"
+                            type="number"
                             value={profileData.personalInfo.currentSalary}
                             onChange={(e) =>
                               setProfileData((prev) => ({
@@ -1247,6 +1850,7 @@ export default function Profile() {
                             }
                             className="flex-1 h-10 lg:h-11"
                             placeholder="Enter amount"
+                            max="0"
                           />
                         </div>
                       </div>
@@ -1255,7 +1859,7 @@ export default function Profile() {
                           htmlFor="expectedSalary"
                           className="text-sm font-medium"
                         >
-                          Expected Salary (LPA)
+                          Expected Salary (PA)
                         </Label>
                         <div className="flex gap-2 mt-1">
                           <Select
@@ -1289,6 +1893,7 @@ export default function Profile() {
                           </Select>
                           <Input
                             id="expectedSalary"
+                            type="number"
                             value={profileData.personalInfo.expectedSalary}
                             onChange={(e) =>
                               setProfileData((prev) => ({
@@ -1300,16 +1905,27 @@ export default function Profile() {
                               }))
                             }
                             className="flex-1 h-10 lg:h-11"
+                            placeholder="Enter amount"
+                            max="0"
                           />
                         </div>
                       </div>
                     </div>
+                    <div className="flex justify-between mt-6">
+                    <Button
+                      onClick={handleSaveProfile}
+                      className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-10 lg:h-11 mt-6"
+                    >
+                      SUBMIT
+                    </Button>
                     <Button
                       onClick={handleNext}
-                      className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-10 lg:h-11"
+                      className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-10 lg:h-11 mt-6"
                     >
                       Next
                     </Button>
+                    
+                  </div>
                   </CardContent>
                 </Card>
               )}
@@ -1348,14 +1964,14 @@ export default function Profile() {
                               </div>
                               <div className="min-w-0 flex-1">
                                 <h3 className="font-semibold text-base lg:text-lg text-gray-900 break-words">
-                                  {getJobTitleName(exp.job_title)}
+                                  {getJobTitleName(exp.job_title_id)}
                                 </h3>
                                 <p className="text-purple-600 font-medium text-sm lg:text-base break-words">
                                   {exp.company}
                                 </p>
                                 {exp.category && (
                                   <p className="text-gray-600 text-sm break-words">
-                                    {getCategoryName(exp.category)}
+                                    {getCategoryName(exp.category_id)}
                                   </p>
                                 )}
                                 <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 text-xs lg:text-sm text-gray-600 mt-1 gap-1 sm:gap-0">
@@ -1415,69 +2031,94 @@ export default function Profile() {
                             </CardTitle>
                           </CardHeader>
                           <CardContent className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">                           
                               <div>
-                                <Label className="text-sm font-medium">
-                                  Company *
-                                </Label>
-                                <Select
-                                  value={experienceForm.company || ""}
-                                  onValueChange={(value) =>
-                                    setExperienceForm((prev) => ({
-                                      ...prev,
-                                      company: value,
-                                    }))
-                                  }
-                                >
-                                  <SelectTrigger className="mt-1 h-10 lg:h-11">
-                                    <SelectValue placeholder="Select company" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {companies.length === 0 && (
-                                      <SelectItem value="loading" disabled>
-                                        Loading companies...
-                                      </SelectItem>
-                                    )}
-                                    {companies.map((company) => (
-                                      <SelectItem
-                                        key={company.id}
-                                        value={company.name}
-                                      >
-                                        {company.name}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              </div>
+                               <Label className="text-sm font-medium">Company *</Label>
+                             
+                               <Popover>
+                                 <PopoverTrigger asChild>
+                                   <button className="w-full mt-1 h-10 lg:h-11 border rounded px-3 text-left">
+                                     {experienceForm.company || "Select company"}
+                                   </button>
+                                 </PopoverTrigger>
+                             
+                                 <PopoverContent className="p-0 w-[300px]">
+                                   <Command
+                                     filter={(value, search) =>
+                                       value.toLowerCase().startsWith(search.toLowerCase()) ? 1 : 0
+                                     }
+                                   >
+                                     <CommandInput placeholder="Search company..." />
+                             
+                                     <CommandList>
+                                       {companies.length === 0 && (
+                                         <CommandItem disabled>No companies found</CommandItem>
+                                       )}
+                             
+                                       {companies.map((company) => (
+                                         <CommandItem
+                                           key={company.id}
+                                           value={company.name}
+                                           onSelect={() =>
+                                             setExperienceForm((prev) => ({
+                                               ...prev,
+                                               company: company.name,
+                                             }))
+                                           }
+                                         >
+                                           {company.name}
+                                         </CommandItem>
+                                       ))}
+                                     </CommandList>
+                                   </Command>
+                                 </PopoverContent>
+                               </Popover>
+                              </div>                           
+                              <div>
+                                <Label className="text-sm font-medium">Location *</Label>
 
-                              <div>
-                                <Label htmlFor="expLocation">Location *</Label>
-                                <Select
-                                  value={
-                                    experienceForm.location.toString() || ""
-                                  }
-                                  onValueChange={(value) =>
-                                    setExperienceForm((prev) => ({
-                                      ...prev,
-                                      location: value,
-                                    }))
-                                  }
-                                  placeholder="Select Location"
-                                >
-                                  <SelectTrigger className="mt-1 h-10 lg:h-11">
-                                    <SelectValue placeholder="Select Location" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {countries.map((location) => (
-                                      <SelectItem
-                                        key={location.id}
-                                        value={location.id.toString()}
-                                      >
-                                        {location.name}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
+                                <Popover>
+                                  <PopoverTrigger asChild>
+                                    <button className="w-full mt-1 h-10 lg:h-11 border rounded px-3 text-left">
+                                      {experienceForm.location_id
+                                        ? countries.find(
+                                            (c) => c.id == experienceForm.location_id
+                                          )?.name
+                                        : "Select location"}
+                                    </button>
+                                  </PopoverTrigger>
+                              
+                                  <PopoverContent className="p-0 w-[300px]">
+                                    <Command
+                                      filter={(value, search) =>
+                                        value.toLowerCase().startsWith(search.toLowerCase()) ? 1 : 0
+                                      }
+                                    >
+                                      <CommandInput placeholder="Search location..." />
+                              
+                                      <CommandList>
+                                        {countries.length === 0 && (
+                                          <CommandItem disabled>No locations found</CommandItem>
+                                        )}
+                              
+                                        {countries.map((location) => (
+                                          <CommandItem
+                                            key={location.id}
+                                            value={location.name}
+                                            onSelect={() =>
+                                              setExperienceForm((prev) => ({
+                                                ...prev,
+                                                location_id: location.id,
+                                              }))
+                                            }
+                                          >
+                                            {location.name}
+                                          </CommandItem>
+                                        ))}
+                                      </CommandList>
+                                    </Command>
+                                  </PopoverContent>
+                                </Popover>
                               </div>
                               <div>
                                 <Label className="text-sm font-medium">
@@ -1485,12 +2126,12 @@ export default function Profile() {
                                 </Label>
                                 <Select
                                   value={
-                                    experienceForm.category.toString() || ""
+                                    experienceForm.category_id.toString() || ""
                                   }
                                   onValueChange={(value) => {
                                     setExperienceForm((prev) => ({
                                       ...prev,
-                                      category: value,
+                                      category_id: value,
                                       jobTitle: "", // Reset job title when category changes
                                     }));
                                     setJobTitles([]); // Clear job titles
@@ -1523,20 +2164,20 @@ export default function Profile() {
                                 </Label>
                                 <Select
                                   value={
-                                    experienceForm.jobTitle.toString() || ""
+                                    experienceForm.job_title_id.toString() || ""
                                   }
                                   onValueChange={(value) =>
                                     setExperienceForm((prev) => ({
                                       ...prev,
-                                      jobTitle: value,
+                                      job_title_id: value,
                                     }))
                                   }
-                                  disabled={!experienceForm.category}
+                                  disabled={!experienceForm.category_id}
                                 >
                                   <SelectTrigger className="mt-1 h-10 lg:h-11">
                                     <SelectValue
                                       placeholder={
-                                        experienceForm.category
+                                        experienceForm.category_id
                                           ? "Select job title"
                                           : "Select category first"
                                       }
@@ -1544,7 +2185,7 @@ export default function Profile() {
                                   </SelectTrigger>
                                   <SelectContent>
                                     {jobTitles.length === 0 &&
-                                      experienceForm.category && (
+                                      experienceForm.category_id && (
                                         <SelectItem value="loading" disabled>
                                           Loading job titles...
                                         </SelectItem>
@@ -1674,12 +2315,21 @@ export default function Profile() {
                         </Card>
                       )}
                     </div>
+                    <div className="flex justify-between mt-6">
+                    <Button
+                      onClick={handleSaveProfile}
+                      className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-10 lg:h-11 mt-6"
+                    >
+                      SUBMIT
+                    </Button>
                     <Button
                       onClick={handleNext}
                       className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-10 lg:h-11 mt-6"
                     >
                       Next
                     </Button>
+                   
+                    </div>
                   </CardContent>
                 </Card>
               )}
@@ -1728,7 +2378,16 @@ export default function Profile() {
                                 </p>
                                 <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 text-xs lg:text-sm text-gray-600 mt-1 gap-1 sm:gap-0">
                                   <span>Year: {edu.year}</span>
-                                  <span>Score: {edu.percentage}</span>
+                                  <span>
+                                  Score: {edu.percentage}{" "}
+                                  {edu.score_type === "percentage"
+                                    ? "(Percentage)"
+                                    : edu.score_type === "cgpa"
+                                    ? "(CGPA)"
+                                    : edu.score_type === "grade"
+                                    ? "(Grade)"
+                                    : ""}
+                                </span>
                                 </div>
                               </div>
                             </div>
@@ -1754,7 +2413,6 @@ export default function Profile() {
                         </div>
                       ))}
 
-                      {/* Add/Edit Education Form */}
                       {showAddEducation && (
                         <Card className="border-2 border-green-200">
                           <CardHeader className="pb-4">
@@ -1767,20 +2425,67 @@ export default function Profile() {
                           <CardContent className="space-y-4">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <div>
-                                <Label htmlFor="degree">Degree *</Label>
-                                <Input
-                                  id="degree"
-                                  value={educationForm.degree}
-                                  onChange={(e) =>
-                                    setEducationForm((prev) => ({
-                                      ...prev,
-                                      degree: e.target.value,
-                                    }))
-                                  }
-                                  placeholder="e.g., Bachelor of Technology"
-                                  className="mt-1"
-                                />
+                                <Label className="text-sm font-medium text-gray-700">
+                                  Degree *
+                                </Label>
+
+                                <Popover open={open} onOpenChange={setOpen}>
+                                  <PopoverTrigger asChild>
+                                    <Button
+                                      variant="outline"
+                                      className="w-full justify-between mt-1 h-12"
+                                    >
+                                      {educationForm.degree || "Select degree"}
+                                    </Button>
+                                  </PopoverTrigger>
+
+                                  <PopoverContent
+                                    align="start"
+                                    className="w-full p-0"
+                                  >
+                                    <Command>
+                                      <CommandInput
+                                        placeholder="Search degree..."
+                                        value={majorSearch}
+                                        onValueChange={setMajorSearch}
+                                      />
+
+                                      <CommandList className="max-h-60 overflow-y-auto">
+                                        <CommandEmpty>
+                                          No degree found.
+                                        </CommandEmpty>
+
+                                        <CommandGroup>
+                                          {majors
+                                            .filter((m: any) =>
+                                              m.name
+                                                .toLowerCase()
+                                                .startsWith(
+                                                  majorSearch.toLowerCase()
+                                                )
+                                            )
+                                            .map((major: any) => (
+                                              <CommandItem
+                                                key={major.id}
+                                                value={major.name}
+                                                onSelect={() => {
+                                                  setEducationForm((prev) => ({
+                                                    ...prev,
+                                                    degree: major.name,
+                                                  }));
+                                                  setOpen(false);
+                                                }}
+                                              >
+                                                {major.name}
+                                              </CommandItem>
+                                            ))}
+                                        </CommandGroup>
+                                      </CommandList>
+                                    </Command>
+                                  </PopoverContent>
+                                </Popover>
                               </div>
+
                               <div>
                                 <Label htmlFor="field">Field of Study *</Label>
                                 <Input
@@ -1841,9 +2546,29 @@ export default function Profile() {
                                 />
                               </div>
                               <div className="md:col-span-2">
-                                <Label htmlFor="percentage">
-                                  Grade/Percentage
+                                <Label className="text-sm font-medium text-gray-700">
+                                  Score
                                 </Label>
+
+                                <Select
+                                value={educationForm.score_type}
+                                onValueChange={(value) =>
+                                  setEducationForm((prev) => ({
+                                    ...prev,
+                                    score_type: value,
+                                  }))
+                                }
+                              >
+                                <SelectTrigger className="mt-1 h-10">
+                                  <SelectValue placeholder="Select score type" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="percentage">Percentage</SelectItem>
+                                  <SelectItem value="cgpa">CGPA</SelectItem>
+                                  <SelectItem value="grade">Grade</SelectItem>
+                                </SelectContent>
+                              </Select>
+
                                 <Input
                                   id="percentage"
                                   value={educationForm.percentage}
@@ -1875,12 +2600,21 @@ export default function Profile() {
                         </Card>
                       )}
                     </div>
+                    <div className="flex justify-between mt-6">
+                    <Button
+                      onClick={handleSaveProfile}
+                      className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-10 lg:h-11 mt-6"
+                    >
+                      SUBMIT
+                    </Button>
                     <Button
                       onClick={handleNext}
                       className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-10 lg:h-11 mt-6"
                     >
                       Next
                     </Button>
+                    
+                  </div>
                   </CardContent>
                 </Card>
               )}
@@ -1934,12 +2668,21 @@ export default function Profile() {
                         ))}
                       </div>
                     </div>
+                    <div className="flex justify-between mt-6">
+                     <Button
+                      onClick={handleSaveProfile}
+                      className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-10 lg:h-11 mt-6"
+                    >
+                      SUBMIT
+                    </Button>
                     <Button
                       onClick={handleNext}
                       className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-10 lg:h-11 mt-6"
                     >
                       Next
                     </Button>
+                    
+                    </div>
                   </CardContent>
                 </Card>
               )}
@@ -2110,6 +2853,208 @@ export default function Profile() {
                   </CardContent>
                 </Card>
               )}
+
+              {activeSection === "SavedJobs" && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-lg lg:text-xl">
+                      <Bookmark className="w-5 h-5" />
+                      <span>Saved Jobs</span>
+                    </CardTitle>
+                  </CardHeader>
+
+                  <CardContent>
+                    {savedJobsData.length > 0 ? (
+                      savedJobsData.map((savedJob) => (
+                        <div
+                          key={savedJob.id}
+                          className="border rounded-lg p-4 mb-4 hover:shadow-md transition-shadow"
+                        >
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h3 className="font-semibold text-base lg:text-lg text-gray-900">
+                                {savedJob.job_title || "No title"}
+                              </h3>
+                              <p className="text-purple-600 font-medium text-sm">
+                                {savedJob.job?.company || "Unknown Company"}
+                              </p>
+                              <p className="text-gray-600 text-xs">
+                                {savedJob.job?.location?.name ||
+                                  "Location not available"}
+                              </p>
+                            </div>
+
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={async () => {
+                                const token =
+                                  localStorage.getItem("auth_token");
+                                if (!token) return;
+                                try {
+                                  const res = await fetch(
+                                    `https://jobseeker-backend-jy1y.onrender.com/api/saved-jobs/${savedJob.id}/`,
+                                    {
+                                      method: "DELETE",
+                                      headers: {
+                                        Authorization: `Bearer ${token}`,
+                                      },
+                                    }
+                                  );
+                                  if (res.ok) {
+                                    setSavedJobsData((prev) =>
+                                      prev.filter((j) => j.id !== savedJob.id)
+                                    );
+                                  }
+                                } catch (err) {
+                                  console.error(
+                                    "Error deleting saved job:",
+                                    err
+                                  );
+                                }
+                              }}
+                              className="text-red-500 border-red-200 hover:bg-red-50"
+                            >
+                              <BookmarkX className="w-4 h-4 mr-2" />
+                              Remove
+                            </Button>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-gray-500 text-sm">
+                        No saved jobs yet.
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
+              {activeSection === "AppliedJobs" && (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-lg lg:text-xl">
+                          <Bookmark className="w-5 h-5" />
+                          <span>Applied Jobs</span>
+                        </CardTitle>
+                      </CardHeader>
+                  
+                      <CardContent>
+                        {loadingAppliedJobs && (
+                          <p className="text-sm text-gray-500">Loading applied jobs...</p>
+                        )}
+                  
+                        {!loadingAppliedJobs && appliedJobs.length === 0 && (
+                          <p className="text-sm text-gray-500">No applied jobs found.</p>
+                        )}
+                  
+                        {appliedJobs.map((appliedJob) => (
+                          <div
+                            key={appliedJob.id}
+                            className="border rounded-lg p-4 mb-4 hover:shadow-md transition-shadow"
+                          >
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <h3 className="font-semibold text-base lg:text-lg text-gray-900">
+                                  {appliedJob.job_title}
+                                </h3>
+                  
+                                <p className="text-purple-600 font-medium text-sm">
+                                  {appliedJob.job?.company}
+                                </p>
+                  
+                                <p className="text-gray-600 text-xs">
+                                  {appliedJob.job?.location?.name}
+                                </p>
+                              </div>
+                  
+                             <div className="flex items-center gap-2">
+                          <span className="text-green-600 text-xs font-medium bg-green-50 px-3 py-1 rounded-full">
+                            Applied
+                          </span>
+                  
+                          <button
+                            onClick={() => removeAppliedJob(appliedJob.id)}
+                            className="text-red-600 text-xs font-medium bg-red-50 px-3 py-1 rounded-full hover:bg-red-100 transition"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                  
+                            </div>
+                          </div>
+                        ))}
+                      </CardContent>
+                    </Card>
+              )}
+
+
+              {/* {activeSection === "save" && (
+  <Card>
+    <CardHeader>
+      <CardTitle className="flex items-center gap-2 text-lg lg:text-xl">
+        <Bookmark className="w-5 h-5" />
+        <span>Saved Jobs</span>
+      </CardTitle>
+    </CardHeader>
+
+    <CardContent>
+      {savedJobsData.length > 0 ? (
+        savedJobsData.map((savedJob) => (
+          <div
+            key={savedJob.id}
+            className="border rounded-lg p-4 mb-4 hover:shadow-md transition-shadow"
+          >
+            <div className="flex justify-between items-start">
+              <div>
+                <h3 className="font-semibold text-base lg:text-lg text-gray-900">
+                  {savedJob.job_title || "No title"}
+                </h3>
+                <p className="text-purple-600 font-medium text-sm">
+                  {savedJob.job?.company || "Unknown Company"}
+                </p>
+                <p className="text-gray-600 text-xs">
+                  {savedJob.job?.location?.name || "Location not available"}
+                </p>
+              </div>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={async () => {
+                  const token = localStorage.getItem("auth_token");
+                  if (!token) return;
+                  try {
+                    const res = await fetch(
+                      `https://jobseeker-backend-jy1y.onrender.com/api/saved-jobs/${savedJob.id}/`,
+                      {
+                        method: "DELETE",
+                        headers: { Authorization: `Bearer ${token}` },
+                      }
+                    );
+                    if (res.ok) {
+                      setSavedJobsData((prev) =>
+                        prev.filter((j) => j.id !== savedJob.id)
+                      );
+                    }
+                  } catch (err) {
+                    console.error("Error deleting saved job:", err);
+                  }
+                }}
+                className="text-red-500 border-red-200 hover:bg-red-50"
+              >
+                <BookmarkX className="w-4 h-4 mr-2" />
+                Remove
+              </Button>
+            </div>
+          </div>
+        ))
+      ) : (
+        <p className="text-gray-500 text-sm">No saved jobs yet.</p>
+      )}
+    </CardContent>
+  </Card>
+)} */}
             </div>
           </div>
         </div>

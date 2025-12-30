@@ -1,14 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect,useReducer } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useRouter } from 'next/navigation';
+import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 import {
   Select,
   SelectContent,
@@ -52,7 +53,29 @@ import {
   XCircle,
 } from "lucide-react";
 import Link from "next/link";
-
+import { jwtDecode } from "jwt-decode";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { ChevronsUpDown } from "lucide-react";
 
 export default function EmployerDashboard() {
   const [activeTab, setActiveTab] = useState("post-job");
@@ -61,14 +84,44 @@ export default function EmployerDashboard() {
   const [cities, setCities] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedCandidate, setSelectedCandidate] = useState(null);
+  const [isCandidateModalOpen, setIsCandidateModalOpen] = useState(false);
   const [jobFilter, setJobFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
-
+  const [questions, setQuestions] = useState<string[]>([]);
+  const [askQuestionEnabled, setAskQuestionEnabled] = useState(false);
+  const [newQuestion, setNewQuestion] = useState("");
   // The Dialog box
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState(null);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [CompanyName, setCompanyName] = useState("");
+  const [filter, setFilter] = useState("All");
+
+  const [dateFilter, setDateFilter] = useState("all");
+  const [search, setSearch] = useState("");
+  const [open, setOpen] = useState(false);
   const router = useRouter();
+
+  const [selectedCity, setSelectedCity] = useState("");
+  const [selectedCountry, setSelectedCountry] = useState("");
+  const [statusFilter, setStatusFilter] = useState("All");
+  const [locationFilter, setLocationFilter] = useState("All");
+  const [salaryFilter, setSalaryFilter] = useState("All");
+  const [experienceFilter, setExperienceFilter] = useState("All");
+  const [jobTitleFilter, setJobTitleFilter] = useState("All");
+  const [searchJobTitle, setSearchJobTitle] = useState("");
+  const [openSchedule, setOpenSchedule] = useState(false);
+  const [interviewDate, setInterviewDate] = useState("");
+  const [interviewMode, setInterviewMode] = useState("Online");
+  const [interviewNotes, setInterviewNotes] = useState("");
+  const [hour, setHour] = useState("12");
+  const [minute, setMinute] = useState("00");
+  const [ampm, setAmPm] = useState("AM");
+  const interviewTime = `${hour}:${minute} ${ampm}`;
+  
+
+
+
   // Sample data for posted jobs
   // const [postedJobs] = useState([
   //   {
@@ -77,7 +130,7 @@ export default function EmployerDashboard() {
   //     company: "Tech Solutions Pvt Ltd",
   //     location: "Mumbai",
   //     experience: "3-5 years",
-  //     salary: "8-12 LPA",
+  //     salary: "8-12 PA",
   //     jobType: "Full Time",
   //     postedDate: "2024-01-15",
   //     applications: 45,
@@ -90,7 +143,7 @@ export default function EmployerDashboard() {
   //     company: "Digital Innovations Inc",
   //     location: "Bangalore",
   //     experience: "2-4 years",
-  //     salary: "6-10 LPA",
+  //     salary: "6-10 PA",
   //     jobType: "Full Time",
   //     postedDate: "2024-01-10",
   //     applications: 32,
@@ -103,7 +156,7 @@ export default function EmployerDashboard() {
   //     company: "StartupXYZ",
   //     location: "Delhi",
   //     experience: "5-8 years",
-  //     salary: "15-20 LPA",
+  //     salary: "15-20 PA",
   //     jobType: "Full Time",
   //     postedDate: "2024-01-08",
   //     applications: 28,
@@ -114,7 +167,7 @@ export default function EmployerDashboard() {
   const [postedJobs, setPostedJobs] = useState([]);
 
   // Sample data for candidates
-  const [candidates] = useState([
+  const [candidates, setCandidates] = useState([
     {
       id: 1,
       name: "Rahul Sharma",
@@ -252,7 +305,7 @@ export default function EmployerDashboard() {
     experience: "",
     salary: "",
     currency: "",
-    jobType: "",
+    job_type: "",
     workMode: "",
     description: "",
     requirements: "",
@@ -262,6 +315,7 @@ export default function EmployerDashboard() {
     vacancies: "",
     isUrgent: false,
     isRemote: false,
+    questions: [],
   });
 
   const [newSkill, setNewSkill] = useState("");
@@ -269,19 +323,134 @@ export default function EmployerDashboard() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem('auth_token');
+    const token = localStorage.getItem("auth_token");
     console.log("LOG TOKEN:", token);
     setIsAuthenticated(!!token);
   }, []);
 
-
-  // Fetch data from APIs
   useEffect(() => {
-    const fetchPostedJobs = async () => {
+    const run = async () => {
       try {
         const token = localStorage.getItem("auth_token");
         if (!token) return;
+  
+        const decoded = jwtDecode(token);
+        console.log("DECODED:", decoded);
+        console.log("Employer ID:", decoded.user_id);
+  
+        const res = await fetch(
+          `https://jobseeker-backend-jy1y.onrender.com/employeer/api/companies/${decoded.user_id}/`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+  
+        if (!res.ok) {
+          console.error("FETCH FAILED:", res.status);
+          return;
+        }
+     
+        const data = await res.json();
+        console.log("Applications:", data);
+        setCompanyName(data.company_name)
+        console.log(data.company_name)
+      } catch (err) {
+        console.error("Error:", err);
+      }
+    };
+  
+    run();
+  }, []);
 
+  useEffect(() => {
+    const fetchApplications = async () => {
+      try {
+        const token = localStorage.getItem("auth_token");
+        if (!token) return;
+        const res = await fetch(
+          "https://jobseeker-backend-jy1y.onrender.com/employeer/api/employer/applications/",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        if (!res.ok) {
+          console.error("Failed to fetch employer applications");
+          return;
+        }
+        const data = await res.json();
+        console.log("Employer applications:", data);
+        // Map API to UI candidate shape
+        const mapped = (Array.isArray(data) ? data : []).map((app) => ({
+          id: app.id,
+          name: app.profile?.full_name || app.user_email || "Unknown",
+          email: app.profile?.email || app.user_email,
+          phone: app.profile?.phone || "Not provided",
+          phoneCode: app.profile?.phone_code || "",
+
+          location: [
+            app.profile?.city,
+            app.profile?.state,
+            app.profile?.country,
+          ]
+            .filter(Boolean)
+            .join(", "),
+          experience: app.profile?.experience || "N/A",
+          currentRole: "",
+          currentCompany: "",
+          skills: app.profile?.skills || [],
+          education: "",
+          appliedFor: app.job_title,
+          appliedDate: app.applied_at,
+          // status: app.application_status || "Under Review",
+          status:
+             app.application_status &&
+             app.application_status !== "application_status"
+             ? app.application_status
+             : "Under Review",
+
+          resumeUrl: app.profile?.resume
+            ? `https://jobseeker-backend-jy1y.onrender.com${app.profile.resume}`
+            : "#",
+          profileImage: null,
+          summary: "",
+          workExperience: app.profile?.experiences || [],
+          educationDetails: app.profile?.educations || [],
+          certifications: app.profile?.certifications || [],
+          qa: app.answers || [],
+        }));
+        setCandidates(mapped);
+      } catch (e) {
+        console.error("Failed to fetch employer applications", e);
+      }
+    };
+    fetchApplications();
+  }, []);
+
+  const exportToExcel = async () => {
+    const XLSX = await import("xlsx");
+
+    const data = filteredCategories.map((c) => ({
+      name: c.name || "",
+      email: c.email || "",
+      // phone: `+${c.phoneCode}${c.phone}` || "",
+      phone: `+${c.phone || ""}`,
+      appliedFor: c.appliedFor || c.job_title || "",
+      status: c.status || "",
+      experience: c.experience || "",
+      location: c.location || "",
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(wb, ws, "Candidates");
+
+    XLSX.writeFile(wb, "filtered_candidates.xlsx");
+  };
+  const fetchPostedJobs = async () => {
+    try {
+      const token = localStorage.getItem("auth_token");
+      if (!token) return;
         const response = await fetch(
           "https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-list-view/",
           {
@@ -292,18 +461,30 @@ export default function EmployerDashboard() {
           }
         );
 
-        if (!response.ok) {
-          console.error("Failed to fetch jobs");
-          return;
-        }
+      // const response = await fetch(
+      //   "https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-list-view/",
+      //   {
+      //     method: "GET",
+      //     headers: {
+      //       Authorization: `Bearer ${token}`,
+      //     },
+      //   }
+      // );
 
-        const data = await response.json();
-        setPostedJobs(data); // Set jobs into state
-      } catch (error) {
-        console.error("Error fetching jobs:", error);
+      if (!response.ok) {
+        console.error("Failed to fetch jobs");
+        return;
       }
-    };
+      const data = await response.json();
+      console.log("Here is the Job-list-view-data:",data)
+      setPostedJobs(data); // Set jobs into state
+    } catch (error) {
+      console.error("Error fetching jobs:", error);
+    }
+  };
 
+  // Fetch data from APIs
+  useEffect(() => {
     fetchPostedJobs();
   }, []);
   console.log("Posted Jobs:", postedJobs);
@@ -319,7 +500,9 @@ export default function EmployerDashboard() {
 
   useEffect(() => {
     // Fetch job categories
-    fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_category/")
+    fetch(
+      "https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_category/"
+    )
       .then((res) => {
         if (!res.ok) {
           throw new Error(`HTTP error! status: ${res.status}`);
@@ -379,6 +562,80 @@ export default function EmployerDashboard() {
     }
   };
 
+  const handleApplicationsClick = async (jobId) => {
+    try {
+      const token = localStorage.getItem("auth_token");
+
+      const response = await fetch(
+        `https://jobseeker-backend-jy1y.onrender.com/employeer/api/employer/applications/job/${jobId}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = await response.json();
+      console.log("API RAW DATA:", data);
+
+      if (!Array.isArray(data)) {
+        console.error("API did not return list:", data);
+        toast.error("Failed to load candidates! (Unauthorized?)", {
+        description: "You might not have permission. Please log in or check your access."
+        });
+        return;
+      }
+
+      const mappedCandidates = data.map((item) => ({
+        id: item.id,
+        name: item.profile?.full_name || item.full_name,
+        email: item.email || item.user_email, 
+        phone: item.profile?.phone || item.phone,
+        phoneCode: item.profile?.phone_code || item.phone_code,
+        location: item.profile?.city || item.city,
+        experience: item.profile?.experience || item.experience,
+        job_title: item.job_title,
+        resumeUrl: item.profile?.resume || item.resume,
+        skills: item.profile?.skills || item.skills,
+        certifications: item.profile?.certifications || item.certifications,
+        educationDetails: item.profile?.educations || item.educations,
+        workExperience: item.profile?.experiences || item.experiences,
+        status: item.application_status || "Under Review",
+        appliedDate: item.applied_at,
+        qa: item.answers?.map((ans) => ({
+          question_index: ans.question_index,
+          question_text: ans.question_text,
+          answer_text: ans.answer,
+        })),
+      }));
+
+      console.log("MAPPED CANDIDATES:", mappedCandidates);
+
+      setCandidates(mappedCandidates);
+      setActiveTab("candidates");
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleAddQuestion = () => {
+    if (newQuestion.trim() && !jobForm.questions.includes(newQuestion.trim())) {
+      const updated = [...jobForm.questions, newQuestion.trim()];
+      setJobForm((prev) => ({ ...prev, questions: updated }));
+      setQuestions(updated); // ✅ keep them in sync
+      setNewQuestion("");
+    }
+  };
+
+  const handleRemoveQuestion = (indexToRemove) => {
+    const updated = jobForm.questions.filter(
+      (_, index) => index !== indexToRemove
+    );
+    setJobForm((prev) => ({ ...prev, questions: updated }));
+    setQuestions(updated);
+  };
+
   const handleRemoveSkill = (skillToRemove) => {
     setJobForm((prev) => ({
       ...prev,
@@ -391,20 +648,23 @@ export default function EmployerDashboard() {
     try {
       const token = localStorage.getItem("auth_token");
       if (!token) {
-        alert("You must be logged in to post a job.");
+        toast.error("You must be logged in to post a job.", {
+        description: "Please log in to continue."
+        });
         return;
       }
       const payload = {
         title: jobForm.title,
-        category: jobForm.category,
-        job_title: jobForm.jobTitle,
+        category_id: parseInt(jobForm.category),
+        job_title: parseInt(jobForm.jobTitle),
         company: jobForm.company,
-        location: jobForm.location,
+        location_id: parseInt(jobForm.location),
+        currency_id: parseInt(jobForm.currency),
         experience: jobForm.experience,
         salary: jobForm.salary,
-        job_type: jobForm.jobType,
+        job_type: jobForm.job_type,
         work_mode: jobForm.workMode,
-        vacancies: jobForm.vacancies || 1,
+        vacancies: parseInt(jobForm.vacancies) || 1, // Ensure integer
         application_deadline: jobForm.applicationDeadline,
         description: jobForm.description,
         requirements: jobForm.requirements,
@@ -413,6 +673,7 @@ export default function EmployerDashboard() {
         is_urgent: jobForm.isUrgent,
         is_remote: jobForm.isRemote,
         status: "active",
+        questions: Array.isArray(jobForm.questions) ? jobForm.questions : [],
       };
       console.log("Payload:", payload);
       const response = await fetch(
@@ -430,57 +691,70 @@ export default function EmployerDashboard() {
       if (!response.ok) {
         const errorData = await response.json();
         console.error("Error posting job:", errorData);
-        alert(`Failed to post job: ${errorData.detail || "Unknown error"}`);
+        toast.error("Failed to post job", {
+        description: errorData.detail || "Unknown error. Please try again.",
+        });
+
         return;
       }
 
-      const data = await response.json();
-      console.log("Job posted successfully:", data);
-      alert("Job posted successfully!");
+  const data = await response.json();
+  console.log("Job posted successfully:", data);
+  setPostedJobs((prev) => [...prev, data]);
+  toast.success("Job posted successfully!");
+  await fetchPostedJobs();
 
       // Reset form
-      setJobForm({
-        title: "",
-        category: "",
-        jobTitle: "",
-        company: "",
-        location: "",
-        experience: "",
-        salary: "",
-        currency: "",
-        jobType: "",
-        workMode: "",
-        description: "",
-        requirements: "",
-        benefits: "",
-        skills: [],
-        applicationDeadline: "",
-        vacancies: "",
-        isUrgent: false,
-        isRemote: false,
-      });
-    } catch (error) {
-      console.error("Error submitting job:", error);
-      alert("An error occurred while posting the job.");
-    }
-  };
+        setJobForm({
+          title: "",
+          category: "",
+          jobTitle: "",
+          company: "",
+          location: "",
+          experience: "",
+          salary: "",
+          currency: "",
+          job_type: "",
+          workMode: "",
+          description: "",
+          requirements: "",
+          benefits: "",
+          skills: [],
+          applicationDeadline: "",
+          vacancies: "",
+          isUrgent: false,
+          isRemote: false,
+          questions: [],
+        });
+        setSelectedCategory("");
+        setQuestions([]);
+        setAskQuestionEnabled(false); // uncheck the checkbox
+        setNewSkill("");
+        setNewQuestion("");
+      } catch (error) {
+        console.error("Error submitting job:", error);
+        toast.error("An error occurred while posting the job.", {
+        description: "Please try again or check your internet connection."
+        });    
+       }
+    };
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "active":
-        return "bg-green-100 text-green-800";
-      case "closed":
-        return "bg-red-100 text-red-800";
-      case "Under Review":
-        return "bg-yellow-100 text-yellow-800";
-      case "Shortlisted":
-        return "bg-blue-100 text-blue-800";
-      case "Rejected":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
+    const getStatusColor = (status) => {
+      switch (status) {
+        case "active":
+          return "bg-green-100 text-green-800";
+        case "closed":
+          return "bg-red-100 text-red-800";
+        case "Under Review":
+          return "bg-yellow-100 text-yellow-800";
+        case "Shortlisted":
+          return "bg-blue-100 text-blue-800";
+        case "Rejected":
+          return "bg-red-100 text-red-800";
+        default:
+          return "bg-gray-100 text-gray-800";
+      }
+    };
 
   // Filter jobs based on status and search term
   const filteredJobs = postedJobs.filter((job) => {
@@ -491,119 +765,530 @@ export default function EmployerDashboard() {
       job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       job.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
       job.location?.name.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesFilter && matchesSearch;
-  });
+    let matchesDate = true;
+    if (dateFilter !== "all" && job.created_at) {
+      const jobDate = new Date(job.created_at);
+      const now = new Date();
 
-  const handleViewJob = async (job) => {
-    try {
-      const token = localStorage.getItem("auth_token");
-      const response = await fetch(
-        ` /employeer/api/job-postings/${job.id}/`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      const data = await response.json();
-      setSelectedJob(data);
-      setIsEditMode(false);
-      setIsModalOpen(true);
-    } catch (err) {
-      console.error("Error fetching job details", err);
+      if (dateFilter === "today") {
+        matchesDate = jobDate.toDateString() === now.toDateString();
+      } else if (dateFilter === "week") {
+        const weekAgo = new Date();
+        weekAgo.setDate(now.getDate() - 7);
+        matchesDate = jobDate >= weekAgo;
+      } else if (dateFilter === "month") {
+        const monthAgo = new Date();
+        monthAgo.setMonth(now.getMonth() - 1);
+        matchesDate = jobDate >= monthAgo;
+      }
     }
-  };
+    return matchesFilter && matchesSearch && matchesDate;
+  });
+  const filteredCategories = candidates.filter((c) => {
+    const nameMatch =
+      c.name?.toLowerCase().startsWith(searchTerm.toLowerCase()) ||
+      c.currentRole?.toLowerCase().startsWith(searchTerm.toLowerCase()) ||
+      c.appliedFor?.toLowerCase().startsWith(searchTerm.toLowerCase());
 
-  const handleEditJob = async (job) => {
-    try {
-      const token = localStorage.getItem("auth_token");
-      const response = await fetch(
-        `https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-postings/${job.id}/`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
+    const statusMatch =
+      statusFilter === "All" ||
+      c.status?.toLowerCase() === statusFilter.toLowerCase();
+
+    const locationMatch =
+      locationFilter === "All" ||
+      c.location?.toLowerCase() === locationFilter.toLowerCase();
+
+    const jobTitleMatch =
+      jobTitleFilter === "All" ||
+      c.appliedFor?.toLowerCase() === jobTitleFilter.toLowerCase();
+
+    const salary = parseInt(c.expectedSalary) || 0;
+    const salaryMatch =
+      salaryFilter === "All" ||
+      (salaryFilter === "Below 20000" && salary < 20000) ||
+      (salaryFilter === "20000-50000" && salary >= 20000 && salary <= 50000) ||
+      (salaryFilter === "Above 50000" && salary > 50000);
+
+    const expMatch =
+      experienceFilter === "All" ||
+      (experienceFilter === "Fresher" &&
+        (c.experience?.toLowerCase().includes("fresher") ||
+          c.experience?.includes("0"))) ||
+      (experienceFilter === "1-3 Years" &&
+        (c.experience?.includes("1") ||
+          c.experience?.includes("2") ||
+          c.experience?.includes("3"))) ||
+      (experienceFilter === "3-5 Years" &&
+        (c.experience?.includes("3") ||
+          c.experience?.includes("4") ||
+          c.experience?.includes("5"))) ||
+      (experienceFilter === "5+ Years" &&
+        (c.experience?.includes("5") ||
+          c.experience?.includes("6") ||
+          c.experience?.includes("7")));
+
+    return (
+      nameMatch &&
+      statusMatch &&
+      locationMatch &&
+      salaryMatch &&
+      expMatch &&
+      jobTitleMatch
+    );
+  });
+  const filteredCities = cities.filter((city) =>
+    city.name.toLowerCase().startsWith(searchTerm.toLowerCase())
+  );
+
+    const handleViewJob = async (job) => {
+      try {
+        const token = localStorage.getItem("auth_token");
+        const response = await fetch(
+          `https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-list-view/${job.id}/`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
         }
-      );
-      const data = await response.json();
-
-      // Prefill the form
-      setJobForm({
-        title: data.title,
-        category: data.category,
-        jobTitle: data.job_title,
-        company: data.company,
-        location: data.location,
-        experience: data.experience,
-        salary: data.salary,
-        currency: data.currency,
-        jobType: data.job_type,
-        workMode: data.work_mode,
-        description: data.description,
-        requirements: data.requirements,
-        benefits: data.benefits,
-        skills: data.skills,
-        applicationDeadline: data.application_deadline,
-        vacancies: data.vacancies,
-        isUrgent: data.is_urgent,
-        isRemote: data.is_remote,
+        const data = await response.json();
+        console.log("Job details:", data);
+        setSelectedJob(data);
+        setIsEditMode(false);
+        setIsModalOpen(true);
+      } catch (err) {
+        console.error("Error fetching job details", err);
+      }
+    };
+  //https://jobseeker-backend-jy1y.onrender.com
+    const handleEditJob = async (job) => {
+      try {
+        const token = localStorage.getItem("auth_token");
+        const response = await fetch(
+          `https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-list-view/${job.id}/`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        // https://jobseeker-backend-jy1y.onrender.com
+        const data = await response.json();
+        console.log("Data is prefill");
+        // Prefill the form
+    setJobForm({
+        title: data.title || "",
+        category: data.category?.id?.toString() || data.category || "",
+        jobTitle: data.job_title?.id?.toString() || data.job_title || "",
+        company: data.company || "",
+        location: data.location?.id?.toString() || data.location || "",
+        experience: data.experience || "",
+        salary: data.salary || "",
+        currency: data.currency?.id?.toString() || data.currency || "",
+        job_type: data.job_type || "",
+        workMode: data.work_mode || "",
+        description: data.description || "",
+        requirements: data.requirements || "",
+        benefits: data.benefits || "",
+        skills: data.skills || [],
+        applicationDeadline: data.application_deadline || "",
+        vacancies: data.vacancies || "",
+        isUrgent: data.is_urgent || false,
+        isRemote: data.is_remote || false,
+        questions: data.questions || [],
       });
+      setQuestions(data.questions || []);
+      setAskQuestionEnabled(data.questions && data.questions.length > 0);
 
       setSelectedJob(data);
       setIsEditMode(true);
-      setIsModalOpen(true);
     } catch (err) {
       console.error("Error fetching job details for edit", err);
     }
   };
 
-  const handleDeleteJob = (job) => {
-    if (
-      window.confirm(`Are you sure you want to delete the job: ${job.title}?`)
-    ) {
-      console.log("Deleting job:", job);
-      // Implement delete job functionality
-      alert(`Job deleted: ${job.title}`);
+  const handleDeleteJob = async (job) => {
+    const token = localStorage.getItem("auth_token");
+    try {
+      if (
+        window.confirm(`Are you sure you want to delete the job: ${job.title}?`)
+      ) {
+        console.log("Deleting job:", job);
+
+        toast.success("Job deleted", {
+        description: `The job "${job.title}" has been successfully removed.`
+        });
+
+      }
+      const response = await fetch(
+        `https://jobseeker-backend-jy1y.onrender.com/employeer/job-postings/${job.id}/delete/`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      if (response.ok) {
+        setPostedJobs((prev) => prev.filter((j) => j.id !== job.id));
+        toast.success("Job deleted", {
+        description: `The job "${job.title}" has been successfully removed.`
+        });
+
+      } else {
+        console.error("Failed to delete job");
+        toast.error("Failed to delete job", {
+        description: "Please try again or check your internet connection."
+        });
+      }
+    } catch (err) {
+      console.error("Error fetching job details for edit", err);
     }
   };
 
-  const handleToggleJobStatus = (job) => {
-    const newStatus = job.status === "Active" ? "Closed" : "Active";
-    console.log(`Changing job status from ${job.status} to ${newStatus}`);
-    // Implement status toggle functionality
-    alert(`Job status changed to: ${newStatus}`);
+  // const handleToggleJobStatus = (job) => {
+  //   const newStatus = job.status === "Active" ? "Closed" : "Active";
+  //   console.log(`Changing job status from ${job.status} to ${newStatus}`);
+  //   // Implement status toggle functionality
+  //   alert(`Job status changed to: ${newStatus}`);
+  // };
+
+  const handleToggleJobStatus = async (job) => {
+    const token = localStorage.getItem("auth_token");
+
+    if (!token) {
+      toast.error("You are not logged in. Please log in again.", {
+      description: "Your session may have expired."
+      });
+      return;
+    }
+
+    const newStatus =
+      job.status.toLowerCase() === "active" ? "closed" : "active";
+
+    try {
+      const response = await fetch(
+        `https://jobseeker-backend-jy1y.onrender.com/employeer/job-postings/${job.id}/update/`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ status: newStatus }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (response.ok) {
+        setPostedJobs((prev) =>
+          prev.map((j) => (j.id === job.id ? { ...j, status: newStatus } : j))
+        );
+        toast.success(`Job status changed to: ${newStatus}`);
+      } else {
+        console.error("Failed to update job status:", result);
+        
+        toast.error(result.detail || "Failed to update job status", {
+       description: "Please check and try again.",
+       });
+      }
+    } catch (err) {
+      console.error("Error updating job status:", err);
+      toast.error("Network error. Please try again.");
+    }
   };
 
+  // OLD handleUpdateJOB
+  // const handleUpdateJob = async () => {
+  //   try {
+  //     const token = localStorage.getItem("auth_token");
+  //     const response = await fetch(`https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-postings/${selectedJob.id}/`, {
+  //       method: "PUT",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //         Authorization: `Bearer ${token}`,
+  //       },
+  //       body: JSON.stringify(jobForm),
+  //     });
+
+  //     if (!response.ok) {
+  //       throw new Error("Failed to update job");
+  //     }
+
+  //     const updatedJob = await response.json();
+  //     setPostedJobs((prev) =>
+  //       prev.map((job) => (job.id === updatedJob.id ? updatedJob : job))
+  //     );
+
+  //     setIsModalOpen(false);
+  //     alert("Job updated successfully");
+  //   } catch (err) {
+  //     console.error(err);
+  //     alert("Failed to update job");
+  //   }
+  // };
+
+  // Added the New Handle UpdateJob
   const handleUpdateJob = async () => {
+    if (!selectedJob?.id) {
+      toast.error("No job selected for update", {
+      description: "Please select a job and try again."
+     });
+      return;
+    }
+
     try {
       const token = localStorage.getItem("auth_token");
-      const response = await fetch(`https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-postings/${selectedJob.id}/`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(jobForm),
-      });
+      if (!token) {
+        toast.error("You must be logged in to update a job.", {
+        description: "Please log in and try again."
+        });
+        return;
+      }
+
+      const response = await fetch(
+        `https://jobseeker-backend-jy1y.onrender.com/employeer/job-postings/${selectedJob.id}/update/`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(jobForm),
+        }
+      );
 
       if (!response.ok) {
-        throw new Error("Failed to update job");
+        const errorData = await response.json();
+        console.error("Failed to update job:", errorData);
+        toast.error(`Error: ${errorData.detail || "Unable to update job"}`, {
+        description: "Please try again or check your network connection."
+        });
+        return;
       }
 
       const updatedJob = await response.json();
 
-      // Update local state
-      setPostedJobs((prev) =>
-        prev.map((job) => (job.id === updatedJob.id ? updatedJob : job))
+      // Update the state with the new job data
+      setPostedJobs((prevJobs) =>
+        prevJobs.map((job) => (job.id === updatedJob.id ? updatedJob : job))
       );
 
-      setIsModalOpen(false);
-      alert("Job updated successfully");
+      setIsEditMode(false); // Close the dialog
+      
+      toast.success("Job updated successfully!");
     } catch (err) {
-      console.error(err);
-      alert("Failed to update job");
+      console.error("Update job error:", err);
+      toast.error("An error occurred while updating the job.", {
+      description: "Please try again or check your network connection."
+      });
     }
   };
+
+  // SHORTLIST
+  const handleShortlistCandidate = async (candidate) => {
+    try {
+      const token = localStorage.getItem("auth_token");
+      if (!token) {
+        toast.error("Token missing", {
+        description: "Please log in again to continue."
+        });
+        return;
+      }
+
+      const response = await fetch(
+        `https://jobseeker-backend-jy1y.onrender.com/employeer/api/employer/applications/${candidate.id}/update/`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            application_status: "shortlisted",
+          }),
+        }
+      );
+
+      const updated = await response.json();
+      console.log("Updated Response:", updated);
+
+      if (!response.ok) {
+         toast.error(updated.error || "Update failed", {
+         description: "Please check and try again."
+         });
+        return;
+      }
+
+      setCandidates((prev) =>
+        prev.map((c) =>
+          c.id === updated.id ? { ...c, status: updated.application_status } : c
+        )
+      );
+
+      setSelectedCandidate((prev) =>
+        prev && prev.id === updated.id
+          ? { ...prev, status: updated.application_status }
+          : prev
+      );
+
+      // setSelectedCandidate((prev) =>
+      //   prev && prev.id === updated.id
+      //     ? { ...prev, status: updated.application_status }
+      //     : prev
+      // );
+      console.log("Now>>>>>>>", selectedCandidate);
+
+      toast.success("Candidate Shortlisted!");
+    } catch (err) {
+      console.log("Shortlist error:", err);
+      toast.error("Network error. Please try again.");
+    }
+  };
+
+  /* REJECT */
+  const handleRejectCandidate = async (candidate) => {
+    try {
+      console.log("Rejecting candidate: ", candidate);
+
+      if (!candidate?.id) {
+        toast.error("Candidate ID missing", {
+        description: "Please select a candidate and try again."
+        });
+        return;
+      }
+
+      const token = localStorage.getItem("auth_token");
+      if (!token) {
+        toast.error("Token missing", {
+         description: "Please log in again to continue."
+        });
+        return;
+      }
+
+      const response = await fetch(
+        `https://jobseeker-backend-jy1y.onrender.com/employeer/api/employer/applications/${candidate.id}/update/`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            application_status: "Rejected",
+          }),
+        }
+      );
+
+      const text = await response.text();
+      console.log("Raw Response → ", text);
+
+      let data = null;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        console.log("HTML Error Response Received");
+      }
+
+      if (!response.ok) {
+        toast.error(data?.detail || "Update failed", {
+        description: "Please check and try again."
+        });
+        return;
+      }
+
+      setCandidates((prev) =>
+        prev.map((c) =>
+          c.id === data.id ? { ...c, status: data.application_status } : c
+        )
+      );
+
+      setSelectedCandidate((prev) =>
+        prev && prev.id === data.id
+          ? { ...prev, status: data.application_status }
+          : prev
+      );
+
+      // setSelectedCandidate((prev) =>
+      //   prev && prev.id === data.id
+      //     ? { ...prev, status: data.application_status }
+      //     : prev
+      // );
+
+      toast.success("Candidate Rejected!");
+    } catch (err) {
+      console.log("Reject error: ", err);
+      toast.error("Network error. Please try again.");
+    }
+  };
+
+  // INTERVIEW SCHEDULE
+  const handleScheduleInterview = (candidate) => {
+    setSelectedCandidate(candidate);
+    setOpenSchedule(true);
+  };
+
+  const handleScheduleSubmit = async () => {
+    try {
+      const token = localStorage.getItem("auth_token");
+      if (!token) return toast.error("Token missing", {
+                         description: "Please log in again to continue."
+                         });
+  
+      const res = await fetch(
+        `https://jobseeker-backend-jy1y.onrender.com/employeer/api/employer/applications/${selectedCandidate.id}/schedule-interview/`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            interview_date: interviewDate,
+            interview_time: interviewTime,
+            interview_mode: interviewMode,
+            notes: interviewNotes,
+          }),
+        }
+      );
+   // meet_link: meetLink,
+      if (!res.ok) {
+        const text = await res.text();
+        console.error("Backend error:", text);
+        return toast.error("Failed to schedule interview", {
+        description: "Please try again or check your network connection."
+         });
+
+      }
+  
+      const data = await res.json();
+  
+      setCandidates((prev) =>
+        prev.map((c) =>
+          c.id === data.id ? { ...c, status: data.application_status } : c
+        )
+      );
+  
+      setSelectedCandidate((prev) =>
+        prev && prev.id === data.id
+          ? { ...prev, status: data.application_status }
+          : prev
+      );
+  
+      toast.success("Interview Scheduled!");
+      setOpenSchedule(false);
+    } catch (err) {
+      console.error(err);
+      toast.error("Network error. Please try again.");
+    }
+  };
+  
+
   const handleLogout = () => {
-    localStorage.removeItem('auth_token');
+    localStorage.removeItem("auth_token");
     setIsAuthenticated(false);
-    router.push('/employer/login');
+    router.push("/employer/login");
   };
 
   const tabs = [
@@ -612,6 +1297,69 @@ export default function EmployerDashboard() {
     { id: "candidates", label: "Candidates", icon: Users },
     // { id: 'analytics', label: 'Analytics', icon: TrendingUp }
   ];
+
+  const getWorkModeColor = (workMode) => {
+    switch (workMode) {
+      case "Remote":
+        return "bg-green-100 text-green-800";
+      case "Hybrid":
+        return "bg-blue-100 text-blue-800";
+      case "Office":
+        return "bg-gray-100 text-gray-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  const getTimeSincePosted = (postedDate) => {
+    const now = new Date();
+    const posted = new Date(postedDate);
+    const diffTime = Math.abs(now - posted);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 1) return "1 day ago";
+    if (diffDays < 7) return `${diffDays} days ago`;
+    if (diffDays < 30) return `${Math.ceil(diffDays / 7)} weeks ago`;
+    return `${Math.ceil(diffDays / 30)} months ago`;
+  };
+
+  // let companyInfoSize;
+  // if(typeof selectedJob ==="object" && selectedJob?.companyInfo.size){
+  //  selectedJob.requirements.map((req, index) => (
+  //                        )
+  // }
+
+  useEffect(() => {
+    const fetchCompany = async () => {
+      try {
+        const token = localStorage.getItem("auth_token");
+        if (!token) return;
+
+        const res = await fetch(
+          "https://jobseeker-backend-jy1y.onrender.com/employeer/api/employeer_register/",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        const data = await res.json();
+        console.log("Company API → ", data);
+
+        if (data?.company_name) {
+          setJobForm((prev) => ({
+            ...prev,
+            company: prev.company ? prev.company : data.company_name
+          }));
+        }
+      } catch (err) {
+        console.error("Company fetch error:", err);
+      }
+    };
+
+    fetchCompany();
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -645,13 +1393,20 @@ export default function EmployerDashboard() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Welcome Section */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Welcome to your Dashboard
-          </h1>
-          <p className="text-gray-600">
-            Manage your job postings and find the perfect candidates
-          </p>
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              Welcome to your Dashboard
+            </h1>
+            <p className="text-gray-600">
+              Manage your job postings and find the perfect candidates
+            </p>
+          </div>
+          {activeTab === "candidates" && (
+            <Button onClick={exportToExcel} className="bg-green-600 text-white">
+              Export Excel
+            </Button>
+          )}
         </div>
 
         {/* Navigation Tabs */}
@@ -713,6 +1468,7 @@ export default function EmployerDashboard() {
                     <Label className="text-sm font-medium">
                       Job Category *
                     </Label>
+
                     <Select
                       value={selectedCategory}
                       onValueChange={(value) => {
@@ -725,17 +1481,48 @@ export default function EmployerDashboard() {
                       }}
                     >
                       <SelectTrigger className="mt-1">
-                        <SelectValue placeholder="Select job category" />
+                        <SelectValue placeholder="Select job category">
+                          {jobCategories.find(
+                            (category) =>
+                              category.id?.toString() === selectedCategory
+                          )?.name || "Select job category"}
+                        </SelectValue>
                       </SelectTrigger>
+
                       <SelectContent>
-                        {jobCategories.map((category) => (
-                          <SelectItem
-                            key={category.id}
-                            value={category.id.toString()}
-                          >
-                            {category.name}
-                          </SelectItem>
-                        ))}
+                        <div className="p-2 sticky top-0 bg-white z-10 border-b">
+                          <Input
+                            placeholder="Search category..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="h-8 text-sm"
+                          />
+                        </div>
+
+                        {Array.isArray(jobCategories) &&
+                        jobCategories.length > 0 ? (
+                          jobCategories
+                            .filter((category) => {
+                              if (!searchTerm) return true;
+                              return category?.name
+                                ?.toLowerCase()
+                                .startsWith(searchTerm.toLowerCase());
+                            })
+                            .map((category) => (
+                              <SelectItem
+                                key={category.id}
+                                value={category.id?.toString()}
+                              >
+                                {category.name}
+                              </SelectItem>
+                            ))
+                        ) : (
+                          <div className="p-2 text-sm text-gray-500">
+                            {jobCategories.length === 0
+                              ? "No categories found"
+                              : "No matching results"}
+                          </div>
+                        )}
                       </SelectContent>
                     </Select>
                   </div>
@@ -760,15 +1547,39 @@ export default function EmployerDashboard() {
                           }
                         />
                       </SelectTrigger>
+
                       <SelectContent>
-                        {jobTitles.map((title) => (
-                          <SelectItem
-                            key={title.id}
-                            value={title.id.toString()}
-                          >
-                            {title.title}
-                          </SelectItem>
-                        ))}
+                        <div className="p-2 sticky top-0 bg-white z-10 border-b">
+                          <Input
+                            placeholder="Search job title..."
+                            value={searchJobTitle}
+                            onChange={(e) => setSearchJobTitle(e.target.value)}
+                            className="h-8 text-sm"
+                          />
+                        </div>
+
+                        {Array.isArray(jobTitles) && jobTitles.length > 0 ? (
+                          jobTitles
+                            .filter((title) =>
+                              title?.title
+                                ?.toLowerCase()
+                                .startsWith(searchJobTitle.toLowerCase())
+                            )
+                            .map((title) => (
+                              <SelectItem
+                                key={title.id}
+                                value={title.id.toString()}
+                              >
+                                {title.title}
+                              </SelectItem>
+                            ))
+                        ) : (
+                          <div className="p-2 text-sm text-gray-500">
+                            {jobTitles.length === 0
+                              ? "No job titles found"
+                              : "No matching results"}
+                          </div>
+                        )}
                       </SelectContent>
                     </Select>
                   </div>
@@ -779,7 +1590,7 @@ export default function EmployerDashboard() {
                     </Label>
                     <Input
                       id="company"
-                      value={jobForm.company}
+                      value={CompanyName}
                       onChange={(e) =>
                         setJobForm((prev) => ({
                           ...prev,
@@ -793,24 +1604,64 @@ export default function EmployerDashboard() {
                   </div>
 
                   <div>
-                    <Label className="text-sm font-medium">Location *</Label>
-                    <Select
-                      value={jobForm.location}
-                      onValueChange={(value) =>
-                        setJobForm((prev) => ({ ...prev, location: value }))
-                      }
-                    >
-                      <SelectTrigger className="mt-1">
-                        <SelectValue placeholder="Select location" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {cities.map((city) => (
-                          <SelectItem key={city.id} value={city.id.toString()}>
-                            {city.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Label className="text-sm font-medium">
+                      Job Location *
+                    </Label>
+
+                    <Popover open={open} onOpenChange={setOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          className="w-full justify-between mt-1 h-10 lg:h-11"
+                        >
+                          {selectedCity || "Select location"}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+
+                      <PopoverContent className="w-full p-0">
+                        <Command>
+                          <CommandInput
+                            placeholder="Search location..."
+                            value={search}
+                            onValueChange={setSearch}
+                          />
+                          <CommandList>
+                            {filteredCities.length === 0 ? (
+                              <CommandEmpty>No location found.</CommandEmpty>
+                            ) : (
+                              <CommandGroup>
+                                {filteredCities
+                                  .filter((city) =>
+                                    city.name
+                                      .toLowerCase()
+                                      .startsWith(search.toLowerCase())
+                                  )
+                                  .map((city) => (
+                                    <CommandItem
+                                      key={city.id}
+                                      onSelect={() => {
+                                        setSelectedCity(city.name);
+
+                                        setJobForm((prev: any) => ({
+                                          ...prev,
+                                          location: city.id.toString(),
+                                        }));
+
+                                        setSearch("");
+                                        setOpen(false);
+                                      }}
+                                    >
+                                      {city.name}
+                                    </CommandItem>
+                                  ))}
+                              </CommandGroup>
+                            )}
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
                   </div>
 
                   <div>
@@ -838,7 +1689,7 @@ export default function EmployerDashboard() {
 
                   <div>
                     <Label htmlFor="salary" className="text-sm font-medium">
-                      Salary Range (LPA)
+                      Salary Range (PA)
                     </Label>
                     {/* <div className="flex gap-2 mt-1">
                       <Select defaultValue="INR">
@@ -852,7 +1703,7 @@ export default function EmployerDashboard() {
                           <SelectItem value="GBP">£</SelectItem>
                         </SelectContent>
                       </Select>
-                     
+
                     </div> */}
                     <div className="flex gap-2 mt-1">
                       <Select
@@ -885,7 +1736,7 @@ export default function EmployerDashboard() {
                             salary: e.target.value,
                           }))
                         }
-                        placeholder="e.g., 5-8 LPA"
+                        placeholder="e.g., 5-8 PA"
                         className="flex-1"
                       />
                     </div>
@@ -894,9 +1745,9 @@ export default function EmployerDashboard() {
                   <div>
                     <Label className="text-sm font-medium">Job Type *</Label>
                     <Select
-                      value={jobForm.jobType}
+                      value={jobForm.job_type}
                       onValueChange={(value) =>
-                        setJobForm((prev) => ({ ...prev, jobType: value }))
+                        setJobForm((prev) => ({ ...prev, job_type: value }))
                       }
                     >
                       <SelectTrigger className="mt-1">
@@ -1100,13 +1951,62 @@ export default function EmployerDashboard() {
                       Remote work available
                     </Label>
                   </div>
+
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="ask-question"
+                      checked={askQuestionEnabled}
+                      onCheckedChange={(checked) =>
+                        setAskQuestionEnabled(!!checked)
+                      }
+                    />
+                    <Label htmlFor="ask-question" className="text-sm">
+                      Ask Question
+                    </Label>
+                  </div>
+
+                  {askQuestionEnabled && (
+                    <div className="space-y-2">
+                      <div className="flex gap-2">
+                        <Input
+                          value={newQuestion}
+                          onChange={(e) => setNewQuestion(e.target.value)}
+                          placeholder="Enter a question..."
+                          className="flex-1"
+                        />
+                        <Button
+                          type="button"
+                          onClick={handleAddQuestion}
+                          variant="outline"
+                        >
+                          Add Question
+                        </Button>
+                      </div>
+
+                      {/* Show added questions */}
+                      <div className="flex flex-wrap gap-2">
+                        {questions.map((q, index) => (
+                          <span
+                            key={index}
+                            className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 text-green-800"
+                          >
+                            {q}
+                            <button
+                              type="button"
+                              className="ml-2 text-red-600 hover:text-red-800"
+                              onClick={() => handleRemoveQuestion(index)}
+                            >
+                              ×
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Submit Button */}
                 <div className="flex justify-end space-x-4">
-                  <Button type="button" variant="outline">
-                    Save as Draft
-                  </Button>
                   <Button
                     type="submit"
                     className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
@@ -1127,6 +2027,20 @@ export default function EmployerDashboard() {
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <CardTitle>Manage Your Jobs</CardTitle>
                 <div className="flex items-center space-x-2">
+                  {/*  Date Filter */}
+                  <Select value={dateFilter} onValueChange={setDateFilter}>
+                    <SelectTrigger className="w-32">
+                      <SelectValue placeholder="Filter by Date" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Date</SelectItem>
+                      <SelectItem value="today">Today</SelectItem>
+                      <SelectItem value="week">This Week</SelectItem>
+                      <SelectItem value="month">This Month</SelectItem>
+                      <SelectItem value="year">This Year</SelectItem>
+                    </SelectContent>
+                  </Select>
+
                   <Select value={jobFilter} onValueChange={setJobFilter}>
                     <SelectTrigger className="w-32">
                       <SelectValue />
@@ -1146,14 +2060,14 @@ export default function EmployerDashboard() {
                       className="pl-10 w-48"
                     />
                   </div>
-                  <Button variant="outline" size="sm">
+                  {/* <Button variant="outline" size="sm">
                     <Filter className="w-4 h-4 mr-2" />
                     Filter
                   </Button>
                   <Button variant="outline" size="sm">
                     <Download className="w-4 h-4 mr-2" />
                     Export
-                  </Button>
+                  </Button> */}
                 </div>
               </div>
             </CardHeader>
@@ -1197,7 +2111,7 @@ export default function EmployerDashboard() {
                             </div>
                             <div className="flex items-center">
                               <Briefcase className="w-4 h-4 mr-1" />
-                              <span>{job.experience}</span>
+                              <span>{job.experience} Years</span>
                             </div>
                             <div className="flex items-center">
                               <DollarSign className="w-4 h-4 mr-1" />
@@ -1207,15 +2121,19 @@ export default function EmployerDashboard() {
                               <Calendar className="w-4 h-4 mr-1" />
                               <span>
                                 Posted:{" "}
-                                {new Date(job.postedDate).toLocaleDateString()}
+                                {new Date(job.created_at).toLocaleDateString()}
                               </span>
                             </div>
                           </div>
                           <div className="flex items-center space-x-6 text-sm">
-                            <div className="flex items-center text-blue-600">
+                            <div
+                              className="flex items-center text-blue-600 cursor-pointer"
+                              onClick={() => handleApplicationsClick(job.id)}
+                            >
                               <Users className="w-4 h-4 mr-1" />
-                              <span>{job.applications} Applications</span>
+                              <span>{job.applicants} Applications</span>
                             </div>
+
                             <div className="flex items-center text-green-600">
                               <Eye className="w-4 h-4 mr-1" />
                               <span>{job.views} Views</span>
@@ -1261,14 +2179,15 @@ export default function EmployerDashboard() {
                               <DropdownMenuItem
                                 onClick={() => handleToggleJobStatus(job)}
                               >
-                                {job.status === "Active" ? (
+                                {job.status?.toLowerCase() === "active" ||
+                                job.status?.toLowerCase() === "open" ? (
                                   <>
-                                    <XCircle className="w-4 h-4 mr-2" />
+                                    <XCircle className="w-4 h-4 mr-2 text-red-500" />
                                     Close Job
                                   </>
                                 ) : (
                                   <>
-                                    <CheckCircle className="w-4 h-4 mr-2" />
+                                    <CheckCircle className="w-4 h-4 mr-2 text-green-500" />
                                     Activate Job
                                   </>
                                 )}
@@ -1292,6 +2211,464 @@ export default function EmployerDashboard() {
           </Card>
         )}
 
+        <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            {selectedJob && (
+              <>
+                <DialogHeader>
+                  <DialogTitle className="text-2xl font-bold text-gray-900">
+                    {selectedJob.title}
+                  </DialogTitle>
+                </DialogHeader>
+                <div className="space-y-6">
+                  {/* Company Info */}
+                  <div className="flex items-start space-x-4 p-4 bg-gray-50 rounded-lg">
+                    <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-blue-100 rounded-lg flex items-center justify-center">
+                      <Building2 className="w-8 h-8 text-purple-600" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-xl font-semibold text-purple-600 mb-1">
+                        {selectedJob.company}
+                      </h3>
+                      {/* <p className="text-gray-600 mb-2">{selectedJob.companyInfo.about}</p> */}
+                      <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                        <div className="flex items-center">
+                          <Users className="w-4 h-4 mr-1" />
+                          {/* <span>{selectedJob.companyInfo.size}</span> */}
+                        </div>
+                        {/* <div className="flex items-center">
+                                  <Building2 className="w-4 h-4 mr-1" />
+                                  <span>{selectedJob.companyInfo.industry}</span>
+                                </div>
+                                <div className="flex items-center">
+                                  <Globe className="w-4 h-4 mr-1" />
+                                  <a href={selectedJob.companyInfo.website} className="text-purple-600 hover:underline">
+                                    Website
+                                  </a> */}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Job Details */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <div className="flex items-center text-gray-600">
+                      <MapPin className="w-4 h-4 mr-2" />
+                      <span>{selectedJob.location?.name}</span>
+                    </div>
+                    <div className="flex items-center text-gray-600">
+                      <Briefcase className="w-4 h-4 mr-2" />
+                      <span>{selectedJob.experience}</span>
+                    </div>
+                    <div className="flex items-center text-gray-600">
+                      <DollarSign className="w-4 h-4 mr-2" />
+                      <span>{selectedJob.salary}</span>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center text-gray-600">
+                      <Clock className="w-4 h-4 mr-2" />
+                      <span>{selectedJob.job_type}</span>
+                    </div>
+                    <div className="flex items-center text-gray-600">
+                      <Building2 className="w-4 h-4 mr-2" />
+                      <Badge
+                        className={getWorkModeColor(selectedJob.work_mode)}
+                      >
+                        {selectedJob.work_mode}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center text-gray-600">
+                      <Calendar className="w-4 h-4 mr-2" />
+                      <span>
+                        Posted {getTimeSincePosted(selectedJob.created_at)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Job Description */}
+                <div>
+                  <h4 className="text-lg font-semibold text-gray-900 mb-3">
+                    Job Description
+                  </h4>
+                  <p className="text-gray-700 leading-relaxed">
+                    {selectedJob.description}
+                  </p>
+                </div>
+
+                {/* Requirements */}
+                <div>
+                  <h4 className="text-lg font-semibold text-gray-900 mb-3">
+                    Requirements
+                  </h4>
+                  <ul className="space-y-2">{selectedJob.requirements}</ul>
+                </div>
+
+                {/* Responsibilities */}
+                {/* <div>
+                            <h4 className="text-lg font-semibold text-gray-900 mb-3">Responsibilities</h4>
+                            <ul className="space-y-2">
+                              {selectedJob.responsibilities.map((resp, index) => (
+                                <li key={index} className="flex items-start">
+                                  <Star className="w-4 h-4 text-purple-500 mr-2 mt-0.5 flex-shrink-0" />
+                                  <span className="text-gray-700">{resp}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                          */}
+                {/* Benefits */}
+                <div>
+                  <h4 className="text-lg font-semibold text-gray-900 mb-3">
+                    Benefits
+                  </h4>
+                  <ul className="space-y-2">{selectedJob.benefits}</ul>
+                </div>
+
+                {/* Skills */}
+                <div>
+                  <h4 className="text-lg font-semibold text-gray-900 mb-3">
+                    Required Skills
+                  </h4>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedJob.skills.map((skill, index) => (
+                      <Badge
+                        key={index}
+                        variant="secondary"
+                        className="bg-purple-100 text-purple-800"
+                      >
+                        {skill}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+
+                {/* questions */}
+                <div>
+                  <h4 className="text-lg font-semibold text-gray-900 mb-3">
+                    Questions
+                  </h4>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedJob.questions &&
+                    selectedJob.questions.length > 0 ? (
+                      selectedJob.questions.map((question, index) => (
+                        <Badge
+                          key={index}
+                          variant="secondary"
+                          className="bg-green-100 text-green-800"
+                        >
+                          {question}
+                        </Badge>
+                      ))
+                    ) : (
+                      <p className="text-gray-500 text-sm">
+                        No questions added
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                {/* <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t">
+                            <Button
+                              onClick={() => {
+                                setIsJobDetailOpen(false);
+                                handleApply(selectedJob);
+                              }}
+                              className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 flex-1"
+                            >
+                              <Send className="w-4 h-4 mr-2" />
+                              Apply Now
+                            </Button>
+                            <Button
+                              variant="outline"
+                              onClick={() => handleBookmark(selectedJob.id)}
+                              className={`flex-1 ${selectedJob.isBookmarked ? 'border-purple-600 text-purple-600' : ''}`}
+                            >
+                              <Bookmark className={`w-4 h-4 mr-2 ${selectedJob.isBookmarked ? 'fill-current' : ''}`} />
+                              {selectedJob.isBookmarked ? 'Bookmarked' : 'Bookmark'}
+                            </Button>
+                            <Button
+                              variant="outline"
+                              onClick={() => handleShare(selectedJob)}
+                              className="flex-1"
+                            >
+                              <Share2 className="w-4 h-4 mr-2" />
+                              Share
+                            </Button>
+                          </div> */}
+                {/* </div> */}
+              </>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* FIX: THE Values are not showing, Preset the Value */}
+        <Dialog open={isEditMode} onOpenChange={setIsEditMode}>
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-xl">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-bold">
+                Edit Job Profile
+              </DialogTitle>
+            </DialogHeader>
+
+            <div className="grid grid-cols-2 gap-4 py-4">
+              {/* Left Column */}
+              <div className="space-y-3">
+                <div>
+                  <Label>Title</Label>
+                  <Input
+                    name="title"
+                    value={jobForm.title || ""}
+                    onChange={(e) =>
+                      setJobForm({
+                        ...jobForm,
+                        [e.target.name]: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+                <div>
+                  <Label>Category</Label>
+                  <Input
+                    name="category"
+                    value={jobForm.category?.name || ""}
+                    onChange={(e) =>
+                      setJobForm({
+                        ...jobForm,
+                        [e.target.name]: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+                <div>
+                  <Label>Job Title</Label>
+                  <Input
+                    name="jobTitle"
+                    value={jobForm.jobTitle || ""}
+                    onChange={(e) =>
+                      setJobForm({
+                        ...jobForm,
+                        [e.target.name]: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+                <div>
+                  <Label>Company</Label>
+                  <Input
+                    name="company"
+                    value={jobForm.company || ""}
+                    onChange={(e) =>
+                      setJobForm({
+                        ...jobForm,
+                        [e.target.name]: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+                <div>
+                  <Label>Location</Label>
+                  <Input
+                    name="location"
+                    value={jobForm.location?.name || ""}
+                    onChange={(e) =>
+                      setJobForm({
+                        ...jobForm,
+                        [e.target.name]: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+                <div>
+                  <Label>Experience</Label>
+                  <Input
+                    name="experience"
+                    value={jobForm.experience || ""}
+                    onChange={(e) =>
+                      setJobForm({
+                        ...jobForm,
+                        [e.target.name]: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+                <div>
+                  <Label>Salary</Label>
+                  <Input
+                    name="salary"
+                    value={jobForm.salary || ""}
+                    onChange={(e) =>
+                      setJobForm({
+                        ...jobForm,
+                        [e.target.name]: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+                <div>
+                  <Label>Currency</Label>
+                  <Input
+                    name="currency"
+                    value={jobForm.currency || ""}
+                    onChange={(e) =>
+                      setJobForm({
+                        ...jobForm,
+                        [e.target.name]: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+              </div>
+
+              {/* Right Column */}
+              <div className="space-y-3">
+                <div>
+                  <Label>Job Type</Label>
+                  <Input
+                    name="job_type"
+                    value={jobForm.job_type || ""}
+                    onChange={(e) =>
+                      setJobForm({
+                        ...jobForm,
+                        [e.target.name]: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+                <div>
+                  <Label>Work Mode</Label>
+                  <Input
+                    name="workMode"
+                    value={jobForm.workMode || ""}
+                    onChange={(e) =>
+                      setJobForm({
+                        ...jobForm,
+                        [e.target.name]: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+                <div>
+                  <Label>Description</Label>
+                  <Textarea
+                    name="description"
+                    value={jobForm.description || ""}
+                    onChange={(e) =>
+                      setJobForm({
+                        ...jobForm,
+                        [e.target.name]: e.target.value,
+                      })
+                    }
+                    rows={3}
+                  />
+                </div>
+                <div>
+                  <Label>Requirements</Label>
+                  <Textarea
+                    name="requirements"
+                    value={jobForm.requirements || ""}
+                    onChange={(e) =>
+                      setJobForm({
+                        ...jobForm,
+                        [e.target.name]: e.target.value,
+                      })
+                    }
+                    rows={3}
+                  />
+                </div>
+                <div>
+                  <Label>Benefits</Label>
+                  <Textarea
+                    name="benefits"
+                    value={jobForm.benefits || ""}
+                    onChange={(e) =>
+                      setJobForm({
+                        ...jobForm,
+                        [e.target.name]: e.target.value,
+                      })
+                    }
+                    rows={3}
+                  />
+                </div>
+                <div>
+                  <Label>Skills</Label>
+                  <Textarea
+                    name="skills"
+                    value={jobForm.skills || ""}
+                    onChange={(e) =>
+                      setJobForm({
+                        ...jobForm,
+                        [e.target.name]: e.target.value,
+                      })
+                    }
+                    rows={2}
+                  />
+                </div>
+                <div>
+                  <Label>Application Deadline</Label>
+                  <Input
+                    type="date"
+                    name="applicationDeadline"
+                    value={jobForm.applicationDeadline || ""}
+                    onChange={(e) =>
+                      setJobForm({
+                        ...jobForm,
+                        [e.target.name]: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+                <div>
+                  <Label>Vacancies</Label>
+                  <Input
+                    type="number"
+                    name="vacancies"
+                    value={jobForm.vacancies || ""}
+                    onChange={(e) =>
+                      setJobForm({
+                        ...jobForm,
+                        [e.target.name]: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+
+                {/* Checkboxes */}
+                <div className="flex items-center gap-4 mt-2">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      checked={jobForm.isUrgent === true}
+                      onCheckedChange={(checked) =>
+                        setJobForm({ ...jobForm, isUrgent: !!checked })
+                      }
+                    />
+                    <Label>Urgent</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      checked={jobForm.isRemote === true}
+                      onCheckedChange={(remote) =>
+                        setJobForm({ ...jobForm, isUrgent: !!remote })
+                      }
+                    />
+                    <Label>Remote</Label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="flex justify-end gap-2 mt-4">
+              <Button variant="ghost">Cancel</Button>
+              {/* FIX : Put the Onclick handle update method */}
+              <Button onClick={handleUpdateJob}>Save Changes</Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
         {/* Candidates Tab */}
         {activeTab === "candidates" && (
           <div className="grid lg:grid-cols-3 gap-6">
@@ -1300,23 +2677,169 @@ export default function EmployerDashboard() {
               <Card className="h-full">
                 <CardHeader>
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg">Applications</CardTitle>
-                    <Badge variant="secondary">{candidates.length}</Badge>
+                    <div className="flex items-center gap-2">
+                      <CardTitle className="text-lg">Applications</CardTitle>
+
+                      <Badge variant="secondary">
+                        {filteredCategories.length}
+                      </Badge>
+                    </div>
+
+                    <button
+                      onClick={() => {
+                        setStatusFilter("All");
+                        setLocationFilter("All");
+                        setSalaryFilter("All");
+                        setExperienceFilter("All");
+                        setJobTitleFilter("All");
+                      }}
+                      className="text-sm px-3 py-1 border rounded-md hover:bg-gray-100"
+                    >
+                      Clear Filters
+                    </button>
                   </div>
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <Input
-                      placeholder="Search candidates..."
-                      className="pl-10"
-                    />
+
+                  {/*  Search Bar  */}
+                  <div className="mb-4">
+                    <div className="relative">
+                      <Input
+                        type="text"
+                        placeholder="Search by name, role or applied job..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full h-11 pl-10"
+                      />
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M21 21l-4.35-4.35M11 18a7 7 0 100-14 7 7 0 000 14z"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+
+                  {/*  Filters */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                    {/*  Status Filter */}
+                    <Select
+                      value={statusFilter}
+                      onValueChange={setStatusFilter}
+                    >
+                      <SelectTrigger className="w-full h-10">
+                        <SelectValue placeholder="Status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="All">All Status</SelectItem>
+                        <SelectItem value="Under Review">
+                          Under Review
+                        </SelectItem>
+                        <SelectItem value="Shortlisted">Shortlisted</SelectItem>
+                        <SelectItem value="Rejected">Rejected</SelectItem>
+                      </SelectContent>
+                    </Select>
+
+                    {/* Location Filter */}
+                    <Select
+                      value={locationFilter}
+                      onValueChange={setLocationFilter}
+                    >
+                      <SelectTrigger className="w-full h-10">
+                        <SelectValue placeholder="Location" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="All">All Locations</SelectItem>
+                        {Array.from(new Set(candidates.map((c) => c.location)))
+                          .filter(Boolean)
+                          .map((loc, i) => (
+                            <SelectItem key={i} value={loc}>
+                              {loc}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                    {/*  Salary Filter */}
+                    <Select
+                      value={salaryFilter}
+                      onValueChange={setSalaryFilter}
+                    >
+                      <SelectTrigger className="w-full h-10">
+                        <SelectValue placeholder="Salary" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="All">All Salaries</SelectItem>
+                        <SelectItem value="Below 20000">
+                          Below ₹20,000
+                        </SelectItem>
+                        <SelectItem value="20000-50000">
+                          ₹20,000–₹50,000
+                        </SelectItem>
+                        <SelectItem value="Above 50000">
+                          Above ₹50,000
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+
+                    {/* Experience Filter */}
+                    <Select
+                      value={experienceFilter}
+                      onValueChange={setExperienceFilter}
+                    >
+                      <SelectTrigger className="w-full h-10">
+                        <SelectValue placeholder="Experience" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="All">All Experience</SelectItem>
+                        <SelectItem value="Fresher">Fresher</SelectItem>
+                        <SelectItem value="1-3 Years">1–3 Years</SelectItem>
+                        <SelectItem value="3-5 Years">3–5 Years</SelectItem>
+                        <SelectItem value="5+ Years">5+ Years</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                    <Select
+                      value={jobTitleFilter}
+                      onValueChange={setJobTitleFilter}
+                    >
+                      <SelectTrigger className="w-full h-10">
+                        <SelectValue placeholder="Job Title" />
+                      </SelectTrigger>
+
+                      <SelectContent>
+                        <SelectItem value="All">All Job Titles</SelectItem>
+
+                        {Array.from(
+                          new Set(candidates.map((c) => c.appliedFor))
+                        )
+                          .filter(Boolean)
+                          .map((title, i) => (
+                            <SelectItem key={i} value={title}>
+                              {title}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </CardHeader>
                 <CardContent className="p-0">
-                  <div className="space-y-1">
-                    {candidates.map((candidate) => (
+                  {/* {candidates.map((candidate) => (
                       <div
                         key={candidate.id}
-                        onClick={() => setSelectedCandidate(candidate)}
+                        onClick={() => {
+                          setSelectedCandidate(candidate);
+                          setIsCandidateModalOpen(true);
+                        }}
                         className={`p-4 cursor-pointer hover:bg-gray-50 border-l-4 transition-colors ${
                           selectedCandidate?.id === candidate.id
                             ? "border-l-blue-500 bg-blue-50"
@@ -1354,8 +2877,58 @@ export default function EmployerDashboard() {
                           </div>
                         </div>
                       </div>
-                    ))}
-                  </div>
+                    ))} */}
+
+                  {filteredCategories.length > 0 ? (
+                    filteredCategories.map((candidate) => (
+                      <div
+                        key={candidate.id}
+                        onClick={() => {
+                          setSelectedCandidate(candidate);
+                          setIsCandidateModalOpen(true);
+                        }}
+                        className={`p-4 cursor-pointer hover:bg-gray-50 border-l-4 transition-colors ${
+                          selectedCandidate?.id === candidate.id
+                            ? "border-l-blue-500 bg-blue-50"
+                            : "border-l-transparent"
+                        }`}
+                      >
+                        <div className="flex items-start space-x-3">
+                          <div className="w-10 h-10 bg-gradient-to-br from-purple-100 to-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                            <Users className="w-5 h-5 text-purple-600" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-medium text-gray-900 truncate">
+                              {candidate.name}
+                            </h4>
+                            <p className="text-sm text-gray-600 truncate">
+                              {candidate.currentRole}
+                            </p>
+                            <p className="text-sm text-gray-500 truncate">
+                              {candidate.appliedFor}
+                            </p>
+                            <div className="flex items-center justify-between mt-2">
+                              <Badge
+                                className={`text-xs ${getStatusColor(
+                                  candidate.status
+                                )}`}
+                              >
+                                {candidate.status}
+                              </Badge>
+                              <span className="text-xs text-gray-500">
+                                {new Date(
+                                  candidate.appliedDate
+                                ).toLocaleDateString()}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-gray-500 text-sm">No candidates found</p>
+                  )}
+                  <div className="flex flex-wrap gap-3 mb-4 items-center"></div>
                 </CardContent>
               </Card>
             </div>
@@ -1401,9 +2974,22 @@ export default function EmployerDashboard() {
                           <Phone className="w-4 h-4 mr-2" />
                           Call
                         </Button>
+
                         <Button variant="outline" size="sm">
-                          <Download className="w-4 h-4 mr-2" />
-                          Resume
+                          {selectedCandidate.resumeUrl ? (
+                            <a
+                              href={selectedCandidate.resumeUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-purple-600 hover:text-purple-800 underline inline-flex items-center gap-1"
+                            >
+                              View Resume
+                            </a>
+                          ) : (
+                            <span className="text-gray-400 italic">
+                              No resume uploaded
+                            </span>
+                          )}
                         </Button>
                       </div>
                     </div>
@@ -1421,7 +3007,11 @@ export default function EmployerDashboard() {
                         </div>
                         <div className="flex items-center">
                           <Phone className="w-4 h-4 mr-2 text-gray-400" />
-                          <span>{selectedCandidate.phone}</span>
+                           
+                          <span>
+                           +{selectedCandidate.phoneCode}
+                            {selectedCandidate.phone}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -1547,8 +3137,32 @@ export default function EmployerDashboard() {
                         )}
                       </div>
                     </div>
-
                     {/* Certifications */}
+                    {Array.isArray(selectedCandidate.qa) &&
+                      selectedCandidate.qa.length > 0 && (
+                        <div>
+                          <h4 className="text-lg font-semibold text-gray-900 mb-2">
+                            Application Q&A
+                          </h4>
+                          <div className="space-y-3">
+                            {selectedCandidate.qa.map((item, index) => (
+                              <div
+                                key={index}
+                                className="bg-gray-50 rounded p-3"
+                              >
+                                <p className="text-sm font-medium text-gray-800">
+                                  Q{(item.question_index ?? index) + 1}.{" "}
+                                  {item.question_text || "Question"}
+                                </p>
+                                <p className="text-sm text-gray-700 mt-1">
+                                  {item.answer_text || "-"}
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
                     {selectedCandidate.certifications.length > 0 && (
                       <div>
                         <h3 className="font-semibold text-gray-900 mb-3">
@@ -1582,21 +3196,184 @@ export default function EmployerDashboard() {
 
                     {/* Action Buttons */}
                     <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t">
-                      <Button className="bg-green-600 hover:bg-green-700 flex-1">
-                        <CheckCircle className="w-4 h-4 mr-2" />
-                        Shortlist Candidate
-                      </Button>
-                      <Button
-                        variant="outline"
-                        className="border-red-600 text-red-600 hover:bg-red-50 flex-1"
-                      >
-                        <XCircle className="w-4 h-4 mr-2" />
-                        Reject Application
-                      </Button>
-                      <Button variant="outline" className="flex-1">
-                        <ExternalLink className="w-4 h-4 mr-2" />
-                        Schedule Interview
-                      </Button>
+                      <div className="flex flex-col sm:flex-row gap-3 mt-4">
+                        {/* UNDER REVIEW */}
+                        {selectedCandidate?.status === "Under Review" && (
+                          <>
+                            <Button
+                              className="bg-green-600 hover:bg-green-700 flex-1"
+                              onClick={() =>
+                                handleShortlistCandidate(selectedCandidate)
+                              }
+                            >
+                              <CheckCircle className="w-4 h-4 mr-2" />
+                              Shortlist Candidate
+                            </Button>
+
+                            <Button
+                              variant="outline"
+                              className="border-red-600 text-red-600 hover:bg-red-50 flex-1"
+                              onClick={() =>
+                                handleRejectCandidate(selectedCandidate)
+                              }
+                            >
+                              <XCircle className="w-4 h-4 mr-2" />
+                              Reject Application
+                            </Button>
+                          </>
+                        )}
+
+                        {/* SHORTLISTED */}
+                        {selectedCandidate?.status === "shortlisted" && (
+                          <Button
+                            variant="outline"
+                            className="flex-1 border-blue-600 text-blue-600"
+                            onClick={() =>
+                              handleScheduleInterview(selectedCandidate)
+                            }
+                          >
+                            <ExternalLink className="w-4 h-4 mr-2" />
+                            Schedule Interview
+                          </Button>
+                        )}
+
+                        {/* REJECTED */}
+                        {selectedCandidate?.status === "Rejected" && (
+                          <Button
+                            disabled
+                            variant="outline"
+                            className="border-red-600 text-red-600 flex-1 opacity-50 cursor-not-allowed"
+                          >
+                            <XCircle className="w-4 h-4 mr-2" />
+                            Application Rejected
+                          </Button>
+                        )}
+                      </div>
+
+                      {openSchedule && (
+  <Dialog open={openSchedule} onOpenChange={() => setOpenSchedule(false)}>
+    <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto rounded-xl">
+      <DialogHeader>
+        <DialogTitle className="text-lg font-semibold">
+          Schedule Interview
+        </DialogTitle>
+      </DialogHeader>
+
+      <div className="space-y-4 mt-3">
+        {/* Candidate Name */}
+        <div className="bg-gray-50 p-3 rounded-lg border">
+          <p className="text-xs text-gray-500">Candidate</p>
+          <p className="font-semibold text-gray-800">
+            {selectedCandidate?.name}
+          </p>
+        </div>
+
+        {/* Candidate Email */}
+        <div className="bg-gray-50 p-3 rounded-lg border">
+          <p className="text-xs text-gray-500">Email</p>
+          <p className="font-semibold text-gray-800">
+            {selectedCandidate?.email}
+          </p>
+        </div>
+
+        {/* Interview Date */}
+        <div>
+          <label className="text-sm font-medium">Interview Date</label>
+          <input
+            type="date"
+            className="w-full border rounded-lg p-2 mt-1 focus:ring-2 focus:ring-blue-500"
+            value={interviewDate}
+            onChange={(e) => setInterviewDate(e.target.value)}
+          />
+        </div>
+
+        {/* Interview Time */}
+        <div className="flex space-x-2 items-center">
+          <label className="text-sm font-medium">Interview Time</label>
+
+          <input
+            type="number"
+            min="1"
+            max="12"
+            className="w-16 border rounded-lg p-2"
+            value={hour}
+            onChange={(e) => setHour(e.target.value)}
+          />
+
+          <span>:</span>
+
+          <input
+            type="number"
+            min="0"
+            max="59"
+            className="w-16 border rounded-lg p-2"
+            value={minute}
+            onChange={(e) => setMinute(e.target.value)}
+          />
+
+          <select
+            className="border rounded-lg p-2"
+            value={ampm}
+            onChange={(e) => setAmPm(e.target.value)}
+          >
+            <option>AM</option>
+            <option>PM</option>
+          </select>
+        </div>
+
+        {/* Interview Mode */}
+        <div>
+          <label className="text-sm font-medium">Interview Mode</label>
+          <select
+            className="w-full border rounded-lg p-2 mt-1 focus:ring-2 focus:ring-blue-500"
+            value={interviewMode}
+            onChange={(e) => setInterviewMode(e.target.value)}
+          >
+            <option>Online</option>
+            <option>Office</option>
+            <option>Phone Call</option>
+          </select>
+        </div>
+
+        {/* Meet Link */}
+        {/* <div>
+          <label className="text-sm text-gray-700">Google Meet link</label>
+          <input
+            className="w-full border rounded-md p-2 text-sm focus:ring-2 focus:ring-blue-500"
+            placeholder="Enter meet link..."
+            value={meetLink}
+            onChange={(e) => setMeetLink(e.target.value)}
+          />
+        </div> */}
+
+        {/* Notes */}
+        <div>
+          <label className="text-sm text-gray-700">Notes</label>
+          <textarea
+            className="w-full border rounded-md p-2 mt-1 text-sm focus:ring-2 focus:ring-blue-500"
+            rows={3}
+            placeholder="Enter instructions or notes..."
+            value={interviewNotes}
+            onChange={(e) => setInterviewNotes(e.target.value)}
+          />
+        </div>
+      </div>
+
+      <DialogFooter className="mt-3">
+        <Button variant="outline" onClick={() => setOpenSchedule(false)}>
+          Cancel
+        </Button>
+        <Button
+          className="bg-blue-600 hover:bg-blue-700"
+          onClick={handleScheduleSubmit}
+        >
+          Schedule
+        </Button>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
+)}
+
                     </div>
                   </CardContent>
                 </Card>
@@ -1632,95 +3409,115 @@ export default function EmployerDashboard() {
           </Card>
         )}
       </div>
+
+      {/* Candidate Detail Modal */}
+
       {isModalOpen && (
-  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div className="bg-white rounded-lg w-full max-w-3xl p-6 relative">
-      {/* Close Button */}
-      <button
-        className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
-        onClick={() => setIsModalOpen(false)}
-      >
-        ✕
-      </button>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg w-full max-w-3xl p-6 relative">
+            {/* Close Button */}
+            <button
+              className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
+              onClick={() => setIsModalOpen(false)}
+            >
+              ✕
+            </button>
 
-      {isEditMode ? (
-        <>
-          <h2 className="text-xl font-bold mb-4">Edit Job</h2>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleUpdateJob();
-            }}
-            className="space-y-4"
-          >
-            {/* Title */}
-            <div>
-              <Label>Job Title</Label>
-              <Input
-                value={jobForm.title}
-                onChange={(e) =>
-                  setJobForm((prev) => ({ ...prev, title: e.target.value }))
-                }
-              />
-            </div>
-            {/* Company */}
-            <div>
-              <Label>Company</Label>
-              <Input
-                value={jobForm.company}
-                onChange={(e) =>
-                  setJobForm((prev) => ({ ...prev, company: e.target.value }))
-                }
-              />
-            </div>
-            {/* Salary */}
-            <div>
-              <Label>Salary</Label>
-              <Input
-                value={jobForm.salary}
-                onChange={(e) =>
-                  setJobForm((prev) => ({ ...prev, salary: e.target.value }))
-                }
-              />
-            </div>
-            {/* Description */}
-            <div>
-              <Label>Description</Label>
-              <Textarea
-                value={jobForm.description}
-                onChange={(e) =>
-                  setJobForm((prev) => ({ ...prev, description: e.target.value }))
-                }
-              />
-            </div>
+            {isEditMode ? (
+              <>
+                <h2 className="text-xl font-bold mb-4">Edit Job</h2>
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    handleUpdateJob();
+                  }}
+                  className="space-y-4"
+                >
+                  {/* Title */}
+                  <div>
+                    <Label>Job Title</Label>
+                    <Input
+                      value={jobForm.title}
+                      onChange={(e) =>
+                        setJobForm((prev) => ({
+                          ...prev,
+                          title: e.target.value,
+                        }))
+                      }
+                    />
+                  </div>
+                  {/* Company */}
+                  <div>
+                    <Label>Company</Label>
+                    <Input
+                      value={jobForm.company}
+                      onChange={(e) =>
+                        setJobForm((prev) => ({
+                          ...prev,
+                          company: e.target.value,
+                        }))
+                      }
+                    />
+                  </div>
+                  {/* Salary */}
+                  <div>
+                    <Label>Salary</Label>
+                    <Input
+                      value={jobForm.salary}
+                      onChange={(e) =>
+                        setJobForm((prev) => ({
+                          ...prev,
+                          salary: e.target.value,
+                        }))
+                      }
+                    />
+                  </div>
+                  {/* Description */}
+                  <div>
+                    <Label>Description</Label>
+                    <Textarea
+                      value={jobForm.description}
+                      onChange={(e) =>
+                        setJobForm((prev) => ({
+                          ...prev,
+                          description: e.target.value,
+                        }))
+                      }
+                    />
+                  </div>
 
-            <div className="flex justify-end gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setIsModalOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button type="submit">Update Job</Button>
-            </div>
-          </form>
-        </>
-      ) : (
-        <>
-          <h2 className="text-xl font-bold mb-4">{selectedJob?.title}</h2>
-          <p className="text-gray-600 mb-2">Company: {selectedJob?.company}</p>
-          <p className="text-gray-600 mb-2">Salary: {selectedJob?.salary}</p>
-          <p className="text-gray-600 mb-2">
-            Description: {selectedJob?.description}
-          </p>
-          <p className="text-gray-600 mb-2">Status: {selectedJob?.status}</p>
-        </>
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setIsModalOpen(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button type="submit">Update Job</Button>
+                  </div>
+                </form>
+              </>
+            ) : (
+              <>
+                <h2 className="text-xl font-bold mb-4">{selectedJob?.title}</h2>
+                <p className="text-gray-600 mb-2">
+                  Company: {selectedJob?.company}
+                </p>
+                <p className="text-gray-600 mb-2">
+                  Salary: {selectedJob?.salary}
+                </p>
+                <p className="text-gray-600 mb-2">
+                  Description: {selectedJob?.description}
+                </p>
+                <p className="text-gray-600 mb-2">
+                  Status: {selectedJob?.status}
+                </p>
+              </>
+            )}
+          </div>
+        </div>
       )}
-    </div>
-  </div>
-)}
-
     </div>
   );
 }

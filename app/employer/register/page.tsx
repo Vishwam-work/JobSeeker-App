@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { toast } from "sonner";
 import {
   Select,
   SelectContent,
@@ -30,6 +31,20 @@ import {
   Eye,
   EyeOff,
 } from "lucide-react";
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@/components/ui/popover";
+
+import {
+  Command,
+  CommandInput,
+  CommandList,
+  CommandGroup,
+  CommandItem,
+  CommandEmpty,
+} from "@/components/ui/command";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -40,6 +55,14 @@ export default function EmployerRegister() {
   const [countries, setCountries] = useState([]);
   const [states, setStates] = useState([]);
   const [cities, setCities] = useState([]);
+  const [industrySearch, setIndustrySearch] = useState("");
+  const [countrySearch, setCountrySearch] = useState("");
+  const [countryOpen, setCountryOpen] = useState(false);
+  const [stateSearch, setStateSearch] = useState("");
+  const [stateOpen, setStateOpen] = useState(false);
+  const [cityOpen, setCityOpen] = useState(false);
+  const [citySearch, setCitySearch] = useState("");
+
   const router = useRouter();
 
   const [formData, setFormData] = useState({
@@ -56,7 +79,7 @@ export default function EmployerRegister() {
     designation: "",
     email: "",
     phone: "",
-    phoneCode: "+91",
+    phoneCode: "",
 
     // Address Information
     address: "",
@@ -131,6 +154,14 @@ export default function EmployerRegister() {
     },
   ];
 
+  const filteredIndustries = industries.filter((item) =>
+    item.toLowerCase().includes(industrySearch.toLowerCase())
+  );
+
+  const filteredCountries = countries.filter((c) =>
+    c.name.toLowerCase().includes(countrySearch.toLowerCase())
+  );
+
   // Fetch the Data from the MASTER DB
   useEffect(() => {
     fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/countries/")
@@ -187,12 +218,12 @@ export default function EmployerRegister() {
     e.preventDefault();
 
     if (formData.password !== formData.confirmPassword) {
-      alert("Passwords do not match");
+      toast.warning("Passwords do not match");
       return;
     }
 
     if (!formData.agreeTerms) {
-      alert("Please agree to the terms and conditions");
+      toast.warning("Please agree to the terms and conditions");
       return;
     }
 
@@ -556,6 +587,205 @@ export default function EmployerRegister() {
                         </div>
                       </div>
 
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {/* Country Dropdown */}
+                        <div>
+                          <Label className="text-sm font-medium text-gray-700">
+                            Country *
+                          </Label>
+
+                          <Popover
+                            open={countryOpen}
+                            onOpenChange={setCountryOpen}
+                          >
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant="outline"
+                                className="w-full justify-between mt-1 h-12"
+                              >
+                                {formData.countryId
+                                  ? countries.find(
+                                      (c) => c.id == formData.countryId
+                                    )?.name
+                                  : "Select country"}
+                              </Button>
+                            </PopoverTrigger>
+
+                            <PopoverContent
+                              align="start"
+                              className="w-full p-0"
+                            >
+                              <Command>
+                                <CommandInput
+                                  placeholder="Search country..."
+                                  value={countrySearch}
+                                  onValueChange={setCountrySearch}
+                                />
+
+                                <CommandList className="max-h-60 overflow-y-auto">
+                                  <CommandEmpty>No country found.</CommandEmpty>
+
+                                  <CommandGroup>
+                                    {countries
+                                      .filter(
+                                        (c) =>
+                                          c.name
+                                            .toLowerCase()
+                                            .startsWith(
+                                              countrySearch.toLowerCase()
+                                            ) 
+                                      )
+                                      .map((country) => (
+                                        <CommandItem
+                                          key={country.id}
+                                          value={country.name}
+                                          onSelect={() => {
+                                            handleInputChange(
+                                              "countryId",
+                                              country.id
+                                            );
+                                            handleInputChange(
+                                              "phoneCode",
+                                              country.phonecode
+                                            ); 
+                                            setCountryOpen(false);
+                                          }}
+                                        >
+                                          {country.name}
+                                        </CommandItem>
+                                      ))}
+                                  </CommandGroup>
+                                </CommandList>
+                              </Command>
+                            </PopoverContent>
+                          </Popover>
+                        </div>
+
+                        {/* State Dropdown */}
+                        <div>
+                          <Label className="text-sm font-medium text-gray-700">
+                            State *
+                          </Label>
+
+                          <Popover open={stateOpen} onOpenChange={setStateOpen}>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant="outline"
+                                className="w-full justify-between mt-1 h-12"
+                              >
+                                {formData.stateId
+                                  ? states.find((s) => s.id == formData.stateId)
+                                      ?.name
+                                  : "Select state"}
+                              </Button>
+                            </PopoverTrigger>
+
+                            <PopoverContent
+                              align="start"
+                              className="w-full p-0"
+                            >
+                              <Command>
+                                <CommandInput
+                                  placeholder="Search state..."
+                                  value={stateSearch}
+                                  onValueChange={setStateSearch}
+                                />
+
+                                <CommandList className="max-h-60 overflow-y-auto">
+                                  <CommandEmpty>No state found.</CommandEmpty>
+
+                                  <CommandGroup>
+                                    {states
+                                      .filter((state) =>
+                                        state.name
+                                          .toLowerCase()
+                                          .startsWith(stateSearch.toLowerCase())
+                                      )
+                                      .map((state) => (
+                                        <CommandItem
+                                          key={state.id}
+                                          value={state.name}
+                                          onSelect={() => {
+                                            handleInputChange(
+                                              "stateId",
+                                              state.id.toString()
+                                            );
+                                            setStateOpen(false);
+                                          }}
+                                        >
+                                          {state.name}
+                                        </CommandItem>
+                                      ))}
+                                  </CommandGroup>
+                                </CommandList>
+                              </Command>
+                            </PopoverContent>
+                          </Popover>
+                        </div>
+
+                        {/* City Dropdown */}
+                        <div>
+                          <Label className="text-sm font-medium text-gray-700">
+                            City *
+                          </Label>
+
+                          <Popover open={cityOpen} onOpenChange={setCityOpen}>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant="outline"
+                                className="w-full justify-between mt-1 h-12"
+                              >
+                                {formData.cityId
+                                  ? cities.find((c) => c.id == formData.cityId)
+                                      ?.name
+                                  : "Select city"}
+                              </Button>
+                            </PopoverTrigger>
+
+                            <PopoverContent
+                              align="start"
+                              className="w-full p-0"
+                            >
+                              <Command>
+                                <CommandInput
+                                  placeholder="Search city..."
+                                  value={citySearch}
+                                  onValueChange={setCitySearch}
+                                />
+
+                                <CommandList className="max-h-60 overflow-y-auto">
+                                  <CommandEmpty>No city found.</CommandEmpty>
+
+                                  <CommandGroup>
+                                    {cities
+                                      .filter((city) =>
+                                        city.name
+                                          .toLowerCase()
+                                          .startsWith(citySearch.toLowerCase())
+                                      )
+                                      .map((city) => (
+                                        <CommandItem
+                                          key={city.id}
+                                          value={city.name}
+                                          onSelect={() => {
+                                            handleInputChange(
+                                              "cityId",
+                                              city.id.toString()
+                                            );
+                                            setCityOpen(false);
+                                          }}
+                                        >
+                                          {city.name}
+                                        </CommandItem>
+                                      ))}
+                                  </CommandGroup>
+                                </CommandList>
+                              </Command>
+                            </PopoverContent>
+                          </Popover>
+                        </div>
+                      </div>
+
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                           <Label
@@ -584,27 +814,20 @@ export default function EmployerRegister() {
                             >
                               Phone Number *
                             </Label>
+
                             <div className="flex gap-2 mt-1">
-                              <Select
-                                value={formData.phoneCode}
-                                onValueChange={(value) =>
-                                  handleInputChange("phoneCode", value)
+                             
+                              <input
+                                className="w-20 h-10 lg:h-11 border rounded px-3 bg-gray-100 text-gray-700"
+                                value={
+                                  formData.phoneCode
+                                    ? `+${formData.phoneCode}`
+                                    : ""
                                 }
-                              >
-                                <SelectTrigger className="w-20 h-10 lg:h-11">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {countries.map((country) => (
-                                    <SelectItem
-                                      key={country.id}
-                                      value={country.phonecode}
-                                    >
-                                      +{country.phonecode}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
+                                readOnly
+                               
+                              />
+
                               <Input
                                 id="phone"
                                 value={formData.phone}
@@ -678,88 +901,6 @@ export default function EmployerRegister() {
                           />
                         </div>
                       </div> */}
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        {/* Country Dropdown */}
-                        <div>
-                          <Label className="text-sm font-medium text-gray-700">
-                            Country *
-                          </Label>
-                          <Select
-                            value={formData.countryId}
-                            onValueChange={(value) =>
-                              handleInputChange("countryId", value)
-                            }
-                          >
-                            <SelectTrigger className="mt-1 h-12">
-                              <SelectValue placeholder="Select country" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {countries.map((country) => (
-                                <SelectItem
-                                  key={`country-${country.id}`}
-                                  value={country.id.toString()}
-                                >
-                                  {country.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        {/* State Dropdown */}
-                        <div>
-                          <Label className="text-sm font-medium text-gray-700">
-                            State *
-                          </Label>
-                          <Select
-                            value={formData.stateId}
-                            onValueChange={(value) =>
-                              handleInputChange("stateId", value)
-                            }
-                          >
-                            <SelectTrigger className="mt-1 h-12">
-                              <SelectValue placeholder="Select state" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {states.map((state) => (
-                                <SelectItem
-                                  key={`state-${state.id}`}
-                                  value={state.id.toString()}
-                                >
-                                  {state.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        {/* City Dropdown */}
-                        <div>
-                          <Label className="text-sm font-medium text-gray-700">
-                            City *
-                          </Label>
-                          <Select
-                            value={formData.cityId}
-                            onValueChange={(value) =>
-                              handleInputChange("cityId", value)
-                            }
-                          >
-                            <SelectTrigger className="mt-1 h-12">
-                              <SelectValue placeholder="Select city" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {cities.map((city) => (
-                                <SelectItem
-                                  key={`city-${city.id}`}
-                                  value={city.id.toString()}
-                                >
-                                  {city.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
                     </div>
                   )}
 

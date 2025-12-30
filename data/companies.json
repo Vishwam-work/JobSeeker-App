@@ -1,0 +1,336 @@
+[
+  {
+    "id": 1,
+    "name": "Simplilearn",
+    "rating": 3.1,
+    "reviews": 727,
+    "category": "e-Learning / EdTech",
+    "founded": 2010,
+    "logo": "/companies_logos/simplilearn.png",
+    "type": "Foreign MNC",
+    "industry": "Education / Training",
+    "locations": ["Bengaluru", "Delhi / NCR"],
+    "jobs": [
+      {
+        "title": "Software Engineer Intern",
+        "duration": "No fixed duration",
+        "salary": "Unpaid",
+        "location": "Bengaluru, Delhi / NCR",
+        "type": "Internship",
+        "start": "Starts in 1-3 months",
+        "posted": "2 Days Ago"
+      },
+      {
+        "title": "QA Engineer",
+        "experience": "1-3 Yrs",
+        "salary": "Not disclosed",
+        "location": "Bengaluru",
+        "description": "Responsible for automation and manual testing of products...",
+        "skills": ["Selenium", "Java", "API Testing", "Postman"],
+        "posted": "6 Days Ago"
+      },
+      {
+        "title": "QA Engineer",
+        "experience": "1-3 Yrs",
+        "salary": "Not disclosed",
+        "location": "Bengaluru",
+        "description": "Responsible for automation and manual testing of products...",
+        "skills": ["Selenium", "Java", "API Testing", "Postman"],
+        "posted": "6 Days Ago"
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "name": "Ganesh Grains",
+    "rating": 3.0,
+    "reviews": 182,
+    "category": "FMCG",
+    "founded": 1936,
+    "logo": "/companies_logos/ganesh_grains.png",
+    "type": "Corporate",
+    "industry": "Food Processing",
+    "locations": ["Kolkata"],
+    "jobs": [
+      {
+        "title": "Software Engineer Intern",
+        "duration": "No fixed duration",
+        "salary": "Unpaid",
+        "location": "Bengaluru, Delhi / NCR",
+        "type": "Internship",
+        "start": "Starts in 1-3 months",
+        "posted": "2 Days Ago"
+      },
+      {
+        "title": "QA Engineer",
+        "experience": "1-3 Yrs",
+        "salary": "Not disclosed",
+        "location": "Bengaluru",
+        "description": "Responsible for automation and manual testing of products...",
+        "skills": ["Selenium", "Java", "API Testing", "Postman"],
+        "posted": "6 Days Ago"
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "name": "Cyber Managers Software Services",
+    "rating": 3.0,
+    "reviews": 35,
+    "category": "IT Services & Consulting",
+    "founded": 2000,
+    "logo": "/companies_logos/cyber_managers.png",
+    "type": "Corporate",
+    "industry": "IT Services & Consulting",
+    "locations": ["Hyderabad", "Pune"],
+    "jobs": [
+      {
+        "title": "Software Engineer Intern",
+        "duration": "No fixed duration",
+        "salary": "Unpaid",
+        "location": "Bengaluru, Delhi / NCR",
+        "type": "Internship",
+        "start": "Starts in 1-3 months",
+        "posted": "2 Days Ago"
+      },
+      {
+        "title": "QA Engineer",
+        "experience": "1-3 Yrs",
+        "salary": "Not disclosed",
+        "location": "Bengaluru",
+        "description": "Responsible for automation and manual testing of products...",
+        "skills": ["Selenium", "Java", "API Testing", "Postman"],
+        "posted": "6 Days Ago"
+      }
+    ]
+  },
+  {
+    "id": 4,
+    "name": "Infinity Data Technologies",
+    "rating": 3.7,
+    "reviews": 158,
+    "category": "IT Services & Consulting",
+    "founded": 2012,
+    "logo": "/companies_logos/infinity_data.png",
+    "type": "Corporate",
+    "industry": "IT Services & Consulting",
+    "locations": ["Mumbai", "Delhi / NCR"],
+    "jobs": [
+      {
+        "title": "Software Engineer Intern",
+        "duration": "No fixed duration",
+        "salary": "Unpaid",
+        "location": "Bengaluru, Delhi / NCR",
+        "type": "Internship",
+        "start": "Starts in 1-3 months",
+        "posted": "2 Days Ago"
+      },
+      {
+        "title": "QA Engineer",
+        "experience": "1-3 Yrs",
+        "salary": "Not disclosed",
+        "location": "Bengaluru",
+        "description": "Responsible for automation and manual testing of products...",
+        "skills": ["Selenium", "Java", "API Testing", "Postman"],
+        "posted": "6 Days Ago"
+      },
+      {
+        "title": "QA Engineer",
+        "experience": "1-3 Yrs",
+        "salary": "Not disclosed",
+        "location": "Bengaluru",
+        "description": "Responsible for automation and manual testing of products...",
+        "skills": ["Selenium", "Java", "API Testing", "Postman"],
+        "posted": "6 Days Ago"
+      }
+    ]
+  },
+  {
+    "id": 5,
+    "name": "Topsource Infotech Solutions",
+    "rating": 3.2,
+    "reviews": 38,
+    "category": "IT Services & Consulting",
+    "founded": 2004,
+    "employees": "51-200 emp.",
+    "logo": "/companies_logos/topsource.png",
+    "type": "Foreign MNC",
+    "industry": "IT Services & Consulting",
+    "locations": ["Pune", "Chennai"],
+    "jobs": [
+      {
+        "title": "Software Engineer Intern",
+        "duration": "No fixed duration",
+        "salary": "Unpaid",
+        "location": "Bengaluru, Delhi / NCR",
+        "type": "Internship",
+        "start": "Starts in 1-3 months",
+        "posted": "2 Days Ago"
+      },
+      {
+        "title": "QA Engineer",
+        "experience": "1-3 Yrs",
+        "salary": "Not disclosed",
+        "location": "Bengaluru",
+        "description": "Responsible for automation and manual testing of products...",
+        "skills": ["Selenium", "Java", "API Testing", "Postman"],
+        "posted": "6 Days Ago"
+      }
+    ]
+  },
+  {
+    "id": 6,
+    "name": "Torrent Pharmaceuticals",
+    "rating": 3.9,
+    "reviews": 2800,
+    "category": "Pharmaceutical & Life Sciences",
+    "founded": 1959,
+    "logo": "/companies_logos/torrent.png",
+    "type": "Indian MNC",
+    "industry": "Pharmaceuticals",
+    "locations": ["Ahmedabad", "Mumbai"],
+    "jobs": [
+      {
+        "title": "Software Engineer Intern",
+        "duration": "No fixed duration",
+        "salary": "Unpaid",
+        "location": "Bengaluru, Delhi / NCR",
+        "type": "Internship",
+        "start": "Starts in 1-3 months",
+        "posted": "2 Days Ago"
+      },
+      {
+        "title": "QA Engineer",
+        "experience": "1-3 Yrs",
+        "salary": "Not disclosed",
+        "location": "Bengaluru",
+        "description": "Responsible for automation and manual testing of products...",
+        "skills": ["Selenium", "Java", "API Testing", "Postman"],
+        "posted": "6 Days Ago"
+      },
+      {
+        "title": "Software Engineer Intern",
+        "duration": "No fixed duration",
+        "salary": "Unpaid",
+        "location": "Bengaluru, Delhi / NCR",
+        "type": "Internship",
+        "start": "Starts in 1-3 months",
+        "posted": "2 Days Ago"
+      },
+      {
+        "title": "QA Engineer",
+        "experience": "1-3 Yrs",
+        "salary": "Not disclosed",
+        "location": "Bengaluru",
+        "description": "Responsible for automation and manual testing of products...",
+        "skills": ["Selenium", "Java", "API Testing", "Postman"],
+        "posted": "6 Days Ago"
+      }
+    ]
+  },
+  {
+    "id": 7,
+    "name": "Anytime Fitness (AF)",
+    "rating": 3.5,
+    "reviews": 167,
+    "category": "Fitness & Wellness",
+    "founded": 2001,
+    "logo": "/companies_logos/anytime_fitness.png",
+    "type": "Corporate",
+    "industry": "Fitness & Wellness",
+    "locations": ["Delhi / NCR", "Bengaluru"],
+    "jobs": [
+      {
+        "title": "Software Engineer Intern",
+        "duration": "No fixed duration",
+        "salary": "Unpaid",
+        "location": "Bengaluru, Delhi / NCR",
+        "type": "Internship",
+        "start": "Starts in 1-3 months",
+        "posted": "2 Days Ago"
+      },
+      {
+        "title": "QA Engineer",
+        "experience": "1-3 Yrs",
+        "salary": "Not disclosed",
+        "location": "Bengaluru",
+        "description": "Responsible for automation and manual testing of products...",
+        "skills": ["Selenium", "Java", "API Testing", "Postman"],
+        "posted": "6 Days Ago"
+      },
+      {
+        "title": "QA Engineer",
+        "experience": "1-3 Yrs",
+        "salary": "Not disclosed",
+        "location": "Bengaluru",
+        "description": "Responsible for automation and manual testing of products...",
+        "skills": ["Selenium", "Java", "API Testing", "Postman"],
+        "posted": "6 Days Ago"
+      }
+    ]
+  },
+  {
+    "id": 8,
+    "name": "Zenoti",
+    "rating": 2.9,
+    "reviews": 167,
+    "category": "IT Services & Consulting",
+    "founded": 2010,
+    "logo": "/companies_logos/zenoti.png",
+    "type": "Foreign MNC",
+    "industry": "IT Services & Consulting",
+    "locations": ["Hyderabad", "Bengaluru"],
+    "jobs": [
+      {
+        "title": "Software Engineer Intern",
+        "duration": "No fixed duration",
+        "salary": "Unpaid",
+        "location": "Bengaluru, Delhi / NCR",
+        "type": "Internship",
+        "start": "Starts in 1-3 months",
+        "posted": "2 Days Ago"
+      },
+      {
+        "title": "QA Engineer",
+        "experience": "1-3 Yrs",
+        "salary": "Not disclosed",
+        "location": "Bengaluru",
+        "description": "Responsible for automation and manual testing of products...",
+        "skills": ["Selenium", "Java", "API Testing", "Postman"],
+        "posted": "6 Days Ago"
+      }
+    ]
+  },
+  {
+    "id": 9,
+    "name": "Cognizant",
+    "rating": 3.9,
+    "reviews": 167,
+    "category": "IT Services & Consulting",
+    "founded": 2010,
+    "logo": "/companies_logos/cognizant.png",
+    "type": "Foreign MNC",
+    "industry": "IT Services & Consulting",
+    "locations": ["Hyderabad", "Bengaluru"],
+    "jobs": [
+      {
+        "title": "Software Engineer Intern",
+        "duration": "No fixed duration",
+        "salary": "Unpaid",
+        "location": "Bengaluru, Delhi / NCR",
+        "type": "Internship",
+        "start": "Starts in 1-3 months",
+        "posted": "2 Days Ago"
+      },
+      {
+        "title": "QA Engineer",
+        "experience": "1-3 Yrs",
+        "salary": "Not disclosed",
+        "location": "Bengaluru",
+        "description": "Responsible for automation and manual testing of products...",
+        "skills": ["Selenium", "Java", "API Testing", "Postman"],
+        "posted": "6 Days Ago"
+      }
+    ]
+  }
+]

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
+import { Snackbar, Alert } from "@mui/material";
 import {
   Eye,
   EyeOff,
@@ -19,6 +20,10 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
+import CookieConsent from "@/components/Cookie";
+import { useSession, signIn, signOut } from "next-auth/react";
+import { Chrome } from "lucide-react";
+
 export default function EmployerLogin() {
   const [alertMessage, setAlertMessage] = useState("");
   const [alertOpen, setAlertOpen] = useState(false);
@@ -29,24 +34,20 @@ export default function EmployerLogin() {
     password: "",
   });
   const router = useRouter();
-
-  // const handleLogin = async (e: React.FormEvent) => {
-  //   e.preventDefault();
-  //   // Simulate login - in real app, make API call
-  //   localStorage.setItem('employer_token', 'dummy_employer_token');
-  //   router.push('/employer/dashboard');
-  // };
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch("https://jobseeker-backend-jy1y.onrender.com/employeer/api/employeer_login/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: loginForm.email,
-          password: loginForm.password,
-        }),
-      });
+      const response = await fetch(
+        "https://jobseeker-backend-jy1y.onrender.com/employeer/api/employeer_login/",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: loginForm.email,
+            password: loginForm.password,
+          }),
+        }
+      );
 
       const data = await response.json();
       if (response.ok) {
@@ -91,6 +92,10 @@ export default function EmployerLogin() {
       description: "Join India's leading recruitment platform",
     },
   ];
+  // GoogleLogin
+  // const handleGoogleLogin = () => {
+  //   signIn("google", { callbackUrl: "/employer/dashboard" });
+  // };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
@@ -121,6 +126,17 @@ export default function EmployerLogin() {
           </div>
         </div>
       </div>
+
+      <Snackbar
+        open={alertOpen}
+        autoHideDuration={3000}
+        onClose={() => setAlertOpen(false)}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <Alert severity={alertType} onClose={() => setAlertOpen(false)}>
+          {alertMessage}
+        </Alert>
+      </Snackbar>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
         <div className="grid lg:grid-cols-2 gap-8 md:gap-12 items-center">
@@ -259,10 +275,26 @@ export default function EmployerLogin() {
 
                   <Button
                     type="submit"
+                    onClick={handleLogin}
                     className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 h-12 shadow-lg hover:shadow-xl transition-all duration-200"
                   >
                     Login to Dashboard
                   </Button>
+
+                  {/* <Button
+                    type="button"
+                    onClick={handleGoogleLogin}
+                    className="w-full h-12 bg-white border border-gray-300 rounded-lg flex items-center justify-center shadow-sm hover:bg-gray-50 transition-all duration-200"
+                  >
+                    <img
+                      src="https://www.svgrepo.com/show/475656/google-color.svg"
+                      alt="Google Logo"
+                      className="w-5 h-5 mr-3"
+                    />
+                    <span className="text-gray-700 font-medium">
+                      Sign in with Google
+                    </span>
+                  </Button> */}
 
                   <div className="relative">
                     <div className="absolute inset-0 flex items-center">
@@ -297,6 +329,7 @@ export default function EmployerLogin() {
           </div>
         </div>
       </div>
+      <CookieConsent />
     </div>
   );
 }
