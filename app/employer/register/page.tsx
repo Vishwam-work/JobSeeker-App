@@ -352,16 +352,16 @@ export default function EmployerRegister() {
   const handleVerifyOTP = async () => {
     try {
       const res = await fetch(
-      //   // "https://jobseeker-backend-jy1y.onrender.com/api/verify-otp/",
-      //   {
-      //     method: "POST",
-      //     headers: { "Content-Type": "application/json" },
-      //     body: JSON.stringify({ email, otp }),
-      //   }
+        "https://jobseeker-backend-jy1y.onrender.com/employeer/api/verify-otp/",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, otp }),
+        }
       );
 
       const data = await res.json();
-
+      console.log(data)
       if (!res.ok) {
         alert(data.error || "Invalid OTP");
         return;
