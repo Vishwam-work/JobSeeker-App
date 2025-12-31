@@ -30,6 +30,7 @@ import {
   Briefcase,
   Eye,
   EyeOff,
+  ChevronDown,
 } from "lucide-react";
 import {
   Popover,
@@ -601,13 +602,16 @@ export default function EmployerRegister() {
                             <PopoverTrigger asChild>
                               <Button
                                 variant="outline"
-                                className="w-full justify-between mt-1 h-12"
+                                className="w-full mt-1 h-10 lg:h-11 border rounded px-3 flex items-center justify-between"
                               >
+                                <span>
                                 {formData.countryId
                                   ? countries.find(
                                       (c) => c.id == formData.countryId
                                     )?.name
                                   : "Select country"}
+                                  </span>
+                                  <ChevronDown className="h-4 w-4 opacity-60" />
                               </Button>
                             </PopoverTrigger>
 
@@ -671,12 +675,15 @@ export default function EmployerRegister() {
                             <PopoverTrigger asChild>
                               <Button
                                 variant="outline"
-                                className="w-full justify-between mt-1 h-12"
+                                className="w-full mt-1 h-10 lg:h-11 border rounded px-3 flex items-center justify-between"
                               >
+                                <span>
                                 {formData.stateId
                                   ? states.find((s) => s.id == formData.stateId)
                                       ?.name
                                   : "Select state"}
+                                  </span>
+                                  <ChevronDown className="h-4 w-4 opacity-60" />
                               </Button>
                             </PopoverTrigger>
 
@@ -733,12 +740,15 @@ export default function EmployerRegister() {
                             <PopoverTrigger asChild>
                               <Button
                                 variant="outline"
-                                className="w-full justify-between mt-1 h-12"
+                                className="w-full mt-1 h-10 lg:h-11 border rounded px-3 flex items-center justify-between"
                               >
+                                <span>
                                 {formData.cityId
                                   ? cities.find((c) => c.id == formData.cityId)
                                       ?.name
                                   : "Select city"}
+                                  </span>
+                                  <ChevronDown className="h-4 w-4 opacity-60" />
                               </Button>
                             </PopoverTrigger>
 

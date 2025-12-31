@@ -51,6 +51,8 @@ import {
   Star,
   CheckCircle,
   XCircle,
+  ChevronsUpDown,
+  ChevronDown,
 } from "lucide-react";
 import Link from "next/link";
 import { jwtDecode } from "jwt-decode";
@@ -75,7 +77,17 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { ChevronsUpDown } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
 
 export default function EmployerDashboard() {
   const [activeTab, setActiveTab] = useState("post-job");
@@ -118,6 +130,9 @@ export default function EmployerDashboard() {
   const [minute, setMinute] = useState("00");
   const [ampm, setAmPm] = useState("AM");
   const interviewTime = `${hour}:${minute} ${ampm}`;
+  const [timeZone, setTimeZone] = useState("IST");
+  const [time, setTime] = useState("");
+
   
 
 
@@ -1616,7 +1631,7 @@ export default function EmployerDashboard() {
                           className="w-full justify-between mt-1 h-10 lg:h-11"
                         >
                           {selectedCity || "Select location"}
-                          <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
+                          <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
                         </Button>
                       </PopoverTrigger>
 
@@ -3187,7 +3202,7 @@ export default function EmployerDashboard() {
                               Shortlist Candidate
                             </Button>
 
-                            <Button
+                            {/* <Button
                               variant="outline"
                               className="border-red-600 text-red-600 hover:bg-red-50 flex-1"
                               onClick={() =>
@@ -3196,7 +3211,38 @@ export default function EmployerDashboard() {
                             >
                               <XCircle className="w-4 h-4 mr-2" />
                               Reject Application
-                            </Button>
+                            </Button> */}
+                            
+                         <AlertDialog>
+                           <AlertDialogTrigger asChild>                         
+                             <Button
+                               variant="outline"
+                               className="border-red-600 text-red-600 hover:bg-red-50 flex-1"
+                             >
+                               <XCircle className="w-4 h-4 mr-2" />
+                               Reject Application
+                             </Button>
+                           </AlertDialogTrigger>
+                         
+                           <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Reject this application?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This action cannot be undone. The candidate will be marked as rejected.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                        
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction
+                                className="bg-red-600 hover:bg-red-700"
+                                onClick={() => handleRejectCandidate(selectedCandidate)}
+                              >
+                                Yes, Reject
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                           </AlertDialogContent>
+                         </AlertDialog>
                           </>
                         )}
 
@@ -3261,6 +3307,7 @@ export default function EmployerDashboard() {
             className="w-full border rounded-lg p-2 mt-1 focus:ring-2 focus:ring-blue-500"
             value={interviewDate}
             onChange={(e) => setInterviewDate(e.target.value)}
+            required
           />
         </div>
 
@@ -3268,7 +3315,7 @@ export default function EmployerDashboard() {
         <div className="flex space-x-2 items-center">
           <label className="text-sm font-medium">Interview Time</label>
 
-          <input
+          {/* <input
             type="number"
             min="1"
             max="12"
@@ -3286,7 +3333,37 @@ export default function EmployerDashboard() {
             className="w-16 border rounded-lg p-2"
             value={minute}
             onChange={(e) => setMinute(e.target.value)}
-          />
+          /> */}
+
+          <input
+  type="text"
+  placeholder="hh:mm AM"
+  className="w-32 border rounded-lg p-2 text-center"
+  value={time}
+  onChange={(e) => {
+    let value = e.target.value.toUpperCase();
+
+    // Allow only numbers, colon, space, A, P, M
+    value = value.replace(/[^0-9:APM ]/g, "");
+
+    // Auto-format
+    if (value.length === 2 && !value.includes(":")) {
+      value = value + ":";
+    }
+
+    if (value.length > 8) return;
+
+    setTime(value);
+  }}
+  onBlur={() => {
+    // Optional validation on blur
+    const regex = /^(0?[1-9]|1[0-2]):[0-5][0-9]\s?(AM|PM)$/;
+    if (!regex.test(time)) {
+      setTime(""); // reset if invalid
+    }
+  }}
+/>
+
 
           <select
             className="border rounded-lg p-2"
@@ -3295,6 +3372,19 @@ export default function EmployerDashboard() {
           >
             <option>AM</option>
             <option>PM</option>
+          </select>
+
+            {/* ✅ Time Zone Dropdown */}
+          <select
+            className="border rounded-lg p-2"
+            value={timeZone}
+            onChange={(e) => setTimeZone(e.target.value)}
+          >
+            <option value="IST">IST</option>
+            <option value="UTC">UTC</option>
+            <option value="EST">EST</option>
+            <option value="PST">PST</option>
+            <option value="CST">CST</option>
           </select>
         </div>
 
