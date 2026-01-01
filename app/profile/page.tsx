@@ -777,6 +777,32 @@ useEffect(() => {
 
   // Save Api
   const handleSaveProfile = async () => {
+
+     //  REQUIRED FIELD VALIDATION
+  if (!profileData.personalInfo.fullName?.trim()) {
+    return toast.error("Full Name is required");
+  }
+
+  if (!profileData.personalInfo.email?.trim()) {
+    return toast.error("Email is required");
+  }
+
+  if (!profileData.personalInfo.phone?.trim()) {
+    return toast.error("Phone number is required");
+  }
+
+  if (!profileData.personalInfo.countryId) {
+    return toast.error("Country is required");
+  }
+
+  if (!profileData.personalInfo.stateId) {
+    return toast.error("State is required");
+  }
+
+  if (!profileData.personalInfo.cityId) {
+    return toast.error("City is required");
+  }
+
     const resumeUploaded = await uploadResume();
     if (!resumeUploaded) {
       toast.error("Resume upload failed. Please try again.");
@@ -1480,7 +1506,7 @@ const removeAppliedJob = async (applicationId: number) => {
                             }))
                           }
                           className="mt-1 h-10 lg:h-11"
-                          required={true}
+                          required
                         />
                       </div>
                      

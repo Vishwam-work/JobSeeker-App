@@ -1245,6 +1245,13 @@ export default function EmployerDashboard() {
   };
 
   const handleScheduleSubmit = async () => {
+
+     if (!interviewDate) {
+    toast.warning("Please select interview date");
+    return;
+  }
+
+                    
     try {
       const token = localStorage.getItem("auth_token");
       if (!token) return toast.error("Token missing", {
@@ -3303,11 +3310,12 @@ export default function EmployerDashboard() {
         <div>
           <label className="text-sm font-medium">Interview Date</label>
           <input
+          required
             type="date"
             className="w-full border rounded-lg p-2 mt-1 focus:ring-2 focus:ring-blue-500"
             value={interviewDate}
             onChange={(e) => setInterviewDate(e.target.value)}
-            required
+            
           />
         </div>
 
@@ -3335,34 +3343,32 @@ export default function EmployerDashboard() {
             onChange={(e) => setMinute(e.target.value)}
           /> */}
 
-          <input
-  type="text"
-  placeholder="hh:mm AM"
-  className="w-32 border rounded-lg p-2 text-center"
-  value={time}
-  onChange={(e) => {
-    let value = e.target.value.toUpperCase();
-
-    // Allow only numbers, colon, space, A, P, M
-    value = value.replace(/[^0-9:APM ]/g, "");
-
-    // Auto-format
-    if (value.length === 2 && !value.includes(":")) {
-      value = value + ":";
-    }
-
-    if (value.length > 8) return;
-
-    setTime(value);
-  }}
-  onBlur={() => {
-    // Optional validation on blur
-    const regex = /^(0?[1-9]|1[0-2]):[0-5][0-9]\s?(AM|PM)$/;
-    if (!regex.test(time)) {
-      setTime(""); // reset if invalid
-    }
-  }}
-/>
+                <input
+                 type="text"
+                 placeholder="hh:mm AM"
+                 className="w-32 border rounded-lg p-2 text-center"
+                 value={time}
+                 onChange={(e) => {
+                   let value = e.target.value.toUpperCase();
+               
+                   value = value.replace(/[^0-9:APM ]/g, "");
+                               
+                   if (value.length === 2 && !value.includes(":")) {
+                     value = value + ":";
+                   }
+               
+                   if (value.length > 8) return;
+               
+                   setTime(value);
+                 }}
+                 onBlur={() => {
+                  
+                   const regex = /^(0?[1-9]|1[0-2]):[0-5][0-9]\s?(AM|PM)$/;
+                   if (!regex.test(time)) {
+                     setTime(""); 
+                   }
+                 }}
+               />
 
 
           <select
@@ -3431,6 +3437,7 @@ export default function EmployerDashboard() {
           Cancel
         </Button>
         <Button
+          type="button"
           className="bg-blue-600 hover:bg-blue-700"
           onClick={handleScheduleSubmit}
         >
