@@ -16,6 +16,7 @@ import {
   User,
   Search,
   ArrowRight,
+  ChevronDown,
 } from "lucide-react";
 
 import Link from "next/link";
@@ -159,7 +160,6 @@ export default function Register() {
           body: JSON.stringify(data),
         }
       );
-
       if (!res.ok) throw new Error("Registration failed");
 
       const result = await res.json();
@@ -297,13 +297,16 @@ export default function Register() {
 
               <Popover open={countryOpen} onOpenChange={setCountryOpen}>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-full h-12 mt-1">
+                  <Button variant="outline" className="w-full mt-1 h-10 lg:h-11 border rounded px-3 flex items-center justify-between">
+                    <span>
                     {profileData.personalInfo.countryId
                       ? countries.find(
                           (c) =>
                             c.id == profileData.personalInfo.countryId
                         )?.name
                       : "Select Country"}
+                    </span>
+                    <ChevronDown className="h-4 w-4 opacity-60" />
                   </Button>
                 </PopoverTrigger>
 
@@ -358,7 +361,7 @@ export default function Register() {
                 <Input
                   className="w-24 h-12 bg-gray-100"
                   value={`+${phoneCode}`}
-                  readOnly
+                  // readOnly
                 />
                 <Input
                   className="h-12"

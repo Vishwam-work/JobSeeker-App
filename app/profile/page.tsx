@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useSavedJobs } from "@/context/SavedJobsContext";
-import { BookmarkX , Check, ChevronsUpDown } from "lucide-react";
+import { BookmarkX , Check, ChevronsUpDown ,ChevronDown } from "lucide-react";
 import { jwtDecode } from "jwt-decode";
 import { toast } from "sonner";
 import {
@@ -73,10 +73,11 @@ import { TextField } from "@mui/material";
 import dayjs from "dayjs";
 import exp from "node:constants";
 
+
 export default function Profile() {
   // Form states, data, and functions, etc.
   const { savedJobs, removeSavedJob } = useSavedJobs();
-
+  const [loading, setLoading] = useState(true);
   const [profileData, setProfileData] = useState({
     personalInfo: {
       fullName: "",
@@ -555,8 +556,7 @@ const getUserKey = () => {
               expectedCurrency: data?.expected_currency?.id?.toString() ?? "",
               noticePeriod: data?.notice_period || "",
               resume: data.resume,
-
-                  profile_image: data.profile_image || profileData.personalInfo.profile_image,
+              profile_image: data.profile_image || profileData.personalInfo.profile_image,
 
             },
             experience: (data.experiences || []).map(exp => ({
@@ -578,6 +578,9 @@ const getUserKey = () => {
         }
       } catch (error) {
         console.error("Error fetching profile:", error);
+      }
+      finally { 
+         setLoading(false);
       }
     };
 
@@ -774,6 +777,32 @@ useEffect(() => {
 
   // Save Api
   const handleSaveProfile = async () => {
+
+     //  REQUIRED FIELD VALIDATION
+  if (!profileData.personalInfo.fullName?.trim()) {
+    return toast.error("Full Name is required");
+  }
+
+  if (!profileData.personalInfo.email?.trim()) {
+    return toast.error("Email is required");
+  }
+
+  if (!profileData.personalInfo.phone?.trim()) {
+    return toast.error("Phone number is required");
+  }
+
+  if (!profileData.personalInfo.countryId) {
+    return toast.error("Country is required");
+  }
+
+  if (!profileData.personalInfo.stateId) {
+    return toast.error("State is required");
+  }
+
+  if (!profileData.personalInfo.cityId) {
+    return toast.error("City is required");
+  }
+
     const resumeUploaded = await uploadResume();
     if (!resumeUploaded) {
       toast.error("Resume upload failed. Please try again.");
@@ -899,7 +928,7 @@ useEffect(() => {
     }
   };
 
-  // Fetch User Data for Profile Name, Email, Phone
+  // Fetch User Data for Profile Name, Email, Phone or country
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
@@ -937,6 +966,8 @@ useEffect(() => {
             fullName: user.full_name || user.name || "",
             email: user.email || "",
             phone: user.phone || user.number || "",
+            country_id: user.country?.id?.toString() || "",
+            countryId: user.country?.id?.toString() || "",
           },
         }));
       } catch (error) {
@@ -1020,8 +1051,6 @@ const removeAppliedJob = async (applicationId: number) => {
     toast.error("Network error. Please try again.");
   }
 };
-
-
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -1416,9 +1445,17 @@ const removeAppliedJob = async (applicationId: number) => {
                   </div>
                 </div>
               </div>
-
-              {/* Personal Information Section */}
-              {activeSection === "personal" && (
+             {loading ? (
+              <div className="p-6 max-w-5xl mx-auto space-y-6 animate-pulse">
+                <div className="h-8 bg-gray-200 rounded w-1/3"></div>
+                <div className="space-y-4">
+                  {[...Array(6)].map((_, i) => (
+                    <div key={i} className="h-12 bg-gray-200 rounded"></div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              activeSection === "personal" && (
                 <Card>
                   <CardHeader className="pb-4">
                     <CardTitle className="flex items-center space-x-2 text-lg lg:text-xl">
@@ -1469,51 +1506,9 @@ const removeAppliedJob = async (applicationId: number) => {
                             }))
                           }
                           className="mt-1 h-10 lg:h-11"
-                          required={true}
+                          required
                         />
                       </div>
-
-                      {/* <div>
-  <Label htmlFor="fullName" className="text-sm font-medium">
-    Full Name *
-  </Label>
-  <Input
-    id="fullName"
-    value={profileData.personalInfo.fullName}
-    onChange={(e) =>
-      setProfileData((prev) => ({
-        ...prev,
-        personalInfo: {
-          ...prev.personalInfo,
-          fullName: e.target.value,
-        },
-      }))
-    }
-    className="mt-1 h-10 lg:h-11"
-  />
-</div> */}
-
-                      {/* <div>
-  <Label htmlFor="email" className="text-sm font-medium">
-    Email Address *
-  </Label>
-  <Input
-    id="email"
-    type="email"
-    value={profileData.personalInfo.email}
-    onChange={(e) =>
-      setProfileData((prev) => ({
-        ...prev,
-        personalInfo: {
-          ...prev.personalInfo,
-          email: e.target.value,
-        },
-      }))
-    }
-    className="mt-1 h-10 lg:h-11"
-  />
-</div> */}
-
                      
                       <div>
                         <Label htmlFor="phone" className="text-sm font-medium">
@@ -1522,7 +1517,7 @@ const removeAppliedJob = async (applicationId: number) => {
                         <div className="flex gap-2 mt-1">
                           <Select
                             value={profileData.personalInfo.phoneCode || ""}
-                            disabled
+                            // disabled
                             onValueChange={(value) =>
                               setProfileData((prev) => ({
                                 ...prev,
@@ -1570,13 +1565,16 @@ const removeAppliedJob = async (applicationId: number) => {
 
                         <Popover>
                           <PopoverTrigger asChild>
-                            <button className="w-full mt-1 h-10 lg:h-11 border rounded px-3 text-left">
+                            <button className="w-full mt-1 h-10 lg:h-11 border rounded px-3 flex items-center justify-between">
+                                <span>
                               {profileData.personalInfo.countryId
                                 ? countries.find(
                                     (c) =>
                                       c.id == profileData.personalInfo.countryId
                                   )?.name
                                 : "Select country"}
+                                </span>
+                                 <ChevronDown className="h-4 w-4 opacity-60" />
                             </button>
                           </PopoverTrigger>
 
@@ -1624,13 +1622,16 @@ const removeAppliedJob = async (applicationId: number) => {
 
                         <Popover>
                           <PopoverTrigger asChild>
-                            <button className="w-full mt-1 h-10 lg:h-11 border rounded px-3 text-left">
+                            <button className="w-full mt-1 h-10 lg:h-11 border rounded px-3 flex items-center justify-between">
+                              <span>
                               {profileData.personalInfo.stateId
                                 ? states.find(
                                     (s) =>
                                       s.id == profileData.personalInfo.stateId
                                   )?.name
                                 : "Select state"}
+                              </span>
+                              <ChevronDown className="h-4 w-4 opacity-60" />
                             </button>
                           </PopoverTrigger>
 
@@ -1680,14 +1681,17 @@ const removeAppliedJob = async (applicationId: number) => {
                           <PopoverTrigger asChild>
                             <Button
                               variant="outline"
-                              className="w-full justify-between mt-1 h-12"
+                              className=" w-full mt-1 h-10 lg:h-11 border rounded px-3 flex items-center justify-between"
                             >
+                                <span>
                               {profileData.personalInfo.cityId
                                 ? cities.find(
                                     (c) =>
                                       c.id == profileData.personalInfo.cityId
                                   )?.name
                                 : "Select city"}
+                                </span>
+                              <ChevronDown className="h-4 w-4 opacity-60" />
                             </Button>
                           </PopoverTrigger>
 
@@ -1803,7 +1807,7 @@ const removeAppliedJob = async (applicationId: number) => {
                           htmlFor="currentSalary"
                           className="text-sm font-medium"
                         >
-                          Current Salary (PA)
+                          Current Salary (Annual)
                         </Label>
                         <div className="flex gap-2 mt-1">
                           <Select
@@ -1859,7 +1863,7 @@ const removeAppliedJob = async (applicationId: number) => {
                           htmlFor="expectedSalary"
                           className="text-sm font-medium"
                         >
-                          Expected Salary (PA)
+                          Expected Salary (Annual)
                         </Label>
                         <div className="flex gap-2 mt-1">
                           <Select
@@ -1928,6 +1932,7 @@ const removeAppliedJob = async (applicationId: number) => {
                   </div>
                   </CardContent>
                 </Card>
+              )
               )}
 
               {/* Experience Section */}
@@ -2037,8 +2042,11 @@ const removeAppliedJob = async (applicationId: number) => {
                              
                                <Popover>
                                  <PopoverTrigger asChild>
-                                   <button className="w-full mt-1 h-10 lg:h-11 border rounded px-3 text-left">
+                                   <button className="w-full mt-1 h-10 lg:h-11 border rounded px-3 flex items-center justify-between ">
+                                     <span >
                                      {experienceForm.company || "Select company"}
+                                      </span>
+                                      <ChevronDown className="h-4 w-4 opacity-60" />
                                    </button>
                                  </PopoverTrigger>
                              
@@ -2079,12 +2087,15 @@ const removeAppliedJob = async (applicationId: number) => {
 
                                 <Popover>
                                   <PopoverTrigger asChild>
-                                    <button className="w-full mt-1 h-10 lg:h-11 border rounded px-3 text-left">
+                                    <button className="w-full mt-1 h-10 lg:h-11 border rounded px-3 flex items-center justify-between ">
+                                      <span >
                                       {experienceForm.location_id
                                         ? countries.find(
                                             (c) => c.id == experienceForm.location_id
                                           )?.name
                                         : "Select location"}
+                                      </span>
+                                      <ChevronDown className="h-4 w-4 opacity-60" />
                                     </button>
                                   </PopoverTrigger>
                               
@@ -2433,9 +2444,12 @@ const removeAppliedJob = async (applicationId: number) => {
                                   <PopoverTrigger asChild>
                                     <Button
                                       variant="outline"
-                                      className="w-full justify-between mt-1 h-12"
+                                      className="w-full mt-1 h-10 lg:h-11 border rounded px-3 flex items-center justify-between "
                                     >
+                                      <span >
                                       {educationForm.degree || "Select degree"}
+                                      </span>
+                                      <ChevronDown className="h-4 w-4 opacity-60" />
                                     </Button>
                                   </PopoverTrigger>
 
@@ -2549,7 +2563,7 @@ const removeAppliedJob = async (applicationId: number) => {
                                 <Label className="text-sm font-medium text-gray-700">
                                   Score
                                 </Label>
-
+                                <div className="mt-1 grid grid-cols-3 gap-2">
                                 <Select
                                 value={educationForm.score_type}
                                 onValueChange={(value) =>
@@ -2559,7 +2573,7 @@ const removeAppliedJob = async (applicationId: number) => {
                                   }))
                                 }
                               >
-                                <SelectTrigger className="mt-1 h-10">
+                                <SelectTrigger className="h-10">
                                   <SelectValue placeholder="Select score type" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -2571,17 +2585,25 @@ const removeAppliedJob = async (applicationId: number) => {
 
                                 <Input
                                   id="percentage"
+                                  className="col-span-2 h-10"
+                                  placeholder={
+                                     educationForm.score_type === "cgpa"
+                                       ? "e.g. 8.5"
+                                       : educationForm.score_type === "percentage"
+                                       ? "e.g. 85%"
+                                       : "e.g. A+"
+                                   }
                                   value={educationForm.percentage}
                                   onChange={(e) =>
                                     setEducationForm((prev) => ({
                                       ...prev,
                                       percentage: e.target.value,
                                     }))
-                                  }
-                                  placeholder="e.g., 8.5 CGPA or 85%"
-                                  className="mt-1"
+                                  }                                                                  
                                 />
+                                </div>
                               </div>
+
                             </div>
                             <div className="flex justify-end space-x-2">
                               <Button
@@ -2969,10 +2991,6 @@ const removeAppliedJob = async (applicationId: number) => {
                               </div>
                   
                              <div className="flex items-center gap-2">
-                          <span className="text-green-600 text-xs font-medium bg-green-50 px-3 py-1 rounded-full">
-                            Applied
-                          </span>
-                  
                           <button
                             onClick={() => removeAppliedJob(appliedJob.id)}
                             className="text-red-600 text-xs font-medium bg-red-50 px-3 py-1 rounded-full hover:bg-red-100 transition"

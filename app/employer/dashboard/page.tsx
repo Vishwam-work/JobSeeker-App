@@ -51,6 +51,8 @@ import {
   Star,
   CheckCircle,
   XCircle,
+  ChevronsUpDown,
+  ChevronDown,
 } from "lucide-react";
 import Link from "next/link";
 import { jwtDecode } from "jwt-decode";
@@ -75,7 +77,17 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { ChevronsUpDown } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
 
 export default function EmployerDashboard() {
   const [activeTab, setActiveTab] = useState("post-job");
@@ -118,6 +130,9 @@ export default function EmployerDashboard() {
   const [minute, setMinute] = useState("00");
   const [ampm, setAmPm] = useState("AM");
   const interviewTime = `${hour}:${minute} ${ampm}`;
+  const [timeZone, setTimeZone] = useState("IST");
+  const [time, setTime] = useState("");
+
   
 
 
@@ -1216,7 +1231,7 @@ export default function EmployerDashboard() {
       //     : prev
       // );
 
-      toast.success("Candidate Rejected!");
+      toast.error("Candidate Rejected!");
     } catch (err) {
       console.log("Reject error: ", err);
       toast.error("Network error. Please try again.");
@@ -1230,6 +1245,13 @@ export default function EmployerDashboard() {
   };
 
   const handleScheduleSubmit = async () => {
+
+     if (!interviewDate) {
+    toast.warning("Please select interview date");
+    return;
+  }
+
+                    
     try {
       const token = localStorage.getItem("auth_token");
       if (!token) return toast.error("Token missing", {
@@ -1616,7 +1638,7 @@ export default function EmployerDashboard() {
                           className="w-full justify-between mt-1 h-10 lg:h-11"
                         >
                           {selectedCity || "Select location"}
-                          <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
+                          <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
                         </Button>
                       </PopoverTrigger>
 
@@ -2768,28 +2790,6 @@ export default function EmployerDashboard() {
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-                    {/*  Salary Filter */}
-                    <Select
-                      value={salaryFilter}
-                      onValueChange={setSalaryFilter}
-                    >
-                      <SelectTrigger className="w-full h-10">
-                        <SelectValue placeholder="Salary" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="All">All Salaries</SelectItem>
-                        <SelectItem value="Below 20000">
-                          Below ₹20,000
-                        </SelectItem>
-                        <SelectItem value="20000-50000">
-                          ₹20,000–₹50,000
-                        </SelectItem>
-                        <SelectItem value="Above 50000">
-                          Above ₹50,000
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-
                     {/* Experience Filter */}
                     <Select
                       value={experienceFilter}
@@ -2806,8 +2806,7 @@ export default function EmployerDashboard() {
                         <SelectItem value="5+ Years">5+ Years</SelectItem>
                       </SelectContent>
                     </Select>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                   
                     <Select
                       value={jobTitleFilter}
                       onValueChange={setJobTitleFilter}
@@ -3210,7 +3209,7 @@ export default function EmployerDashboard() {
                               Shortlist Candidate
                             </Button>
 
-                            <Button
+                            {/* <Button
                               variant="outline"
                               className="border-red-600 text-red-600 hover:bg-red-50 flex-1"
                               onClick={() =>
@@ -3219,7 +3218,38 @@ export default function EmployerDashboard() {
                             >
                               <XCircle className="w-4 h-4 mr-2" />
                               Reject Application
-                            </Button>
+                            </Button> */}
+                            
+                         <AlertDialog>
+                           <AlertDialogTrigger asChild>                         
+                             <Button
+                               variant="outline"
+                               className="border-red-600 text-red-600 hover:bg-red-50 flex-1"
+                             >
+                               <XCircle className="w-4 h-4 mr-2" />
+                               Reject Application
+                             </Button>
+                           </AlertDialogTrigger>
+                         
+                           <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Reject this application?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This action cannot be undone. The candidate will be marked as rejected.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                        
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction
+                                className="bg-red-600 hover:bg-red-700"
+                                onClick={() => handleRejectCandidate(selectedCandidate)}
+                              >
+                                Yes, Reject
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                           </AlertDialogContent>
+                         </AlertDialog>
                           </>
                         )}
 
@@ -3280,10 +3310,12 @@ export default function EmployerDashboard() {
         <div>
           <label className="text-sm font-medium">Interview Date</label>
           <input
+          required
             type="date"
             className="w-full border rounded-lg p-2 mt-1 focus:ring-2 focus:ring-blue-500"
             value={interviewDate}
             onChange={(e) => setInterviewDate(e.target.value)}
+            
           />
         </div>
 
@@ -3291,7 +3323,7 @@ export default function EmployerDashboard() {
         <div className="flex space-x-2 items-center">
           <label className="text-sm font-medium">Interview Time</label>
 
-          <input
+          {/* <input
             type="number"
             min="1"
             max="12"
@@ -3309,7 +3341,35 @@ export default function EmployerDashboard() {
             className="w-16 border rounded-lg p-2"
             value={minute}
             onChange={(e) => setMinute(e.target.value)}
-          />
+          /> */}
+
+                <input
+                 type="text"
+                 placeholder="hh:mm AM"
+                 className="w-32 border rounded-lg p-2 text-center"
+                 value={time}
+                 onChange={(e) => {
+                   let value = e.target.value.toUpperCase();
+               
+                   value = value.replace(/[^0-9:APM ]/g, "");
+                               
+                   if (value.length === 2 && !value.includes(":")) {
+                     value = value + ":";
+                   }
+               
+                   if (value.length > 8) return;
+               
+                   setTime(value);
+                 }}
+                 onBlur={() => {
+                  
+                   const regex = /^(0?[1-9]|1[0-2]):[0-5][0-9]\s?(AM|PM)$/;
+                   if (!regex.test(time)) {
+                     setTime(""); 
+                   }
+                 }}
+               />
+
 
           <select
             className="border rounded-lg p-2"
@@ -3318,6 +3378,19 @@ export default function EmployerDashboard() {
           >
             <option>AM</option>
             <option>PM</option>
+          </select>
+
+            {/* ✅ Time Zone Dropdown */}
+          <select
+            className="border rounded-lg p-2"
+            value={timeZone}
+            onChange={(e) => setTimeZone(e.target.value)}
+          >
+            <option value="IST">IST</option>
+            <option value="UTC">UTC</option>
+            <option value="EST">EST</option>
+            <option value="PST">PST</option>
+            <option value="CST">CST</option>
           </select>
         </div>
 
@@ -3364,6 +3437,7 @@ export default function EmployerDashboard() {
           Cancel
         </Button>
         <Button
+          type="button"
           className="bg-blue-600 hover:bg-blue-700"
           onClick={handleScheduleSubmit}
         >
