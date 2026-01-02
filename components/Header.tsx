@@ -10,6 +10,7 @@ import {
   ChevronDown,
   Menu,
   X,
+  Bell,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
@@ -22,6 +23,8 @@ export default function Header() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isEmployerDropdownOpen, setIsEmployerDropdownOpen] = useState(false);
   const [pageLoading, setPageLoading] = useState(false);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+
 
   const router = useRouter();
   const pathname = usePathname();
@@ -61,6 +64,29 @@ export default function Header() {
   setPageLoading(true);
   router.push("/profile");
 };
+
+const lockBodyScroll = () => {
+  const scrollBarWidth =
+    window.innerWidth - document.documentElement.clientWidth;
+
+  document.body.style.overflow = "hidden";
+  document.body.style.paddingRight = `${scrollBarWidth}px`;
+};
+
+const unlockBodyScroll = () => {
+  document.body.style.overflow = "";
+  document.body.style.paddingRight = "";
+};
+
+useEffect(() => {
+  if (isNotificationOpen) {
+    lockBodyScroll();
+  } else {
+    unlockBodyScroll();
+  }
+
+  return () => unlockBodyScroll();
+}, [isNotificationOpen]);
 
 
 
@@ -183,6 +209,50 @@ export default function Header() {
                 </div>
               )}
             </div>
+
+           {/* Notification Bell  */}
+           <div className="relative">
+           <div
+             onClick={() => setIsNotificationOpen(!isNotificationOpen)}
+             className="cursor-pointer relative"
+           >
+             <Bell className="w-5 h-5 text-gray-700 hover:text-purple-600" />
+             <span className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full" />
+           </div>
+          
+           {isNotificationOpen && (
+             <>
+               <div
+                 className="fixed inset-0 z-40"
+                 onClick={() => setIsNotificationOpen(false)}
+               />
+          
+               <div className="absolute right-0 mt-2 w-80 bg-white border shadow-lg rounded-lg z-50">
+                 <div className="p-3 border-b font-semibold text-gray-700">
+                   Notifications
+                 </div>
+          
+                 <div className="max-h-64 overflow-y-auto">
+                   <div className="px-4 py-3 hover:bg-gray-50 cursor-pointer">
+                     <p className="text-sm font-medium text-gray-800">
+                       New job matched your profile
+                     </p>
+                     <p className="text-xs text-gray-500">2 minutes ago</p>
+                   </div>
+          
+                   <div className="px-4 py-3 hover:bg-gray-50 cursor-pointer">
+                     <p className="text-sm font-medium text-gray-800">
+                       Employer viewed your profile
+                     </p>
+                     <p className="text-xs text-gray-500">1 hour ago</p>
+                   </div>
+                 </div>
+               </div>
+              </>
+            )}
+          </div>
+
+
           </div>
 
           {/* Mobile Menu Button */}
@@ -238,6 +308,35 @@ export default function Header() {
                   Employer Login
                 </Link>
               </div>
+
+             {/*  Notification Section */}
+              <div className="border-t pt-4">
+               <button
+                 onClick={() => setIsNotificationOpen(!isNotificationOpen)}
+                 className="flex items-center gap-2 w-full px-2 py-2 text-gray-700 hover:text-purple-600"
+               >
+                 <Bell className="w-5 h-5" />
+                 <span>Notifications</span>
+               </button>
+
+               {isNotificationOpen && (
+                 <div className="mt-2 bg-gray-50 rounded-lg border">
+                   <div className="px-3 py-2 text-sm font-medium border-b">
+                     Notifications
+                   </div>
+
+                   <div className="max-h-48 overflow-y-auto">
+                     <div className="px-3 py-2 text-sm hover:bg-gray-100">
+                       New job matched your profile
+                     </div>
+                     <div className="px-3 py-2 text-sm hover:bg-gray-100">
+                       Employer viewed your profile
+                     </div>
+                   </div>
+                 </div>
+               )}
+              </div>
+
 
               <div className="flex flex-col space-y-2 pt-4 border-t px-2">
                 {isAuthenticated ? (
