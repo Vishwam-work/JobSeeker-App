@@ -60,6 +60,17 @@ export default function ProfileReview() {
     return jobTitles.find((t) => t.id === id)?.title || "";
   };
 
+// const imageToBase64 = async (url: string): Promise<string> => {
+//   const res = await fetch(url);
+//   const blob = await res.blob();
+
+//   return new Promise((resolve) => {
+//     const reader = new FileReader();
+//     reader.onloadend = () => resolve(reader.result as string);
+//     reader.readAsDataURL(blob);
+//   });
+// };
+
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -81,8 +92,10 @@ export default function ProfileReview() {
 
         setProfileData({
           personalInfo: {
+            // profile_image: data.profile_image
+            //  ? await imageToBase64(data.profile_image)
+            //  : null,
             profile_image: data.profile_image || null,
-
             fullName: data.full_name,
             email: data.email,
             phone: data.phone,
@@ -155,6 +168,23 @@ export default function ProfileReview() {
 
   // const completionPercentage = calculateCompletionPercentage();
 
+  const waitForImages = async (container: HTMLElement) => {
+  const images = Array.from(container.querySelectorAll("img"));
+
+  await Promise.all(
+    images.map(
+      (img) =>
+        new Promise((resolve) => {
+          if (img.complete) resolve(true);
+          else {
+            img.onload = () => resolve(true);
+            img.onerror = () => resolve(true);
+          }
+        })
+    )
+  );
+};
+
  const hideElementsForPDF = (container: HTMLElement) => {
   const hidden: HTMLElement[] = [];
 
@@ -175,6 +205,8 @@ export default function ProfileReview() {
   return hidden;
 };
 
+
+
 const restoreElements = (elements: HTMLElement[]) => {
   elements.forEach((el) => {
     el.style.display = "";
@@ -193,6 +225,7 @@ const handleDownloadPDF = async () => {
   const pdfHeight = pdf.internal.pageSize.getHeight();
 
   const container = document.getElementById("profile-review-ui");
+  await waitForImages(container);
   const hidden = hideElementsForPDF(container);
 
   const pages = ["pdf-page-1", "pdf-page-2"];
@@ -202,13 +235,16 @@ const handleDownloadPDF = async () => {
     if (!page) continue;
 
     const canvas = await html2canvas(page, {
-      scale: 1.3,          
-      useCORS: true,
-      backgroundColor: "#fff",
-      scrollY: -window.scrollY,
-    });
+  scale: window.devicePixelRatio || 2,
+  useCORS: true,
+  allowTaint: true,
+  backgroundColor: "#ffffff",
+  logging: false,
+});
 
-    const imgData = canvas.toDataURL("image/jpeg", 0.85); 
+
+    const imgData = canvas.toDataURL("image/png");
+ 
     const imgHeight = (canvas.height * pdfWidth) / canvas.width;
 
     if (i > 0) pdf.addPage();
@@ -287,6 +323,7 @@ const handleDownloadPDF = async () => {
                     <img
                      src={profileData.personalInfo.profile_image}
                      alt="Profile"
+                    //  crossOrigin="anonymous"
                      className="w-full h-full object-cover"
                     />
                    ) : (

@@ -53,6 +53,7 @@ import {
   XCircle,
   ChevronsUpDown,
   ChevronDown,
+  Bell,
 } from "lucide-react";
 import Link from "next/link";
 import { jwtDecode } from "jwt-decode";
@@ -132,7 +133,7 @@ export default function EmployerDashboard() {
   const interviewTime = `${hour}:${minute} ${ampm}`;
   const [timeZone, setTimeZone] = useState("IST");
   const [time, setTime] = useState("");
-
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   
 
 
@@ -1400,7 +1401,66 @@ export default function EmployerDashboard() {
                 Employer Dashboard
               </span>
             </Link>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                 <div               
+                   onClick={() => setIsNotificationOpen(!isNotificationOpen)}
+                   className="cursor-pointer relative select-none"
+                  >
+                  <Bell className="w-5 h-5 text-gray-700 hover:text-purple-600" />
+                <span className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full" />
+                 </div>
+
+                 {isNotificationOpen && (
+                   <>
+                    
+                     <div
+                       className="fixed inset-0 z-40 bg-black/20 md:bg-transparent"
+                       onClick={() => setIsNotificationOpen(false)}
+                     />
+                     <div
+                       className="               
+                        fixed md:absolute
+                        inset-x-0 bottom-0 md:inset-auto
+                        md:right-0 md:top-full
+                        w-full md:w-80
+                        bg-white
+                        border
+                        shadow-lg
+                        rounded-t-xl md:rounded-lg
+                        z-50
+                      "
+                     >
+                       <div className="p-3 border-b font-semibold text-gray-700 flex justify-between items-center">               
+                        Notifications
+                        <button
+                          className="md:hidden text-gray-500"
+                          onClick={() => setIsNotificationOpen(false)}
+                        >
+                          ✕
+                        </button>
+                       </div>
+
+                       <div className="max-h-64 overflow-y-auto">
+                         <div className="px-4 py-3 hover:bg-gray-50 cursor-pointer">
+                           <p className="text-sm font-medium text-gray-800">
+                             New job matched your profile
+                           </p>
+                           <p className="text-xs text-gray-500">2 minutes ago</p>
+                         </div>
+
+                        <div className="px-4 py-3 hover:bg-gray-50 cursor-pointer">
+                          <p className="text-sm font-medium text-gray-800">
+                            Employer viewed your profile
+                          </p>
+                          <p className="text-xs text-gray-500">1 hour ago</p>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+
               <Button
                 variant="outline"
                 className="border-red-600 text-red-600 hover:bg-red-50"

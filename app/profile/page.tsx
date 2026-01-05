@@ -65,6 +65,8 @@ import {
   Ambulance as Cancel,
 } from "lucide-react";
 import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+
 import Link from "next/link";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -2784,7 +2786,7 @@ const removeAppliedJob = async (applicationId: number) => {
 
                       {/* Add/Edit Certification Form */}
                       {showAddCertification && (
-                        <Card className="border-2 border-yellow-200 bg-yellow-50">
+                        <Card className="border-2 ">
                           <CardHeader className="pb-4">
                             <CardTitle className="text-lg">
                               {editingCertification
@@ -2830,6 +2832,7 @@ const removeAppliedJob = async (applicationId: number) => {
                               </div>
                               <div>
                                 <Label>Year Obtained *</Label>
+                                <div className="mt-1">
                                 <DatePicker
                                   value={certificationForm.year}
                                   onChange={(date) =>
@@ -2853,7 +2856,9 @@ const removeAppliedJob = async (applicationId: number) => {
                                       }}
                                     />
                                   )}
+
                                 />
+                                </div>
                               </div>
                             </div>
                             <div className="flex justify-end space-x-2">
@@ -3083,6 +3088,7 @@ const removeAppliedJob = async (applicationId: number) => {
             </div>
           </div>
         </div>
+         <Footer />
       </div>
     </LocalizationProvider>
   );
