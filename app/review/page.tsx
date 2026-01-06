@@ -26,13 +26,13 @@ import {
 } from 'lucide-react';
 import Header from '@/components/Header';
 import Link from 'next/link';
-
+import DownloadProfilePDF from '@/components/DownloadProfilePDF';
+import PdfSafeIcon from '@/components/PdfSafeIcon';
 export default function ProfileReview() {
   const [profileData, setProfileData] = useState(null);
   const [jobTitles, setJobTitles] = useState([]);
   const [jobCategories, setJobCategories] = useState([]);
   const [isPDF, setIsPDF] = useState(false);
-
     useEffect(() => {
       fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_title/")
         .then((res) => res.json())
@@ -59,19 +59,6 @@ export default function ProfileReview() {
     console.log("jobTitles", jobTitles);
     return jobTitles.find((t) => t.id === id)?.title || "";
   };
-
-// const imageToBase64 = async (url: string): Promise<string> => {
-//   const res = await fetch(url);
-//   const blob = await res.blob();
-
-//   return new Promise((resolve) => {
-//     const reader = new FileReader();
-//     reader.onloadend = () => resolve(reader.result as string);
-//     reader.readAsDataURL(blob);
-//   });
-// };
-
-
   useEffect(() => {
     const loadProfile = async () => {
       const res = await fetch("https://jobseeker-backend-jy1y.onrender.com/api/profile/", {
@@ -92,9 +79,6 @@ export default function ProfileReview() {
 
         setProfileData({
           personalInfo: {
-            // profile_image: data.profile_image
-            //  ? await imageToBase64(data.profile_image)
-            //  : null,
             profile_image: data.profile_image || null,
             fullName: data.full_name,
             email: data.email,
@@ -168,103 +152,6 @@ export default function ProfileReview() {
 
   // const completionPercentage = calculateCompletionPercentage();
 
-  const waitForImages = async (container: HTMLElement) => {
-  const images = Array.from(container.querySelectorAll("img"));
-
-  await Promise.all(
-    images.map(
-      (img) =>
-        new Promise((resolve) => {
-          if (img.complete) resolve(true);
-          else {
-            img.onload = () => resolve(true);
-            img.onerror = () => resolve(true);
-          }
-        })
-    )
-  );
-};
-
- const hideElementsForPDF = (container: HTMLElement) => {
-  const hidden: HTMLElement[] = [];
-
-  // Hide profile image box completely
-  container.querySelectorAll(".profile-image-box").forEach((el) => {
-    const h = el as HTMLElement;
-    hidden.push(h);
-    h.style.display = "none";
-  });
-
-  // Hide all SVG icons
-  container.querySelectorAll("svg").forEach((el) => {
-    const h = el as HTMLElement;
-    hidden.push(h);
-    h.style.display = "none";
-  });
-
-  return hidden;
-};
-
-
-
-const restoreElements = (elements: HTMLElement[]) => {
-  elements.forEach((el) => {
-    el.style.display = "";
-  });
-};  
-
-const handleDownloadPDF = async () => {
-  setIsPDF(true);
-  await new Promise((r) => setTimeout(r, 300));
-
-  const html2canvas = (await import("html2canvas")).default;
-  const jsPDF = (await import("jspdf")).default;
-
-  const pdf = new jsPDF("p", "mm", "a4");
-  const pdfWidth = pdf.internal.pageSize.getWidth();
-  const pdfHeight = pdf.internal.pageSize.getHeight();
-
-  const container = document.getElementById("profile-review-ui");
-  await waitForImages(container);
-  const hidden = hideElementsForPDF(container);
-
-  const pages = ["pdf-page-1", "pdf-page-2"];
-
-  for (let i = 0; i < pages.length; i++) {
-    const page = document.getElementById(pages[i]);
-    if (!page) continue;
-
-    const canvas = await html2canvas(page, {
-  scale: window.devicePixelRatio || 2,
-  useCORS: true,
-  allowTaint: true,
-  backgroundColor: "#ffffff",
-  logging: false,
-});
-
-
-    const imgData = canvas.toDataURL("image/png");
- 
-    const imgHeight = (canvas.height * pdfWidth) / canvas.width;
-
-    if (i > 0) pdf.addPage();
-
-    pdf.addImage(
-      imgData,
-      "JPEG",
-      0,
-      0,
-      pdfWidth,
-      Math.min(imgHeight, pdfHeight)
-    );
-  }
-
-  pdf.save("profile.pdf");
-
-  restoreElements(hidden);
-  setIsPDF(false);
-};
-
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
@@ -281,16 +168,8 @@ const handleDownloadPDF = async () => {
                 </Button>
               </Link>
             </div>
-            <div className="flex flex-col sm:flex-row gap-2">
-              <Button
-              variant="outline"
-              className="w-full sm:w-auto"
-              onClick={handleDownloadPDF}
-              >
-                <Download className="w-4 h-4 mr-2" />
-                Download PDF
-              </Button>
-
+            <div className="flex flex-col sm:flex-row gap-2">            
+             <DownloadProfilePDF isPDF={true} />
             </div>
           </div>
         </div>
@@ -299,9 +178,7 @@ const handleDownloadPDF = async () => {
           <div  className="space-y-6 bg-white px-6 pb-6 pt-10" >
             <div
               id="profile-review-ui"
-              className={`space-y-6 bg-white px-6 pb-6 pt-10 ${
-              isPDF ? "pdf-mode" : ""
-              }`}
+              className={isPDF ? 'pdf-mode' : ''}
             >
       <div id="pdf-page-1">
         {/* COMPLETE REVIEW UI */}
@@ -321,11 +198,13 @@ const handleDownloadPDF = async () => {
 
                    {profileData.personalInfo.profile_image ? (
                     <img
-                     src={profileData.personalInfo.profile_image}
-                     alt="Profile"
-                    //  crossOrigin="anonymous"
-                     className="w-full h-full object-cover"
+                        src={`/api/image-proxy?url=${encodeURIComponent(
+                        profileData.personalInfo.profile_image
+                      )}`}
+                      alt="Profile"
+                      className="w-full h-full object-cover"
                     />
+
                    ) : (
                    <User className="w-12 h-12 lg:w-16 lg:h-16 text-purple-600" />
                     )}
@@ -337,11 +216,13 @@ const handleDownloadPDF = async () => {
                   </h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm lg:text-base">
                     <div className="flex items-center space-x-2 text-gray-600">
-                      <Mail className="w-4 h-4" />
+                      {/* <Mail className="w-4 h-4" /> */}
+                        <PdfSafeIcon name="mail" isPDF={isPDF} />
                       <span>{profileData.personalInfo.email}</span>
                     </div>
                     <div className="flex items-center space-x-2 text-gray-600">
-                      <Phone className="w-4 h-4" />
+                      {/* <Phone className="w-4 h-4" /> */}
+                      <PdfSafeIcon name="phone" isPDF={isPDF} />
                       <span>{profileData.personalInfo.phone}</span>
                     </div>
                     <div className="flex items-center space-x-2 text-gray-600">
