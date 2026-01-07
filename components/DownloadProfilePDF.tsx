@@ -4,7 +4,15 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Download } from 'lucide-react';
 
-export default function DownloadProfilePDF() {
+export default function DownloadProfilePDF(
+  {
+  onStart,
+  onEnd,
+}: {
+  onStart: () => void;
+  onEnd: () => void;
+}
+) {
   const [loading, setLoading] = useState(false);
 
   const waitForImages = async (container: HTMLElement) => {
@@ -26,7 +34,8 @@ export default function DownloadProfilePDF() {
   const downloadPDF = async () => {
     try {
       setLoading(true);
-
+      onStart(); 
+      await new Promise((r) => setTimeout(r, 300));
       const html2canvas = (await import('html2canvas')).default;
       const jsPDF = (await import('jspdf')).default;
 
@@ -61,6 +70,7 @@ export default function DownloadProfilePDF() {
       console.error(err);
       alert('PDF download failed');
     } finally {
+      onEnd(); 
       setLoading(false);
     }
   };

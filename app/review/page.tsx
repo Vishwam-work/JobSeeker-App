@@ -27,7 +27,6 @@ import {
 import Header from '@/components/Header';
 import Link from 'next/link';
 import DownloadProfilePDF from '@/components/DownloadProfilePDF';
-import PdfSafeIcon from '@/components/PdfSafeIcon';
 export default function ProfileReview() {
   const [profileData, setProfileData] = useState(null);
   const [jobTitles, setJobTitles] = useState([]);
@@ -169,7 +168,10 @@ export default function ProfileReview() {
               </Link>
             </div>
             <div className="flex flex-col sm:flex-row gap-2">            
-             <DownloadProfilePDF isPDF={true} />
+             <DownloadProfilePDF
+              onStart={() => setIsPDF(true)}
+              onEnd={() => setIsPDF(false)}
+             />
             </div>
           </div>
         </div>
@@ -186,8 +188,7 @@ export default function ProfileReview() {
           <Card>
             <CardHeader className="pb-4">
               <CardTitle className="flex items-center space-x-2">
-                <User className="w-5 h-5 text-purple-600" />
-
+                {isPDF ? '👤' : <User className="w-5 h-5 text-purple-600" />}
                 <span>Personal Information</span>
               </CardTitle>
             </CardHeader>
@@ -216,33 +217,31 @@ export default function ProfileReview() {
                   </h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm lg:text-base">
                     <div className="flex items-center space-x-2 text-gray-600">
-                      {/* <Mail className="w-4 h-4" /> */}
-                        <PdfSafeIcon name="mail" isPDF={isPDF} />
+                         {isPDF ? '✉️' : <Mail className="w-4 h-4" />}
                       <span>{profileData.personalInfo.email}</span>
                     </div>
                     <div className="flex items-center space-x-2 text-gray-600">
-                      {/* <Phone className="w-4 h-4" /> */}
-                      <PdfSafeIcon name="phone" isPDF={isPDF} />
+                      {isPDF ? ' ☎' : <Phone className="w-4 h-4" />}
                       <span>{profileData.personalInfo.phone}</span>
                     </div>
                     <div className="flex items-center space-x-2 text-gray-600">
-                      <MapPin className="w-4 h-4" />
+                      {isPDF ? '📍' : <MapPin className="w-4 h-4" />}
                       <span>{profileData.personalInfo.location}</span>
                     </div>
                     <div className="flex items-center space-x-2 text-gray-600">
-                      <Briefcase className="w-4 h-4" />
+                      {isPDF ? '💼' : <Briefcase className="w-4 h-4" />}
                       <span>{profileData.personalInfo.experience} Experience</span>
                     </div>
                     <div className="flex items-center space-x-2 text-gray-600">
-                      <DollarSign className="w-4 h-4" />
+                      {isPDF ? ' $ ' : <DollarSign className="w-4 h-4" />}
                       <span>Current: {profileData.personalInfo.currentSalary}</span>
                     </div>
                     <div className="flex items-center space-x-2 text-gray-600">
-                      <DollarSign className="w-4 h-4" />
+                      {isPDF ? ' $ ' : <DollarSign className="w-4 h-4" />}
                       <span>Expected: {profileData.personalInfo.expectedSalary}</span>
                     </div>
                     <div className="flex items-center space-x-2 text-gray-600">
-                      <Clock className="w-4 h-4" />
+                      {isPDF ? '🕒' : <Clock className="w-4 h-4" />}
                       <span>Notice Period: {profileData.personalInfo.noticePeriod}</span>
                     </div>
                   </div>
@@ -269,7 +268,7 @@ export default function ProfileReview() {
           <Card>
             <CardHeader className="pb-4">
               <CardTitle className="flex items-center space-x-2">
-                <Briefcase className="w-5 h-5 text-purple-600" />
+                {isPDF ? '💼' : <Briefcase className="w-4 h-4 text-purple-600" />}
                 <span>Work Experience</span>
               </CardTitle>
             </CardHeader>
@@ -290,11 +289,11 @@ export default function ProfileReview() {
                         <h2 className='text-gray-400 font-semibold'>{getCategoryName(exp.category)}</h2>
                         <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 text-sm text-gray-600 mt-1 gap-1 sm:gap-0">
                           <div className="flex items-center">
-                            <Clock className="w-4 h-4 mr-1" />
+                            {isPDF ? '🕒' : <Clock className="w-4 h-4" />}
                             <span>{exp.duration}</span>
                           </div>
                           <div className="flex items-center">
-                            <MapPin className="w-4 h-4 mr-1" />
+                            {isPDF ? '📍' : <MapPin className="w-4 h-4" />}
                             <span>{exp.location}</span>
                           </div>
                         </div>
@@ -313,7 +312,7 @@ export default function ProfileReview() {
           <Card>
             <CardHeader className="pb-4">
               <CardTitle className="flex items-center space-x-2">
-                <GraduationCap className="w-5 h-5 text-purple-600" />
+                {isPDF ? '🎓' : <GraduationCap className="w-5 h-5 text-purple-600" />}
                 <span>Education</span>
               </CardTitle>
             </CardHeader>
@@ -334,11 +333,11 @@ export default function ProfileReview() {
                         <p className="text-gray-600">{edu.institution}</p>
                         <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 text-sm text-gray-600 mt-1 gap-1 sm:gap-0">
                           <div className="flex items-center">
-                            <Calendar className="w-4 h-4 mr-1" />
+                            {isPDF ? '📅' : <Calendar className="w-4 h-4 mr-1" />}
                             <span>Graduated: {edu.year}</span>
                           </div>
                           <div className="flex items-center">
-                            <Award className="w-4 h-4 mr-1" />
+                            {isPDF ? '🎖  ' : <Award className="w-5 h-5 text-purple-600" />}
                             <span>Score: {edu.percentage}</span>
                           </div>
                         </div>
@@ -354,7 +353,7 @@ export default function ProfileReview() {
           <Card>
             <CardHeader className="pb-4">
               <CardTitle className="flex items-center space-x-2">
-                <Award className="w-5 h-5 text-purple-600" />
+                {isPDF ? '🎖  ' : <Award className="w-5 h-5 text-purple-600" />}
                 <span>Skills</span>
               </CardTitle>
             </CardHeader>
@@ -378,7 +377,7 @@ export default function ProfileReview() {
           <Card>
             <CardHeader className="pb-4">
               <CardTitle className="flex items-center space-x-2">
-                <Award className="w-5 h-5 text-purple-600" />
+                {isPDF ? '🎖  ' : <Award className="w-5 h-5 text-purple-600" />}
                 <span>Certifications</span>
               </CardTitle>
             </CardHeader>
@@ -387,13 +386,13 @@ export default function ProfileReview() {
                 {profileData.certifications.map((cert) => (
                   <div key={cert.id} className="flex items-start space-x-4 p-4 bg-gray-50 rounded-lg">
                     <div className="w-12 h-12 bg-gradient-to-br from-yellow-100 to-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <Award className="w-6 h-6 text-yellow-600" />
+                      <Award className="w-5 h-5 text-purple-600" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold text-lg text-gray-900">{cert.name}</h3>
                       <p className="text-yellow-600 font-medium">{cert.issuer}</p>
                       <div className="flex items-center text-sm text-gray-600 mt-1">
-                        <Calendar className="w-4 h-4 mr-1" />
+                        {isPDF ? '📅' : <Calendar className="w-4 h-4 mr-1" />}
                         <span>Issued: {cert.year}</span>
                       </div>
                     </div>
