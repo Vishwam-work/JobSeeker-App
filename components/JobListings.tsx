@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter  } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -66,6 +66,7 @@ export default function JobListings() {
   const [visibleCount, setVisibleCount] = useState(3);
   const searchParams = useSearchParams();
   const searchFromUrl = searchParams.get("search");
+  const router = useRouter();
 
 
   // Filter states
@@ -507,6 +508,13 @@ const unsaveJob = async (jobId: number) => {
         setShowLoginPopup(true);
       return;
     }
+      if (!isProfileComplete(userData)) {
+    toast.warning(
+      "Please complete your profile (Name, Phone, Resume, Skills, Experience) before applying."
+    );
+    router.push("/profile");
+    return;
+  }
     setSelectedJob(job);
     setAnswers({});
     fetchUserData();
@@ -534,7 +542,72 @@ const unsaveJob = async (jobId: number) => {
     }
   };
 
-  
+const REQUIRED_PROFILE_FIELDS = [
+  "full_name",
+  "phone",
+  "resume",
+  "skills",
+  "country",
+  "state",
+  "city",
+  "experiences"
+];
+
+
+
+const isProfileComplete = (profile) => {
+  return REQUIRED_PROFILE_FIELDS.every((field) => {
+    const value = profile?.[field];
+
+    if (Array.isArray(value)) {
+      return value.length > 0;
+    }
+
+    if (typeof value === "object") {
+      return value !== null && Object.keys(value).length > 0;
+    }
+
+    return value !== null && value !== undefined && value !== "";
+  });
+};
+
+
+
+  const fetchUserProfile = async () => {
+  setLoadingUserData(true);
+  try {
+    const token = localStorage.getItem("auth_token");
+
+    const response = await fetch(
+      "https://jobseeker-backend-jy1y.onrender.com/api/profile/",
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      console.log("Profile API failed:", response.status);
+      return;
+    }
+
+    const profile = await response.json();
+
+    setUserData({
+      ...profile,
+      resume: profile.resume
+        ? `https://jobseeker-backend-jy1y.onrender.com${profile.resume}`
+        : null,
+    });
+
+  } catch (error) {
+    console.error("Profile fetch error:", error);
+  } finally {
+    setLoadingUserData(false);
+  }
+};
+
 
 
 const fetchUserData = async () => {
@@ -565,17 +638,6 @@ const fetchUserData = async () => {
 
     console.log("MY Applications:", myApplications);
 
-     if (myApplications.length > 0) {
-     const profile = myApplications[0].profile;
-
-      setUserData({
-       ...profile,
-       resume: profile.resume
-        ? `https://jobseeker-backend-jy1y.onrender.com${profile.resume}`
-        : null,
-        });
-      }
-
     const appliedIDs = myApplications.map(app => Number(app.job));
 
     localStorage.setItem(`applied_jobs_${email}`, JSON.stringify(appliedIDs));
@@ -590,6 +652,12 @@ const fetchUserData = async () => {
     setLoadingUserData(false);
   }
 };
+
+useEffect(() => {
+  fetchUserProfile(); 
+  fetchUserData();    
+}, []);
+
   const handleAnswerChange = (questionIndex, value) => {
     setAnswers((prev) => ({
       ...prev,

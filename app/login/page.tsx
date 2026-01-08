@@ -50,7 +50,7 @@ export default function Login() {
         setAlertMessage("Login Successful!");
         setAlertOpen(true);
         setTimeout(() => {
-          router.push("/");
+          router.push("/profile");
         }, 2000);
       } else {
         setAlertType("error");
