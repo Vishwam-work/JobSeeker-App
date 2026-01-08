@@ -65,6 +65,8 @@ import {
   Ambulance as Cancel,
 } from "lucide-react";
 import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+
 import Link from "next/link";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -2533,7 +2535,10 @@ const removeAppliedJob = async (applicationId: number) => {
                                 />
                               </div>
                               <div>
-                                <Label>Year of Graduation *</Label>
+                                <Label  className="text-sm font-medium text-gray-700">
+                                  Year of Graduation *
+                                  </Label>
+                                  <div className="mt-1">
                                 <DatePicker
                                   value={educationForm.year}
                                   onChange={(date) =>
@@ -2543,6 +2548,7 @@ const removeAppliedJob = async (applicationId: number) => {
                                     }))
                                   }
                                   views={["year"]}
+                                  disableFuture 
                                   renderInput={(params) => (
                                     <TextField
                                       {...params}
@@ -2553,17 +2559,19 @@ const removeAppliedJob = async (applicationId: number) => {
                                         "& .MuiOutlinedInput-root": {
                                           height: "44px",
                                           borderRadius: "6px",
+                                          padding: "0 12px",
                                         },
                                       }}
                                     />
                                   )}
                                 />
+                                </div>
                               </div>
-                              <div className="md:col-span-2">
+                              <div>
                                 <Label className="text-sm font-medium text-gray-700">
                                   Score
                                 </Label>
-                                <div className="mt-1 grid grid-cols-3 gap-2">
+                                <div className="mt-1 flex gap-2">
                                 <Select
                                 value={educationForm.score_type}
                                 onValueChange={(value) =>
@@ -2573,8 +2581,8 @@ const removeAppliedJob = async (applicationId: number) => {
                                   }))
                                 }
                               >
-                                <SelectTrigger className="h-10">
-                                  <SelectValue placeholder="Select score type" />
+                                <SelectTrigger className="h-10 w-[140px]">
+                                  <SelectValue placeholder="Score type" />
                                 </SelectTrigger>
                                 <SelectContent>
                                   <SelectItem value="percentage">Percentage</SelectItem>
@@ -2585,7 +2593,7 @@ const removeAppliedJob = async (applicationId: number) => {
 
                                 <Input
                                   id="percentage"
-                                  className="col-span-2 h-10"
+                                  className="h-10 flex-1"
                                   placeholder={
                                      educationForm.score_type === "cgpa"
                                        ? "e.g. 8.5"
@@ -2604,6 +2612,7 @@ const removeAppliedJob = async (applicationId: number) => {
                                 </div>
                               </div>
 
+                             
                             </div>
                             <div className="flex justify-end space-x-2">
                               <Button
@@ -2777,7 +2786,7 @@ const removeAppliedJob = async (applicationId: number) => {
 
                       {/* Add/Edit Certification Form */}
                       {showAddCertification && (
-                        <Card className="border-2 border-yellow-200 bg-yellow-50">
+                        <Card className="border-2 ">
                           <CardHeader className="pb-4">
                             <CardTitle className="text-lg">
                               {editingCertification
@@ -2823,6 +2832,7 @@ const removeAppliedJob = async (applicationId: number) => {
                               </div>
                               <div>
                                 <Label>Year Obtained *</Label>
+                                <div className="mt-1">
                                 <DatePicker
                                   value={certificationForm.year}
                                   onChange={(date) =>
@@ -2846,7 +2856,9 @@ const removeAppliedJob = async (applicationId: number) => {
                                       }}
                                     />
                                   )}
+
                                 />
+                                </div>
                               </div>
                             </div>
                             <div className="flex justify-end space-x-2">
@@ -3076,6 +3088,7 @@ const removeAppliedJob = async (applicationId: number) => {
             </div>
           </div>
         </div>
+         <Footer />
       </div>
     </LocalizationProvider>
   );
