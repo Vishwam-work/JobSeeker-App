@@ -24,6 +24,27 @@ export default function Login() {
   
   const router = useRouter();
 
+const REQUIRED_PROFILE_FIELDS = [
+  "full_name",
+  "phone",
+  "resume",
+  "skills",
+  "country",
+  "state",
+  "city",
+  "experiences",
+];
+const isProfileComplete = (profile: any) => {
+  return REQUIRED_PROFILE_FIELDS.every(
+    (field) =>
+      profile[field] &&
+      (Array.isArray(profile[field])
+        ? profile[field].length > 0
+        : true)
+  );
+};
+
+
   // Email/Password login
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,13 +66,33 @@ export default function Login() {
         localStorage.setItem("user_email", email);
         if (data.id) localStorage.setItem("user_id", data.id);
         window.dispatchEvent(new Event("user-email-updated"));
+        // 🔹 profile API call
+const profileRes = await fetch(
+  "https://jobseeker-backend-jy1y.onrender.com/api/profile/",
+  {
+    headers: {
+      Authorization: `Bearer ${data.access}`,
+    },
+  }
+);
+
+const profileData = await profileRes.json();
+
+// 🔹 conditional redirect
+setTimeout(() => {
+  if (isProfileComplete(profileData)) {
+    router.push("/");        // profile complete → home
+  } else {
+    router.push("/profile"); // profile incomplete → profile page
+  }
+}, 2000);
 
         setAlertType("success");
         setAlertMessage("Login Successful!");
         setAlertOpen(true);
-        setTimeout(() => {
-          router.push("/profile");
-        }, 2000);
+        // setTimeout(() => {
+        //   router.push("/profile");
+        // }, 2000);
       } else {
         setAlertType("error");
         setAlertMessage(data.error || "Login Failed");
