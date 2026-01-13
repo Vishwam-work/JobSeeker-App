@@ -325,7 +325,7 @@ export default function EmployerRegister() {
   const handlesendotp = async () => {
     try {
       const res = await fetch(
-        "https://jobseeker-backend-jy1y.onrender.com/api/send_otp/",
+        "https://jobseeker-backend-jy1y.onrender.com/employeer/api/send_otp/",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -888,7 +888,7 @@ export default function EmployerRegister() {
                             disabled={!email.includes("@")}
                             onClick={handlesendotp}
                           >
-                            Verify Email OTP
+                            Verify Email's OTP
                           </Button>
                         </div>
                         <div>
