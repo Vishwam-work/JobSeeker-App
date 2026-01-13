@@ -625,6 +625,7 @@ const getUserKey = () => {
         setCurrency(data);
       });
   }, []);
+  
   useEffect(() => {
     fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/countries/")
       .then((res) => res.json())
@@ -634,6 +635,21 @@ const getUserKey = () => {
       })
       .catch((err) => console.error(err));
   }, []);
+
+ const uniqueCurrencies = Array.from(
+  new Map(
+    countries.map((c) => [
+      c.currency,
+      {
+        id: c.id, 
+        currency: c.currency,
+        currency_name: c.currency_name,
+      },
+    ])
+  ).values()
+);
+
+
 
   useEffect(() => {
     if (profileData.personalInfo.countryId) {
@@ -1811,11 +1827,9 @@ const removeAppliedJob = async (applicationId: number) => {
                         >
                           Current Salary (Annual)
                         </Label>
-                        <div className="flex gap-2 mt-1">
+                        <div className="flex gap-2 mt-1">           
                           <Select
-                            value={
-                              profileData.personalInfo.currentcurrency || ""
-                            }
+                            value={profileData.personalInfo.currentcurrency || ""}
                             onValueChange={(value) =>
                               setProfileData((prev) => ({
                                 ...prev,
@@ -1825,18 +1839,20 @@ const removeAppliedJob = async (applicationId: number) => {
                                 },
                               }))
                             }
-                            required={true}
                           >
-                            <SelectTrigger className="w-20 h-10 lg:h-11">
-                              <SelectValue placeholder="INR" />
+                            <SelectTrigger className="w-28 h-10 lg:h-11">
+                              <span>
+                                {profileData.personalInfo.currentcurrency
+                                  ? uniqueCurrencies.find(
+                                      (c) => String(c.id) === profileData.personalInfo.currentcurrency
+                                    )?.currency
+                                  : "Select currency"}
+                              </span>
                             </SelectTrigger>
                             <SelectContent>
-                              {currency.map((curr) => (
-                                <SelectItem
-                                  key={curr.id}
-                                  value={curr.id.toString()}
-                                >
-                                  {curr.symbol}
+                              {uniqueCurrencies.map((curr) => (
+                                <SelectItem key={curr.currency} value={String(curr.id)}>
+                                  {curr.currency} - {curr.currency_name}
                                 </SelectItem>
                               ))}
                             </SelectContent>
@@ -1860,6 +1876,7 @@ const removeAppliedJob = async (applicationId: number) => {
                           />
                         </div>
                       </div>
+                      
                       <div>
                         <Label
                           htmlFor="expectedSalary"
@@ -1867,36 +1884,37 @@ const removeAppliedJob = async (applicationId: number) => {
                         >
                           Expected Salary (Annual)
                         </Label>
-                        <div className="flex gap-2 mt-1">
-                          <Select
-                            value={
-                              profileData.personalInfo.expectedCurrency || ""
-                            }
-                            onValueChange={(value) =>
-                              setProfileData((prev) => ({
-                                ...prev,
-                                personalInfo: {
-                                  ...prev.personalInfo,
-                                  expectedCurrency: value,
-                                },
-                              }))
-                            }
-                            required={true}
-                          >
-                            <SelectTrigger className="w-20 h-10 lg:h-11">
-                              <SelectValue placeholder="Select Currency" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {currency.map((curr) => (
-                                <SelectItem
-                                  key={curr.id}
-                                  value={curr.id.toString()}
-                                >
-                                  {curr.symbol}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                        <div className="flex gap-2 mt-1">          
+                         <Select
+                           value={profileData.personalInfo.currentcurrency || ""}
+                           onValueChange={(value) =>
+                             setProfileData((prev) => ({
+                               ...prev,
+                               personalInfo: {
+                                 ...prev.personalInfo,
+                                 currentcurrency: value, 
+                               },
+                             }))
+                           }                         
+                         >
+                           <SelectTrigger className="w-28 h-10 lg:h-11">
+                             <span>
+                               {profileData.personalInfo.currentcurrency
+                                 ? uniqueCurrencies.find(
+                                     (c) => String(c.id) === profileData.personalInfo.currentcurrency
+                                   )?.currency
+                                 : "Select currency"}
+                             </span>
+                           </SelectTrigger>
+
+                           <SelectContent>
+                             {uniqueCurrencies.map((curr) => (
+                               <SelectItem key={curr.currency} value={String(curr.id)}>
+                                 {curr.currency} - {curr.currency_name}
+                               </SelectItem>
+                             ))}
+                           </SelectContent>
+                         </Select>
                           <Input
                             id="expectedSalary"
                             type="number"
