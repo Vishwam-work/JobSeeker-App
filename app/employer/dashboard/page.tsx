@@ -10,6 +10,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import Pricing from "@/components/Pricing";
+
 import {
   Select,
   SelectContent,
@@ -1320,6 +1322,12 @@ export default function EmployerDashboard() {
     { id: "manage-jobs", label: "Manage Jobs", icon: Briefcase },
     { id: "candidates", label: "Candidates", icon: Users },
     // { id: 'analytics', label: 'Analytics', icon: TrendingUp }
+    {
+    id: "pricing",
+    label: "Pricing",
+    icon: DollarSign,
+    component: <Pricing />,
+  },
   ];
 
   const getWorkModeColor = (workMode) => {
@@ -3530,6 +3538,10 @@ export default function EmployerDashboard() {
           </div>
         )}
 
+        {activeTab === "pricing" && (
+        <Pricing />
+         )}
+         
         {/* Analytics Tab */}
         {activeTab === "analytics" && (
           <Card>
