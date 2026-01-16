@@ -1181,9 +1181,19 @@ useEffect(() => {
                               </div>
                               <div className="min-w-0 flex-1">
                                 <div className="flex items-center gap-2 mb-1">
-                                  <h3 className="text-lg md:text-xl font-semibold text-gray-900 hover:text-purple-600 cursor-pointer transition-colors">
-                                    {job.title}
+                                  <h3 className="text-lg md:text-xl font-semibold text-gray-900 hover:text-purple-600 transition-colors">
+                                    <a
+                                      href={`/job-details?job=${encodeURIComponent(
+                                        JSON.stringify(job)
+                                      )}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="hover:underline"
+                                    >
+                                      {job.title}
+                                    </a>
                                   </h3>
+
                                   {job.urgentHiring && (
                                     <Badge className="bg-red-100 text-red-800 text-xs">
                                       Urgent
