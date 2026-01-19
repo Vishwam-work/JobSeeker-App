@@ -1183,9 +1183,7 @@ useEffect(() => {
                                 <div className="flex items-center gap-2 mb-1">
                                   <h3 className="text-lg md:text-xl font-semibold text-gray-900 hover:text-purple-600 transition-colors">
                                     <a
-                                      href={`/job-details?job=${encodeURIComponent(
-                                        JSON.stringify(job)
-                                      )}`}
+                                      href={`/job-details?id=${job.id}`}
                                       target="_blank"
                                       rel="noopener noreferrer"
                                       className="hover:underline"
