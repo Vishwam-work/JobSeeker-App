@@ -136,7 +136,7 @@ export default function EmployerDashboard() {
   const [timeZone, setTimeZone] = useState("IST");
   const [time, setTime] = useState("");
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
-  
+  const [showResume, setShowResume] = useState(false);
 
 
 
@@ -3231,6 +3231,8 @@ export default function EmployerDashboard() {
                         </div>
                       )}
 
+                     
+
                     {selectedCandidate.certifications.length > 0 && (
                       <div>
                         <h3 className="font-semibold text-gray-900 mb-3">
@@ -3261,6 +3263,26 @@ export default function EmployerDashboard() {
                         </div>
                       </div>
                     )}
+
+                       <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowResume(!showResume)}
+                      >
+                        View Resume
+                      </Button>
+
+                      {showResume && selectedCandidate.resumeUrl && (
+                        <div className="mt-4 h-[500px] border rounded">
+                          <iframe
+                            src={`https://docs.google.com/gview?url=${encodeURIComponent(
+                              selectedCandidate.resumeUrl
+                            )}&embedded=true`}
+                            className="w-full h-full"
+                            title="Resume Preview"
+                          />
+                        </div>
+                      )}
 
                     {/* Action Buttons */}
                     <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t">
