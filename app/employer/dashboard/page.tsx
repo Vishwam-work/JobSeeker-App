@@ -807,7 +807,10 @@ export default function EmployerDashboard() {
     const nameMatch =
       c.name?.toLowerCase().startsWith(searchTerm.toLowerCase()) ||
       c.currentRole?.toLowerCase().startsWith(searchTerm.toLowerCase()) ||
-      c.appliedFor?.toLowerCase().startsWith(searchTerm.toLowerCase());
+      c.appliedFor?.toLowerCase().startsWith(searchTerm.toLowerCase()) ||
+      c.skills?.some((skill) =>
+      skill.toLowerCase().includes(searchTerm.toLowerCase())
+      );
 
     const statusMatch =
       statusFilter === "All" ||
