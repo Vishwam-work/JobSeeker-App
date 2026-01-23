@@ -11,6 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
 import { useSavedJobs } from "@/context/SavedJobsContext";
 import { toast } from "sonner";
+import { v4 as uuidv4 } from "uuid";
 
 import {
   Select,
@@ -512,9 +513,26 @@ const unsaveJob = async (jobId: number) => {
     setIsApplyModalOpen(true);
   };
 
-  const handleViewDetails = (job) => {
+  const handleViewDetails = async(job) => {
     setSelectedJob(job);
     setIsJobDetailOpen(true);
+    try {
+      const requestId = uuidv4(); 
+      const res = await fetch(`https://jobseeker-backend-jy1y.onrender.com/employeer/api/${job.id}/click/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          // Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ request_id: requestId }),
+      });
+
+        const response = await res.json();
+        console.log(response)
+
+    } catch (err) {
+      console.error("Error incrementing job views:", err);
+    }
   };
 
   const handleShare = (job) => {
