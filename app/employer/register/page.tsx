@@ -76,7 +76,7 @@ export default function EmployerRegister() {
   const [isOtpOpen,setIsOtpOpen] =useState(false);
   const [otp,setOtp] = useState("");
   const [IsOtpVerified,setIsOtpVerified] =useState(false);
-  const [IsRegDisabled,setIsRegDisabled] = useState(false);
+  const isRegDisabled = currentStep === 2 && !IsOtpVerified;
   const router = useRouter();
   const [email,setemail] = useState("");
   const [showText,setShowText] =useState(false)
@@ -223,20 +223,20 @@ export default function EmployerRegister() {
   };
 
   const handleNext = () => {
-    if (currentStep < 3) {
-      setCurrentStep(currentStep + 1);
-    }
-    if(currentStep == 1 && !IsOtpVerified){
-      setIsRegDisabled(true)  
-    }
+    
+      setCurrentStep(prev => Math.min(prev + 1, 3));
+
   };
 
   const handlePrevious = () => {
+    console.log("Current step before prev click : ",currentStep)
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
+      console.log("Current step after prev click with 1 : ",currentStep)
     }
     if(currentStep!=1){
-      setIsRegDisabled(false)
+     
+      console.log("Current step after prev click with 2 : ",currentStep)
     }
   };
 
@@ -369,6 +369,7 @@ export default function EmployerRegister() {
 
       setIsOtpVerified(true);
       setIsOtpOpen(false);
+      
       alert("OTP Verified Successfully!");
     } catch (err) {
       console.error(err);
@@ -1148,7 +1149,7 @@ export default function EmployerRegister() {
                       <Button
                         type="button"
                         onClick={handleNext}
-                        disabled= {IsRegDisabled}
+                        disabled={isRegDisabled}
                         className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 h-12 px-6 ml-auto"
                       >
                         Next
