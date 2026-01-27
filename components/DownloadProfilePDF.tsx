@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Download } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function DownloadProfilePDF(
   {
@@ -68,7 +69,7 @@ export default function DownloadProfilePDF(
       pdf.save('profile.pdf');
     } catch (err) {
       console.error(err);
-      alert('PDF download failed');
+      toast.warning('PDF download failed');
     } finally {
       onEnd(); 
       setLoading(false);

@@ -10,7 +10,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import Pricing from "@/components/Pricing";
+// import Pricing from "@/components/Pricing";
+import CandidatesPage from "@/app/employer/dashboard/candidate_listing/page";
 
 import {
   Select,
@@ -56,6 +57,7 @@ import {
   ChevronsUpDown,
   ChevronDown,
   Bell,
+  UserCircle,
 } from "lucide-react";
 import Link from "next/link";
 import { jwtDecode } from "jwt-decode";
@@ -1327,9 +1329,9 @@ export default function EmployerDashboard() {
     // { id: 'analytics', label: 'Analytics', icon: TrendingUp }
     {
     id: "pricing",
-    label: "Pricing",
-    icon: DollarSign,
-    component: <Pricing />,
+    label: "profiles",
+    icon: UserCircle,
+    component: <CandidatesPage />,
   },
   ];
 
@@ -3564,7 +3566,7 @@ export default function EmployerDashboard() {
         )}
 
         {activeTab === "pricing" && (
-        <Pricing />
+        <CandidatesPage/>
          )}
          
         {/* Analytics Tab */}
