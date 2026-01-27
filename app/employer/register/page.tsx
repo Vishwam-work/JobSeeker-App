@@ -219,7 +219,7 @@ export default function EmployerRegister() {
 
   const handleEmailChange = (value:string) => {
     setemail(value);
-    // console.log("Form Data:", formData);
+    console.log("Form Data:", formData);
   };
 
   const handleNext = () => {
@@ -272,7 +272,7 @@ export default function EmployerRegister() {
       agree_marketing: formData.agreeMarketing,
       password: formData.password,
       confirm_password: formData.confirmPassword,
-      email: formData.email,
+      email: email,
     };
     console.log("Payload:", payload);
     try {
