@@ -273,6 +273,7 @@ export default function EmployerRegister() {
       password: formData.password,
       confirm_password: formData.confirmPassword,
       email: email,
+      is_verified : true,
     };
     console.log("Payload:", payload);
     try {
