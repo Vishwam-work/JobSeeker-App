@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Phone, FileText, Mail } from "lucide-react";
+import { Phone, FileText, Mail, CheckSquare } from "lucide-react";
 
 interface Candidate {
   id: number;
@@ -24,6 +24,7 @@ export default function CandidatesPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [showFilters, setShowFilters] = useState(false);
+  const [viewedCandidateIds, setViewedCandidateIds] = useState<number[]>([]);
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(
     null
   );
@@ -42,7 +43,7 @@ export default function CandidatesPage() {
     )
       .then((res) => res.json())
       .then((data) => {
-        // console.log("Candidate data:", data);
+        console.log("Candidate data:", data);
         setCandidates(Array.isArray(data) ? data : []);
         setLoading(false);
       });
@@ -813,9 +814,18 @@ export default function CandidatesPage() {
                 {/* MAIN INFO */}
                 <div className="flex-1 flex flex-col gap-2">
                   <h3
-                    onClick={() => setSelectedCandidate(c)}
-                    className="font-semibold text-gray-900 cursor-pointer hover:text-blue-600"
+                    onClick={() => {
+                      setSelectedCandidate(c);
+
+                      setViewedCandidateIds((prev) =>
+                        prev.includes(c.id) ? prev : [...prev, c.id]
+                      );
+                    }}
+                    className="font-semibold text-gray-900 cursor-pointer hover:text-blue-600 flex items-center gap-2"
                   >
+                    {viewedCandidateIds.includes(c.id) && (
+                      <CheckSquare size={16} className="text-blue-600" />
+                    )}
                     {c.full_name}
                   </h3>
 
@@ -862,22 +872,19 @@ export default function CandidatesPage() {
                 <div className="flex md:flex-col items-center md:items-center justify-between md:justify-center gap-2 md:gap-3 md:w-52 w-full border-t md:border-t-0 md:border-l pt-3 md:pt-0 md:pl-4">
                   <img
                     src={
-                      c.profile_image ||
-                      `https://ui-avatars.com/api/?name=${c.full_name}`
+                      c.profile_image
+                        ? `https://jobseeker-backend-jy1y.onrender.com${c.profile_image}`
+                        : `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                            c.full_name
+                          )}`
                     }
-                    className="w-14 h-14 md:w-16 md:h-16 rounded-full object-cover"
+                    alt={c.full_name}
+                    className="w-14 h-14 md:w-16 md:h-16 rounded-full object-cover border"
                   />
 
                   <p className="text-xs text-gray-500 flex items-center gap-1">
                     <Mail size={14} /> {c.email}
                   </p>
-
-                  <a
-                    href={`tel:${c.phone}`}
-                    className="bg-blue-600 text-white text-xs md:text-sm py-1 px-2 rounded flex items-center justify-center gap-1"
-                  >
-                    <Phone size={14} /> Call
-                  </a>
 
                   {c.resume && (
                     <a
@@ -909,9 +916,6 @@ export default function CandidatesPage() {
   );
 }
 
-
-
-
 // Candidate Detail page
 
 function CandidateDetail({
@@ -936,10 +940,14 @@ function CandidateDetail({
         <div className="flex gap-4">
           <img
             src={
-              candidate.profile_image ||
-              `https://ui-avatars.com/api/?name=${candidate.full_name}`
+              candidate.profile_image
+                ? `https://jobseeker-backend-jy1y.onrender.com${candidate.profile_image}`
+                : `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                    candidate.full_name
+                  )}`
             }
-            className="w-20 h-20 rounded-full"
+            alt={candidate.full_name}
+            className="w-20 h-20 rounded-full object-cover border"
           />
 
           <div>
@@ -952,6 +960,41 @@ function CandidateDetail({
             </p>
           </div>
         </div>
+        <hr className="my-4" />
+
+        <h3 className="font-medium mb-2">Compensation</h3>
+
+        <div className="grid grid-cols-2 gap-3 text-sm">
+          <p>
+            <b>Current:</b> {candidate.current_salary}
+          </p>
+          <p>
+            <b>Expected:</b> {candidate.expected_salary}
+          </p>
+          <p>
+            <b>Notice Period:</b> {candidate.notice_period}
+          </p>
+        </div>
+        {candidate.educations?.length > 0 && (
+          <>
+            <hr className="my-4" />
+            <h3 className="font-medium mb-2">Education</h3>
+
+            {candidate.educations.map((e, i) => (
+              <div key={i} className="text-sm mb-3">
+                <p className="font-medium">
+                  {e.degree} {e.field && `(${e.field})`}
+                </p>
+
+                <p className="text-gray-600">{e.institution}</p>
+
+                <p className="text-gray-500 text-xs">
+                  {e.score_type?.toUpperCase()}: {e.percentage} • Year: {e.year}
+                </p>
+              </div>
+            ))}
+          </>
+        )}
 
         <hr className="my-4" />
 
@@ -966,6 +1009,37 @@ function CandidateDetail({
             </span>
           ))}
         </div>
+
+        {candidate.experiences?.length > 0 && (
+          <>
+            <hr className="my-4" />
+            <h3 className="font-medium mb-2">Experience</h3>
+
+            {candidate.experiences.map((ex, i) => (
+              <div key={i} className="text-sm mb-3">
+                <p className="font-medium">{ex.designation}</p>
+                <p className="text-gray-600">{ex.company}</p>
+                <p className="text-gray-500 text-xs">
+                  {ex.start_date} – {ex.end_date || "Present"}
+                </p>
+              </div>
+            ))}
+          </>
+        )}
+        {candidate.certifications?.length > 0 && (
+          <>
+            <hr className="my-4" />
+            <h3 className="font-medium mb-2">Certifications</h3>
+
+            {candidate.certifications.map((c, i) => (
+              <div key={i} className="text-sm mb-2">
+                <p className="font-medium">{c.name}</p>
+                <p className="text-gray-600">{c.issuer}</p>
+                <p className="text-gray-500 text-xs">Year: {c.year}</p>
+              </div>
+            ))}
+          </>
+        )}
 
         <hr className="my-4" />
 
@@ -994,7 +1068,7 @@ function CandidateDetail({
 
         {candidates
           .filter((c) => c.id !== candidate.id)
-          .slice(0, 4)
+          .slice(0, 10)
           .map((c) => (
             <div
               key={c.id}
