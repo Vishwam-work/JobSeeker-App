@@ -49,6 +49,62 @@ export default function CandidatesPage() {
       });
   }, []);
 
+ const filteredCandidates = candidates.filter((c) => {
+  const q = search.trim().toLowerCase();
+  if (!q) return true;
+
+  const matches = (value: any) =>
+    value !== null &&
+    value !== undefined &&
+    String(value).toLowerCase().includes(q);
+
+  return (
+    // basic info
+    matches(c.full_name) ||
+    matches(c.email) ||
+    matches(c.current_role) ||
+    matches(c.current_company) ||
+    matches(c.experience) ||
+    matches(c.current_salary) ||
+    matches(c.expected_salary) ||
+    matches(c.notice_period) ||
+
+    // location
+    matches(c.city?.name) ||
+    matches(c.state?.name) ||
+    matches(c.country?.name) ||
+
+    // skills
+    c.skills?.some((s) => matches(s.name)) ||
+
+    // certifications  
+    c.certifications?.some(
+      (cert) =>
+        matches(cert.name) ||
+        matches(cert.issuer) ||
+        matches(cert.year)
+    ) ||
+
+    // education
+    c.educations?.some(
+      (e) =>
+        matches(e.degree) ||
+        matches(e.field) ||
+        matches(e.institution) ||
+        matches(e.year)
+    ) ||
+
+    // experience details
+    c.experiences?.some(
+      (ex) =>
+        matches(ex.designation) ||
+        matches(ex.company)
+    )
+  );
+});
+
+
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center text-gray-500">
@@ -803,7 +859,7 @@ export default function CandidatesPage() {
 
         {!selectedCandidate ? (
           <main className="col-span-9 space-y-4">
-            {candidates.map((c) => (
+            {filteredCandidates.map((c) => (
               <div
                 key={c.id}
                 className="bg-white rounded-xl shadow-sm p-4 flex flex-col md:flex-row gap-4"
