@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 // import Pricing from "@/components/Pricing";
 import CandidatesPage from "@/app/employer/dashboard/candidate_listing/page";
-
+import QuotaUsagePage from "@/app/employer/dashboard/quota-usage/page";
 import {
   Select,
   SelectContent,
@@ -58,6 +58,7 @@ import {
   ChevronDown,
   Bell,
   UserCircle,
+  BarChart3,
 } from "lucide-react";
 import Link from "next/link";
 import { jwtDecode } from "jwt-decode";
@@ -1328,10 +1329,16 @@ export default function EmployerDashboard() {
     { id: "candidates", label: "Candidates", icon: Users },
     // { id: 'analytics', label: 'Analytics', icon: TrendingUp }
     {
-    id: "pricing",
+    id: "profiles",
     label: "profiles",
     icon: UserCircle,
     component: <CandidatesPage />,
+  },
+    {
+    id: "quota",
+    label: "Quota Usage",
+    icon: BarChart3,
+    component: <QuotaUsagePage />,
   },
   ];
 
@@ -3565,10 +3572,12 @@ export default function EmployerDashboard() {
           </div>
         )}
 
-        {activeTab === "pricing" && (
+        {activeTab === "profiles" && (
         <CandidatesPage/>
          )}
-         
+         {activeTab === "quota" && (
+        <QuotaUsagePage />
+         )}
         {/* Analytics Tab */}
         {activeTab === "analytics" && (
           <Card>

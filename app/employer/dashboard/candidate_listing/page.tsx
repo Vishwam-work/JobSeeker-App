@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Phone, FileText, Mail, CheckSquare } from "lucide-react";
-
+import Highlighter from "react-highlight-words";
 interface Candidate {
   id: number;
   full_name: string;
@@ -25,9 +25,46 @@ export default function CandidatesPage() {
   const [search, setSearch] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [viewedCandidateIds, setViewedCandidateIds] = useState<number[]>([]);
+  const [selectedCities, setSelectedCities] = useState<string[]>([]);
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(
     null
   );
+  const [filters, setFilters] = useState({
+    hideProfiles: false,
+    premiumOnly: false,
+    locations: [] as string[],
+    minExperience: "",
+    maxExperience: "",
+    minSalary: "",
+    maxSalary: "",
+    designation: "",
+    department: "",
+    industry: "",
+    noticePeriod: [] as string[],
+    gender: "",
+    minAge: "",
+    maxAge: "",
+  });
+
+  const clearFilters = () => {
+    setFilters({
+      hideProfiles: false,
+      premiumOnly: false,
+      locations: [],
+      minExperience: "",
+      maxExperience: "",
+      minSalary: "",
+      maxSalary: "",
+      designation: "",
+      department: "",
+      industry: "",
+      noticePeriod: [],
+      gender: "",
+      minAge: "",
+      maxAge: "",
+    });
+  };
+  const cleanSearch = search.trim().replace(/\s+/g, " ");
 
   useEffect(() => {
     const token = localStorage.getItem("auth_token");
@@ -49,61 +86,67 @@ export default function CandidatesPage() {
       });
   }, []);
 
- const filteredCandidates = candidates.filter((c) => {
-  const q = search.trim().toLowerCase();
-  if (!q) return true;
+  const filteredCandidates = candidates.filter((c) => {
+    const q = search.trim().toLowerCase();
+    if (!q) return true;
 
-  const matches = (value: any) =>
-    value !== null &&
-    value !== undefined &&
-    String(value).toLowerCase().includes(q);
+    const matches = (value: any) =>
+      value !== null &&
+      value !== undefined &&
+      String(value).toLowerCase().includes(q);
 
-  return (
-    // basic info
-    matches(c.full_name) ||
-    matches(c.email) ||
-    matches(c.current_role) ||
-    matches(c.current_company) ||
-    matches(c.experience) ||
-    matches(c.current_salary) ||
-    matches(c.expected_salary) ||
-    matches(c.notice_period) ||
+    return (
+      // basic info
+      matches(c.full_name) ||
+      matches(c.email) ||
+      matches(c.current_role) ||
+      matches(c.current_company) ||
+      matches(c.experience) ||
+      matches(c.current_salary) ||
+      matches(c.expected_salary) ||
+      matches(c.notice_period) ||
+      // location
+      matches(c.city?.name) ||
+      matches(c.state?.name) ||
+      matches(c.country?.name) ||
+      // skills
+      c.skills?.some((s) => matches(s.name)) ||
+      // certifications
+      c.certifications?.some(
+        (cert) =>
+          matches(cert.name) || matches(cert.issuer) || matches(cert.year)
+      ) ||
+      // education
+      c.educations?.some(
+        (e) =>
+          matches(e.degree) ||
+          matches(e.field) ||
+          matches(e.institution) ||
+          matches(e.year)
+      ) ||
+      // experience details
+      c.experiences?.some(
+        (ex) => matches(ex.designation) || matches(ex.company)
+      )
+    );
+  });
 
-    // location
-    matches(c.city?.name) ||
-    matches(c.state?.name) ||
-    matches(c.country?.name) ||
+  type HighlightProps = {
+    text?: string;
+  };
 
-    // skills
-    c.skills?.some((s) => matches(s.name)) ||
+  const Highlight = ({ text = "" }: HighlightProps) => {
+    if (!cleanSearch) return <>{text}</>;
 
-    // certifications  
-    c.certifications?.some(
-      (cert) =>
-        matches(cert.name) ||
-        matches(cert.issuer) ||
-        matches(cert.year)
-    ) ||
-
-    // education
-    c.educations?.some(
-      (e) =>
-        matches(e.degree) ||
-        matches(e.field) ||
-        matches(e.institution) ||
-        matches(e.year)
-    ) ||
-
-    // experience details
-    c.experiences?.some(
-      (ex) =>
-        matches(ex.designation) ||
-        matches(ex.company)
-    )
-  );
-});
-
-
+    return (
+      <Highlighter
+        highlightClassName="bg-yellow-200 px-1 rounded font-semibold"
+        searchWords={cleanSearch.split(" ")}
+        autoEscape={true}
+        textToHighlight={String(text)}
+      />
+    );
+  };
 
   if (loading) {
     return (
@@ -147,22 +190,28 @@ export default function CandidatesPage() {
       <div className="max-w-7xl mx-auto grid grid-cols-12 gap-4 p-4">
         {/* LEFT FILTERS */}
         <aside className="hidden md:block col-span-3 bg-white rounded-xl p-4 shadow-sm">
-          {/* Hide Profiles */}
-          <label className="flex items-center gap-2 font-medium mb-4">
-            <input type="checkbox" />
-            Hide Profiles
-          </label>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold text-sm">Filters</h3>
+            <button
+              onClick={clearFilters}
+              className="text-xs text-blue-600 hover:underline"
+            >
+              Clear all
+            </button>
+          </div>
 
           <hr className="mb-4" />
-
-          {/* Filters Title */}
-          <div className="flex items-center gap-2 font-semibold mb-4">
-            <span className="material-icons text-gray-500">tune</span>
-            Filters
-            <span className="text-xs bg-orange-500 text-white px-2 rounded">
-              New
-            </span>
-          </div>
+          {/* Hide Profiles */}
+          <label className="flex items-center gap-2 font-medium mb-4">
+            <input
+              type="checkbox"
+              checked={filters.premiumOnly}
+              onChange={(e) =>
+                setFilters({ ...filters, hideProfiles: e.target.checked })
+              }
+            />
+            Hide Profiles
+          </label>
 
           <hr className="mb-4" />
 
@@ -200,6 +249,13 @@ export default function CandidatesPage() {
 
             <input
               placeholder="Search location"
+              value={filters.locationSearch}
+              onChange={(e) => {
+                setFilters({
+                  ...filters,
+                  locationSearch: e.target.value,
+                });
+              }}
               className="w-full border rounded px-2 py-1 mb-3 text-sm"
             />
 
@@ -214,7 +270,18 @@ export default function CandidatesPage() {
                 className="flex justify-between items-center mb-2"
               >
                 <span className="flex gap-2">
-                  <input type="checkbox" />
+                  <input
+                    type="checkbox"
+                    checked={filters.locations.includes(city)}
+                    onChange={() =>
+                      setFilters((prev) => ({
+                        ...prev,
+                        locations: prev.locations.includes(city)
+                          ? prev.locations.filter((c) => c !== city)
+                          : [...prev.locations, city],
+                      }))
+                    }
+                  />
                   {city}
                 </span>
                 <span className="text-gray-400">{count}</span>
@@ -238,7 +305,13 @@ export default function CandidatesPage() {
             <div className="h-8 bg-gray-100 rounded mb-3"></div>
 
             <div className="flex items-center gap-2">
-              <select className="w-full border rounded px-2 py-1 text-sm">
+              <select
+                value={filters.minExperience}
+                onChange={(e) =>
+                  setFilters({ ...filters, minExperience: e.target.value })
+                }
+                className="w-full border rounded px-2 py-1 text-sm"
+              >
                 <option>Select</option>
                 <option>0</option>
                 <option>1</option>
@@ -247,7 +320,13 @@ export default function CandidatesPage() {
 
               <span>to</span>
 
-              <select className="w-full border rounded px-2 py-1 text-sm">
+              <select
+                value={filters.maxExperience}
+                onChange={(e) =>
+                  setFilters({ ...filters, maxExperience: e.target.value })
+                }
+                className="w-full border rounded px-2 py-1 text-sm"
+              >
                 <option>Select</option>
                 <option>5</option>
                 <option>10</option>
@@ -419,10 +498,20 @@ export default function CandidatesPage() {
             </summary>
 
             <div className="flex gap-3">
-              <button className="border rounded-full px-4 py-1 text-sm hover:bg-gray-50">
+              <button
+                onClick={() => setFilters({ ...filters, gender: "Male" })}
+                className={`border rounded-full px-4 py-1 text-sm ${
+                  filters.gender === "Male" ? "bg-blue-100" : ""
+                }`}
+              >
                 Male
               </button>
-              <button className="border rounded-full px-4 py-1 text-sm hover:bg-gray-50">
+              <button
+                onClick={() => setFilters({ ...filters, gender: "Female" })}
+                className={`border rounded-full px-4 py-1 text-sm ${
+                  filters.gender === "Female" ? "bg-blue-100" : ""
+                }`}
+              >
                 Female
               </button>
             </div>
@@ -882,27 +971,35 @@ export default function CandidatesPage() {
                     {viewedCandidateIds.includes(c.id) && (
                       <CheckSquare size={16} className="text-blue-600" />
                     )}
-                    {c.full_name}
+                    <h3 className="font-semibold text-gray-900">
+                      <Highlight text={c.full_name} />
+                    </h3>
                   </h3>
 
                   {/* Experience, salary, location */}
                   <div className="text-xs md:text-sm text-gray-600 flex flex-wrap gap-2 md:gap-3">
-                    <span>{c.experience}</span>
-                    <span>{c.current_salary}</span>
+                    <span>
+                      <Highlight text={c.experience} />
+                    </span>
+                    <span>
+                      <Highlight text={c.current_salary} />
+                    </span>
                     {c.expected_salary && (
-                      <span className="text-green-600">
-                        Expected: {c.expected_salary}
+                      <span>
+                        Expected:
+                        <Highlight text={c.expected_salary} />
                       </span>
                     )}
                     <span>
-                      {c.city?.name || "—"}, {c.state?.name || ""}
+                      <Highlight text={c.city?.name} />,{" "}
+                      <Highlight text={c.state?.name} />
                     </span>
                   </div>
 
                   {/* Notice period */}
                   {c.notice_period && (
                     <p className="text-xs text-gray-500">
-                      Notice period: {c.notice_period}
+                      Notice period: <Highlight text={c.notice_period} />
                     </p>
                   )}
 
@@ -913,7 +1010,7 @@ export default function CandidatesPage() {
                         key={i}
                         className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded"
                       >
-                        {s.name}
+                        <Highlight text={s.name} />
                       </span>
                     ))}
                   </div>
@@ -939,7 +1036,7 @@ export default function CandidatesPage() {
                   />
 
                   <p className="text-xs text-gray-500 flex items-center gap-1">
-                    <Mail size={14} /> {c.email}
+                    <Mail size={14} /> <Highlight text={c.email} />
                   </p>
 
                   {c.resume && (
@@ -962,6 +1059,7 @@ export default function CandidatesPage() {
             <CandidateDetail
               candidate={selectedCandidate}
               candidates={candidates}
+              search={search}
               onBack={() => setSelectedCandidate(null)}
               onSelect={setSelectedCandidate}
             />
@@ -977,14 +1075,31 @@ export default function CandidatesPage() {
 function CandidateDetail({
   candidate,
   candidates,
+  search,
   onBack,
   onSelect,
 }: {
   candidate: Candidate;
   candidates: Candidate[];
+  search: string;
   onBack: () => void;
   onSelect: (c: Candidate) => void;
 }) {
+  const cleanSearch = search.trim().replace(/\s+/g, " ");
+
+  const HighlightText = ({ text = "" }: { text?: string }) => {
+    if (!cleanSearch) return <>{text}</>;
+
+    return (
+      <Highlighter
+        searchWords={cleanSearch.split(" ")}
+        autoEscape={true}
+        textToHighlight={String(text)}
+        highlightClassName="bg-yellow-200 px-1 rounded font-semibold"
+      />
+    );
+  };
+
   return (
     <div className="grid grid-cols-12 gap-4">
       {/* LEFT PROFILE */}
@@ -1007,12 +1122,17 @@ function CandidateDetail({
           />
 
           <div>
-            <h2 className="text-xl font-semibold">{candidate.full_name}</h2>
+            <h2 className="text-xl font-semibold">
+              {" "}
+              <HighlightText text={candidate.full_name} />
+            </h2>
             <p className="text-sm text-gray-600">
-              {candidate.experience} • {candidate.current_salary}
+              <HighlightText text={candidate.experience} /> •{" "}
+              <HighlightText text={candidate.current_salary} />
             </p>
             <p className="text-sm text-gray-500">
-              {candidate.city?.name}, {candidate.state?.name}
+              <HighlightText text={candidate.city?.name} />,{" "}
+              <HighlightText text={candidate.state?.name} />
             </p>
           </div>
         </div>
@@ -1022,13 +1142,14 @@ function CandidateDetail({
 
         <div className="grid grid-cols-2 gap-3 text-sm">
           <p>
-            <b>Current:</b> {candidate.current_salary}
+            <b>Current:</b> <HighlightText text={candidate.current_salary} />
           </p>
           <p>
-            <b>Expected:</b> {candidate.expected_salary}
+            <b>Expected:</b> <HighlightText text={candidate.expected_salary} />
           </p>
           <p>
-            <b>Notice Period:</b> {candidate.notice_period}
+            <b>Notice Period:</b>{" "}
+            <HighlightText text={candidate.notice_period} />
           </p>
         </div>
         {candidate.educations?.length > 0 && (
@@ -1039,13 +1160,17 @@ function CandidateDetail({
             {candidate.educations.map((e, i) => (
               <div key={i} className="text-sm mb-3">
                 <p className="font-medium">
-                  {e.degree} {e.field && `(${e.field})`}
+                  <HighlightText text={e.degree} /> {e.field && `(${e.field})`}
                 </p>
 
-                <p className="text-gray-600">{e.institution}</p>
+                <p className="text-gray-600">
+                  <HighlightText text={e.institution} />
+                </p>
 
                 <p className="text-gray-500 text-xs">
-                  {e.score_type?.toUpperCase()}: {e.percentage} • Year: {e.year}
+                  <HighlightText text={e.score_type?.toUpperCase()} />:{" "}
+                  <HighlightText text={String(e.percentage)} /> • Year:{" "}
+                  <HighlightText text={String(e.year)} />
                 </p>
               </div>
             ))}
@@ -1061,7 +1186,7 @@ function CandidateDetail({
               key={i}
               className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded"
             >
-              {s.name}
+              <HighlightText text={s.name} />
             </span>
           ))}
         </div>
@@ -1073,10 +1198,19 @@ function CandidateDetail({
 
             {candidate.experiences.map((ex, i) => (
               <div key={i} className="text-sm mb-3">
-                <p className="font-medium">{ex.designation}</p>
-                <p className="text-gray-600">{ex.company}</p>
+                <p className="font-medium">
+                  {" "}
+                  <HighlightText text={ex.designation} />
+                </p>
+                <p className="text-gray-600">
+                  {" "}
+                  <HighlightText text={ex.company} />
+                </p>
                 <p className="text-gray-500 text-xs">
-                  {ex.start_date} – {ex.end_date || "Present"}
+                  <p className="text-gray-500 text-xs">
+                    <HighlightText text={ex.start_date} /> –{" "}
+                    <HighlightText text={ex.end_date || "Present"} />
+                  </p>
                 </p>
               </div>
             ))}
@@ -1089,9 +1223,16 @@ function CandidateDetail({
 
             {candidate.certifications.map((c, i) => (
               <div key={i} className="text-sm mb-2">
-                <p className="font-medium">{c.name}</p>
-                <p className="text-gray-600">{c.issuer}</p>
-                <p className="text-gray-500 text-xs">Year: {c.year}</p>
+                <p className="font-medium">
+                  <HighlightText text={c.name} />
+                </p>
+                <p className="text-gray-600">
+                  <HighlightText text={c.issuer} />
+                </p>
+                <p className="text-gray-500 text-xs">
+                  Year:
+                  <HighlightText text={String(c.year)} />
+                </p>
               </div>
             ))}
           </>
@@ -1101,10 +1242,11 @@ function CandidateDetail({
 
         <h3 className="font-medium mb-2">Contact</h3>
         <p className="flex items-center gap-2 text-sm">
-          <Mail size={14} /> {candidate.email}
+          <Mail size={14} />
+          <HighlightText text={candidate.email} />
         </p>
         <p className="flex items-center gap-2 text-sm">
-          <Phone size={14} /> {candidate.phone}
+          <Phone size={14} /> <HighlightText text={candidate.phone} />
         </p>
 
         {candidate.resume && (
@@ -1131,7 +1273,7 @@ function CandidateDetail({
               onClick={() => onSelect(c)}
               className="border-b py-2 text-sm cursor-pointer hover:text-blue-600"
             >
-              {c.full_name}
+              <HighlightText text={c.full_name} />
             </div>
           ))}
       </div>
