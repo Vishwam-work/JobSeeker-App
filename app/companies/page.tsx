@@ -22,7 +22,7 @@ export default function CompaniesPage() {
         const token = localStorage.getItem("auth_token");
 
         const res = await fetch(
-          "https://jobseeker-backend-jy1y.onrender.com/employeer/api/companies/",
+          "http://127.0.0.1:8010/employeer/api/companies/",
           {
             headers: {
               "Content-Type": "application/json",

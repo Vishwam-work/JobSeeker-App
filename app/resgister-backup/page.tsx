@@ -388,7 +388,7 @@ export default function RegistrationVerificationPage() {
       className="w-full bg-indigo-600 text-white py-3 rounded-xl"
       onClick={async () => {
         try {
-          const res = await fetch("https://jobseeker-backend-jy1y.onrender.com/api/verify-otp/", {
+          const res = await fetch("http://127.0.0.1:8010/api/verify-otp/", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email: formData.email, otp }),
