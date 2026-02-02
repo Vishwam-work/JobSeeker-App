@@ -10,8 +10,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import Pricing from "@/components/Pricing";
-
+// import Pricing from "@/components/Pricing";
+import CandidatesPage from "@/app/employer/dashboard/candidate_listing/page";
+import QuotaUsagePage from "@/app/employer/dashboard/quota-usage/page";
 import {
   Select,
   SelectContent,
@@ -56,6 +57,8 @@ import {
   ChevronsUpDown,
   ChevronDown,
   Bell,
+  UserCircle,
+  BarChart3,
 } from "lucide-react";
 import Link from "next/link";
 import { jwtDecode } from "jwt-decode";
@@ -136,7 +139,7 @@ export default function EmployerDashboard() {
   const [timeZone, setTimeZone] = useState("IST");
   const [time, setTime] = useState("");
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
-  
+  const [showResume, setShowResume] = useState(false);
 
 
 
@@ -807,7 +810,10 @@ export default function EmployerDashboard() {
     const nameMatch =
       c.name?.toLowerCase().startsWith(searchTerm.toLowerCase()) ||
       c.currentRole?.toLowerCase().startsWith(searchTerm.toLowerCase()) ||
-      c.appliedFor?.toLowerCase().startsWith(searchTerm.toLowerCase());
+      c.appliedFor?.toLowerCase().startsWith(searchTerm.toLowerCase()) ||
+      c.skills?.some((skill) =>
+      skill.toLowerCase().includes(searchTerm.toLowerCase())
+      );
 
     const statusMatch =
       statusFilter === "All" ||
@@ -1323,10 +1329,16 @@ export default function EmployerDashboard() {
     { id: "candidates", label: "Candidates", icon: Users },
     // { id: 'analytics', label: 'Analytics', icon: TrendingUp }
     {
-    id: "pricing",
-    label: "Pricing",
-    icon: DollarSign,
-    component: <Pricing />,
+    id: "profiles",
+    label: "profiles",
+    icon: UserCircle,
+    component: <CandidatesPage />,
+  },
+    {
+    id: "quota",
+    label: "Quota Usage",
+    icon: BarChart3,
+    component: <QuotaUsagePage />,
   },
   ];
 
@@ -3231,6 +3243,8 @@ export default function EmployerDashboard() {
                         </div>
                       )}
 
+                     
+
                     {selectedCandidate.certifications.length > 0 && (
                       <div>
                         <h3 className="font-semibold text-gray-900 mb-3">
@@ -3261,6 +3275,26 @@ export default function EmployerDashboard() {
                         </div>
                       </div>
                     )}
+
+                       <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowResume(!showResume)}
+                      >
+                        View Resume
+                      </Button>
+
+                      {showResume && selectedCandidate.resumeUrl && (
+                        <div className="mt-4 h-[500px] border rounded">
+                          <iframe
+                            src={`https://docs.google.com/gview?url=${encodeURIComponent(
+                              selectedCandidate.resumeUrl
+                            )}&embedded=true`}
+                            className="w-full h-full"
+                            title="Resume Preview"
+                          />
+                        </div>
+                      )}
 
                     {/* Action Buttons */}
                     <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t">
@@ -3538,10 +3572,12 @@ export default function EmployerDashboard() {
           </div>
         )}
 
-        {activeTab === "pricing" && (
-        <Pricing />
+        {activeTab === "profiles" && (
+        <CandidatesPage/>
          )}
-         
+         {activeTab === "quota" && (
+        <QuotaUsagePage />
+         )}
         {/* Analytics Tab */}
         {activeTab === "analytics" && (
           <Card>

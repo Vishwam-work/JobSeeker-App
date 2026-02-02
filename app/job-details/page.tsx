@@ -15,6 +15,9 @@ import {
   Share2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 export default function JobDetailsPage() {
   const searchParams = useSearchParams();
   const jobId = searchParams.get("id");
@@ -58,11 +61,13 @@ export default function JobDetailsPage() {
       });
     } else {
       navigator.clipboard.writeText(window.location.href);
-      alert("Job link copied to clipboard");
+      toast.success("Job link copied to clipboard");
     }
   };
 
   return (
+    <div>
+      <Header />
     <div className="max-w-4xl mx-auto p-6 border border-gray-200 rounded-lg shadow-sm">
       <>
         {/* Job Title */}
@@ -197,6 +202,9 @@ export default function JobDetailsPage() {
           </div>
         </div>
       </>
+    
+    </div>
+    <Footer />
     </div>
   );
 }
