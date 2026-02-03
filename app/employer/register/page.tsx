@@ -367,15 +367,15 @@ export default function EmployerRegister() {
 
       const data = await res.json();
       if (!res.ok) {
-        alert(data.error || "Failed to send OTP");
+        toast.error(data.error || "Failed to send OTP");
         return;
       }
 
       setIsOtpOpen(true);
-      alert("OTP Sent Successfully");
+      toast.success("OTP Sent Successfully");
     } catch (error) {
       console.error(error);
-      alert("Something went wrong");
+      toast.error("Something went wrong");
     }
   };
 
@@ -393,14 +393,13 @@ export default function EmployerRegister() {
       const data = await res.json();
       console.log(data)
       if (!res.ok) {
-        alert(data.error || "Invalid OTP");
+        toast.error(data.error || "Invalid OTP");
         return;
       }
 
       setIsOtpVerified(true);
       setIsOtpOpen(false);
-      
-      alert("OTP Verified Successfully!");
+      toast.success("OTP Verified Successfully!");
     } catch (err) {
       console.error(err);
     }
