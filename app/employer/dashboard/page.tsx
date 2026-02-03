@@ -2239,7 +2239,7 @@ export default function EmployerDashboard() {
 
                             <div className="flex items-center text-green-600">
                               <Eye className="w-4 h-4 mr-1" />
-                              <span>{job.views} Views</span>
+                              <span>{job.apply_clicks} Views</span>
                             </div>
                           </div>
                         </div>

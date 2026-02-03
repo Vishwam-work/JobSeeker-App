@@ -59,6 +59,11 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
+
+
+const OTP_EXPIRY_SECONDS = 60;
+
+
 export default function EmployerRegister() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -76,7 +81,7 @@ export default function EmployerRegister() {
   const [isOtpOpen,setIsOtpOpen] =useState(false);
   const [otp,setOtp] = useState("");
   const [IsOtpVerified,setIsOtpVerified] =useState(false);
-  const [IsRegDisabled,setIsRegDisabled] = useState(false);
+  const isRegDisabled = currentStep === 2 && !IsOtpVerified;
   const router = useRouter();
   const [email,setemail] = useState("");
   const [showText,setShowText] =useState(false)
@@ -176,7 +181,31 @@ export default function EmployerRegister() {
   const filteredCountries = countries.filter((c) =>
     c.name.toLowerCase().includes(countrySearch.toLowerCase())
   );
+  const handleResendOTP = async() => {
+    const response =  await handlesendotp()
+    setTimeLeft(OTP_EXPIRY_SECONDS);
+  };
 
+  const [timeLeft, setTimeLeft] = useState(OTP_EXPIRY_SECONDS);
+
+  useEffect(() => {
+    if (!isOtpOpen) return;
+  
+    setTimeLeft(OTP_EXPIRY_SECONDS);
+  
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  
+    return () => clearInterval(timer);
+  }, [isOtpOpen]);
+  
   // Fetch the Data from the MASTER DB
   useEffect(() => {
     fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/countries/")
@@ -219,24 +248,24 @@ export default function EmployerRegister() {
 
   const handleEmailChange = (value:string) => {
     setemail(value);
-    // console.log("Form Data:", formData);
+    console.log("Form Data:", formData);
   };
 
   const handleNext = () => {
-    if (currentStep < 3) {
-      setCurrentStep(currentStep + 1);
-    }
-    if(currentStep == 1 && !IsOtpVerified){
-      setIsRegDisabled(true)  
-    }
+    
+      setCurrentStep(prev => Math.min(prev + 1, 3));
+
   };
 
   const handlePrevious = () => {
+    console.log("Current step before prev click : ",currentStep)
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
+      console.log("Current step after prev click with 1 : ",currentStep)
     }
     if(currentStep!=1){
-      setIsRegDisabled(false)
+     
+      console.log("Current step after prev click with 2 : ",currentStep)
     }
   };
 
@@ -272,7 +301,8 @@ export default function EmployerRegister() {
       agree_marketing: formData.agreeMarketing,
       password: formData.password,
       confirm_password: formData.confirmPassword,
-      email: formData.email,
+      email: email,
+      is_verified : true,
     };
     console.log("Payload:", payload);
     try {
@@ -1148,7 +1178,7 @@ export default function EmployerRegister() {
                       <Button
                         type="button"
                         onClick={handleNext}
-                        disabled= {IsRegDisabled}
+                        disabled={isRegDisabled}
                         className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 h-12 px-6 ml-auto"
                       >
                         Next
@@ -1177,28 +1207,52 @@ export default function EmployerRegister() {
           </div>
         </div>
       </div>
-      <Dialog open={isOtpOpen} onOpenChange={setIsOtpOpen}>
-        <DialogContent>
-          <div className="text-center">
-            <h1 className="text-xl font-bold mb-4">Enter OTP</h1>
+      import { useEffect, useState } from "react";
 
-            <InputOTP maxLength={6} value={otp} onChange={setOtp}>
-              <InputOTPGroup>
-                {[0, 1, 2, 3, 4, 5].map((i) => (
-                  <InputOTPSlot key={i} index={i} />
-                ))}
-              </InputOTPGroup>
-            </InputOTP>
+const OTP_EXPIRY_SECONDS = 60; // change as needed
 
-            <Button
-              className="w-full mt-4 bg-indigo-600 text-white"
-              onClick={handleVerifyOTP}
-            >
-              Verify
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+<Dialog open={isOtpOpen} onOpenChange={setIsOtpOpen}>
+  <DialogContent>
+    <div className="text-center">
+      <h1 className="text-xl font-bold mb-4">Enter OTP</h1>
+
+      <InputOTP maxLength={6} value={otp} onChange={setOtp}>
+        <InputOTPGroup>
+          {[0, 1, 2, 3, 4, 5].map((i) => (
+            <InputOTPSlot key={i} index={i} />
+          ))}
+        </InputOTPGroup>
+      </InputOTP>
+
+      <Button
+        className="w-full mt-4 bg-indigo-600 text-white"
+        onClick={handleVerifyOTP}
+      >
+        Verify
+      </Button>
+
+      {/* Footer */}
+      <div className="mt-4 text-sm text-gray-600">
+        {timeLeft > 0 ? (
+          <p>
+            Resend OTP in{" "}
+            <span className="font-semibold text-indigo-600">
+              {timeLeft}s
+            </span>
+          </p>
+        ) : (
+          <button
+            onClick={handleResendOTP}
+            className="text-indigo-600 font-semibold hover:underline"
+          >
+            Resend OTP
+          </button>
+        )}
+      </div>
+    </div>
+  </DialogContent>
+</Dialog>
+
     </div>
   );
 }
