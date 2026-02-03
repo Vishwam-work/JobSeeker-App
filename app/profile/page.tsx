@@ -498,7 +498,7 @@ const getUserKey = () => {
         }
 
         const res = await fetch(
-          "http://127.0.0.1:8010/master/api/majors/",
+          "https://jobseeker-backend-jy1y.onrender.com/master/api/majors/",
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -528,7 +528,7 @@ const getUserKey = () => {
 
       try {
         const res = await fetch(
-          "http://127.0.0.1:8010/api/profile/",
+          "https://jobseeker-backend-jy1y.onrender.com/api/profile/",
           {
             method: "GET",
             headers: {
@@ -596,7 +596,7 @@ const getUserKey = () => {
 
       try {
         const res = await fetch(
-          "http://127.0.0.1:8010/api/saved-jobs-all/",
+          "https://jobseeker-backend-jy1y.onrender.com/api/saved-jobs-all/",
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -618,7 +618,7 @@ const getUserKey = () => {
   }, []);
 
   useEffect(() => {
-    fetch("http://127.0.0.1:8010/master/api/currencies/")
+    fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/currencies/")
       .then((res) => res.json())
       .then((data) => {
         console.log("Currency data:", data);
@@ -626,7 +626,7 @@ const getUserKey = () => {
       });
   }, []);
   useEffect(() => {
-    fetch("http://127.0.0.1:8010/master/api/countries/")
+    fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/countries/")
       .then((res) => res.json())
       .then((data) => {
         console.log("Country data:", data);
@@ -638,7 +638,7 @@ const getUserKey = () => {
   useEffect(() => {
     if (profileData.personalInfo.countryId) {
       fetch(
-        `http://127.0.0.1:8010/master/api/states/?country_id=${profileData.personalInfo.countryId}`
+        `https://jobseeker-backend-jy1y.onrender.com/master/api/states/?country_id=${profileData.personalInfo.countryId}`
       )
         .then((res) => res.json())
         .then((data) => {
@@ -651,7 +651,7 @@ const getUserKey = () => {
   useEffect(() => {
     if (profileData.personalInfo.stateId) {
       fetch(
-        `http://127.0.0.1:8010/master/api/cities/?state=${profileData.personalInfo.stateId}`
+        `https://jobseeker-backend-jy1y.onrender.com/master/api/cities/?state=${profileData.personalInfo.stateId}`
       )
         .then((res) => res.json())
         .then(setCities)
@@ -660,7 +660,7 @@ const getUserKey = () => {
   }, [profileData.personalInfo.stateId]);
 
   useEffect(() => {
-    fetch("http://127.0.0.1:8010/master/api/companies/")
+    fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/companies/")
       .then((res) => res.json())
       .then((data) => {
         setCompanies(data);
@@ -670,7 +670,7 @@ const getUserKey = () => {
 
   useEffect(() => {
     fetch(
-      "http://127.0.0.1:8010/master/api/jobs_category/"
+      "https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_category/"
     )
       .then((res) => res.json())
       .then((data) => {
@@ -682,7 +682,7 @@ const getUserKey = () => {
   useEffect(() => {
     if (experienceForm.category_id) {
       fetch(
-        `http://127.0.0.1:8010/master/api/jobs_title/?category=${experienceForm.category_id}`
+        `https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_title/?category=${experienceForm.category_id}`
       )
         .then((res) => res.json())
         .then((data) => {
@@ -699,7 +699,7 @@ const getUserKey = () => {
     formData.append("resume", resumeFile);
     try {
       const res = await fetch(
-        "http://127.0.0.1:8010/api/profile/upload-resume/",
+        "https://jobseeker-backend-jy1y.onrender.com/api/profile/upload-resume/",
         {
           method: "PATCH",
           headers: {
@@ -747,7 +747,7 @@ const getUserKey = () => {
   formData.append("profile_image", selectedImage);
 
   const res = await fetch(
-    "http://127.0.0.1:8010/api/profile/",
+    "https://jobseeker-backend-jy1y.onrender.com/api/profile/",
     {
       method: "PATCH",
       headers: {
@@ -869,7 +869,7 @@ useEffect(() => {
     console.log("Payload:", payload);
     console.log("Token:", localStorage.getItem("auth_token"));
     const res = await fetch(
-      "http://127.0.0.1:8010/api/profile/",
+      "https://jobseeker-backend-jy1y.onrender.com/api/profile/",
       {
         method: "PUT",
         headers: {
@@ -941,7 +941,7 @@ useEffect(() => {
         }
 
         const res = await fetch(
-          "http://127.0.0.1:8010/api/register/",
+          "https://jobseeker-backend-jy1y.onrender.com/api/register/",
           {
             headers: {
               "Content-Type": "application/json",
@@ -991,7 +991,7 @@ useEffect(() => {
     }
 
     const response = await fetch(
-      "http://127.0.0.1:8010/api/my-applied-jobs/",
+      "https://jobseeker-backend-jy1y.onrender.com/api/my-applied-jobs/",
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -1030,7 +1030,7 @@ const removeAppliedJob = async (applicationId: number) => {
     }
 
     const response = await fetch(
-      `http://127.0.0.1:8010/api/my-applied-jobs/${applicationId}/`,
+      `https://jobseeker-backend-jy1y.onrender.com/api/my-applied-jobs/${applicationId}/`,
       {
         method: "DELETE",
         headers: {
@@ -1183,7 +1183,7 @@ const removeAppliedJob = async (applicationId: number) => {
                       className="w-full text-sm lg:text-base h-10 lg:h-11"
                       onClick={() => {
                         if (profileData?.personalInfo?.resume) {
-                          window.open(`http://127.0.0.1:8010${profileData.personalInfo.resume}`, "_blank");
+                          window.open(`https://jobseeker-backend-jy1y.onrender.com${profileData.personalInfo.resume}`, "_blank");
                         } else {
                           
                         }
@@ -2927,7 +2927,7 @@ const removeAppliedJob = async (applicationId: number) => {
                                 if (!token) return;
                                 try {
                                   const res = await fetch(
-                                    `http://127.0.0.1:8010/api/saved-jobs/${savedJob.id}/`,
+                                    `https://jobseeker-backend-jy1y.onrender.com/api/saved-jobs/${savedJob.id}/`,
                                     {
                                       method: "DELETE",
                                       headers: {
@@ -3056,7 +3056,7 @@ const removeAppliedJob = async (applicationId: number) => {
                   if (!token) return;
                   try {
                     const res = await fetch(
-                      `http://127.0.0.1:8010/api/saved-jobs/${savedJob.id}/`,
+                      `https://jobseeker-backend-jy1y.onrender.com/api/saved-jobs/${savedJob.id}/`,
                       {
                         method: "DELETE",
                         headers: { Authorization: `Bearer ${token}` },
