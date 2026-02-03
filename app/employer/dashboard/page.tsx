@@ -13,6 +13,7 @@ import { toast } from "sonner";
 // import Pricing from "@/components/Pricing";
 import CandidatesPage from "@/app/employer/dashboard/candidate_listing/page";
 import QuotaUsagePage from "@/app/employer/dashboard/quota-usage/page";
+import Footer from "@/components/Footer";
 import {
   Select,
   SelectContent,
@@ -3701,6 +3702,8 @@ export default function EmployerDashboard() {
           </div>
         </div>
       )}
+      <Footer />
     </div>
+    
   );
 }
