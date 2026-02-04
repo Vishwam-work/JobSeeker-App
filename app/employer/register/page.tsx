@@ -30,6 +30,7 @@ import {
   Briefcase,
   Eye,
   EyeOff,
+  ChevronDown,
 } from "lucide-react";
 import {
   Popover,
@@ -45,8 +46,23 @@ import {
   CommandItem,
   CommandEmpty,
 } from "@/components/ui/command";
+import {
+  Dialog,
+  DialogContent,
+} from "@/components/ui/dialog";
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSeparator,
+  InputOTPSlot,
+} from "@/components/ui/input-otp";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+
+
+
+const OTP_EXPIRY_SECONDS = 60;
+
 
 export default function EmployerRegister() {
   const [showPassword, setShowPassword] = useState(false);
@@ -62,9 +78,13 @@ export default function EmployerRegister() {
   const [stateOpen, setStateOpen] = useState(false);
   const [cityOpen, setCityOpen] = useState(false);
   const [citySearch, setCitySearch] = useState("");
-
+  const [isOtpOpen,setIsOtpOpen] =useState(false);
+  const [otp,setOtp] = useState("");
+  const [IsOtpVerified,setIsOtpVerified] =useState(false);
+  const isRegDisabled = currentStep === 2 && !IsOtpVerified;
   const router = useRouter();
-
+  const [email,setemail] = useState("");
+  const [showText,setShowText] =useState(false)
   const [formData, setFormData] = useState({
     // Company Information
     companyName: "",
@@ -77,7 +97,7 @@ export default function EmployerRegister() {
     // Contact Information
     contactPersonName: "",
     designation: "",
-    email: "",
+    email: email,
     phone: "",
     phoneCode: "",
 
@@ -161,7 +181,31 @@ export default function EmployerRegister() {
   const filteredCountries = countries.filter((c) =>
     c.name.toLowerCase().includes(countrySearch.toLowerCase())
   );
+  const handleResendOTP = async() => {
+    const response =  await handlesendotp()
+    setTimeLeft(OTP_EXPIRY_SECONDS);
+  };
 
+  const [timeLeft, setTimeLeft] = useState(OTP_EXPIRY_SECONDS);
+
+  useEffect(() => {
+    if (!isOtpOpen) return;
+  
+    setTimeLeft(OTP_EXPIRY_SECONDS);
+  
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  
+    return () => clearInterval(timer);
+  }, [isOtpOpen]);
+  
   // Fetch the Data from the MASTER DB
   useEffect(() => {
     fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/countries/")
@@ -202,15 +246,26 @@ export default function EmployerRegister() {
     // console.log("Form Data:", formData);
   };
 
+  const handleEmailChange = (value:string) => {
+    setemail(value);
+    console.log("Form Data:", formData);
+  };
+
   const handleNext = () => {
-    if (currentStep < 3) {
-      setCurrentStep(currentStep + 1);
-    }
+    
+      setCurrentStep(prev => Math.min(prev + 1, 3));
+
   };
 
   const handlePrevious = () => {
+    console.log("Current step before prev click : ",currentStep)
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
+      console.log("Current step after prev click with 1 : ",currentStep)
+    }
+    if(currentStep!=1){
+     
+      console.log("Current step after prev click with 2 : ",currentStep)
     }
   };
 
@@ -246,7 +301,8 @@ export default function EmployerRegister() {
       agree_marketing: formData.agreeMarketing,
       password: formData.password,
       confirm_password: formData.confirmPassword,
-      email: formData.email,
+      email: email,
+      is_verified : true,
     };
     console.log("Payload:", payload);
     try {
@@ -297,6 +353,58 @@ export default function EmployerRegister() {
       ))}
     </div>
   );
+
+  const handlesendotp = async () => {
+    try {
+      const res = await fetch(
+        "https://jobseeker-backend-jy1y.onrender.com/api/send_otp/",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email }),
+        }
+      );
+
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.error || "Failed to send OTP");
+        return;
+      }
+
+      setIsOtpOpen(true);
+      toast.success("OTP Sent Successfully");
+    } catch (error) {
+      console.error(error);
+      toast.error("Something went wrong");
+    }
+  };
+
+  const handleVerifyOTP = async () => {
+    try {
+      const res = await fetch(
+        "https://jobseeker-backend-jy1y.onrender.com/employeer/api/verify-otp/",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, otp }),
+        }
+      );
+
+      const data = await res.json();
+      console.log(data)
+      if (!res.ok) {
+        toast.error(data.error || "Invalid OTP");
+        return;
+      }
+
+      setIsOtpVerified(true);
+      setIsOtpOpen(false);
+      toast.success("OTP Verified Successfully!");
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
@@ -601,13 +709,16 @@ export default function EmployerRegister() {
                             <PopoverTrigger asChild>
                               <Button
                                 variant="outline"
-                                className="w-full justify-between mt-1 h-12"
+                                className="w-full mt-1 h-10 lg:h-11 border rounded px-3 flex items-center justify-between"
                               >
+                                <span>
                                 {formData.countryId
                                   ? countries.find(
                                       (c) => c.id == formData.countryId
                                     )?.name
                                   : "Select country"}
+                                  </span>
+                                  <ChevronDown className="h-4 w-4 opacity-60" />
                               </Button>
                             </PopoverTrigger>
 
@@ -671,12 +782,15 @@ export default function EmployerRegister() {
                             <PopoverTrigger asChild>
                               <Button
                                 variant="outline"
-                                className="w-full justify-between mt-1 h-12"
+                                className="w-full mt-1 h-10 lg:h-11 border rounded px-3 flex items-center justify-between"
                               >
+                                <span>
                                 {formData.stateId
                                   ? states.find((s) => s.id == formData.stateId)
                                       ?.name
                                   : "Select state"}
+                                  </span>
+                                  <ChevronDown className="h-4 w-4 opacity-60" />
                               </Button>
                             </PopoverTrigger>
 
@@ -733,12 +847,15 @@ export default function EmployerRegister() {
                             <PopoverTrigger asChild>
                               <Button
                                 variant="outline"
-                                className="w-full justify-between mt-1 h-12"
+                                className="w-full mt-1 h-10 lg:h-11 border rounded px-3 flex items-center justify-between"
                               >
+                                <span>
                                 {formData.cityId
                                   ? cities.find((c) => c.id == formData.cityId)
                                       ?.name
                                   : "Select city"}
+                                  </span>
+                                  <ChevronDown className="h-4 w-4 opacity-60" />
                               </Button>
                             </PopoverTrigger>
 
@@ -797,14 +914,23 @@ export default function EmployerRegister() {
                           <Input
                             id="email"
                             type="email"
-                            value={formData.email}
+                            value={email}
                             onChange={(e) =>
-                              handleInputChange("email", e.target.value)
+                              handleEmailChange(e.target.value)
                             }
                             placeholder="Enter email address"
                             className="mt-1 h-12"
                             required
                           />
+
+                          <Button
+                            type="button"
+                            className="mt-2"
+                            disabled={!email.includes("@")}
+                            onClick={handlesendotp}
+                          >
+                            Verify Email OTP
+                          </Button>
                         </div>
                         <div>
                           <div>
@@ -1048,13 +1174,17 @@ export default function EmployerRegister() {
                     )}
 
                     {currentStep < 3 ? (
+                      
                       <Button
                         type="button"
                         onClick={handleNext}
+                        disabled={isRegDisabled}
                         className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 h-12 px-6 ml-auto"
                       >
                         Next
+                      
                       </Button>
+                    
                     ) : (
                       <Button
                         type="submit"
@@ -1065,7 +1195,7 @@ export default function EmployerRegister() {
                     )}
                   </div>
                 </form>
-
+                  
                 <div className="mt-8 pt-6 border-t border-gray-200">
                   <div className="flex items-center justify-center space-x-2 text-sm text-gray-600">
                     <CheckCircle className="w-4 h-4 text-green-500" />
@@ -1077,6 +1207,52 @@ export default function EmployerRegister() {
           </div>
         </div>
       </div>
+      import { useEffect, useState } from "react";
+
+const OTP_EXPIRY_SECONDS = 60; // change as needed
+
+<Dialog open={isOtpOpen} onOpenChange={setIsOtpOpen}>
+  <DialogContent>
+    <div className="text-center">
+      <h1 className="text-xl font-bold mb-4">Enter OTP</h1>
+
+      <InputOTP maxLength={6} value={otp} onChange={setOtp}>
+        <InputOTPGroup>
+          {[0, 1, 2, 3, 4, 5].map((i) => (
+            <InputOTPSlot key={i} index={i} />
+          ))}
+        </InputOTPGroup>
+      </InputOTP>
+
+      <Button
+        className="w-full mt-4 bg-indigo-600 text-white"
+        onClick={handleVerifyOTP}
+      >
+        Verify
+      </Button>
+
+      {/* Footer */}
+      <div className="mt-4 text-sm text-gray-600">
+        {timeLeft > 0 ? (
+          <p>
+            Resend OTP in{" "}
+            <span className="font-semibold text-indigo-600">
+              {timeLeft}s
+            </span>
+          </p>
+        ) : (
+          <button
+            onClick={handleResendOTP}
+            className="text-indigo-600 font-semibold hover:underline"
+          >
+            Resend OTP
+          </button>
+        )}
+      </div>
+    </div>
+  </DialogContent>
+</Dialog>
+
     </div>
   );
 }

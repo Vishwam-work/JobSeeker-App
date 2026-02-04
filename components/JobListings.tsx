@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter  } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
 import { useSavedJobs } from "@/context/SavedJobsContext";
 import { toast } from "sonner";
+import { v4 as uuidv4 } from "uuid";
 
 import {
   Select,
@@ -66,6 +67,7 @@ export default function JobListings() {
   const [visibleCount, setVisibleCount] = useState(3);
   const searchParams = useSearchParams();
   const searchFromUrl = searchParams.get("search");
+  const router = useRouter();
 
 
   // Filter states
@@ -86,7 +88,7 @@ export default function JobListings() {
   const [locations, setLocations] = useState([]);
   const [skillsList, setSkillsList] = useState([]);
 
-  const [isLoaded, setIsLoaded] = useState(false);
+  
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
   const [searchLocation, setSearchLocation] = useState("");
   const [showCompanyDropdown, setShowCompanyDropdown] = useState(false);
@@ -164,25 +166,6 @@ export default function JobListings() {
 
   }, []);
 
-  // Lazy load locations
-  const loadLocations = async () => {
-    if (isLoaded) return;
-    setLoading(true);
-    try {
-      const res = await fetch(
-        "https://jobseeker-backend-jy1y.onrender.com/master/api/states/"
-      );
-      const data = await res.json();
-      const locationNames = data.map((item: any) => item.name);
-      setLocations(locationNames);
-      setIsLoaded(true);
-    } catch (err) {
-      console.error("Error fetching locations:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // Fetch skills from API
   useEffect(() => {
     const fetchSkills = async () => {
@@ -213,6 +196,16 @@ export default function JobListings() {
       console.log("Jobs data:", data);
       setJobs(data);
       setFilteredJobs(data);
+
+      const uniqueLocations = Array.from(
+       new Set(
+       data
+        .map((job: any) => job.location?.name) // ✅ FIX
+        .filter((loc: string) => loc && loc.trim() !== "")
+       )
+     );
+
+      setLocations(uniqueLocations);
       setLoading(false);
       fetchUserData();
     }, 1000);
@@ -507,15 +500,39 @@ const unsaveJob = async (jobId: number) => {
         setShowLoginPopup(true);
       return;
     }
+      if (!isProfileComplete(userData)) {
+    toast.warning(
+      "Please complete your profile (Name, Phone, Resume, Skills, Experience) before applying."
+    );
+    router.push("/profile");
+    return;
+  }
     setSelectedJob(job);
     setAnswers({});
     fetchUserData();
     setIsApplyModalOpen(true);
   };
 
-  const handleViewDetails = (job) => {
+  const handleViewDetails = async(job) => {
     setSelectedJob(job);
     setIsJobDetailOpen(true);
+    try {
+      const requestId = uuidv4(); 
+      const res = await fetch(`https://jobseeker-backend-jy1y.onrender.com/employeer/api/${job.id}/click/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          // Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ request_id: requestId }),
+      });
+
+        const response = await res.json();
+        console.log(response)
+
+    } catch (err) {
+      console.error("Error incrementing job views:", err);
+    }
   };
 
   const handleShare = (job) => {
@@ -534,7 +551,72 @@ const unsaveJob = async (jobId: number) => {
     }
   };
 
-  
+const REQUIRED_PROFILE_FIELDS = [
+  "full_name",
+  "phone",
+  "resume",
+  "skills",
+  "country",
+  "state",
+  "city",
+  "experiences"
+];
+
+
+
+const isProfileComplete = (profile) => {
+  return REQUIRED_PROFILE_FIELDS.every((field) => {
+    const value = profile?.[field];
+
+    if (Array.isArray(value)) {
+      return value.length > 0;
+    }
+
+    if (typeof value === "object") {
+      return value !== null && Object.keys(value).length > 0;
+    }
+
+    return value !== null && value !== undefined && value !== "";
+  });
+};
+
+
+
+  const fetchUserProfile = async () => {
+  setLoadingUserData(true);
+  try {
+    const token = localStorage.getItem("auth_token");
+
+    const response = await fetch(
+      "https://jobseeker-backend-jy1y.onrender.com/api/profile/",
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      console.log("Profile API failed:", response.status);
+      return;
+    }
+
+    const profile = await response.json();
+
+    setUserData({
+      ...profile,
+      resume: profile.resume
+        ? `https://jobseeker-backend-jy1y.onrender.com${profile.resume}`
+        : null,
+    });
+
+  } catch (error) {
+    console.error("Profile fetch error:", error);
+  } finally {
+    setLoadingUserData(false);
+  }
+};
+
 
 
 const fetchUserData = async () => {
@@ -565,17 +647,6 @@ const fetchUserData = async () => {
 
     console.log("MY Applications:", myApplications);
 
-     if (myApplications.length > 0) {
-     const profile = myApplications[0].profile;
-
-      setUserData({
-       ...profile,
-       resume: profile.resume
-        ? `https://jobseeker-backend-jy1y.onrender.com${profile.resume}`
-        : null,
-        });
-      }
-
     const appliedIDs = myApplications.map(app => Number(app.job));
 
     localStorage.setItem(`applied_jobs_${email}`, JSON.stringify(appliedIDs));
@@ -590,6 +661,12 @@ const fetchUserData = async () => {
     setLoadingUserData(false);
   }
 };
+
+useEffect(() => {
+  fetchUserProfile(); 
+  fetchUserData();    
+}, []);
+
   const handleAnswerChange = (questionIndex, value) => {
     setAnswers((prev) => ({
       ...prev,
@@ -774,72 +851,69 @@ const fetchUserData = async () => {
                     </div>
                   </div>
 
-                  {/* Location */}
-                  <div className="border rounded-lg p-3 bg-white shadow-sm">
-                    <button
-                      onClick={() => {
-                        if (!isLoaded) loadLocations();
-                        setShowLocationDropdown((prev) => !prev);
-                      }}
-                      className="w-full text-left font-semibold text-gray-700 flex justify-between items-center"
-                    >
-                      <span> Location</span>
-                      <span className="text-gray-400">
-                        {showLocationDropdown ? "▲" : "▼"}
-                      </span>
-                    </button>
+                  {/* Location */}             
+                <div>
+                   <Label className="text-sm font-medium text-gray-700 mb-2 block">
+                     Location
+                   </Label>
 
-                    {showLocationDropdown && (
-                      <div className="mt-3 space-y-2 max-h-56 overflow-y-auto">
-                        <div className="sticky top-0 bg-white z-10 p-1 border-b">
-                          <input
-                            type="text"
-                            placeholder="Search location..."
-                            value={searchLocation}
-                            onChange={(e) => setSearchLocation(e.target.value)}
-                            className="w-full h-8 text-sm border rounded px-2"
-                          />
-                        </div>
+                   <Select
+                     value={filters.location || "" }
+                     onValueChange={(location) =>
+                       setFilters((prev) => ({
+                         ...prev,
+                         location,
+                       }))
+                     }  
+                   >
+                     <SelectTrigger>
+                       <SelectValue placeholder="Select location" />
+                     </SelectTrigger>
+                 
+                     <SelectContent className="max-h-60">
+                       {/* Search input */}
+                     <div className="sticky top-0 z-20 bg-white p-2 border-b">
+                       <input
+                         type="text"
+                         placeholder="Search location..."
+                         value={searchLocation}
+                         onChange={(e) => setSearchLocation(e.target.value)}
+                         onKeyDown={(e) => e.stopPropagation()}
+                         className="w-full h-10 text-sm border rounded px-2 placeholder-gray-400 appearance-none focus:outline-none"
+                        />
+                     </div>    
 
-                        {loading ? (
-                          <p className="text-sm text-gray-500">
-                            Loading locations...
-                          </p>
-                        ) : (
-                          locations
-                            .filter((location) =>
-                              location
-                                .toLowerCase()
-                                .startsWith(searchLocation.toLowerCase())
-                            )
-                            .map((location) => {
-                              const isSelected = filters.location === location;
+                       {/* Loading */}
+                       {loading && (
+                         <p className="text-sm text-gray-500 p-2">Loading locations...</p>
+                       )}
 
-                              return (
-                                <div
-                                  key={location}
-                                  onClick={() =>
-                                    setFilters((prev) => ({
-                                      ...prev,
-                                      location: isSelected ? "All" : location,
-                                    }))
-                                  }
-                                  className={`p-2 rounded cursor-pointer text-sm
-                                     ${
-                                       isSelected
-                                         ? "bg-blue-100 text-blue-700 font-medium"
-                                         : "text-gray-700 hover:bg-gray-100"
-                                     }
-                                   `}
-                                >
-                                  {location}
-                                </div>
-                              );
-                            })
-                        )}
-                      </div>
-                    )}
-                  </div>
+                       {/* Location list */}
+                       {locations
+                         .filter((location) =>
+                           location.toLowerCase().startsWith(searchLocation.toLowerCase())
+                         )
+                         .map((location) => {
+                           const isSelected = filters.location === location;
+
+                           return (
+                             <SelectItem
+                               key={location}
+                               value={location}
+                               className={`text-sm cursor-pointer
+                                 ${
+                                   isSelected
+                                     ? "bg-blue-100 text-blue-700 font-medium"
+                                     : "text-gray-700 hover:bg-gray-100"
+                                 }`}
+                             >
+                               {location}
+                             </SelectItem>
+                           );
+                         })}
+                     </SelectContent>
+                   </Select>
+                 </div>
 
                   {/* Experience */}
                   <div>
@@ -960,31 +1034,40 @@ const fetchUserData = async () => {
                     </Select>
                   </div>
 
-                  {/* Companies */}
-                  <div className="border rounded-lg p-3 bg-white shadow-sm">
-                    <button
-                      onClick={() => setShowCompanyDropdown((prev) => !prev)}
-                      className="w-full text-left font-semibold text-gray-700 flex justify-between items-center"
-                    >
-                      <span>Companies</span>
-                      <span className="text-gray-400">
-                        {showCompanyDropdown ? "▲" : "▼"}
-                      </span>
-                    </button>
+                  {/* Companies */}                
+                  <div>
+                    <Label className="text-sm font-medium text-gray-700 mb-2 block">
+                      Companies
+                    </Label>
 
-                    {showCompanyDropdown && (
-                      <div className="mt-3 space-y-2 max-h-56 overflow-y-auto">
-                        <div className="sticky top-0 bg-white z-10 p-1 border-b">
+                    <Select
+                      value={filters.companies?.[0] || ""}
+                      onValueChange={(company) =>
+                        setFilters((prev) => ({
+                          ...prev,
+                          companies: [company],
+                        }))
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select company" />
+                      </SelectTrigger>
+                  
+                      <SelectContent className="max-h-60">
+
+                      
+                        <div className="sticky top-0 bg-white z-10 p-2 border-b">
                           <input
                             type="text"
                             placeholder="Search company..."
                             value={searchCompany}
                             onChange={(e) => setSearchCompany(e.target.value)}
+                            onKeyDown={(e) => e.stopPropagation()}
                             className="w-full h-8 text-sm border rounded px-2"
                           />
                         </div>
 
-                        {/* List */}
+                        {/* Company list */}
                         {companies
                           .filter((company) =>
                             company
@@ -992,81 +1075,80 @@ const fetchUserData = async () => {
                               .startsWith(searchCompany.toLowerCase())
                           )
                           .map((company) => (
-                            <div
-                              key={company}
-                              className="p-2 text-sm text-gray-700 cursor-pointer hover:bg-gray-100 rounded"
-                              onClick={() =>
-                                setFilters((prev) => ({
-                                  ...prev,
-                                  companies: [company],
-                                }))
-                              }
-                            >
+                            <SelectItem key={company} value={company}>
                               {company}
-                            </div>
+                            </SelectItem>
                           ))}
-                      </div>
-                    )}
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   {/* Skills */}
-                  <div className="border rounded-lg p-3 bg-white shadow-sm">
-                    <button
-                      onClick={() => setShowSkillsDropdown((prev) => !prev)}
-                      className="w-full text-left font-semibold text-gray-700 flex justify-between items-center"
-                    >
-                      <span>Skills</span>
-                      <span className="text-gray-400">
-                        {showSkillsDropdown ? "▲" : "▼"}
-                      </span>
-                    </button>
+                  <div>
+                     <Label className="text-sm font-medium text-gray-700 mb-2 block">
+                       Skills
+                     </Label>
 
-                    {showSkillsDropdown && (
-                      <div className="mt-3 space-y-2 max-h-56 overflow-y-auto">
-                        <div className="sticky top-0 bg-white z-10 p-1 border-b">
-                          <input
-                            type="text"
-                            placeholder="Search skills..."
-                            value={searchSkill}
-                            onChange={(e) => setSearchSkill(e.target.value)}
-                            className="w-full h-8 text-sm border rounded px-2"
-                          />
-                        </div>
+                     <Select
+                       value="" 
+                       onValueChange={() => {}}
+                     >
+                       <SelectTrigger>
+                         <SelectValue
+                           placeholder={
+                             filters.skills.length > 0
+                               ? `${filters.skills.length} skills selected`
+                               : "Select skills"
+                           }
+                         />
+                       </SelectTrigger>
 
-                        {/* List */}
-                        {skillsList
-                          .filter((skill) =>
-                            skill
-                              .toLowerCase()
-                              .startsWith(searchSkill.toLowerCase())
-                          )
-                          .map((skill) => {
-                            const isSelected = filters.skills.includes(skill);
+                       <SelectContent className="max-h-60">
+                         <div className="sticky top-0 bg-white z-10 p-2 border-b">
+                           <input
+                             type="text"
+                             placeholder="Search skills..."
+                             value={searchSkill}
+                             onChange={(e) => setSearchSkill(e.target.value)}
+                             onKeyDown={(e) => e.stopPropagation()}
+                             className="w-full h-8 text-sm border rounded px-2"
+                           />
+                         </div>
 
-                            return (
-                              <div
-                                key={skill}
-                                className={`p-2 text-sm cursor-pointer rounded ${
-                                  isSelected
-                                    ? "bg-blue-100 text-blue-700 font-medium"
-                                    : "text-gray-700 hover:bg-gray-100"
-                                }`}
-                                onClick={() => {
-                                  setFilters((prev) => ({
-                                    ...prev,
-                                    skills: isSelected
-                                      ? prev.skills.filter((s) => s !== skill)
-                                      : [...prev.skills, skill],
-                                  }));
-                                }}
-                              >
-                                {skill}
-                              </div>
-                            );
-                          })}
-                      </div>
-                    )}
-                  </div>
+                         {skillsList
+                           .filter((skill) =>
+                             skill.toLowerCase().startsWith(searchSkill.toLowerCase())
+                           )
+                           .map((skill) => {
+                             const isSelected = filters.skills.includes(skill);
+
+                             return (
+                               <div
+                                 key={skill}
+                                 className={`px-3 py-2 text-sm cursor-pointer flex justify-between items-center
+                                   ${
+                                     isSelected
+                                       ? "bg-blue-100 text-blue-700 font-medium"
+                                       : "text-gray-700 hover:bg-gray-100"
+                                   }`}
+                                 onClick={() =>
+                                   setFilters((prev) => ({
+                                     ...prev,
+                                     skills: isSelected
+                                       ? prev.skills.filter((s) => s !== skill)
+                                       : [...prev.skills, skill],
+                                   }))
+                                 }
+                               >
+                                 <span>{skill}</span>
+                                 {isSelected && <span>✓</span>}
+                               </div>
+                             );
+                           })}
+                      </SelectContent>
+                     </Select>
+                   </div>
+
                 </div>
               </div>
             </Card>
@@ -1117,9 +1199,17 @@ const fetchUserData = async () => {
                               </div>
                               <div className="min-w-0 flex-1">
                                 <div className="flex items-center gap-2 mb-1">
-                                  <h3 className="text-lg md:text-xl font-semibold text-gray-900 hover:text-purple-600 cursor-pointer transition-colors">
-                                    {job.title}
+                                  <h3 className="text-lg md:text-xl font-semibold text-gray-900 hover:text-purple-600 transition-colors">
+                                    <a
+                                      href={`/job-details?id=${job.id}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="hover:underline"
+                                    >
+                                      {job.title}
+                                    </a>
                                   </h3>
+
                                   {job.urgentHiring && (
                                     <Badge className="bg-red-100 text-red-800 text-xs">
                                       Urgent
@@ -1510,7 +1600,7 @@ const fetchUserData = async () => {
 
         {/* Apply Modal */}
         <Dialog open={isApplyModalOpen} onOpenChange={setIsApplyModalOpen}>
-          <DialogContent className="max-w-2xl w-full max-h-[85vh] overflow-y-auto p-6">
+          <DialogContent className="max-w-2xl w-full h-[90vh] overflow-y-auto p-6">
             {selectedJob && (
               <>
                 <DialogHeader>
@@ -1518,7 +1608,6 @@ const fetchUserData = async () => {
                     Apply for {selectedJob.title}
                   </DialogTitle>
                 </DialogHeader>
-                <div className="space-y-4 max-h-[70vh] overflow-y-auto">
                   <div className="space-y-3">
                     <p className="text-sm text-gray-700">
                       Your profile and resume will be sent to the employer.
@@ -1626,7 +1715,6 @@ const fetchUserData = async () => {
                       Cancel
                     </Button>
                   </div>
-                </div>
               </>
             )}
           </DialogContent>

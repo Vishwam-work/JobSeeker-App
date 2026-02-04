@@ -26,13 +26,12 @@ import {
 } from 'lucide-react';
 import Header from '@/components/Header';
 import Link from 'next/link';
-
+import DownloadProfilePDF from '@/components/DownloadProfilePDF';
 export default function ProfileReview() {
   const [profileData, setProfileData] = useState(null);
   const [jobTitles, setJobTitles] = useState([]);
   const [jobCategories, setJobCategories] = useState([]);
   const [isPDF, setIsPDF] = useState(false);
-
     useEffect(() => {
       fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_title/")
         .then((res) => res.json())
@@ -59,8 +58,6 @@ export default function ProfileReview() {
     console.log("jobTitles", jobTitles);
     return jobTitles.find((t) => t.id === id)?.title || "";
   };
-
-
   useEffect(() => {
     const loadProfile = async () => {
       const res = await fetch("https://jobseeker-backend-jy1y.onrender.com/api/profile/", {
@@ -82,7 +79,6 @@ export default function ProfileReview() {
         setProfileData({
           personalInfo: {
             profile_image: data.profile_image || null,
-
             fullName: data.full_name,
             email: data.email,
             phone: data.phone,
@@ -155,80 +151,6 @@ export default function ProfileReview() {
 
   // const completionPercentage = calculateCompletionPercentage();
 
- const hideElementsForPDF = (container: HTMLElement) => {
-  const hidden: HTMLElement[] = [];
-
-  // Hide profile image box completely
-  container.querySelectorAll(".profile-image-box").forEach((el) => {
-    const h = el as HTMLElement;
-    hidden.push(h);
-    h.style.display = "none";
-  });
-
-  // Hide all SVG icons
-  container.querySelectorAll("svg").forEach((el) => {
-    const h = el as HTMLElement;
-    hidden.push(h);
-    h.style.display = "none";
-  });
-
-  return hidden;
-};
-
-const restoreElements = (elements: HTMLElement[]) => {
-  elements.forEach((el) => {
-    el.style.display = "";
-  });
-};  
-
-const handleDownloadPDF = async () => {
-  setIsPDF(true);
-  await new Promise((r) => setTimeout(r, 300));
-
-  const html2canvas = (await import("html2canvas")).default;
-  const jsPDF = (await import("jspdf")).default;
-
-  const pdf = new jsPDF("p", "mm", "a4");
-  const pdfWidth = pdf.internal.pageSize.getWidth();
-  const pdfHeight = pdf.internal.pageSize.getHeight();
-
-  const container = document.getElementById("profile-review-ui");
-  const hidden = hideElementsForPDF(container);
-
-  const pages = ["pdf-page-1", "pdf-page-2"];
-
-  for (let i = 0; i < pages.length; i++) {
-    const page = document.getElementById(pages[i]);
-    if (!page) continue;
-
-    const canvas = await html2canvas(page, {
-      scale: 1.3,          
-      useCORS: true,
-      backgroundColor: "#fff",
-      scrollY: -window.scrollY,
-    });
-
-    const imgData = canvas.toDataURL("image/jpeg", 0.85); 
-    const imgHeight = (canvas.height * pdfWidth) / canvas.width;
-
-    if (i > 0) pdf.addPage();
-
-    pdf.addImage(
-      imgData,
-      "JPEG",
-      0,
-      0,
-      pdfWidth,
-      Math.min(imgHeight, pdfHeight)
-    );
-  }
-
-  pdf.save("profile.pdf");
-
-  restoreElements(hidden);
-  setIsPDF(false);
-};
-
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
@@ -245,16 +167,11 @@ const handleDownloadPDF = async () => {
                 </Button>
               </Link>
             </div>
-            <div className="flex flex-col sm:flex-row gap-2">
-              <Button
-              variant="outline"
-              className="w-full sm:w-auto"
-              onClick={handleDownloadPDF}
-              >
-                <Download className="w-4 h-4 mr-2" />
-                Download PDF
-              </Button>
-
+            <div className="flex flex-col sm:flex-row gap-2">            
+             <DownloadProfilePDF
+              onStart={() => setIsPDF(true)}
+              onEnd={() => setIsPDF(false)}
+             />
             </div>
           </div>
         </div>
@@ -263,9 +180,7 @@ const handleDownloadPDF = async () => {
           <div  className="space-y-6 bg-white px-6 pb-6 pt-10" >
             <div
               id="profile-review-ui"
-              className={`space-y-6 bg-white px-6 pb-6 pt-10 ${
-              isPDF ? "pdf-mode" : ""
-              }`}
+              className={isPDF ? 'pdf-mode' : ''}
             >
       <div id="pdf-page-1">
         {/* COMPLETE REVIEW UI */}
@@ -273,8 +188,7 @@ const handleDownloadPDF = async () => {
           <Card>
             <CardHeader className="pb-4">
               <CardTitle className="flex items-center space-x-2">
-                <User className="w-5 h-5 text-purple-600" />
-
+                {isPDF ? '👤' : <User className="w-5 h-5 text-purple-600" />}
                 <span>Personal Information</span>
               </CardTitle>
             </CardHeader>
@@ -285,10 +199,13 @@ const handleDownloadPDF = async () => {
 
                    {profileData.personalInfo.profile_image ? (
                     <img
-                     src={profileData.personalInfo.profile_image}
-                     alt="Profile"
-                     className="w-full h-full object-cover"
+                        src={`/api/image-proxy?url=${encodeURIComponent(
+                        profileData.personalInfo.profile_image
+                      )}`}
+                      alt="Profile"
+                      className="w-full h-full object-cover"
                     />
+
                    ) : (
                    <User className="w-12 h-12 lg:w-16 lg:h-16 text-purple-600" />
                     )}
@@ -300,31 +217,31 @@ const handleDownloadPDF = async () => {
                   </h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm lg:text-base">
                     <div className="flex items-center space-x-2 text-gray-600">
-                      <Mail className="w-4 h-4" />
+                         {isPDF ? '✉️' : <Mail className="w-4 h-4" />}
                       <span>{profileData.personalInfo.email}</span>
                     </div>
                     <div className="flex items-center space-x-2 text-gray-600">
-                      <Phone className="w-4 h-4" />
+                      {isPDF ? ' ☎' : <Phone className="w-4 h-4" />}
                       <span>{profileData.personalInfo.phone}</span>
                     </div>
                     <div className="flex items-center space-x-2 text-gray-600">
-                      <MapPin className="w-4 h-4" />
+                      {isPDF ? '📍' : <MapPin className="w-4 h-4" />}
                       <span>{profileData.personalInfo.location}</span>
                     </div>
                     <div className="flex items-center space-x-2 text-gray-600">
-                      <Briefcase className="w-4 h-4" />
+                      {isPDF ? '💼' : <Briefcase className="w-4 h-4" />}
                       <span>{profileData.personalInfo.experience} Experience</span>
                     </div>
                     <div className="flex items-center space-x-2 text-gray-600">
-                      <DollarSign className="w-4 h-4" />
+                      {isPDF ? ' $ ' : <DollarSign className="w-4 h-4" />}
                       <span>Current: {profileData.personalInfo.currentSalary}</span>
                     </div>
                     <div className="flex items-center space-x-2 text-gray-600">
-                      <DollarSign className="w-4 h-4" />
+                      {isPDF ? ' $ ' : <DollarSign className="w-4 h-4" />}
                       <span>Expected: {profileData.personalInfo.expectedSalary}</span>
                     </div>
                     <div className="flex items-center space-x-2 text-gray-600">
-                      <Clock className="w-4 h-4" />
+                      {isPDF ? '🕒' : <Clock className="w-4 h-4" />}
                       <span>Notice Period: {profileData.personalInfo.noticePeriod}</span>
                     </div>
                   </div>
@@ -351,7 +268,7 @@ const handleDownloadPDF = async () => {
           <Card>
             <CardHeader className="pb-4">
               <CardTitle className="flex items-center space-x-2">
-                <Briefcase className="w-5 h-5 text-purple-600" />
+                {isPDF ? '💼' : <Briefcase className="w-4 h-4 text-purple-600" />}
                 <span>Work Experience</span>
               </CardTitle>
             </CardHeader>
@@ -372,11 +289,11 @@ const handleDownloadPDF = async () => {
                         <h2 className='text-gray-400 font-semibold'>{getCategoryName(exp.category)}</h2>
                         <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 text-sm text-gray-600 mt-1 gap-1 sm:gap-0">
                           <div className="flex items-center">
-                            <Clock className="w-4 h-4 mr-1" />
+                            {isPDF ? '🕒' : <Clock className="w-4 h-4" />}
                             <span>{exp.duration}</span>
                           </div>
                           <div className="flex items-center">
-                            <MapPin className="w-4 h-4 mr-1" />
+                            {isPDF ? '📍' : <MapPin className="w-4 h-4" />}
                             <span>{exp.location}</span>
                           </div>
                         </div>
@@ -395,7 +312,7 @@ const handleDownloadPDF = async () => {
           <Card>
             <CardHeader className="pb-4">
               <CardTitle className="flex items-center space-x-2">
-                <GraduationCap className="w-5 h-5 text-purple-600" />
+                {isPDF ? '🎓' : <GraduationCap className="w-5 h-5 text-purple-600" />}
                 <span>Education</span>
               </CardTitle>
             </CardHeader>
@@ -416,11 +333,11 @@ const handleDownloadPDF = async () => {
                         <p className="text-gray-600">{edu.institution}</p>
                         <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 text-sm text-gray-600 mt-1 gap-1 sm:gap-0">
                           <div className="flex items-center">
-                            <Calendar className="w-4 h-4 mr-1" />
+                            {isPDF ? '📅' : <Calendar className="w-4 h-4 mr-1" />}
                             <span>Graduated: {edu.year}</span>
                           </div>
                           <div className="flex items-center">
-                            <Award className="w-4 h-4 mr-1" />
+                            {isPDF ? '🎖  ' : <Award className="w-5 h-5 text-purple-600" />}
                             <span>Score: {edu.percentage}</span>
                           </div>
                         </div>
@@ -436,7 +353,7 @@ const handleDownloadPDF = async () => {
           <Card>
             <CardHeader className="pb-4">
               <CardTitle className="flex items-center space-x-2">
-                <Award className="w-5 h-5 text-purple-600" />
+                {isPDF ? '🎖  ' : <Award className="w-5 h-5 text-purple-600" />}
                 <span>Skills</span>
               </CardTitle>
             </CardHeader>
@@ -460,7 +377,7 @@ const handleDownloadPDF = async () => {
           <Card>
             <CardHeader className="pb-4">
               <CardTitle className="flex items-center space-x-2">
-                <Award className="w-5 h-5 text-purple-600" />
+                {isPDF ? '🎖  ' : <Award className="w-5 h-5 text-purple-600" />}
                 <span>Certifications</span>
               </CardTitle>
             </CardHeader>
@@ -469,13 +386,13 @@ const handleDownloadPDF = async () => {
                 {profileData.certifications.map((cert) => (
                   <div key={cert.id} className="flex items-start space-x-4 p-4 bg-gray-50 rounded-lg">
                     <div className="w-12 h-12 bg-gradient-to-br from-yellow-100 to-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <Award className="w-6 h-6 text-yellow-600" />
+                      <Award className="w-5 h-5 text-purple-600" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold text-lg text-gray-900">{cert.name}</h3>
                       <p className="text-yellow-600 font-medium">{cert.issuer}</p>
                       <div className="flex items-center text-sm text-gray-600 mt-1">
-                        <Calendar className="w-4 h-4 mr-1" />
+                        {isPDF ? '📅' : <Calendar className="w-4 h-4 mr-1" />}
                         <span>Issued: {cert.year}</span>
                       </div>
                     </div>

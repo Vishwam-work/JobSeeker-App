@@ -10,6 +10,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+// import Pricing from "@/components/Pricing";
+import CandidatesPage from "@/app/employer/dashboard/candidate_listing/page";
+import QuotaUsagePage from "@/app/employer/dashboard/quota-usage/page";
 import {
   Select,
   SelectContent,
@@ -51,6 +54,11 @@ import {
   Star,
   CheckCircle,
   XCircle,
+  ChevronsUpDown,
+  ChevronDown,
+  Bell,
+  UserCircle,
+  BarChart3,
 } from "lucide-react";
 import Link from "next/link";
 import { jwtDecode } from "jwt-decode";
@@ -75,7 +83,17 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { ChevronsUpDown } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
 
 export default function EmployerDashboard() {
   const [activeTab, setActiveTab] = useState("post-job");
@@ -118,7 +136,10 @@ export default function EmployerDashboard() {
   const [minute, setMinute] = useState("00");
   const [ampm, setAmPm] = useState("AM");
   const interviewTime = `${hour}:${minute} ${ampm}`;
-  
+  const [timeZone, setTimeZone] = useState("IST");
+  const [time, setTime] = useState("");
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [showResume, setShowResume] = useState(false);
 
 
 
@@ -477,7 +498,8 @@ export default function EmployerDashboard() {
       }
       const data = await response.json();
       console.log("Here is the Job-list-view-data:",data)
-      setPostedJobs(data); // Set jobs into state
+      console.log(data.category)
+      setPostedJobs(data); // Set jobs into stateq
     } catch (error) {
       console.error("Error fetching jobs:", error);
     }
@@ -657,7 +679,7 @@ export default function EmployerDashboard() {
         title: jobForm.title,
         category_id: parseInt(jobForm.category),
         job_title: parseInt(jobForm.jobTitle),
-        company: jobForm.company,
+        company: CompanyName,
         location_id: parseInt(jobForm.location),
         currency_id: parseInt(jobForm.currency),
         experience: jobForm.experience,
@@ -788,7 +810,10 @@ export default function EmployerDashboard() {
     const nameMatch =
       c.name?.toLowerCase().startsWith(searchTerm.toLowerCase()) ||
       c.currentRole?.toLowerCase().startsWith(searchTerm.toLowerCase()) ||
-      c.appliedFor?.toLowerCase().startsWith(searchTerm.toLowerCase());
+      c.appliedFor?.toLowerCase().startsWith(searchTerm.toLowerCase()) ||
+      c.skills?.some((skill) =>
+      skill.toLowerCase().includes(searchTerm.toLowerCase())
+      );
 
     const statusMatch =
       statusFilter === "All" ||
@@ -872,16 +897,16 @@ export default function EmployerDashboard() {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
-        // https://jobseeker-backend-jy1y.onrender.com
+      
         const data = await response.json();
-        console.log("Data is prefill");
+        console.log("Data is prefill", data);
         // Prefill the form
     setJobForm({
         title: data.title || "",
-        category: data.category?.id?.toString() || data.category || "",
+        category: data.category?.name?.toString() || data.category || "",
         jobTitle: data.job_title?.id?.toString() || data.job_title || "",
         company: data.company || "",
-        location: data.location?.id?.toString() || data.location || "",
+        location: data.location?.name?.toString() || data.location || "",
         experience: data.experience || "",
         salary: data.salary || "",
         currency: data.currency?.id?.toString() || data.currency || "",
@@ -1216,7 +1241,7 @@ export default function EmployerDashboard() {
       //     : prev
       // );
 
-      toast.success("Candidate Rejected!");
+      toast.error("Candidate Rejected!");
     } catch (err) {
       console.log("Reject error: ", err);
       toast.error("Network error. Please try again.");
@@ -1230,6 +1255,13 @@ export default function EmployerDashboard() {
   };
 
   const handleScheduleSubmit = async () => {
+
+     if (!interviewDate) {
+    toast.warning("Please select interview date");
+    return;
+  }
+
+                    
     try {
       const token = localStorage.getItem("auth_token");
       if (!token) return toast.error("Token missing", {
@@ -1296,6 +1328,18 @@ export default function EmployerDashboard() {
     { id: "manage-jobs", label: "Manage Jobs", icon: Briefcase },
     { id: "candidates", label: "Candidates", icon: Users },
     // { id: 'analytics', label: 'Analytics', icon: TrendingUp }
+    {
+    id: "profiles",
+    label: "profiles",
+    icon: UserCircle,
+    component: <CandidatesPage />,
+  },
+    {
+    id: "quota",
+    label: "Quota Usage",
+    icon: BarChart3,
+    component: <QuotaUsagePage />,
+  },
   ];
 
   const getWorkModeColor = (workMode) => {
@@ -1378,7 +1422,66 @@ export default function EmployerDashboard() {
                 Employer Dashboard
               </span>
             </Link>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                 <div               
+                   onClick={() => setIsNotificationOpen(!isNotificationOpen)}
+                   className="cursor-pointer relative select-none"
+                  >
+                  <Bell className="w-5 h-5 text-gray-700 hover:text-purple-600" />
+                <span className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full" />
+                 </div>
+
+                 {isNotificationOpen && (
+                   <>
+                    
+                     <div
+                       className="fixed inset-0 z-40 bg-black/20 md:bg-transparent"
+                       onClick={() => setIsNotificationOpen(false)}
+                     />
+                     <div
+                       className="               
+                        fixed md:absolute
+                        inset-x-0 bottom-0 md:inset-auto
+                        md:right-0 md:top-full
+                        w-full md:w-80
+                        bg-white
+                        border
+                        shadow-lg
+                        rounded-t-xl md:rounded-lg
+                        z-50
+                      "
+                     >
+                       <div className="p-3 border-b font-semibold text-gray-700 flex justify-between items-center">               
+                        Notifications
+                        <button
+                          className="md:hidden text-gray-500"
+                          onClick={() => setIsNotificationOpen(false)}
+                        >
+                          ✕
+                        </button>
+                       </div>
+
+                       <div className="max-h-64 overflow-y-auto">
+                         <div className="px-4 py-3 hover:bg-gray-50 cursor-pointer">
+                           <p className="text-sm font-medium text-gray-800">
+                             New job matched your profile
+                           </p>
+                           <p className="text-xs text-gray-500">2 minutes ago</p>
+                         </div>
+
+                        <div className="px-4 py-3 hover:bg-gray-50 cursor-pointer">
+                          <p className="text-sm font-medium text-gray-800">
+                            Employer viewed your profile
+                          </p>
+                          <p className="text-xs text-gray-500">1 hour ago</p>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+
               <Button
                 variant="outline"
                 className="border-red-600 text-red-600 hover:bg-red-50"
@@ -1616,7 +1719,7 @@ export default function EmployerDashboard() {
                           className="w-full justify-between mt-1 h-10 lg:h-11"
                         >
                           {selectedCity || "Select location"}
-                          <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
+                          <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
                         </Button>
                       </PopoverTrigger>
 
@@ -2136,7 +2239,7 @@ export default function EmployerDashboard() {
 
                             <div className="flex items-center text-green-600">
                               <Eye className="w-4 h-4 mr-1" />
-                              <span>{job.views} Views</span>
+                              <span>{job.apply_clicks} Views</span>
                             </div>
                           </div>
                         </div>
@@ -2434,7 +2537,7 @@ export default function EmployerDashboard() {
                   <Label>Category</Label>
                   <Input
                     name="category"
-                    value={jobForm.category?.name || ""}
+                    value={jobForm.category || ""}
                     onChange={(e) =>
                       setJobForm({
                         ...jobForm,
@@ -2473,7 +2576,7 @@ export default function EmployerDashboard() {
                   <Label>Location</Label>
                   <Input
                     name="location"
-                    value={jobForm.location?.name || ""}
+                    value={jobForm.location || ""}
                     onChange={(e) =>
                       setJobForm({
                         ...jobForm,
@@ -2768,28 +2871,6 @@ export default function EmployerDashboard() {
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-                    {/*  Salary Filter */}
-                    <Select
-                      value={salaryFilter}
-                      onValueChange={setSalaryFilter}
-                    >
-                      <SelectTrigger className="w-full h-10">
-                        <SelectValue placeholder="Salary" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="All">All Salaries</SelectItem>
-                        <SelectItem value="Below 20000">
-                          Below ₹20,000
-                        </SelectItem>
-                        <SelectItem value="20000-50000">
-                          ₹20,000–₹50,000
-                        </SelectItem>
-                        <SelectItem value="Above 50000">
-                          Above ₹50,000
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-
                     {/* Experience Filter */}
                     <Select
                       value={experienceFilter}
@@ -2806,8 +2887,7 @@ export default function EmployerDashboard() {
                         <SelectItem value="5+ Years">5+ Years</SelectItem>
                       </SelectContent>
                     </Select>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                   
                     <Select
                       value={jobTitleFilter}
                       onValueChange={setJobTitleFilter}
@@ -3163,6 +3243,8 @@ export default function EmployerDashboard() {
                         </div>
                       )}
 
+                     
+
                     {selectedCandidate.certifications.length > 0 && (
                       <div>
                         <h3 className="font-semibold text-gray-900 mb-3">
@@ -3194,6 +3276,26 @@ export default function EmployerDashboard() {
                       </div>
                     )}
 
+                       <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowResume(!showResume)}
+                      >
+                        View Resume
+                      </Button>
+
+                      {showResume && selectedCandidate.resumeUrl && (
+                        <div className="mt-4 h-[500px] border rounded">
+                          <iframe
+                            src={`https://docs.google.com/gview?url=${encodeURIComponent(
+                              selectedCandidate.resumeUrl
+                            )}&embedded=true`}
+                            className="w-full h-full"
+                            title="Resume Preview"
+                          />
+                        </div>
+                      )}
+
                     {/* Action Buttons */}
                     <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t">
                       <div className="flex flex-col sm:flex-row gap-3 mt-4">
@@ -3210,7 +3312,7 @@ export default function EmployerDashboard() {
                               Shortlist Candidate
                             </Button>
 
-                            <Button
+                            {/* <Button
                               variant="outline"
                               className="border-red-600 text-red-600 hover:bg-red-50 flex-1"
                               onClick={() =>
@@ -3219,7 +3321,38 @@ export default function EmployerDashboard() {
                             >
                               <XCircle className="w-4 h-4 mr-2" />
                               Reject Application
-                            </Button>
+                            </Button> */}
+                            
+                         <AlertDialog>
+                           <AlertDialogTrigger asChild>                         
+                             <Button
+                               variant="outline"
+                               className="border-red-600 text-red-600 hover:bg-red-50 flex-1"
+                             >
+                               <XCircle className="w-4 h-4 mr-2" />
+                               Reject Application
+                             </Button>
+                           </AlertDialogTrigger>
+                         
+                           <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Reject this application?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This action cannot be undone. The candidate will be marked as rejected.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                        
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction
+                                className="bg-red-600 hover:bg-red-700"
+                                onClick={() => handleRejectCandidate(selectedCandidate)}
+                              >
+                                Yes, Reject
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                           </AlertDialogContent>
+                         </AlertDialog>
                           </>
                         )}
 
@@ -3280,10 +3413,12 @@ export default function EmployerDashboard() {
         <div>
           <label className="text-sm font-medium">Interview Date</label>
           <input
+          required
             type="date"
             className="w-full border rounded-lg p-2 mt-1 focus:ring-2 focus:ring-blue-500"
             value={interviewDate}
             onChange={(e) => setInterviewDate(e.target.value)}
+            
           />
         </div>
 
@@ -3291,7 +3426,7 @@ export default function EmployerDashboard() {
         <div className="flex space-x-2 items-center">
           <label className="text-sm font-medium">Interview Time</label>
 
-          <input
+          {/* <input
             type="number"
             min="1"
             max="12"
@@ -3309,7 +3444,35 @@ export default function EmployerDashboard() {
             className="w-16 border rounded-lg p-2"
             value={minute}
             onChange={(e) => setMinute(e.target.value)}
-          />
+          /> */}
+
+                <input
+                 type="text"
+                 placeholder="hh:mm AM"
+                 className="w-32 border rounded-lg p-2 text-center"
+                 value={time}
+                 onChange={(e) => {
+                   let value = e.target.value.toUpperCase();
+               
+                   value = value.replace(/[^0-9:APM ]/g, "");
+                               
+                   if (value.length === 2 && !value.includes(":")) {
+                     value = value + ":";
+                   }
+               
+                   if (value.length > 8) return;
+               
+                   setTime(value);
+                 }}
+                 onBlur={() => {
+                  
+                   const regex = /^(0?[1-9]|1[0-2]):[0-5][0-9]\s?(AM|PM)$/;
+                   if (!regex.test(time)) {
+                     setTime(""); 
+                   }
+                 }}
+               />
+
 
           <select
             className="border rounded-lg p-2"
@@ -3318,6 +3481,19 @@ export default function EmployerDashboard() {
           >
             <option>AM</option>
             <option>PM</option>
+          </select>
+
+            {/* ✅ Time Zone Dropdown */}
+          <select
+            className="border rounded-lg p-2"
+            value={timeZone}
+            onChange={(e) => setTimeZone(e.target.value)}
+          >
+            <option value="IST">IST</option>
+            <option value="UTC">UTC</option>
+            <option value="EST">EST</option>
+            <option value="PST">PST</option>
+            <option value="CST">CST</option>
           </select>
         </div>
 
@@ -3364,6 +3540,7 @@ export default function EmployerDashboard() {
           Cancel
         </Button>
         <Button
+          type="button"
           className="bg-blue-600 hover:bg-blue-700"
           onClick={handleScheduleSubmit}
         >
@@ -3395,6 +3572,12 @@ export default function EmployerDashboard() {
           </div>
         )}
 
+        {activeTab === "profiles" && (
+        <CandidatesPage/>
+         )}
+         {activeTab === "quota" && (
+        <QuotaUsagePage />
+         )}
         {/* Analytics Tab */}
         {activeTab === "analytics" && (
           <Card>
