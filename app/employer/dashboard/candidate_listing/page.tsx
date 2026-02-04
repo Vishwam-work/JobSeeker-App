@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Phone, FileText, Mail, CheckSquare ,Bookmark } from "lucide-react";
+import { Phone, FileText, Mail, CheckSquare, Bookmark } from "lucide-react";
 import Highlighter from "react-highlight-words";
 interface Candidate {
   id: number;
@@ -1023,13 +1023,13 @@ export default function CandidatesPage() {
 
                 {/* RIGHT ACTION PANEL */}
                 <div className="flex md:flex-col items-center md:items-center justify-between md:justify-center gap-2 md:gap-3 md:w-52 w-full border-t md:border-t-0 md:border-l pt-3 md:pt-0 md:pl-4 relative">
-                   {/* STATIC SAVE ICON */}
-<span
-  className="absolute top-2 right-2 text-gray-400"
-  title="Save candidate"
->
-  <Bookmark size={20} />
-</span>
+                  {/* SAVE ICON */}
+                  <span
+                    className="absolute top-2 right-2 text-gray-400"
+                    title="Save candidate"
+                  >
+                    <Bookmark size={20} />
+                  </span>
 
                   <img
                     src={
@@ -1057,7 +1057,6 @@ export default function CandidatesPage() {
                       <FileText size={14} /> View CV
                     </a>
                   )}
-                 
                 </div>
               </div>
             ))}
