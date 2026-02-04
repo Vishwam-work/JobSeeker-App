@@ -78,7 +78,7 @@ import exp from "node:constants";
 
 export default function Profile() {
   // Form states, data, and functions, etc.
-  const { savedJobs, removeSavedJob } = useSavedJobs();
+  // const { savedJobs, removeSavedJob } = useSavedJobs();
   const [loading, setLoading] = useState(true);
   const [profileData, setProfileData] = useState({
     personalInfo: {
@@ -103,7 +103,7 @@ export default function Profile() {
     summary: "",
   });
   const [profileImage, setProfileImage] = useState(null);
-  const [selectedImage, setSelectedImage] = useState(null); 
+  const [selectedImage, setSelectedImage] = useState(null);
   const [activeSection, setActiveSection] = useState("personal");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState({
@@ -203,10 +203,10 @@ const getUserKey = () => {
 
   // Functions to handle inline forms
 
-  const getCategoryName = (id) =>
+  const getCategoryName = (id: string) =>
     jobCategories.find((c) => c.id === id)?.name || "";
 
-  const getJobTitleName = (id) =>
+  const getJobTitleName = (id: string) =>
     jobTitles.find((t) => t.id === id)?.title || "";
 
   const resetExperienceForm = () => {

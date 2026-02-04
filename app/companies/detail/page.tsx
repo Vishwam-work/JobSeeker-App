@@ -19,8 +19,8 @@ export default function CompanyDetailPage() {
   const searchParams = useSearchParams();
   const id = searchParams.get("id");
   const router = useRouter(); 
-  const [company, setCompany] = useState(null);
-  const [jobs, setJobs] = useState([]);
+  const [company, setCompany] = useState<Company | null>(null);
+  const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
@@ -29,7 +29,27 @@ export default function CompanyDetailPage() {
   const [loadingUserData, setLoadingUserData] = useState(false);
   const [answers, setAnswers] = useState([]);
 
- 
+ type Company = {
+  id: string | number;
+  name: string;
+  type?: string;
+  industry?: string;
+  size?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  website?: string;
+  description?: string;
+};
+type Job = {
+  id: string | number;
+  title: string;
+  description: string;
+  location: string;
+  salary: string;
+  type: string;
+  questions: any[];
+};
 
   useEffect(() => {
     const fetchCompanyDetails = async () => {
@@ -54,13 +74,29 @@ export default function CompanyDetailPage() {
         const companyData = await companyRes.json();
         const jobsData = await jobsRes.json();
         console.log("Company Data:", companyData);
-        const mappedCompany = {
+        // const mappedCompany = {
+        //   id: companyData.id,
+        //   // name: companyData.company_name,
+        //     name:
+        //    companyData.company_name ||
+        //    companyData.name ||
+        //    "Company name not available",
+        //   type: companyData.company_type,
+        //   industry: companyData.industry,
+        //   size: companyData.company_size,
+        //   city: companyData.city,
+        //   state: companyData.state,
+        //   country: companyData.country,
+        //   website: companyData.website,
+        //   description: companyData.description,
+        // };
+        const mappedCompany: Company = {
           id: companyData.id,
           // name: companyData.company_name,
-            name:
-           companyData.company_name ||
-           companyData.name ||
-           "Company name not available",
+          name:
+            companyData.company_name ||
+            companyData.name ||
+            "Company name not available",
           type: companyData.company_type,
           industry: companyData.industry,
           size: companyData.company_size,
@@ -73,19 +109,20 @@ export default function CompanyDetailPage() {
 
         setCompany(mappedCompany);
 
-        const jobList =
+        const jobList: Job[] =
           Array.isArray(jobsData) ||
           Array.isArray(jobsData.data) ||
           Array.isArray(jobsData.results)
-            ? (jobsData.data || jobsData.results || jobsData).map((job) => ({
-                id: job.id,
-                title: job.title || job.job_title || "Untitled Job",
-                description: job.description || "No description provided.",
-                location: job.location?.name || job.city?.name || "N/A",
-                salary: job.salary || "Not specified",
-                type: job.job_type || job.type || "Not specified",
-                questions: job.questions || [],
-              }))
+            ? (jobsData.data || jobsData.results || jobsData).map(
+                (job: any): Job => ({
+                  id: job.id,
+                  title: job.title || job.job_title || "Untitled Job",
+                  description: job.description || "No description provided.",
+                  location: job.location?.name || job.city?.name || "N/A",
+                  salary: job.salary || "Not specified",
+                  type: job.job_type || job.type || "Not specified",
+                  questions: job.questions || [],
+                }))
             : [];
 
         setJobs(jobList);
@@ -99,7 +136,8 @@ export default function CompanyDetailPage() {
     if (id) fetchCompanyDetails();
   }, [id]);
 
-   const redirectToHomeWithSearch = (jobTitle) => {
+const redirectToHomeWithSearch = (jobTitle?: string) => {
+  if (!jobTitle) return;
   router.push(`/?search=${encodeURIComponent(jobTitle)}`);
 };
 
