@@ -1668,6 +1668,21 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
     fetchCompany();
   }, []);
 
+  const [filters, setFilters] = useState({
+    search: "",
+    location: "",
+    experience: "",
+    salaryRange: [0, 50],
+    designation: "",
+    department_Role :"",
+    Industry :"",
+    Notice_Period :"",
+    Gender :"",
+    Age :[0, 50],
+    Degree_Course :"",
+    college_Name :"",
+  });
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
