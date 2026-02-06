@@ -28,10 +28,68 @@ import Header from '@/components/Header';
 import Link from 'next/link';
 import DownloadProfilePDF from '@/components/DownloadProfilePDF';
 export default function ProfileReview() {
-  const [profileData, setProfileData] = useState(null);
-  const [jobTitles, setJobTitles] = useState([]);
-  const [jobCategories, setJobCategories] = useState([]);
+  const [profileData, setProfileData] = useState<ProfileData | null>(null);
+  const [jobTitles, setJobTitles] = useState<JobTitle[]>([]);
+  const [jobCategories, setJobCategories] = useState<JobCategory[]>([]);
   const [isPDF, setIsPDF] = useState(false);
+  interface JobCategory {
+  id: number | string;
+  name: string;
+}
+interface JobTitle {
+  id: number | string;
+  title: string;
+}
+interface ProfileExperience {
+  id: string | number;
+  company: string;
+  position: string;
+  category: string;
+  duration: string;
+  location: string;
+  description: string;
+}
+
+interface Education {
+  id: string | number;
+  degree: string;
+  field: string;
+  institution: string;
+  year: string | number;
+  percentage: string;
+}
+
+interface Certification {
+  name: string;
+  issuer: string;
+  year: string | number;
+}
+
+interface ProfileData {
+  personalInfo: {
+    profile_image?: string | null;
+    fullName: string;
+    email: string;
+    phone: string;
+    location: string;
+    experience: string;
+    currentSalary: string;
+    expectedSalary: string;
+    noticePeriod: string;
+  };
+  experience: ProfileExperience[];
+  education: Education[];
+  certifications: Certification[];
+  skills: string[];
+  resume: string;
+}
+interface Certification {
+  id: string | number; 
+  name: string;
+  issuer: string;
+  year: string | number;
+}
+
     useEffect(() => {
       fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_title/")
         .then((res) => res.json())
@@ -88,7 +146,7 @@ export default function ProfileReview() {
             expectedSalary: data.expected_salary,
             noticePeriod: data.notice_period,
           },
-          experience: data.experiences.map((exp) => ({
+          experience: data.experiences.map((exp: any) => ({
             id: exp.id,
             company: exp.company,
             position: exp.job_title?.title || "N/A",  
@@ -97,7 +155,7 @@ export default function ProfileReview() {
             location: exp.location?.name || "N/A",
             description: exp.description,
           })),
-          education: data.educations.map((edu) => ({
+          education: data.educations.map((edu: any) => ({
             id: edu.id,
             degree: edu.degree,
             field: edu.field_of_study,
@@ -105,12 +163,12 @@ export default function ProfileReview() {
             year: edu.year,
             percentage: edu.percentage,
           })),
-          certifications: data.certifications.map((cert) => ({
+          certifications: data.certifications.map((cert: any) => ({
             name : cert.name,
             issuer : cert.issuer,
             year : cert.year
           })),
-          skills: data.skills.map((s) => s.name),
+          skills: data.skills.map((s: any) => s.name),
           resume: data.resume || "",
         });
       } else {

@@ -80,7 +80,7 @@ export default function Profile() {
   // Form states, data, and functions, etc.
   // const { savedJobs, removeSavedJob } = useSavedJobs();
   const [loading, setLoading] = useState(true);
-  const [profileData, setProfileData] = useState({
+  const [profileData, setProfileData] = useState<ProfileData>({
     personalInfo: {
       fullName: "",
       email: "",
@@ -103,7 +103,7 @@ export default function Profile() {
     summary: "",
   });
   const [profileImage, setProfileImage] = useState(null);
-  const [selectedImage, setSelectedImage] = useState(null);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [activeSection, setActiveSection] = useState("personal");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState({
@@ -118,13 +118,13 @@ export default function Profile() {
   const [showAddExperience, setShowAddExperience] = useState(false);
   const [showAddEducation, setShowAddEducation] = useState(false);
   const [showAddCertification, setShowAddCertification] = useState(false);
-  const [editingExperience, setEditingExperience] = useState(null);
-  const [editingEducation, setEditingEducation] = useState(null);
-  const [editingCertification, setEditingCertification] = useState(null);
+  const [editingExperience, setEditingExperience] = useState<ApiExperience | null>(null);
+  const [editingEducation, setEditingEducation] = useState<Education | null>(null);
+  const [editingCertification, setEditingCertification] = useState<Certification | null>(null);
   const [majors, setMajors] = useState([]);
   const [majorSearch, setMajorSearch] = useState("");
   const [resumeFile, setResumeFile] = useState<File | null>(null);
-  const [experienceForm, setExperienceForm] = useState({
+  const [experienceForm, setExperienceForm] = useState<ExperienceForm>({
     company: "",
     category_id: "",
     job_title_id: "",
@@ -135,7 +135,7 @@ export default function Profile() {
     description: "",
   });
   
-  const [educationForm, setEducationForm] = useState({
+  const [educationForm, setEducationForm] = useState<EducationForm>({
     degree: "",
     field: "",
     institution: "",
@@ -144,7 +144,7 @@ export default function Profile() {
     score_type: "",
   });
 
-  const [certificationForm, setCertificationForm] = useState({
+  const [certificationForm, setCertificationForm] = useState<CertificationForm>({
     name: "",
     issuer: "",
     year: null,
@@ -158,14 +158,14 @@ export default function Profile() {
     { id: "certifications", label: "Certifications", icon: Award },
     { id: "save", label: "Jobs", icon: Briefcase },
   ];
-  const [countries, setCountries] = useState([]);
-  const [states, setStates] = useState([]);
-  const [cities, setCities] = useState([]);
-  const [companies, setCompanies] = useState([]);
-  const [jobTitles, setJobTitles] = useState([]);
-  const [jobCategories, setJobCategories] = useState([]);
+  const [countries, setCountries] = useState<Country[]>([]);
+  const [states, setStates] = useState<StateItem[]>([]);
+  const [cities, setCities] = useState<CityItem[]>([]);
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [jobTitles, setJobTitles] = useState<JobTitle[]>([]);
+  const [jobCategories, setJobCategories] = useState<JobCategory[]>([]);
   const [currency, setCurrency] = useState([]);
-  const [savedJobsData, setSavedJobsData] = useState([]);
+  const [savedJobsData, setSavedJobsData] = useState<SavedJob[]>([]);
   const [activeSaveTab, setActiveSaveTab] = useState("SavedJobs");
   const [isProfileSubmitted, setIsProfileSubmitted] = useState(false);
   const [appliedJobs, setAppliedJobs] = useState<any[]>([]);
@@ -178,6 +178,182 @@ export default function Profile() {
     "60-90 days",
     "90+ days",
   ]);
+
+type JobCategory = {
+  id: string;
+  name: string;
+};
+
+type JobTitle = {
+  id: string;
+  title: string;
+};
+
+type ExperienceForm = {
+  company: string;
+  category_id: string;
+  job_title_id: string;
+  location_id: string;
+  startDate: dayjs.Dayjs | null;
+  endDate: dayjs.Dayjs | null;
+  isCurrentJob: boolean;
+  description: string;
+};
+
+type ApiExperience = {
+  id?: string | number;
+  company?: string;
+  start_date?: string | null;
+  end_date?: string | null;
+  description?: string;
+
+  job_title?: {
+    id?: string | number;
+    title?: string;
+  };
+
+  category?: {
+    id?: string | number;
+    name?: string;
+  };
+
+  location?: {
+    id?: string | number;
+    name?: string;
+  };
+};
+type ProfileExperience = {
+  id?: string | number;
+  company: string;
+
+  category?: {
+    id: string | number;
+    name?: string;
+  };
+
+  job_title?: {
+    id: string | number;
+    title?: string;
+  };
+
+  location?: {
+    id: string | number;
+    name?: string;
+  };
+
+  // form / payload fields
+  category_id?: string;
+  job_title_id?: string;
+  location_id?: string;
+
+  start_date?: string;
+  end_date?: string | null;
+  description?: string;
+};
+
+type Certification = {
+  id?: string | number;
+  name: string;
+  issuer: string;
+  year?: number | string | null;
+};
+
+type CertificationForm = {
+  name: string;
+  issuer: string;
+  year: dayjs.Dayjs | null;
+};
+
+type ProfileData = {
+  personalInfo: {
+    fullName: string;
+    email: string;
+    phone: string;
+    phoneCode: string;
+    countryId: string;
+    stateId: string;
+    cityId: string;
+    currentcurrency: string;
+    expectedCurrency: string;
+    experience: string;
+    currentSalary: string;
+    expectedSalary: string;
+    noticePeriod: string;
+    resume?: string | null;
+    profile_image?: string | null;
+  };
+  experience: ProfileExperience[]; 
+  education: Education[];
+  skills: Skill[];
+  certifications: Certification[];
+  summary: string;
+};
+type Education = {
+  id?: string | number;
+  degree: string;
+  field: string;
+  institution: string;
+  year?: number | string | null; 
+  percentage?: string;
+  score_type?: string;
+};
+
+type EducationForm = {
+  degree: string;
+  field: string;
+  institution: string;
+  year: dayjs.Dayjs | null; 
+  percentage: string;
+  score_type: string;
+};
+
+type Skill = {
+  id?: string | number;
+  name: string;
+};
+
+type WithId = {
+  id: string | number;
+};
+type DeletableSection =
+  | "experience"
+  | "education"
+  | "skills"
+  | "certifications";
+
+type Country = {
+  id: string | number;
+  name?: string;
+  phonecode: string;
+  currency: string;
+  currency_name: string;
+};
+
+type StateItem = {
+  id: string | number;
+  name: string;
+};
+ 
+type CityItem = {
+  id: string | number;
+  name: string;
+};
+type Company = {
+  id: string | number;
+  name: string;
+};
+interface SavedJob {
+  id: string | number;
+  job_title?: string;
+  job?: {
+    company?: string;
+    location?: {
+      name?: string;
+    };
+  };
+}
+
+
 
   const token =
   typeof window !== "undefined"
@@ -195,7 +371,7 @@ const getUserKey = () => {
 };
 
 
-  const fileInputRef = useRef(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   // Give the refrence to the Resume button
   const openFileDialog = () => {
     fileInputRef.current?.click();
@@ -247,7 +423,7 @@ const getUserKey = () => {
     setShowAddExperience(true);
     setEditingExperience(null);
   };
-  const handleEditExperience = (exp) => {
+  const handleEditExperience = (exp: ApiExperience) => {
     const startDate = exp.start_date ? dayjs(exp.start_date) : null;
     const endDate = exp.end_date ? dayjs(exp.end_date) : null;
 
@@ -327,13 +503,13 @@ const getUserKey = () => {
     setEditingEducation(null);
   };
 
-  const handleEditEducation = (edu) => {
+  const handleEditEducation = (edu: Education) => {
     setEducationForm({
       degree: edu.degree,
       field: edu.field,
       institution: edu.institution,
       year: edu.year ? dayjs(edu.year, "YYYY") : null,
-      percentage: edu.percentage,
+     percentage: edu.percentage ?? "",
       score_type: edu.score_type ? edu.score_type.toLowerCase() : "",
     });
     setEditingEducation(edu);
@@ -396,7 +572,7 @@ const getUserKey = () => {
     setEditingCertification(null);
   };
 
-  const handleEditCertification = (cert) => {
+  const handleEditCertification = (cert: Certification) => {
     setCertificationForm({
       name: cert.name,
       issuer: cert.issuer,
@@ -456,28 +632,38 @@ const getUserKey = () => {
   };
 
   const handleAddSkill = () => {
-    if (newSkill.trim() && !profileData.skills.includes(newSkill.trim())) {
+    if (newSkill.trim() && !profileData.skills.some((skill) => skill.name === newSkill.trim())) {
       setProfileData((prev) => ({
         ...prev,
-        skills: [...prev.skills, newSkill.trim()],
+        skills: [...prev.skills, { name: newSkill.trim() }],
       }));
       setNewSkill("");
     }
   };
 
-  const handleRemoveSkill = (skillToRemove) => {
+  const handleRemoveSkill = (skillToRemove: Skill) => {
     setProfileData((prev) => ({
       ...prev,
-      skills: prev.skills.filter((skill) => skill !== skillToRemove),
+      skills: prev.skills.filter((skill) => skill.name !== skillToRemove.name),
     }));
   };
 
-  const handleDeleteItem = (type, id) => {
-    setProfileData((prev) => ({
+  const handleDeleteItem = (
+  type: DeletableSection,
+  id: string | number
+) => {
+  setProfileData((prev) => {
+    if (!prev) return prev;
+
+    return {
       ...prev,
-      [type]: prev[type].filter((item) => item.id !== id),
-    }));
-  };
+      [type]: (prev[type] as WithId[]).filter(
+        (item) => item.id !== id
+      ),
+    };
+  });
+};
+
 
   const handleResumeUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -561,17 +747,17 @@ const getUserKey = () => {
               profile_image: data.profile_image || profileData.personalInfo.profile_image,
 
             },
-            experience: (data.experiences || []).map(exp => ({
+            experience: (data.experiences || []).map((exp: ProfileExperience) => ({
               ...exp,
               category_id: exp.category?.id ?? "",
               job_title_id: exp.job_title?.id ?? "",
               location_id: exp.location?.id ?? "",
             })),
-            education: (data.educations || []).map(e => ({
+            education: (data.educations || []).map((e: Education) => ({
               ...e,
               score_type: e.score_type?.toLowerCase() || "cgpa",
             })),
-            skills: (data.skills || []).map((skill) => skill.name),
+            skills: (data.skills || []).map((skill: Skill) => skill.name),
             certifications: data.certifications || [],
             summary: "", // Optional: if you use a summary field
           });
@@ -831,8 +1017,8 @@ useEffect(() => {
   const imageUploaded = await uploadProfileImage();
   if (!imageUploaded) {
     toast.error("Image upload failed", {
-    description: error?.message || "Please try again.",
-    });
+    description: "Please try again.",
+  });
     return;
   }
 }
@@ -920,7 +1106,7 @@ useEffect(() => {
           },
           experience: data.experiences || [],
           education: data.educations || [],
-          skills: (data.skills || []).map((s) => s.name),
+          skills: (data.skills || []).map((s: Skill) => s.name),
           certifications: data.certifications || [],
           summary: profileData.summary,
         });
@@ -1109,10 +1295,12 @@ const removeAppliedJob = async (applicationId: number) => {
                    type="file"
                    accept="image/*"
                    className="hidden"
-                   onChange={(e) => {
-                   const file = e.target.files[0];
-                   if (file) setSelectedImage(file);
-                    }}
+                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                      setSelectedImage(file);
+                     }
+                   }}
                     />
                   </label>
              </div>
@@ -1550,7 +1738,7 @@ const removeAppliedJob = async (applicationId: number) => {
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              {countries.map((country) => (
+                              {countries.map((country: Country) => (
                                 <SelectItem
                                   key={country.id}
                                   value={country.phonecode}
@@ -1618,7 +1806,7 @@ const removeAppliedJob = async (applicationId: number) => {
                                         ...prev,
                                         personalInfo: {
                                           ...prev.personalInfo,
-                                          countryId: country.id,
+                                          countryId: country.id.toString(),
                                           stateId: "",
                                           cityId: "",
                                           phoneCode: country.phonecode,
@@ -1675,7 +1863,7 @@ const removeAppliedJob = async (applicationId: number) => {
                                         ...prev,
                                         personalInfo: {
                                           ...prev.personalInfo,
-                                          stateId: state.id,
+                                           stateId: state.id.toString(),
                                           cityId: "",
                                         },
                                       }));
@@ -1704,7 +1892,7 @@ const removeAppliedJob = async (applicationId: number) => {
                                 <span>
                               {profileData.personalInfo.cityId
                                 ? cities.find(
-                                    (c) =>
+                                    (c: CityItem) =>
                                       c.id == profileData.personalInfo.cityId
                                   )?.name
                                 : "Select city"}
@@ -1740,7 +1928,7 @@ const removeAppliedJob = async (applicationId: number) => {
                                             ...prev,
                                             personalInfo: {
                                               ...prev.personalInfo,
-                                              cityId: city.id,
+                                              cityId: city.id.toString(),
                                             },
                                           }));
                                           setCityOpen(false);
@@ -1989,14 +2177,14 @@ const removeAppliedJob = async (applicationId: number) => {
                               </div>
                               <div className="min-w-0 flex-1">
                                 <h3 className="font-semibold text-base lg:text-lg text-gray-900 break-words">
-                                  {getJobTitleName(exp.job_title_id)}
+                                  {getJobTitleName(exp.job_title_id ?? "")}
                                 </h3>
                                 <p className="text-purple-600 font-medium text-sm lg:text-base break-words">
                                   {exp.company}
                                 </p>
                                 {exp.category && (
                                   <p className="text-gray-600 text-sm break-words">
-                                    {getCategoryName(exp.category_id)}
+                                    {getCategoryName(exp.category_id ?? "")}
                                   </p>
                                 )}
                                 <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 text-xs lg:text-sm text-gray-600 mt-1 gap-1 sm:gap-0">
@@ -2030,7 +2218,7 @@ const removeAppliedJob = async (applicationId: number) => {
                                 variant="outline"
                                 size="sm"
                                 onClick={() =>
-                                  handleDeleteItem("experience", exp.id)
+                                  handleDeleteItem("experience", exp.id ?? "")
                                 }
                               >
                                 <Trash2 className="w-4 h-4 text-red-500" />
@@ -2083,7 +2271,7 @@ const removeAppliedJob = async (applicationId: number) => {
                                          <CommandItem disabled>No companies found</CommandItem>
                                        )}
                              
-                                       {companies.map((company) => (
+                                       {companies.map((company: Company) => (
                                          <CommandItem
                                            key={company.id}
                                            value={company.name}
@@ -2139,7 +2327,7 @@ const removeAppliedJob = async (applicationId: number) => {
                                             onSelect={() =>
                                               setExperienceForm((prev) => ({
                                                 ...prev,
-                                                location_id: location.id,
+                                                location_id: location.id.toString(),
                                               }))
                                             }
                                           >
@@ -2234,31 +2422,31 @@ const removeAppliedJob = async (applicationId: number) => {
                               </div>
 
                               <div>
-                                <DatePicker
-                                  label="Start Date *"
+                               <DatePicker
+                                 label="Start Date *"
                                   value={experienceForm.startDate}
                                   onChange={(date) =>
                                     setExperienceForm((prev) => ({
                                       ...prev,
                                       startDate: date,
                                     }))
-                                  }
+                                 }
                                   views={["year", "month", "day"]}
-                                  renderInput={(params) => (
-                                    <TextField
-                                      {...params}
-                                      fullWidth
-                                      size="small"
-                                      sx={{
+                                  slotProps={{
+                                    textField: {
+                                      fullWidth: true,
+                                      size: "small",
+                                      sx: {
                                         mt: 1,
                                         "& .MuiOutlinedInput-root": {
-                                          height: "44px",
+                                         height: "44px",
                                           borderRadius: "6px",
                                         },
-                                      }}
-                                    />
-                                  )}
-                                />
+                                      },
+                                   },
+                                 }}
+                               />
+
                               </div>
                               <div>
                                 <div className="space-y-2">
@@ -2273,34 +2461,35 @@ const removeAppliedJob = async (applicationId: number) => {
                                         }))
                                       }
                                       views={["year", "month", "day"]}
-                                      minDate={experienceForm.startDate}
-                                      renderInput={(params) => (
-                                        <TextField
-                                          {...params}
-                                          fullWidth
-                                          size="small"
-                                          sx={{
+                                      minDate={experienceForm.startDate ?? undefined} 
+                                      slotProps={{
+                                        textField: {
+                                          fullWidth: true,
+                                          size: "small",
+                                          sx: {
                                             "& .MuiOutlinedInput-root": {
                                               height: "44px",
                                               borderRadius: "6px",
                                             },
-                                          }}
-                                        />
-                                      )}
+                                          },
+                                        },
+                                      }}
                                     />
+
                                   )}
                                 </div>
                                 <div className="flex items-center space-x-2 mt-1">
                                   <Checkbox
                                     id="currentJob"
                                     checked={experienceForm.isCurrentJob}
-                                    onCheckedChange={(checked) =>
-                                      setExperienceForm((prev) => ({
-                                        ...prev,
-                                        isCurrentJob: checked,
-                                        endDate: checked ? null : prev.endDate,
-                                      }))
-                                    }
+                                    onCheckedChange={(checked) => {
+                                         const isChecked = checked === true; 
+                                       setExperienceForm((prev) => ({
+                                         ...prev,
+                                         isCurrentJob: isChecked,
+                                         endDate: isChecked ? null : prev.endDate,
+                                       }));
+                                     }}                                  
                                   />
                                   <Label
                                     htmlFor="currentJob"
@@ -2434,7 +2623,7 @@ const removeAppliedJob = async (applicationId: number) => {
                                 variant="outline"
                                 size="sm"
                                 onClick={() =>
-                                  handleDeleteItem("education", edu.id)
+                                  handleDeleteItem("education", edu.id ?? "")
                                 }
                               >
                                 <Trash2 className="w-4 h-4 text-red-500" />
@@ -2558,7 +2747,7 @@ const removeAppliedJob = async (applicationId: number) => {
                                   </Label>
                                   <div className="mt-1">
                                 <DatePicker
-                                  value={educationForm.year}
+                                  value={educationForm.year ?? undefined} 
                                   onChange={(date) =>
                                     setEducationForm((prev) => ({
                                       ...prev,
@@ -2566,23 +2755,23 @@ const removeAppliedJob = async (applicationId: number) => {
                                     }))
                                   }
                                   views={["year"]}
-                                  disableFuture 
-                                  renderInput={(params) => (
-                                    <TextField
-                                      {...params}
-                                      fullWidth
-                                      size="small"
-                                      sx={{
+                                  disableFuture
+                                  slotProps={{
+                                    textField: {
+                                      fullWidth: true,
+                                      size: "small",
+                                      sx: {
                                         mt: 1,
                                         "& .MuiOutlinedInput-root": {
                                           height: "44px",
                                           borderRadius: "6px",
                                           padding: "0 12px",
                                         },
-                                      }}
-                                    />
-                                  )}
-                                />
+                                      },
+                                    },
+                                  }}
+                                 />
+
                                 </div>
                               </div>
                               <div>
@@ -2706,7 +2895,7 @@ const removeAppliedJob = async (applicationId: number) => {
                             key={index}
                             className="inline-flex items-center px-3 py-1.5 rounded-full text-xs lg:text-sm bg-purple-100 text-purple-800 hover:bg-purple-200 transition-colors"
                           >
-                            <span className="break-all">{skill}</span>
+                            <span className="break-all">{skill.name}</span>
                             <button
                               className="ml-2 text-purple-600 hover:text-purple-800 flex-shrink-0"
                               onClick={() => handleRemoveSkill(skill)}
@@ -2792,7 +2981,7 @@ const removeAppliedJob = async (applicationId: number) => {
                                 variant="outline"
                                 size="sm"
                                 onClick={() =>
-                                  handleDeleteItem("certifications", cert.id)
+                                  handleDeleteItem("certifications", cert.id ?? "")
                                 }
                               >
                                 <Trash2 className="w-4 h-4 text-red-500" />
@@ -2852,7 +3041,7 @@ const removeAppliedJob = async (applicationId: number) => {
                                 <Label>Year Obtained *</Label>
                                 <div className="mt-1">
                                 <DatePicker
-                                  value={certificationForm.year}
+                                   value={certificationForm.year ?? undefined} 
                                   onChange={(date) =>
                                     setCertificationForm((prev) => ({
                                       ...prev,
@@ -2860,22 +3049,21 @@ const removeAppliedJob = async (applicationId: number) => {
                                     }))
                                   }
                                   views={["year"]}
-                                  renderInput={(params) => (
-                                    <TextField
-                                      {...params}
-                                      fullWidth
-                                      size="small"
-                                      sx={{
+                                  slotProps={{
+                                    textField: {
+                                      fullWidth: true,
+                                      size: "small",
+                                      sx: {
                                         mt: 1,
                                         "& .MuiOutlinedInput-root": {
                                           height: "44px",
                                           borderRadius: "6px",
                                         },
-                                      }}
-                                    />
-                                  )}
-
+                                      },
+                                    },
+                                  }}
                                 />
+
                                 </div>
                               </div>
                             </div>
