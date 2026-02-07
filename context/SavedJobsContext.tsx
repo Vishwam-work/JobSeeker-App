@@ -1,30 +1,54 @@
 "use client";
-import { createContext, useContext, useEffect, useState } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+} from "react";
 
-const SavedJobsContext = createContext(null);
+export interface SavedJob {
+  id: number;
+  title?: string;
+}
 
-export const SavedJobsProvider = ({ children }) => {
-  const [savedJobs, setSavedJobs] = useState([]);
+interface SavedJobsContextType {
+  savedJobs: SavedJob[];
+  addJob: (job: SavedJob) => void;
+  removeJob: (id: number) => void;
+}
 
-  // Load from localStorage
+const SavedJobsContext = createContext<SavedJobsContextType | null>(null);
+export const SavedJobsProvider = ({
+  children,
+}: {
+  children: ReactNode;
+}) => {
+  const [savedJobs, setSavedJobs] = useState<SavedJob[]>([]);
+
   useEffect(() => {
     const stored = localStorage.getItem("saved_jobs");
-    if (stored) setSavedJobs(JSON.parse(stored));
+    if (stored) {
+      try {
+        setSavedJobs(JSON.parse(stored));
+      } catch {
+        console.error("Invalid saved_jobs data");
+      }
+    }
   }, []);
 
-  // Save to localStorage when changed
   useEffect(() => {
     localStorage.setItem("saved_jobs", JSON.stringify(savedJobs));
   }, [savedJobs]);
 
-  const addJob = (job) => {
+  const addJob = (job: SavedJob) => {
     setSavedJobs((prev) => {
-      if (prev.find((j) => j.id === job.id)) return prev;
+      if (prev.some((j) => j.id === job.id)) return prev;
       return [...prev, job];
     });
   };
 
-  const removeJob = (id) => {
+  const removeJob = (id: number) => {
     setSavedJobs((prev) => prev.filter((j) => j.id !== id));
   };
 
@@ -35,4 +59,12 @@ export const SavedJobsProvider = ({ children }) => {
   );
 };
 
-export const useSavedJobs = () => useContext(SavedJobsContext);
+export const useSavedJobs = () => {
+  const context = useContext(SavedJobsContext);
+  if (!context) {
+    throw new Error(
+      "useSavedJobs must be used within a SavedJobsProvider"
+    );
+  }
+  return context;
+};

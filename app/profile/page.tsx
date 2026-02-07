@@ -640,7 +640,7 @@ const getUserKey = () => {
       setNewSkill("");
     }
   };
-
+  
   const handleRemoveSkill = (skillToRemove: Skill) => {
     setProfileData((prev) => ({
       ...prev,
@@ -1067,7 +1067,6 @@ useEffect(() => {
       certifications: profileData.certifications,
       skills: profileData.skills.map((name) => ({ name })),
     };
- 
     console.log("Payload:", payload);
     console.log("Token:", localStorage.getItem("auth_token"));
     const res = await fetch(
