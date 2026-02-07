@@ -631,22 +631,25 @@ const getUserKey = () => {
     }
   };
 
-  const handleAddSkill = () => {
-    if (newSkill.trim() && !profileData.skills.some((skill) => skill.name === newSkill.trim())) {
-      setProfileData((prev) => ({
-        ...prev,
-        skills: [...prev.skills, { name: newSkill.trim() }],
-      }));
-      setNewSkill("");
-    }
-  };
-  
-  const handleRemoveSkill = (skillToRemove: Skill) => {
+const handleAddSkill = () => {
+  const skillName = newSkill.trim();
+  if (!skillName) return;
+
+  if (!profileData.skills.some((s) => s.name === skillName)) {
     setProfileData((prev) => ({
       ...prev,
-      skills: prev.skills.filter((skill) => skill.name !== skillToRemove.name),
+      skills: [...prev.skills, { name: skillName }],
     }));
-  };
+    setNewSkill("");
+  }
+};
+  
+const handleRemoveSkill = (skillToRemove: Skill) => {
+  setProfileData((prev) => ({
+    ...prev,
+    skills: prev.skills.filter((s) => s.name !== skillToRemove.name),
+  }));
+};
 
   const handleDeleteItem = (
   type: DeletableSection,
@@ -757,7 +760,7 @@ const getUserKey = () => {
               ...e,
               score_type: e.score_type?.toLowerCase() || "cgpa",
             })),
-            skills: (data.skills || []).map((skill: Skill) => skill.name),
+            skills: (data.skills || []).map((skill: Skill) => ({id: skill.id,name: skill.name,})),
             certifications: data.certifications || [],
             summary: "", // Optional: if you use a summary field
           });
@@ -775,6 +778,7 @@ const getUserKey = () => {
     fetchProfile();
   }, []);
 
+ console.log("Profile Data ---->After Fetch", profileData);
   useEffect(() => {
     const fetchSavedJobs = async () => {
       const token = localStorage.getItem("auth_token");
@@ -1065,7 +1069,9 @@ useEffect(() => {
         score_type: edu.score_type?.toLowerCase() || "cgpa",
       })),
       certifications: profileData.certifications,
-      skills: profileData.skills.map((name) => ({ name })),
+      skills:profileData.skills.map((skill) => ({
+  name: skill.name,
+})),
     };
     console.log("Payload:", payload);
     console.log("Token:", localStorage.getItem("auth_token"));
@@ -1105,7 +1111,10 @@ useEffect(() => {
           },
           experience: data.experiences || [],
           education: data.educations || [],
-          skills: (data.skills || []).map((s: Skill) => s.name),
+          skills:(data.skills || []).map((s: Skill) => ({
+  id: s.id,
+  name: s.name,
+})),
           certifications: data.certifications || [],
           summary: profileData.summary,
         });
@@ -2894,7 +2903,9 @@ const removeAppliedJob = async (applicationId: number) => {
                             key={index}
                             className="inline-flex items-center px-3 py-1.5 rounded-full text-xs lg:text-sm bg-purple-100 text-purple-800 hover:bg-purple-200 transition-colors"
                           >
-                            <span className="break-all">{skill.name}</span>
+                             <span key={skill.id ?? index}>
+                              {skill.name}
+                            </span>
                             <button
                               className="ml-2 text-purple-600 hover:text-purple-800 flex-shrink-0"
                               onClick={() => handleRemoveSkill(skill)}
@@ -2918,7 +2929,7 @@ const removeAppliedJob = async (applicationId: number) => {
                     >
                       Next
                     </Button>
-                    
+
                     </div>
                   </CardContent>
                 </Card>
