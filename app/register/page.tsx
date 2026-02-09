@@ -80,7 +80,7 @@ export default function Register() {
   // ----------------------------
   // SEND OTP
   // ----------------------------
-  const handlesendotp = async (e) => {
+  const handlesendotp = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       const res = await fetch(

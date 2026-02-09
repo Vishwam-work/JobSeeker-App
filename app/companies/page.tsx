@@ -11,10 +11,22 @@ import HeroCarousel from "@/components/Carousel";
 import Footer from "@/components/Footer";
 
 export default function CompaniesPage() {
-  const [allCompanies, setAllCompanies] = useState([]);
+  const [allCompanies, setAllCompanies] = useState<CompanyListItem[]>([]);
   const [visibleCount, setVisibleCount] = useState(9);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+
+  type CompanyListItem = {
+  id: string | number;
+  name: string;
+  type: string;
+  industry: string;
+  employees: string;
+  locations: string[];
+  rating: number;
+  reviews: number;
+  founded: number | null;
+};
 
   useEffect(() => {
     const fetchCompanies = async () => {
@@ -34,7 +46,8 @@ export default function CompaniesPage() {
         const data = await res.json();
         console.log("API Response:", data);
 
-        const mapped = (data.data || data).map((item) => ({
+        const mapped: CompanyListItem[] = (data.data || data).map(
+        (item: any): CompanyListItem => ({
           id: item.id,
           name: item.company_name,
           type: item.company_type || "N/A",
@@ -44,8 +57,8 @@ export default function CompaniesPage() {
           rating: Math.floor(Math.random() * 2) + 3,
           reviews: Math.floor(Math.random() * 200) + 10,
           founded: item.founded_year || null,
-        }));
-
+        })
+      );
         setAllCompanies(mapped);
       } catch (error) {
         console.error("Error fetching companies:", error);

@@ -21,8 +21,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import CookieConsent from "@/components/Cookie";
-import { useSession, signIn, signOut } from "next-auth/react";
-import { Chrome } from "lucide-react";
+// import { useSession, signIn, signOut } from "next-auth/react";
+// import { Chrome } from "lucide-react";
 
 export default function EmployerLogin() {
   const [alertMessage, setAlertMessage] = useState("");

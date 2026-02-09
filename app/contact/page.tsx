@@ -82,7 +82,7 @@ export default function ContactPage() {
 
             <textarea
               placeholder="Message *"
-              rows="4"
+              rows={4}
               className="border border-gray-300 rounded-md px-4 py-2 w-full focus:ring-2 focus:ring-purple-500 outline-none"
               required
             ></textarea>
@@ -103,7 +103,7 @@ export default function ContactPage() {
           src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3679.54436687594!2d72.5713620751197!3d23.022505217313975!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x395e84f5f5df34a3%3A0x5e7e4e3d06c1a9e7!2sAhmedabad%2C%20Gujarat!5e0!3m2!1sen!2sin!4v1693914300000!5m2!1sen!2sin"
           width="100%"
           height="100%"
-          allowFullScreen=""
+          allowFullScreen={true}
           loading="lazy"
           referrerPolicy="no-referrer-when-downgrade"
           className="w-full h-full border-0"

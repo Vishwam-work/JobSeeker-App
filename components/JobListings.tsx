@@ -52,17 +52,17 @@ import {
 } from "lucide-react";
 
 export default function JobListings() {
-  const [jobs, setJobs] = useState([]);
-  const [filteredJobs, setFilteredJobs] = useState([]);
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [filteredJobs, setFilteredJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedJob, setSelectedJob] = useState(null);
+  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [isJobDetailOpen, setIsJobDetailOpen] = useState(false);
   const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
-  const [answers, setAnswers] = useState({});
-  const [userData, setUserData] = useState(null);
+  const [answers, setAnswers] = useState<Record<number, string>>({});
+  const [userData, setUserData] = useState<any>(null);
   const [loadingUserData, setLoadingUserData] = useState(false);
-  const [appliedJobs, setAppliedJobs] = useState([]);
-  const { savedJobs, addJob, removeJob } = useSavedJobs();
+  const [appliedJobs, setAppliedJobs] = useState<number[]>([]);
+  // const { savedJobs, addJob, removeJob } = useSavedJobs();
   const [savedJobIds, setSavedJobIds] = useState<number[]>([]);
   const [visibleCount, setVisibleCount] = useState(3);
   const searchParams = useSearchParams();
@@ -78,15 +78,15 @@ export default function JobListings() {
     jobType: "",
     workMode: "",
     salaryRange: [0, 50],
-    companies: [],
-    skills: [],
+    companies: [] as string[],
+    skills: [] as string[],
     postedWithin: "",
   });
 
   // Sample job data - in real app, this would come from API
-  const [companies, setCompanies] = useState([]);
-  const [locations, setLocations] = useState([]);
-  const [skillsList, setSkillsList] = useState([]);
+  const [companies, setCompanies] = useState<string[]>([]);
+  const [locations, setLocations] = useState<Location[]>([]);
+  const [skillsList, setSkillsList] = useState<string[]>([]);
 
   
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
@@ -97,6 +97,47 @@ export default function JobListings() {
   const [searchSkill, setSearchSkill] = useState("");
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [showLoginPopup, setShowLoginPopup] = useState(false);
+ 
+  interface  Location  {
+  id: string | number;
+  name: string;
+};
+interface  JobLocation  {
+  id?: number | string;
+  name: string;
+};
+
+ interface  Job  {
+  id: number | string;
+  title: string;
+  company: string;
+  skills: string[];
+  location?: JobLocation;
+  experience?: string; 
+  work_mode?: string;
+  job_type?: string;
+  salary?: string;
+  created_at?: string;
+  description?: string;
+  vacancies?: number;
+  urgentHiring?: boolean;
+  requirements?: string[];
+  benefits?: string[];
+  questions?: string[];
+};
+interface Filters {
+  skills: string[];
+   companies: string[];
+  experience?: string;
+  workMode?: string;
+  
+}
+interface Application {
+  id: number | string;
+  user_email: string;
+  job: number | string;
+}
+
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -130,9 +171,13 @@ export default function JobListings() {
         );
         const data = await res.json();
 
-        const companyNames = [
-          ...new Set(data.map((item: any) => item.company).filter(Boolean)),
-        ];
+        const companyNames: string[] = Array.from(
+           new Set(
+             data
+               .map((item: { company?: string }) => item.company)
+               .filter((c: string | undefined): c is string => Boolean(c))
+           )
+        );
 
         setCompanies(companyNames);
       } catch (error) {
@@ -197,7 +242,7 @@ export default function JobListings() {
       setJobs(data);
       setFilteredJobs(data);
 
-      const uniqueLocations = Array.from(
+      const uniqueLocations: Location[]  = Array.from(
        new Set(
        data
         .map((job: any) => job.location?.name) // ✅ FIX
@@ -269,6 +314,7 @@ export default function JobListings() {
     // Experience filter
     if (filters.experience && filters.experience !== "All") {
       filtered = filtered.filter((job) => {
+         if (!job.experience) return false;
         const [minJobExp, maxJobExp] = job.experience.split("-").map(Number);
         let [minFilterExp, maxFilterExp] = [0, 100]; // default
 
@@ -339,6 +385,7 @@ export default function JobListings() {
     // Salary range filter
     const [minSalary, maxSalary] = filters.salaryRange;
     filtered = filtered.filter((job) => {
+      if (!job.salary) return true;
       const salaryMatch = job.salary.match(/(\d+)-(\d+)/);
       if (salaryMatch) {
         const jobMinSalary = parseInt(salaryMatch[1]);
@@ -352,8 +399,8 @@ export default function JobListings() {
     if (filters.postedWithin && filters.postedWithin !== "All") {
       const now = new Date();
       filtered = filtered.filter((job) => {
-        const postedDate = new Date(job.created_at);
-        const diffTime = Math.abs(now - postedDate);
+        const postedDate = new Date(job.created_at ?? "");
+        const diffTime = Math.abs(now.getTime() - postedDate.getTime());
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
         switch (filters.postedWithin) {
@@ -374,14 +421,14 @@ export default function JobListings() {
     setFilteredJobs(filtered);
   }, [jobs, filters]);
 
-  const handleFilterChange = (key, value) => {
+  const handleFilterChange = (key: keyof typeof filters, value: any) => {
     setFilters((prev) => ({
       ...prev,
       [key]: value,
     }));
   };
 
-  const handleCompanyFilter = (company, checked) => {
+  const handleCompanyFilter = (company: string, checked: boolean) => {
     setFilters((prev) => ({
       ...prev,
       companies: checked
@@ -390,7 +437,7 @@ export default function JobListings() {
     }));
   };
 
-  const handleSkillFilter = (skill, checked) => {
+  const handleSkillFilter = (skill: string, checked: boolean) => {
     setFilters((prev) => ({
       ...prev,
       skills: checked
@@ -413,14 +460,14 @@ export default function JobListings() {
     });
   };
 
-  const handleSaveJob = (job) => {
-  const isSaved = savedJobs.some((j) => j.id === job.id);
-  if (isSaved) {
-    removeJob(job.id);
-  } else {
-    addJob(job);
-  }
-};
+//   const handleSaveJob = (job) => {
+//   const isSaved = savedJobs.some((j) => j.id === job.id);
+//   if (isSaved) {
+//     removeJob(job.id);
+//   } else {
+//     addJob(job);
+//   }
+// };
 
 const saveJob = async (jobId: number) => {
   const token = localStorage.getItem("auth_token");
@@ -494,13 +541,13 @@ const unsaveJob = async (jobId: number) => {
     setAppliedJobs(saved ? JSON.parse(saved) : []);
   }, [userEmail]);
 
-  const handleApply = (job) => {
+  const handleApply = (job: Job) => {
     const token = localStorage.getItem("auth_token");
     if (!token) {
         setShowLoginPopup(true);
       return;
     }
-      if (!isProfileComplete(userData)) {
+      if (!userData || !isProfileComplete(userData)) {
     toast.warning(
       "Please complete your profile (Name, Phone, Resume, Skills, Experience) before applying."
     );
@@ -513,7 +560,7 @@ const unsaveJob = async (jobId: number) => {
     setIsApplyModalOpen(true);
   };
 
-  const handleViewDetails = async(job) => {
+  const handleViewDetails = async (job: Job) => {
     setSelectedJob(job);
     setIsJobDetailOpen(true);
     try {
@@ -535,7 +582,7 @@ const unsaveJob = async (jobId: number) => {
     }
   };
 
-  const handleShare = (job) => {
+  const handleShare = (job : Job) => {
     if (navigator.share) {
       navigator.share({
         title: job.title,
@@ -564,7 +611,7 @@ const REQUIRED_PROFILE_FIELDS = [
 
 
 
-const isProfileComplete = (profile) => {
+const isProfileComplete = (profile: Record<string, any>) => {
   return REQUIRED_PROFILE_FIELDS.every((field) => {
     const value = profile?.[field];
 
@@ -643,11 +690,11 @@ const fetchUserData = async () => {
     const data = await response.json();
     console.log("ALL applications from backend:", data);
 
-    const myApplications = data.filter(app => app.user_email === email);
+    const myApplications = data.filter((app: Application) => app.user_email === email);
 
     console.log("MY Applications:", myApplications);
 
-    const appliedIDs = myApplications.map(app => Number(app.job));
+    const appliedIDs = myApplications.map((app: Application) => Number(app.job));
 
     localStorage.setItem(`applied_jobs_${email}`, JSON.stringify(appliedIDs));
 
@@ -667,7 +714,7 @@ useEffect(() => {
   fetchUserData();    
 }, []);
 
-  const handleAnswerChange = (questionIndex, value) => {
+  const handleAnswerChange = (questionIndex: number, value: string) => {
     setAnswers((prev) => ({
       ...prev,
       [questionIndex]: value,
@@ -683,6 +730,13 @@ useEffect(() => {
         description: "Please login to continue with your application.",
       });
 
+        return;
+      }
+
+      if (!selectedJob) {
+        toast("Error", {
+          description: "No job selected. Please try again.",
+        });
         return;
       }
 
@@ -761,7 +815,7 @@ useEffect(() => {
     }
   };
 
-  const getWorkModeColor = (workMode) => {
+  const getWorkModeColor = (workMode: string) => {
     switch (workMode) {
       case "Remote":
         return "bg-green-100 text-green-800";
@@ -774,10 +828,10 @@ useEffect(() => {
     }
   };
 
-  const getTimeSincePosted = (postedDate) => {
+  const getTimeSincePosted = (postedDate: string | Date) => {
     const now = new Date();
     const posted = new Date(postedDate);
-    const diffTime = Math.abs(now - posted);
+    const diffTime = Math.abs(now.getTime() - posted.getTime());
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
     if (diffDays === 1) return "1 day ago";
@@ -891,15 +945,16 @@ useEffect(() => {
                        {/* Location list */}
                        {locations
                          .filter((location) =>
-                           location.toLowerCase().startsWith(searchLocation.toLowerCase())
+                           typeof location.name === "string" &&
+                           location.name.toLowerCase().startsWith(searchLocation.toLowerCase())
                          )
                          .map((location) => {
-                           const isSelected = filters.location === location;
+                           const isSelected = filters.location === location.name;
 
                            return (
                              <SelectItem
-                               key={location}
-                               value={location}
+                               key={location.id}
+                               value={location.name}
                                className={`text-sm cursor-pointer
                                  ${
                                    isSelected
@@ -907,7 +962,7 @@ useEffect(() => {
                                      : "text-gray-700 hover:bg-gray-100"
                                  }`}
                              >
-                               {location}
+                               {location.name}
                              </SelectItem>
                            );
                          })}
@@ -946,7 +1001,7 @@ useEffect(() => {
                       Job Type
                     </Label>
                     <Select
-                      value={filters.job_Type}
+                      value={filters.jobType}
                       onValueChange={(value) =>
                         handleFilterChange("jobType", value)
                       }
@@ -1233,9 +1288,9 @@ useEffect(() => {
                                     <span>{job.salary}</span>
                                   </div>
                                   <Badge
-                                    className={getWorkModeColor(job.workMode)}
+                                    className={getWorkModeColor(job.work_mode ?? "")}
                                   >
-                                    {job.workMode}
+                                    {job.work_mode}
                                   </Badge>
                                 </div>
                               </div>
@@ -1258,19 +1313,19 @@ useEffect(() => {
                               variant="ghost"
                               size="sm"
                               onClick={() =>
-                                savedJobIds.includes(job.id)
-                                  ? unsaveJob(job.id)
-                                  : saveJob(job.id)
+                                savedJobIds.includes(Number(job.id))
+                                  ? unsaveJob(Number(job.id))
+                                  : saveJob(Number(job.id))
                               }
                               className={`${
-                                savedJobIds.includes(job.id)
+                                savedJobIds.includes(Number(job.id))
                                   ? "text-green-600"
                                   : "text-gray-400 hover:text-green-500"
                               }`}
                             >
                               <Bookmark
                                 className={`w-4 h-4 transition-all duration-300 ${
-                                  savedJobIds.includes(job.id)
+                                  savedJobIds.includes(Number(job.id))
                                     ? "fill-green-500 drop-shadow-[0_0_6px_rgba(34,197,94,0.8)]"
                                     : ""
                                 }`}
@@ -1320,7 +1375,7 @@ useEffect(() => {
                               <div className="flex items-center">
                                 <Clock className="w-4 h-4 mr-1" />
                                 <span>
-                                  {getTimeSincePosted(job.created_at)}
+                                  {getTimeSincePosted(job.created_at ?? "")}
                                 </span>
                               </div>
                               <div className="flex items-center">
@@ -1437,7 +1492,7 @@ useEffect(() => {
                       <div className="flex items-center text-gray-600">
                         <Building2 className="w-4 h-4 mr-2" />
                         <Badge
-                          className={getWorkModeColor(selectedJob.workMode)}
+                          className={getWorkModeColor(selectedJob.work_mode ?? "")}
                         >
                           {selectedJob.work_mode}
                         </Badge>
@@ -1445,7 +1500,7 @@ useEffect(() => {
                       <div className="flex items-center text-gray-600">
                         <Calendar className="w-4 h-4 mr-2" />
                         <span>
-                          Posted {getTimeSincePosted(selectedJob.created_at)}
+                          Posted {getTimeSincePosted(selectedJob.created_at ?? "")}
                         </span>
                       </div>
                     </div>
@@ -1563,22 +1618,22 @@ useEffect(() => {
                    <Button
                     variant="outline"
                     onClick={() =>
-                      savedJobIds.includes(selectedJob.id)
-                        ? unsaveJob(selectedJob.id)
-                        : saveJob(selectedJob.id)
+                      savedJobIds.includes(Number(selectedJob.id))
+                        ? unsaveJob(Number(selectedJob.id))
+                        : saveJob(Number(selectedJob.id))
                                       }
                     className={`flex-1 ${
-                      savedJobIds.includes(selectedJob.id)
+                      savedJobIds.includes(Number(selectedJob.id))
                         ? "border-purple-600 text-purple-600"
                         : ""
                     }`}
                     >
                     <Bookmark
                       className={`w-4 h-4 mr-2 ${
-                        savedJobIds.includes(selectedJob.id) ? "fill-current" : ""
+                        savedJobIds.includes(Number(selectedJob.id)) ? "fill-current" : ""
                       }`}
                     />
-                    {savedJobIds.includes(selectedJob.id) ? "Saved" : "Save Job"}
+                    {savedJobIds.includes(Number(selectedJob.id)) ? "Saved" : "Save Job"}
                   </Button>
 
 

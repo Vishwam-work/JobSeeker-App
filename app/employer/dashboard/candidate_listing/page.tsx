@@ -3,21 +3,67 @@
 import { useEffect, useState } from "react";
 import { Phone, FileText, Mail, CheckSquare } from "lucide-react";
 import Highlighter from "react-highlight-words";
+// interface Candidate {
+//   id: number;
+//   full_name: string;
+//   experience: string;
+//   current_salary: string;
+//   expected_salary?: string;
+//   notice_period?: string;
+//   email: string;
+//   city?: { name: string };
+//   state?: { name: string };
+//   profile_image?: string | null;
+//   skills?: { name: string }[];
+//   phone: string;
+//   resume?: string;
+// }
 interface Candidate {
   id: number;
   full_name: string;
+  email: string;
+  phone: string;
+
+  current_role?: string;
+  current_company?: string;
+
   experience: string;
   current_salary: string;
   expected_salary?: string;
   notice_period?: string;
-  email: string;
+
   city?: { name: string };
   state?: { name: string };
+  country?: { name: string };
+
   profile_image?: string | null;
-  skills?: { name: string }[];
-  phone: string;
   resume?: string;
+
+  skills?: { name: string }[];
+
+  certifications?: {
+    name: string;
+    issuer?: string;
+    year?: string | number;
+  }[];
+
+  educations?: {
+  degree?: string;
+  field?: string;
+  institution?: string;
+  year?: string | number;
+  score_type?: string;
+  percentage?: string | number;
+}[];
+
+  experiences?: {
+    designation?: string;
+    company?: string;
+    start_date?: string | number;
+    end_date?: string | number;
+  }[];
 }
+
 
 export default function CandidatesPage() {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
@@ -33,6 +79,7 @@ export default function CandidatesPage() {
     hideProfiles: false,
     premiumOnly: false,
     locations: [] as string[],
+    locationSearch: "",
     minExperience: "",
     maxExperience: "",
     minSalary: "",
@@ -51,6 +98,7 @@ export default function CandidatesPage() {
       hideProfiles: false,
       premiumOnly: false,
       locations: [],
+      locationSearch: "",
       minExperience: "",
       maxExperience: "",
       minSalary: "",
@@ -1152,7 +1200,7 @@ function CandidateDetail({
             <HighlightText text={candidate.notice_period} />
           </p>
         </div>
-        {candidate.educations?.length > 0 && (
+        {candidate.educations && candidate.educations.length > 0 && (
           <>
             <hr className="my-4" />
             <h3 className="font-medium mb-2">Education</h3>
@@ -1191,7 +1239,7 @@ function CandidateDetail({
           ))}
         </div>
 
-        {candidate.experiences?.length > 0 && (
+          {candidate.experiences && candidate.experiences.length > 0 && (
           <>
             <hr className="my-4" />
             <h3 className="font-medium mb-2">Experience</h3>
@@ -1208,15 +1256,16 @@ function CandidateDetail({
                 </p>
                 <p className="text-gray-500 text-xs">
                   <p className="text-gray-500 text-xs">
-                    <HighlightText text={ex.start_date} /> –{" "}
-                    <HighlightText text={ex.end_date || "Present"} />
+                    <HighlightText text={ex.start_date ? String(ex.start_date) : undefined}/>{" "}
+                  – <HighlightText text={ex.end_date !== undefined && ex.end_date !== null ? String(ex.end_date): "Present"}/>
+
                   </p>
                 </p>
               </div>
             ))}
           </>
         )}
-        {candidate.certifications?.length > 0 && (
+        {candidate.certifications && candidate.certifications.length > 0 && (
           <>
             <hr className="my-4" />
             <h3 className="font-medium mb-2">Certifications</h3>
