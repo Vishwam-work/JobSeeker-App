@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect,useReducer } from "react";
+import { useState, useEffect, useReducer } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -141,6 +141,7 @@ export default function EmployerDashboard() {
   const [time, setTime] = useState("");
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [showResume, setShowResume] = useState(false);
+  const [isSubscribed, setIsSubscribed] = useState(false);
 
   interface DecodedToken {
   user_id: number | string;
@@ -586,8 +587,8 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
       try {
         const token = localStorage.getItem("auth_token");
         if (!token) return;
-
-        const decoded = jwtDecode<DecodedToken>(token);
+  
+        const decoded = jwtDecode(token);
         console.log("DECODED:", decoded);
         console.log("Employer ID:", decoded.user_id);
 
@@ -656,10 +657,10 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
           appliedDate: app.applied_at,
           // status: app.application_status || "Under Review",
           status:
-             app.application_status &&
-             app.application_status !== "application_status"
-             ? app.application_status
-             : "Under Review",
+            app.application_status &&
+              app.application_status !== "application_status"
+              ? app.application_status
+              : "Under Review",
 
           resumeUrl: app.profile?.resume
             ? `https://jobseeker-backend-jy1y.onrender.com${app.profile.resume}`
@@ -704,15 +705,15 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
     try {
       const token = localStorage.getItem("auth_token");
       if (!token) return;
-        const response = await fetch(
-          "https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-list-view/",
-          {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+      const response = await fetch(
+        "https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-list-view/",
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       // const response = await fetch(
       //   "https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-list-view/",
@@ -729,8 +730,8 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
         return;
       }
       const data = await response.json();
-      // console.log("Here is the Job-list-view-data:",data)
-      // console.log(data.category)
+      console.log("Here is the Job-list-view-data:",data)
+      console.log(data.category)
       setPostedJobs(data); // Set jobs into stateq
     } catch (error) {
       console.error("Error fetching jobs:", error);
@@ -836,33 +837,33 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
       if (!Array.isArray(data)) {
         console.error("API did not return list:", data);
         toast.error("Failed to load candidates! (Unauthorized?)", {
-        description: "You might not have permission. Please log in or check your access."
+          description: "You might not have permission. Please log in or check your access."
         });
         return;
       }
 
-    //   const mappedCandidates = data.map((item) => ({
-    //     id: item.id,
-    //     name: item.profile?.full_name || item.full_name,
-    //     email: item.email || item.user_email, 
-    //     phone: item.profile?.phone || item.phone,
-    //     phoneCode: item.profile?.phone_code || item.phone_code,
-    //     location: item.profile?.city || item.city,
-    //     experience: item.profile?.experience || item.experience,
-    //     job_title: item.job_title,
-    //     resumeUrl: item.profile?.resume || item.resume,
-    //     skills: item.profile?.skills || item.skills,
-    //     certifications: item.profile?.certifications || item.certifications,
-    //     educationDetails: item.profile?.educations || item.educations,
-    //     workExperience: item.profile?.experiences || item.experiences,
-    //     status: item.application_status || "Under Review",
-    //     appliedDate: item.applied_at,
-    //     qa: item.answers?.map((ans: any) => ({
-    //       question_index: ans.question_index,
-    //       question_text: ans.question_text,
-    //       answer_text: ans.answer,
-    //     })),
-    //   }));
+      const mappedCandidates = data.map((item) => ({
+        id: item.id,
+        name: item.profile?.full_name || item.full_name,
+        email: item.email || item.user_email, 
+        phone: item.profile?.phone || item.phone,
+        phoneCode: item.profile?.phone_code || item.phone_code,
+        location: item.profile?.city || item.city,
+        experience: item.profile?.experience || item.experience,
+        job_title: item.job_title,
+        resumeUrl: item.profile?.resume || item.resume,
+        skills: item.profile?.skills || item.skills,
+        certifications: item.profile?.certifications || item.certifications,
+        educationDetails: item.profile?.educations || item.educations,
+        workExperience: item.profile?.experiences || item.experiences,
+        status: item.application_status || "Under Review",
+        appliedDate: item.applied_at,
+        qa: item.answers?.map((ans) => ({
+          question_index: ans.question_index,
+          question_text: ans.question_text,
+          answer_text: ans.answer,
+        })),
+      }));
 
     //   console.log("MAPPED CANDIDATES:", mappedCandidates);
 
@@ -911,7 +912,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
       const token = localStorage.getItem("auth_token");
       if (!token) {
         toast.error("You must be logged in to post a job.", {
-        description: "Please log in to continue."
+          description: "Please log in to continue."
         });
         return;
       }
@@ -954,54 +955,54 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
         const errorData = await response.json();
         console.error("Error posting job:", errorData);
         toast.error("Failed to post job", {
-        description: errorData.detail || "Unknown error. Please try again.",
+          description: errorData.detail || "Unknown error. Please try again.",
         });
 
         return;
       }
 
   const data = await response.json();
-  // console.log("Job posted successfully:", data);
+  console.log("Job posted successfully:", data);
   setPostedJobs((prev) => [...prev, data]);
   toast.success("Job posted successfully!");
   await fetchPostedJobs();
 
       // Reset form
-        setJobForm({
-          title: "",
-          category: "",
-          jobTitle: "",
-          company: "",
-          location: "",
-          experience: "",
-          salary: "",
-          currency: "",
-          job_type: "",
-          workMode: "",
-          description: "",
-          requirements: "",
-          benefits: "",
-          skills: [],
-          applicationDeadline: "",
-          vacancies: "",
-          isUrgent: false,
-          isRemote: false,
-          questions: [],
-        });
-        setSelectedCategory("");
-        setQuestions([]);
-        setAskQuestionEnabled(false); // uncheck the checkbox
-        setNewSkill("");
-        setNewQuestion("");
-      } catch (error) {
-        console.error("Error submitting job:", error);
-        toast.error("An error occurred while posting the job.", {
+      setJobForm({
+        title: "",
+        category: "",
+        jobTitle: "",
+        company: "",
+        location: "",
+        experience: "",
+        salary: "",
+        currency: "",
+        job_type: "",
+        workMode: "",
+        description: "",
+        requirements: "",
+        benefits: "",
+        skills: [],
+        applicationDeadline: "",
+        vacancies: "",
+        isUrgent: false,
+        isRemote: false,
+        questions: [],
+      });
+      setSelectedCategory("");
+      setQuestions([]);
+      setAskQuestionEnabled(false); // uncheck the checkbox
+      setNewSkill("");
+      setNewQuestion("");
+    } catch (error) {
+      console.error("Error submitting job:", error);
+      toast.error("An error occurred while posting the job.", {
         description: "Please try again or check your internet connection."
-        });
+        });    
        }
     };
 
-    const getStatusColor = (status: string) => {
+    const getStatusColor = (status) => {
       switch (status) {
         case "active":
           return "bg-green-100 text-green-800";
@@ -1052,7 +1053,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
       c.currentRole?.toLowerCase().startsWith(searchTerm.toLowerCase()) ||
       c.appliedFor?.toLowerCase().startsWith(searchTerm.toLowerCase()) ||
       c.skills?.some((skill) =>
-      skill.toLowerCase().includes(searchTerm.toLowerCase())
+        skill.toLowerCase().includes(searchTerm.toLowerCase())
       );
 
     const statusMatch =
@@ -1105,7 +1106,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
     city.name.toLowerCase().startsWith(searchTerm.toLowerCase())
   );
 
-    const handleViewJob = async (job: any) => {
+    const handleViewJob = async (job) => {
       try {
         const token = localStorage.getItem("auth_token");
         const response = await fetch(
@@ -1119,7 +1120,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
         const data = await response.json();
-        // console.log("Job details:", data);
+        console.log("Job details:", data);
         setSelectedJob(data);
         setIsEditMode(false);
         setIsModalOpen(true);
@@ -1128,7 +1129,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
       }
     };
   //https://jobseeker-backend-jy1y.onrender.com
-    const handleEditJob = async (job: any) => {
+    const handleEditJob = async (job) => {
       try {
         const token = localStorage.getItem("auth_token");
         const response = await fetch(
@@ -1139,7 +1140,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
         );
       
         const data = await response.json();
-        // console.log("Data is prefill", data);
+        console.log("Data is prefill", data);
         // Prefill the form
     setJobForm({
         title: data.title || "",
@@ -1181,7 +1182,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
         // console.log("Deleting job:", job);
 
         toast.success("Job deleted", {
-        description: `The job "${job.title}" has been successfully removed.`
+          description: `The job "${job.title}" has been successfully removed.`
         });
 
       }
@@ -1197,13 +1198,13 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
       if (response.ok) {
         setPostedJobs((prev) => prev.filter((j) => j.id !== job.id));
         toast.success("Job deleted", {
-        description: `The job "${job.title}" has been successfully removed.`
+          description: `The job "${job.title}" has been successfully removed.`
         });
 
       } else {
         console.error("Failed to delete job");
         toast.error("Failed to delete job", {
-        description: "Please try again or check your internet connection."
+          description: "Please try again or check your internet connection."
         });
       }
     } catch (err) {
@@ -1223,7 +1224,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
 
     if (!token) {
       toast.error("You are not logged in. Please log in again.", {
-      description: "Your session may have expired."
+        description: "Your session may have expired."
       });
       return;
     }
@@ -1255,8 +1256,8 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
         console.error("Failed to update job status:", result);
 
         toast.error(result.detail || "Failed to update job status", {
-       description: "Please check and try again.",
-       });
+          description: "Please check and try again.",
+        });
       }
     } catch (err) {
       console.error("Error updating job status:", err);
@@ -1298,8 +1299,8 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
   const handleUpdateJob = async () => {
     if (!selectedJob?.id) {
       toast.error("No job selected for update", {
-      description: "Please select a job and try again."
-     });
+        description: "Please select a job and try again."
+      });
       return;
     }
 
@@ -1307,7 +1308,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
       const token = localStorage.getItem("auth_token");
       if (!token) {
         toast.error("You must be logged in to update a job.", {
-        description: "Please log in and try again."
+          description: "Please log in and try again."
         });
         return;
       }
@@ -1328,7 +1329,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
         const errorData = await response.json();
         console.error("Failed to update job:", errorData);
         toast.error(`Error: ${errorData.detail || "Unable to update job"}`, {
-        description: "Please try again or check your network connection."
+          description: "Please try again or check your network connection."
         });
         return;
       }
@@ -1346,7 +1347,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
     } catch (err) {
       console.error("Update job error:", err);
       toast.error("An error occurred while updating the job.", {
-      description: "Please try again or check your network connection."
+        description: "Please try again or check your network connection."
       });
     }
   };
@@ -1357,7 +1358,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
       const token = localStorage.getItem("auth_token");
       if (!token) {
         toast.error("Token missing", {
-        description: "Please log in again to continue."
+          description: "Please log in again to continue."
         });
         return;
       }
@@ -1380,9 +1381,9 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
       // console.log("Updated Response:", updated);
 
       if (!response.ok) {
-         toast.error(updated.error || "Update failed", {
-         description: "Please check and try again."
-         });
+        toast.error(updated.error || "Update failed", {
+          description: "Please check and try again."
+        });
         return;
       }
 
@@ -1419,7 +1420,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
 
       if (!candidate?.id) {
         toast.error("Candidate ID missing", {
-        description: "Please select a candidate and try again."
+          description: "Please select a candidate and try again."
         });
         return;
       }
@@ -1427,7 +1428,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
       const token = localStorage.getItem("auth_token");
       if (!token) {
         toast.error("Token missing", {
-         description: "Please log in again to continue."
+          description: "Please log in again to continue."
         });
         return;
       }
@@ -1458,7 +1459,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
 
       if (!response.ok) {
         toast.error(data?.detail || "Update failed", {
-        description: "Please check and try again."
+          description: "Please check and try again."
         });
         return;
       }
@@ -1513,12 +1514,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
   };
 
   const handleScheduleSubmit = async () => {
-    if (!selectedCandidate) {
-    toast.error("No candidate selected", {
-      description: "Please select a candidate and try again."
-    });
-    return;
-  }
+
      if (!interviewDate) {
     toast.warning("Please select interview date");
     return;
@@ -1530,7 +1526,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
       if (!token) return toast.error("Token missing", {
                          description: "Please log in again to continue."
                          });
-
+  
       const res = await fetch(
         `https://jobseeker-backend-jy1y.onrender.com/employeer/api/employer/applications/${selectedCandidate.id}/schedule-interview/`,
         {
@@ -1547,13 +1543,13 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
           }),
         }
       );
-   // meet_link: meetLink,
+      // meet_link: meetLink,
       if (!res.ok) {
         const text = await res.text();
         console.error("Backend error:", text);
         return toast.error("Failed to schedule interview", {
-        description: "Please try again or check your network connection."
-         });
+          description: "Please try again or check your network connection."
+        });
 
       }
 
@@ -1578,7 +1574,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
       toast.error("Network error. Please try again.");
     }
   };
-  
+
 
   const handleLogout = () => {
     localStorage.removeItem("auth_token");
@@ -1592,17 +1588,17 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
     { id: "candidates", label: "Candidates", icon: Users },
     // { id: 'analytics', label: 'Analytics', icon: TrendingUp }
     {
-    id: "profiles",
-    label: "profiles",
-    icon: UserCircle,
-    component: <CandidatesPage />,
-  },
+      id: "profiles",
+      label: "profiles",
+      icon: UserCircle,
+      component: <CandidatesPage />,
+    },
     {
-    id: "quota",
-    label: "Quota Usage",
-    icon: BarChart3,
-    component: <QuotaUsagePage />,
-  },
+      id: "quota",
+      label: "Quota Usage",
+      icon: BarChart3,
+      component: <QuotaUsagePage />,
+    },
   ];
 
   const getWorkModeColor = (workMode: string) => {
@@ -1674,13 +1670,13 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
     experience: "",
     salaryRange: [0, 50],
     designation: "",
-    department_Role :"",
-    Industry :"",
-    Notice_Period :"",
-    Gender :"",
-    Age :[0, 50],
-    Degree_Course :"",
-    college_Name :"",
+    department_Role: "",
+    Industry: "",
+    Notice_Period: "",
+    Gender: "",
+    Age: [0, 50],
+    Degree_Course: "",
+    college_Name: "",
   });
 
   return (
@@ -1702,23 +1698,23 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
             </Link>
             <div className="flex items-center gap-4">
               <div className="relative">
-                 <div
+                 <div               
                    onClick={() => setIsNotificationOpen(!isNotificationOpen)}
                    className="cursor-pointer relative select-none"
                   >
                   <Bell className="w-5 h-5 text-gray-700 hover:text-purple-600" />
-                <span className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full" />
-                 </div>
+                  <span className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full" />
+                </div>
 
                  {isNotificationOpen && (
                    <>
-
+                    
                      <div
                        className="fixed inset-0 z-40 bg-black/20 md:bg-transparent"
                        onClick={() => setIsNotificationOpen(false)}
                      />
                      <div
-                       className="
+                       className="               
                         fixed md:absolute
                         inset-x-0 bottom-0 md:inset-auto
                         md:right-0 md:top-full
@@ -1730,7 +1726,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
                         z-50
                       "
                      >
-                       <div className="p-3 border-b font-semibold text-gray-700 flex justify-between items-center">
+                       <div className="p-3 border-b font-semibold text-gray-700 flex justify-between items-center">               
                         Notifications
                         <button
                           className="md:hidden text-gray-500"
@@ -1738,15 +1734,15 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
                         >
                           ✕
                         </button>
-                       </div>
+                      </div>
 
-                       <div className="max-h-64 overflow-y-auto">
-                         <div className="px-4 py-3 hover:bg-gray-50 cursor-pointer">
-                           <p className="text-sm font-medium text-gray-800">
-                             New job matched your profile
-                           </p>
-                           <p className="text-xs text-gray-500">2 minutes ago</p>
-                         </div>
+                      <div className="max-h-64 overflow-y-auto">
+                        <div className="px-4 py-3 hover:bg-gray-50 cursor-pointer">
+                          <p className="text-sm font-medium text-gray-800">
+                            New job matched your profile
+                          </p>
+                          <p className="text-xs text-gray-500">2 minutes ago</p>
+                        </div>
 
                         <div className="px-4 py-3 hover:bg-gray-50 cursor-pointer">
                           <p className="text-sm font-medium text-gray-800">
@@ -1799,11 +1795,10 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center space-x-2 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
-                    activeTab === tab.id
-                      ? "border-blue-600 text-blue-600"
-                      : "border-transparent text-gray-600 hover:text-blue-600"
-                  }`}
+                  className={`flex items-center space-x-2 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${activeTab === tab.id
+                    ? "border-blue-600 text-blue-600"
+                    : "border-transparent text-gray-600 hover:text-blue-600"
+                    }`}
                 >
                   <IconComponent className="w-4 h-4" />
                   <span>{tab.label}</span>
@@ -1881,7 +1876,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
                         </div>
 
                         {Array.isArray(jobCategories) &&
-                        jobCategories.length > 0 ? (
+                          jobCategories.length > 0 ? (
                           jobCategories
                             .filter((category) => {
                               if (!searchTerm) return true;
@@ -2567,7 +2562,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
                                 onClick={() => handleToggleJobStatus(job)}
                               >
                                 {job.status?.toLowerCase() === "active" ||
-                                job.status?.toLowerCase() === "open" ? (
+                                  job.status?.toLowerCase() === "open" ? (
                                   <>
                                     <XCircle className="w-4 h-4 mr-2 text-red-500" />
                                     Close Job
@@ -2726,7 +2721,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
                   </h4>
                   <div className="flex flex-wrap gap-2">
                     {selectedJob.questions &&
-                    selectedJob.questions.length > 0 ? (
+                      selectedJob.questions.length > 0 ? (
                       selectedJob.questions.map((question, index) => (
                         <Badge
                           key={index}
@@ -3158,7 +3153,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
                         <SelectItem value="5+ Years">5+ Years</SelectItem>
                       </SelectContent>
                     </Select>
-                   
+
                     <Select
                       value={jobTitleFilter}
                       onValueChange={setJobTitleFilter}
@@ -3238,11 +3233,10 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
                           setSelectedCandidate(candidate);
                           setIsCandidateModalOpen(true);
                         }}
-                        className={`p-4 cursor-pointer hover:bg-gray-50 border-l-4 transition-colors ${
-                          selectedCandidate?.id === candidate.id
-                            ? "border-l-blue-500 bg-blue-50"
-                            : "border-l-transparent"
-                        }`}
+                        className={`p-4 cursor-pointer hover:bg-gray-50 border-l-4 transition-colors ${selectedCandidate?.id === candidate.id
+                          ? "border-l-blue-500 bg-blue-50"
+                          : "border-l-transparent"
+                          }`}
                       >
                         <div className="flex items-start space-x-3">
                           <div className="w-10 h-10 bg-gradient-to-br from-purple-100 to-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
@@ -3354,8 +3348,9 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
                         </div>
                         <div className="flex items-center">
                           <Phone className="w-4 h-4 mr-2 text-gray-400" />
+                           
                           <span>
-                           +{selectedCandidate.phoneCode}
+                            +{selectedCandidate.phoneCode}
                             {selectedCandidate.phone}
                           </span>
                         </div>
@@ -3509,7 +3504,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
                         </div>
                       )}
 
-                     
+
 
                     {selectedCandidate.certifications.length > 0 && (
                       <div>
@@ -3542,25 +3537,25 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
                       </div>
                     )}
 
-                       <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setShowResume(!showResume)}
-                      >
-                        View Resume
-                      </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowResume(!showResume)}
+                    >
+                      View Resume
+                    </Button>
 
-                      {showResume && selectedCandidate.resumeUrl && (
-                        <div className="mt-4 h-[500px] border rounded">
-                          <iframe
-                            src={`https://docs.google.com/gview?url=${encodeURIComponent(
-                              selectedCandidate.resumeUrl
-                            )}&embedded=true`}
-                            className="w-full h-full"
-                            title="Resume Preview"
-                          />
-                        </div>
-                      )}
+                    {showResume && selectedCandidate.resumeUrl && (
+                      <div className="mt-4 h-[500px] border rounded">
+                        <iframe
+                          src={`https://docs.google.com/gview?url=${encodeURIComponent(
+                            selectedCandidate.resumeUrl
+                          )}&embedded=true`}
+                          className="w-full h-full"
+                          title="Resume Preview"
+                        />
+                      </div>
+                    )}
 
                     {/* Action Buttons */}
                     <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t">
@@ -3578,8 +3573,19 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
                               Shortlist Candidate
                             </Button>
 
+                            {/* <Button
+                              variant="outline"
+                              className="border-red-600 text-red-600 hover:bg-red-50 flex-1"
+                              onClick={() =>
+                                handleRejectCandidate(selectedCandidate)
+                              }
+                            >
+                              <XCircle className="w-4 h-4 mr-2" />
+                              Reject Application
+                            </Button> */}
+                            
                          <AlertDialog>
-                           <AlertDialogTrigger asChild>
+                           <AlertDialogTrigger asChild>                         
                              <Button
                                variant="outline"
                                className="border-red-600 text-red-600 hover:bg-red-50 flex-1"
@@ -3588,7 +3594,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
                                Reject Application
                              </Button>
                            </AlertDialogTrigger>
-
+                         
                            <AlertDialogContent>
                             <AlertDialogHeader>
                               <AlertDialogTitle>Reject this application?</AlertDialogTitle>
@@ -3596,7 +3602,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
                                 This action cannot be undone. The candidate will be marked as rejected.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
-
+                        
                             <AlertDialogFooter>
                               <AlertDialogCancel>Cancel</AlertDialogCancel>
                               <AlertDialogAction
@@ -3639,100 +3645,118 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
                       </div>
 
                       {openSchedule && (
-  <Dialog open={openSchedule} onOpenChange={() => setOpenSchedule(false)}>
-    <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto rounded-xl">
-      <DialogHeader>
-        <DialogTitle className="text-lg font-semibold">
-          Schedule Interview
-        </DialogTitle>
-      </DialogHeader>
+                        <Dialog open={openSchedule} onOpenChange={() => setOpenSchedule(false)}>
+                          <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto rounded-xl">
+                            <DialogHeader>
+                              <DialogTitle className="text-lg font-semibold">
+                                Schedule Interview
+                              </DialogTitle>
+                            </DialogHeader>
 
-      <div className="space-y-4 mt-3">
-        {/* Candidate Name */}
-        <div className="bg-gray-50 p-3 rounded-lg border">
-          <p className="text-xs text-gray-500">Candidate</p>
-          <p className="font-semibold text-gray-800">
-            {selectedCandidate?.name}
-          </p>
-        </div>
+                            <div className="space-y-4 mt-3">
+                              {/* Candidate Name */}
+                              <div className="bg-gray-50 p-3 rounded-lg border">
+                                <p className="text-xs text-gray-500">Candidate</p>
+                                <p className="font-semibold text-gray-800">
+                                  {selectedCandidate?.name}
+                                </p>
+                              </div>
 
-        {/* Candidate Email */}
-        <div className="bg-gray-50 p-3 rounded-lg border">
-          <p className="text-xs text-gray-500">Email</p>
-          <p className="font-semibold text-gray-800">
-            {selectedCandidate?.email}
-          </p>
-        </div>
+                              {/* Candidate Email */}
+                              <div className="bg-gray-50 p-3 rounded-lg border">
+                                <p className="text-xs text-gray-500">Email</p>
+                                <p className="font-semibold text-gray-800">
+                                  {selectedCandidate?.email}
+                                </p>
+                              </div>
 
-        {/* Interview Date */}
-        <div>
-          <label className="text-sm font-medium">Interview Date</label>
-          <input
-          required
-            type="date"
-            className="w-full border rounded-lg p-2 mt-1 focus:ring-2 focus:ring-blue-500"
-            value={interviewDate}
-            onChange={(e) => setInterviewDate(e.target.value)}
-            
+                              {/* Interview Date */}
+                              <div>
+                                <label className="text-sm font-medium">Interview Date</label>
+                                <input
+                                  required
+                                  type="date"
+                                  className="w-full border rounded-lg p-2 mt-1 focus:ring-2 focus:ring-blue-500"
+                                  value={interviewDate}
+                                  onChange={(e) => setInterviewDate(e.target.value)}
+
+                                />
+                              </div>
+
+                              {/* Interview Time */}
+                              <div className="flex space-x-2 items-center">
+                                <label className="text-sm font-medium">Interview Time</label>
+
+          {/* <input
+            type="number"
+            min="1"
+            max="12"
+            className="w-16 border rounded-lg p-2"
+            value={hour}
+            onChange={(e) => setHour(e.target.value)}
           />
-        </div>
 
-        {/* Interview Time */}
-        <div className="flex space-x-2 items-center">
-          <label className="text-sm font-medium">Interview Time</label>
+          <span>:</span>
 
-          
+          <input
+            type="number"
+            min="0"
+            max="59"
+            className="w-16 border rounded-lg p-2"
+            value={minute}
+            onChange={(e) => setMinute(e.target.value)}
+          /> */}
 
-                <input
-                 type="text"
-                 placeholder="hh:mm AM"
-                 className="w-32 border rounded-lg p-2 text-center"
-                 value={time}
-                 onChange={(e) => {
-                   let value = e.target.value.toUpperCase();
-               
-                   value = value.replace(/[^0-9:APM ]/g, "");
-                               
-                   if (value.length === 2 && !value.includes(":")) {
-                     value = value + ":";
-                   }
-               
-                   if (value.length > 8) return;
-               
-                   setTime(value);
-                 }}
-                 onBlur={() => {
-                  
-                   const regex = /^(0?[1-9]|1[0-2]):[0-5][0-9]\s?(AM|PM)$/;
-                   if (!regex.test(time)) {
-                     setTime(""); 
-                   }
-                 }}
-               />
+                                <input
+                                  type="text"
+                                  placeholder="hh:mm AM"
+                                  className="w-32 border rounded-lg p-2 text-center"
+                                  value={time}
+                                  onChange={(e) => {
+                                    let value = e.target.value.toUpperCase();
+
+                                    value = value.replace(/[^0-9:APM ]/g, "");
+
+                                    if (value.length === 2 && !value.includes(":")) {
+                                      value = value + ":";
+                                    }
+
+                                    if (value.length > 8) return;
+
+                                    setTime(value);
+                                  }}
+                                  onBlur={() => {
+
+                                    const regex = /^(0?[1-9]|1[0-2]):[0-5][0-9]\s?(AM|PM)$/;
+                                    if (!regex.test(time)) {
+                                      setTime("");
+                                    }
+                                  }}
+                                />
 
 
-          <select
-            className="border rounded-lg p-2"
-            value={ampm}
-            onChange={(e) => setAmPm(e.target.value)}
-          >
-            <option>AM</option>
-            <option>PM</option>
-          </select>
+                                <select
+                                  className="border rounded-lg p-2"
+                                  value={ampm}
+                                  onChange={(e) => setAmPm(e.target.value)}
+                                >
+                                  <option>AM</option>
+                                  <option>PM</option>
+                                </select>
 
-            {/* ✅ Time Zone Dropdown */}
-          <select
-            className="border rounded-lg p-2"
-            value={timeZone}
-            onChange={(e) => setTimeZone(e.target.value)}
-          >
-            <option value="IST">IST</option>
-            <option value="UTC">UTC</option>
-            <option value="EST">EST</option>
-            <option value="PST">PST</option>
-            <option value="CST">CST</option>
-          </select>
-        </div>
+                                {/* ✅ Time Zone Dropdown */}
+                                <select
+                                  className="border rounded-lg p-2"
+                                  value={timeZone}
+                                  onChange={(e) => setTimeZone(e.target.value)}
+                                >
+                                  <option value="IST">IST</option>
+                                  <option value="UTC">UTC</option>
+                                  <option value="EST">EST</option>
+                                  <option value="PST">PST</option>
+                                  <option value="CST">CST</option>
+                                </select>
+                              </div>
 
         {/* Interview Mode */}
         <div>
@@ -3748,34 +3772,45 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
           </select>
         </div>
 
-        {/* Notes */}
-        <div>
-          <label className="text-sm text-gray-700">Notes</label>
-          <textarea
-            className="w-full border rounded-md p-2 mt-1 text-sm focus:ring-2 focus:ring-blue-500"
-            rows={3}
-            placeholder="Enter instructions or notes..."
-            value={interviewNotes}
-            onChange={(e) => setInterviewNotes(e.target.value)}
+        {/* Meet Link */}
+        {/* <div>
+          <label className="text-sm text-gray-700">Google Meet link</label>
+          <input
+            className="w-full border rounded-md p-2 text-sm focus:ring-2 focus:ring-blue-500"
+            placeholder="Enter meet link..."
+            value={meetLink}
+            onChange={(e) => setMeetLink(e.target.value)}
           />
-        </div>
-      </div>
+        </div> */}
 
-      <DialogFooter className="mt-3">
-        <Button variant="outline" onClick={() => setOpenSchedule(false)}>
-          Cancel
-        </Button>
-        <Button
-          type="button"
-          className="bg-blue-600 hover:bg-blue-700"
-          onClick={handleScheduleSubmit}
-        >
-          Schedule
-        </Button>
-      </DialogFooter>
-    </DialogContent>
-  </Dialog>
-)}
+                              {/* Notes */}
+                              <div>
+                                <label className="text-sm text-gray-700">Notes</label>
+                                <textarea
+                                  className="w-full border rounded-md p-2 mt-1 text-sm focus:ring-2 focus:ring-blue-500"
+                                  rows={3}
+                                  placeholder="Enter instructions or notes..."
+                                  value={interviewNotes}
+                                  onChange={(e) => setInterviewNotes(e.target.value)}
+                                />
+                              </div>
+                            </div>
+
+                            <DialogFooter className="mt-3">
+                              <Button variant="outline" onClick={() => setOpenSchedule(false)}>
+                                Cancel
+                              </Button>
+                              <Button
+                                type="button"
+                                className="bg-blue-600 hover:bg-blue-700"
+                                onClick={handleScheduleSubmit}
+                              >
+                                Schedule
+                              </Button>
+                            </DialogFooter>
+                          </DialogContent>
+                        </Dialog>
+                      )}
 
                     </div>
                   </CardContent>
@@ -3799,11 +3834,11 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
         )}
 
         {activeTab === "profiles" && (
-        <CandidatesPage/>
-         )}
-         {activeTab === "quota" && (
-        <QuotaUsagePage />
-         )}
+          <CandidatesPage isSubscribed={isSubscribed} />
+        )}
+        {activeTab === "quota" && (
+          <QuotaUsagePage />
+        )}
         {/* Analytics Tab */}
         {activeTab === "analytics" && (
           <Card>
