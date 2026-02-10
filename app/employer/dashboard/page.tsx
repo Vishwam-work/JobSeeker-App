@@ -2172,6 +2172,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
                     <Input
                       id="deadline"
                       type="date"
+                       min={new Date().toISOString().split("T")[0]}
                       value={jobForm.applicationDeadline}
                       onChange={(e) =>
                         setJobForm((prev) => ({

@@ -242,14 +242,19 @@ interface Application {
       console.log("Jobs data:", data);
       setJobs(data);
       setFilteredJobs(data);
+      
+      const locationNames: string[] = data
+       .map((job: any): string | undefined => job?.location?.name)
+       .filter((loc: string | undefined): loc is string => {
+         return typeof loc === "string" && loc.trim() !== "";
+       });
 
-      const uniqueLocations: Location[]  = Array.from(
-       new Set(
-       data
-        .map((job: any) => job.location?.name) // ✅ FIX
-        .filter((loc: string) => loc && loc.trim() !== "")
-       )
-     );
+      const uniqueLocations: Location[] = Array.from<string>(
+       new Set<string>(locationNames)
+      ).map((name: string) => ({
+       id: name,   
+       name: name, 
+      }));
 
       setLocations(uniqueLocations);
       setLoading(false);
@@ -913,7 +918,7 @@ useEffect(() => {
                    </Label>
 
                    <Select
-                     value={filters.location || "" }
+                     value={filters.location || undefined}
                      onValueChange={(location) =>
                        setFilters((prev) => ({
                          ...prev,
