@@ -58,6 +58,7 @@ export default function JobListings() {
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [isJobDetailOpen, setIsJobDetailOpen] = useState(false);
   const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
+  const [open, setOpen] = useState(false);
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [userData, setUserData] = useState<any>(null);
   const [loadingUserData, setLoadingUserData] = useState(false);
@@ -1145,6 +1146,8 @@ useEffect(() => {
                      </Label>
 
                      <Select
+                       open={open} 
+                       onOpenChange={setOpen}
                        value="" 
                        onValueChange={() => {}}
                      >
@@ -1186,14 +1189,15 @@ useEffect(() => {
                                        ? "bg-blue-100 text-blue-700 font-medium"
                                        : "text-gray-700 hover:bg-gray-100"
                                    }`}
-                                 onClick={() =>
+                                 onClick={() => {
                                    setFilters((prev) => ({
                                      ...prev,
                                      skills: isSelected
                                        ? prev.skills.filter((s) => s !== skill)
                                        : [...prev.skills, skill],
-                                   }))
-                                 }
+                                   }));
+                                   setOpen(false);
+                                 }}
                                >
                                  <span>{skill}</span>
                                  {isSelected && <span>✓</span>}

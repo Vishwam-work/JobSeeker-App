@@ -191,6 +191,12 @@ export default function Profile() {
     "90+ days",
   ]);
 
+const uniquePhoneCodes = Array.from(
+  new Map(
+    countries.map((c) => [c.phonecode, c])
+  ).values()
+);
+
 type JobCategory = {
   id: string;
   name: string;
@@ -1765,15 +1771,16 @@ const removeAppliedJob = async (applicationId: number) => {
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              {countries.map((country: Country) => (
+                              {uniquePhoneCodes.map((country: Country) => (
                                 <SelectItem
-                                  key={country.id}
+                                  key={country.phonecode}
                                   value={country.phonecode}
                                 >
                                   +{country.phonecode}
                                 </SelectItem>
                               ))}
                             </SelectContent>
+
                           </Select>
                           <Input
                             id="phone"
