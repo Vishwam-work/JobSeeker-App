@@ -60,7 +60,11 @@ export default function EmployerLogin() {
         }, 2000);
       } else {
         setAlertType("error");
-        setAlertMessage(data.error || "Login Failed");
+        setAlertMessage(
+          data.error === "User not found"
+          ? " kindly register first to access"
+          : data.error || "Login Failed"
+           );
         setAlertOpen(true);
       }
     } catch (error) {

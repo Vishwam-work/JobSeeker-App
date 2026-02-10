@@ -70,9 +70,10 @@ import Footer from "@/components/Footer";
 import Link from "next/link";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { TextField } from "@mui/material";
-import dayjs from "dayjs";
+import dayjs, { Dayjs } from "dayjs";
 import exp from "node:constants";
 
 
@@ -92,8 +93,8 @@ export default function Profile() {
       currentcurrency: "",
       expectedCurrency: "",
       experience: "",
-      currentSalary: "",
-      expectedSalary: "",
+      currentSalary: null,
+      expectedSalary: null,
       noticePeriod: "",
     },
     experience: [],
@@ -110,9 +111,19 @@ export default function Profile() {
     resume: false,
   });
   const [open, setOpen] = useState(false);
+  const [countryOpen, setCountryOpen] = useState(false);
+  const [stateOpen, setStateOpen] = useState(false);
   const [cityOpen, setCityOpen] = useState(false);
+  const [companyOpen, setCompanyOpen] = useState(false);
+  const [locationOpen, setLocationOpen] = useState(false);
   const [citySearch, setCitySearch] = useState("");
   const [newSkill, setNewSkill] = useState("");
+
+  
+ const [dateError, setDateError] = useState<string | null>(null);
+ const [scoreError, setScoreError] = useState<string | null>(null);
+
+ 
 
   // States for inline forms
   const [showAddExperience, setShowAddExperience] = useState(false);
@@ -172,12 +183,19 @@ export default function Profile() {
   const [loadingAppliedJobs, setLoadingAppliedJobs] = useState(false);
 
   const [noticeRanges] = useState([
+    "Immediate Joiner",
     "1-15 days",
     "15-30 days",
     "30-60 days",
     "60-90 days",
     "90+ days",
   ]);
+
+const uniquePhoneCodes = Array.from(
+  new Map(
+    countries.map((c) => [c.phonecode, c])
+  ).values()
+);
 
 type JobCategory = {
   id: string;
@@ -276,8 +294,8 @@ type ProfileData = {
     currentcurrency: string;
     expectedCurrency: string;
     experience: string;
-    currentSalary: string;
-    expectedSalary: string;
+    currentSalary: number | null;
+    expectedSalary: number | null;
     noticePeriod: string;
     resume?: string | null;
     profile_image?: string | null;
@@ -353,7 +371,13 @@ interface SavedJob {
   };
 }
 
-
+const validateDates = (start: Dayjs | null, end: Dayjs | null) => {
+  if (!start || !end) return null;
+  if (end.isBefore(start, "day")) {
+    return "End date can't be before start date";
+  }
+  return null;
+};
 
   const token =
   typeof window !== "undefined"
@@ -1491,21 +1515,22 @@ const removeAppliedJob = async (applicationId: number) => {
                     </Dialog>
 
                     {/* DOWNLOAD BUTTON */}
-                    <a
-                      href={profileData?.personalInfo?.resume || "#"}
+                    {profileData?.personalInfo?.resume && (
+                     <a
+                      href={profileData.personalInfo.resume}
                       download
                       className="block"
                     >
                       <Button
                         variant="outline"
                         className="w-full text-sm lg:text-base h-10 lg:h-11"
-                        disabled={!profileData?.personalInfo?.resume}
                       >
                         <Download className="w-4 h-4 mr-2" />
                         Download Resume
                       </Button>
                     </a>
-
+                   )}
+                   
                     {/* PREVIEW BUTTON */}
                    {isProfileSubmitted && (
                       <Link href="/review">
@@ -1746,15 +1771,16 @@ const removeAppliedJob = async (applicationId: number) => {
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              {countries.map((country: Country) => (
+                              {uniquePhoneCodes.map((country: Country) => (
                                 <SelectItem
-                                  key={country.id}
+                                  key={country.phonecode}
                                   value={country.phonecode}
                                 >
                                   +{country.phonecode}
                                 </SelectItem>
                               ))}
                             </SelectContent>
+
                           </Select>
                           <Input
                             id="phone"
@@ -1777,7 +1803,7 @@ const removeAppliedJob = async (applicationId: number) => {
                       <div>
                         <Label className="text-sm font-medium">Country *</Label>
 
-                        <Popover>
+                        <Popover open={countryOpen} onOpenChange={setCountryOpen}>
                           <PopoverTrigger asChild>
                             <button className="w-full mt-1 h-10 lg:h-11 border rounded px-3 flex items-center justify-between">
                                 <span>
@@ -1820,6 +1846,7 @@ const removeAppliedJob = async (applicationId: number) => {
                                           phoneCode: country.phonecode,
                                         },
                                       }));
+                                      setCountryOpen(false);
                                     }}
                                   >
                                     {country.name}
@@ -1834,7 +1861,7 @@ const removeAppliedJob = async (applicationId: number) => {
                       <div>
                         <Label className="text-sm font-medium">State *</Label>
 
-                        <Popover>
+                        <Popover open={stateOpen} onOpenChange={setStateOpen}>
                           <PopoverTrigger asChild>
                             <button className="w-full mt-1 h-10 lg:h-11 border rounded px-3 flex items-center justify-between">
                               <span>
@@ -1875,6 +1902,7 @@ const removeAppliedJob = async (applicationId: number) => {
                                           cityId: "",
                                         },
                                       }));
+                                      setStateOpen(false);
                                     }}
                                   >
                                     {state.name}
@@ -2056,20 +2084,26 @@ const removeAppliedJob = async (applicationId: number) => {
                           <Input
                             id="currentSalary"
                             type="number"
-                            value={profileData.personalInfo.currentSalary}
+                            value={profileData.personalInfo.currentSalary ?? ""}
+                            onKeyDown={(e) => {
+                              if (["e", "E", "+", "-"].includes(e.key)) {
+                                e.preventDefault();
+                              }
+                            }}
                             onChange={(e) =>
                               setProfileData((prev) => ({
                                 ...prev,
                                 personalInfo: {
                                   ...prev.personalInfo,
-                                  currentSalary: e.target.value,
+                                  currentSalary:
+                                    e.target.value === "" ? null : Number(e.target.value),
                                 },
                               }))
                             }
                             className="flex-1 h-10 lg:h-11"
                             placeholder="Enter amount"
-                            max="0"
                           />
+
                         </div>
                       </div>
                       
@@ -2114,20 +2148,28 @@ const removeAppliedJob = async (applicationId: number) => {
                           <Input
                             id="expectedSalary"
                             type="number"
-                            value={profileData.personalInfo.expectedSalary}
-                            onChange={(e) =>
+                            value={profileData.personalInfo.expectedSalary ?? ""}
+                            onKeyDown={(e) => {
+                              if (["e", "E", "+", "-"].includes(e.key)) {
+                                e.preventDefault(); 
+                              }
+                            }}
+                             onChange={(e) => {
+                              const value = e.target.value;
+                          
                               setProfileData((prev) => ({
                                 ...prev,
                                 personalInfo: {
                                   ...prev.personalInfo,
-                                  expectedSalary: e.target.value,
+                                  expectedSalary: value === "" ? null : Number(value), 
                                 },
-                              }))
-                            }
+                               }));
+                             }}
                             className="flex-1 h-10 lg:h-11"
                             placeholder="Enter amount"
-                            max="0"
+                            min={0}  
                           />
+
                         </div>
                       </div>
                     </div>
@@ -2256,7 +2298,7 @@ const removeAppliedJob = async (applicationId: number) => {
                               <div>
                                <Label className="text-sm font-medium">Company *</Label>
                              
-                               <Popover>
+                               <Popover open={companyOpen} onOpenChange={setCompanyOpen}>
                                  <PopoverTrigger asChild>
                                    <button className="w-full mt-1 h-10 lg:h-11 border rounded px-3 flex items-center justify-between ">
                                      <span >
@@ -2288,7 +2330,9 @@ const removeAppliedJob = async (applicationId: number) => {
                                                ...prev,
                                                company: company.name,
                                              }))
+
                                            }
+                                           onPointerDown={() => setCompanyOpen(false)}
                                          >
                                            {company.name}
                                          </CommandItem>
@@ -2301,7 +2345,7 @@ const removeAppliedJob = async (applicationId: number) => {
                               <div>
                                 <Label className="text-sm font-medium">Location *</Label>
 
-                                <Popover>
+                                <Popover open={locationOpen} onOpenChange={setLocationOpen}>
                                   <PopoverTrigger asChild>
                                     <button className="w-full mt-1 h-10 lg:h-11 border rounded px-3 flex items-center justify-between ">
                                       <span >
@@ -2338,6 +2382,7 @@ const removeAppliedJob = async (applicationId: number) => {
                                                 location_id: location.id.toString(),
                                               }))
                                             }
+                                            onPointerDown={() => setLocationOpen(false)}
                                           >
                                             {location.name}
                                           </CommandItem>
@@ -2431,30 +2476,33 @@ const removeAppliedJob = async (applicationId: number) => {
 
                               <div>
                                <DatePicker
-                                 label="Start Date *"
+                                  label="Start Date *"
                                   value={experienceForm.startDate}
-                                  onChange={(date) =>
+                                  onChange={(date) => {
                                     setExperienceForm((prev) => ({
                                       ...prev,
                                       startDate: date,
-                                    }))
-                                 }
+                                    }));
+                                    setDateError(validateDates(date, experienceForm.endDate));
+                                  }}
+                                  maxDate={dayjs()}   
                                   views={["year", "month", "day"]}
                                   slotProps={{
                                     textField: {
+                                      error: !!dateError,
+                                      helperText: dateError,
                                       fullWidth: true,
                                       size: "small",
                                       sx: {
                                         mt: 1,
                                         "& .MuiOutlinedInput-root": {
-                                         height: "44px",
+                                          height: "44px",
                                           borderRadius: "6px",
                                         },
                                       },
-                                   },
-                                 }}
-                               />
-
+                                    },
+                                  }}
+                                />
                               </div>
                               <div>
                                 <div className="space-y-2">
@@ -2462,27 +2510,24 @@ const removeAppliedJob = async (applicationId: number) => {
                                     <DatePicker
                                       label="End Date"
                                       value={experienceForm.endDate}
-                                      onChange={(date) =>
+                                      onChange={(date) => {
                                         setExperienceForm((prev) => ({
                                           ...prev,
                                           endDate: date,
-                                        }))
-                                      }
-                                      views={["year", "month", "day"]}
-                                      minDate={experienceForm.startDate ?? undefined} 
+                                        }));
+                                        setDateError(validateDates(experienceForm.startDate, date));
+                                      }}
+                                      minDate={experienceForm.startDate ?? undefined}
                                       slotProps={{
                                         textField: {
+                                          error: !!dateError,
+                                          helperText: dateError,
                                           fullWidth: true,
                                           size: "small",
-                                          sx: {
-                                            "& .MuiOutlinedInput-root": {
-                                              height: "44px",
-                                              borderRadius: "6px",
-                                            },
-                                          },
                                         },
                                       }}
                                     />
+
 
                                   )}
                                 </div>
@@ -2764,6 +2809,7 @@ const removeAppliedJob = async (applicationId: number) => {
                                   }
                                   views={["year"]}
                                   disableFuture
+                                  maxDate={dayjs()} 
                                   slotProps={{
                                     textField: {
                                       fullWidth: true,
@@ -2807,23 +2853,52 @@ const removeAppliedJob = async (applicationId: number) => {
                               </Select>
 
                                 <Input
-                                  id="percentage"
-                                  className="h-10 flex-1"
-                                  placeholder={
-                                     educationForm.score_type === "cgpa"
-                                       ? "e.g. 8.5"
-                                       : educationForm.score_type === "percentage"
-                                       ? "e.g. 85%"
-                                       : "e.g. A+"
-                                   }
-                                  value={educationForm.percentage}
-                                  onChange={(e) =>
-                                    setEducationForm((prev) => ({
-                                      ...prev,
-                                      percentage: e.target.value,
-                                    }))
-                                  }                                                                  
-                                />
+  id="score"
+  className="h-10 flex-1"
+  placeholder={
+    educationForm.score_type === "cgpa"
+      ? "e.g. 8.5"
+      : educationForm.score_type === "percentage"
+      ? "e.g. 85%"
+      : "e.g. A+"
+  }
+  value={educationForm.percentage}
+  onChange={(e) => {
+    let value = e.target.value;
+
+    // 🔤 GRADE → alphabets only (+ / - allowed)
+    if (educationForm.score_type === "grade") {
+      if (!/^[a-zA-Z+-]*$/.test(value)) return;
+      setScoreError(null);
+    }
+
+    // 📊 PERCENTAGE
+    if (educationForm.score_type === "percentage") {
+      if (!/^\d*\.?\d*$/.test(value)) return;
+      const num = Number(value);
+      if (num > 100) return;
+      setScoreError(null);
+    }
+
+    // 🎯 CGPA
+    if (educationForm.score_type === "cgpa") {
+      if (!/^\d*\.?\d*$/.test(value)) return;
+
+      const num = Number(value);
+      if (num < 0 || num > 10) {
+        setScoreError("CGPA must be between 0 and 10");
+      } else {
+        setScoreError(null);
+      }
+    }
+
+    setEducationForm((prev) => ({
+      ...prev,
+      percentage: value,
+    }));
+  }}
+/>
+
                                 </div>
                               </div>
 
@@ -3059,6 +3134,7 @@ const removeAppliedJob = async (applicationId: number) => {
                                     }))
                                   }
                                   views={["year"]}
+                                   maxDate={dayjs()} 
                                   slotProps={{
                                     textField: {
                                       fullWidth: true,

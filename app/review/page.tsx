@@ -71,9 +71,12 @@ interface ProfileData {
     fullName: string;
     email: string;
     phone: string;
+    phoneCode?: string;
     location: string;
     experience: string;
     currentSalary: string;
+    currentCurrency: string;
+    expectedCurrency: string;
     expectedSalary: string;
     noticePeriod: string;
   };
@@ -140,9 +143,13 @@ interface Certification {
             fullName: data.full_name,
             email: data.email,
             phone: data.phone,
+            phoneCode: data.phone_code || data.phoneCode || "",
             location: `${data.city?.name || ""}, ${data.state?.name || ""}`,
             experience: data.experience,
             currentSalary: data.current_salary,
+            currentCurrency: data?.current_currency?.symbol ?? "",
+            expectedCurrency: data?.expected_currency?.symbol ?? "",
+
             expectedSalary: data.expected_salary,
             noticePeriod: data.notice_period,
           },
@@ -279,8 +286,18 @@ interface Certification {
                       <span>{profileData.personalInfo.email}</span>
                     </div>
                     <div className="flex items-center space-x-2 text-gray-600">
-                      {isPDF ? ' ☎' : <Phone className="w-4 h-4" />}
-                      <span>{profileData.personalInfo.phone}</span>
+                      {isPDF ? ' ' : <Phone className="w-4 h-4" />}
+                      <span>
+                        {[
+                           profileData.personalInfo.phoneCode
+                            ? `+${profileData.personalInfo.phoneCode}`
+                            : null,
+                          profileData.personalInfo.phone,
+                        ]
+                          .filter(Boolean)
+                          .join(" ")}
+                       </span>
+
                     </div>
                     <div className="flex items-center space-x-2 text-gray-600">
                       {isPDF ? '📍' : <MapPin className="w-4 h-4" />}
@@ -291,12 +308,28 @@ interface Certification {
                       <span>{profileData.personalInfo.experience} Experience</span>
                     </div>
                     <div className="flex items-center space-x-2 text-gray-600">
-                      {isPDF ? ' $ ' : <DollarSign className="w-4 h-4" />}
-                      <span>Current: {profileData.personalInfo.currentSalary}</span>
+                       {isPDF ? (
+                         <span>{profileData.personalInfo.currentCurrency}</span>
+                       ) : (
+                         <span className="text-sm font-medium">
+                           {profileData.personalInfo.currentCurrency}
+                         </span>
+                       )}
+                       <span>
+                         Current: {profileData.personalInfo.currentSalary}
+                       </span>
                     </div>
                     <div className="flex items-center space-x-2 text-gray-600">
-                      {isPDF ? ' $ ' : <DollarSign className="w-4 h-4" />}
-                      <span>Expected: {profileData.personalInfo.expectedSalary}</span>
+                       {isPDF ? (
+                         <span>{profileData.personalInfo.expectedCurrency}</span>
+                       ) : (
+                         <span className="text-sm font-medium">
+                           {profileData.personalInfo.expectedCurrency}
+                         </span>
+                       )}
+                       <span>
+                         Expected: {profileData.personalInfo.expectedSalary}
+                       </span>
                     </div>
                     <div className="flex items-center space-x-2 text-gray-600">
                       {isPDF ? '🕒' : <Clock className="w-4 h-4" />}

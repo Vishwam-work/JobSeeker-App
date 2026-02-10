@@ -58,6 +58,7 @@ export default function JobListings() {
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [isJobDetailOpen, setIsJobDetailOpen] = useState(false);
   const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
+  const [open, setOpen] = useState(false);
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [userData, setUserData] = useState<any>(null);
   const [loadingUserData, setLoadingUserData] = useState(false);
@@ -241,14 +242,19 @@ interface Application {
       console.log("Jobs data:", data);
       setJobs(data);
       setFilteredJobs(data);
+      
+      const locationNames: string[] = data
+       .map((job: any): string | undefined => job?.location?.name)
+       .filter((loc: string | undefined): loc is string => {
+         return typeof loc === "string" && loc.trim() !== "";
+       });
 
-      const uniqueLocations: Location[]  = Array.from(
-       new Set(
-       data
-        .map((job: any) => job.location?.name) // ✅ FIX
-        .filter((loc: string) => loc && loc.trim() !== "")
-       )
-     );
+      const uniqueLocations: Location[] = Array.from<string>(
+       new Set<string>(locationNames)
+      ).map((name: string) => ({
+       id: name,   
+       name: name, 
+      }));
 
       setLocations(uniqueLocations);
       setLoading(false);
@@ -912,7 +918,7 @@ useEffect(() => {
                    </Label>
 
                    <Select
-                     value={filters.location || "" }
+                     value={filters.location || undefined}
                      onValueChange={(location) =>
                        setFilters((prev) => ({
                          ...prev,
@@ -1145,6 +1151,8 @@ useEffect(() => {
                      </Label>
 
                      <Select
+                       open={open} 
+                       onOpenChange={setOpen}
                        value="" 
                        onValueChange={() => {}}
                      >
@@ -1186,14 +1194,15 @@ useEffect(() => {
                                        ? "bg-blue-100 text-blue-700 font-medium"
                                        : "text-gray-700 hover:bg-gray-100"
                                    }`}
-                                 onClick={() =>
+                                 onClick={() => {
                                    setFilters((prev) => ({
                                      ...prev,
                                      skills: isSelected
                                        ? prev.skills.filter((s) => s !== skill)
                                        : [...prev.skills, skill],
-                                   }))
-                                 }
+                                   }));
+                                   setOpen(false);
+                                 }}
                                >
                                  <span>{skill}</span>
                                  {isSelected && <span>✓</span>}
