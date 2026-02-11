@@ -711,7 +711,7 @@ const handleRemoveSkill = (skillToRemove: Skill) => {
         }
 
         const res = await fetch(
-          "https://jobseeker-backend-jy1y.onrender.com/master/api/majors/",
+          "http://127.0.0.1:8010/master/api/majors/",
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -721,11 +721,10 @@ const handleRemoveSkill = (skillToRemove: Skill) => {
 
         const data = await res.json();
 
-        // console.log("MAJORS API DATA ---->", data);
 
         setMajors(data);
       } catch (error) {
-        console.error("Error fetching majors:", error);
+        console.error("Error fetching majors");
       }
     };
 
@@ -741,8 +740,7 @@ const handleRemoveSkill = (skillToRemove: Skill) => {
 
       try {
         const res = await fetch(
-          "https://jobseeker-backend-jy1y.onrender.com/api/profile/",
-          {
+          "http://127.0.0.1:8010/api/profile/",{
             method: "GET",
             headers: {
               "Content-Type": "application/json",
@@ -753,7 +751,7 @@ const handleRemoveSkill = (skillToRemove: Skill) => {
 
         if (res.ok) {
           const data = await res.json();
-          console.log("Fetched profile:", data);
+          console.log("Fetched profile");
 
           setProfileData({
             personalInfo: {
@@ -792,7 +790,7 @@ const handleRemoveSkill = (skillToRemove: Skill) => {
           console.error("Failed to fetch profile");
         }
       } catch (error) {
-        console.error("Error fetching profile:", error);
+        console.error("Error fetching profile");
       }
       finally { 
          setLoading(false);
@@ -802,7 +800,6 @@ const handleRemoveSkill = (skillToRemove: Skill) => {
     fetchProfile();
   }, []);
 
-//  console.log("Profile Data ---->After Fetch", profileData);
   useEffect(() => {
     const fetchSavedJobs = async () => {
       const token = localStorage.getItem("auth_token");
@@ -810,7 +807,7 @@ const handleRemoveSkill = (skillToRemove: Skill) => {
 
       try {
         const res = await fetch(
-          "https://jobseeker-backend-jy1y.onrender.com/api/saved-jobs-all/",
+          "http://127.0.0.1:8010/api/saved-jobs-all/",
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -824,7 +821,7 @@ const handleRemoveSkill = (skillToRemove: Skill) => {
           console.error("Failed to fetch saved jobs");
         }
       } catch (err) {
-        console.error("Error fetching saved jobs:", err);
+        console.error("Error fetching saved jobs");
       }
     };
 
@@ -832,7 +829,7 @@ const handleRemoveSkill = (skillToRemove: Skill) => {
   }, []);
 
   useEffect(() => {
-    fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/currencies/")
+    fetch("http://127.0.0.1:8010/master/api/currencies/")
       .then((res) => res.json())
       .then((data) => {
         // console.log("Currency data:", data);
@@ -841,10 +838,10 @@ const handleRemoveSkill = (skillToRemove: Skill) => {
   }, []);
   
   useEffect(() => {
-    fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/countries/")
+    fetch("http://127.0.0.1:8010/master/api/countries/")
       .then((res) => res.json())
       .then((data) => {
-        // console.log("Country data:", data);
+        console.log("Country data");
         setCountries(data);
       })
       .catch((err) => console.error(err));
@@ -868,7 +865,7 @@ const handleRemoveSkill = (skillToRemove: Skill) => {
   useEffect(() => {
     if (profileData.personalInfo.countryId) {
       fetch(
-        `https://jobseeker-backend-jy1y.onrender.com/master/api/states/?country_id=${profileData.personalInfo.countryId}`
+        `http://127.0.0.1:8010/master/api/states/?country_id=${profileData.personalInfo.countryId}`
       )
         .then((res) => res.json())
         .then((data) => {
@@ -881,7 +878,7 @@ const handleRemoveSkill = (skillToRemove: Skill) => {
   useEffect(() => {
     if (profileData.personalInfo.stateId) {
       fetch(
-        `https://jobseeker-backend-jy1y.onrender.com/master/api/cities/?state=${profileData.personalInfo.stateId}`
+        `http://127.0.0.1:8010/master/api/cities/?state=${profileData.personalInfo.stateId}`
       )
         .then((res) => res.json())
         .then(setCities)
@@ -890,7 +887,7 @@ const handleRemoveSkill = (skillToRemove: Skill) => {
   }, [profileData.personalInfo.stateId]);
 
   useEffect(() => {
-    fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/companies/")
+    fetch("http://127.0.0.1:8010/master/api/companies/")
       .then((res) => res.json())
       .then((data) => {
         setCompanies(data);
@@ -900,7 +897,7 @@ const handleRemoveSkill = (skillToRemove: Skill) => {
 
   useEffect(() => {
     fetch(
-      "https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_category/"
+      "http://127.0.0.1:8010/master/api/jobs_category/"
     )
       .then((res) => res.json())
       .then((data) => {
@@ -912,7 +909,7 @@ const handleRemoveSkill = (skillToRemove: Skill) => {
   useEffect(() => {
     if (experienceForm.category_id) {
       fetch(
-        `https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_title/?category=${experienceForm.category_id}`
+        `http://127.0.0.1:8010/master/api/jobs_title/?category=${experienceForm.category_id}`
       )
         .then((res) => res.json())
         .then((data) => {
@@ -929,7 +926,7 @@ const handleRemoveSkill = (skillToRemove: Skill) => {
     formData.append("resume", resumeFile);
     try {
       const res = await fetch(
-        "https://jobseeker-backend-jy1y.onrender.com/api/profile/upload-resume/",
+        "http://127.0.0.1:8010/api/profile/upload-resume/",
         {
           method: "PATCH",
           headers: {
@@ -941,8 +938,7 @@ const handleRemoveSkill = (skillToRemove: Skill) => {
 
       if (res.ok) {
         const data = await res.json();
-        // console.log("Resume uploaded:", data.resume_url);
-        // console.log("Resume Data uploaded:", data);
+        console.log("Resume uploaded");
         setProfileData((prev) => ({
           ...prev,
           personalInfo: {
@@ -955,7 +951,7 @@ const handleRemoveSkill = (skillToRemove: Skill) => {
         return true;
       } else {
         const error = await res.json();
-        console.error("Failed to upload resume:", error);
+        console.error("Failed to upload resume");
         
         toast.error("Resume upload failed", {
         description: error?.message || "Unknown error. Please try again.",
@@ -964,7 +960,7 @@ const handleRemoveSkill = (skillToRemove: Skill) => {
         return false;
       }
     } catch (error) {
-      console.error("Error uploading resume:", error);
+      console.error("Error uploading resume");
       toast.error("Network error while uploading resume");
       return false;
     }
@@ -977,7 +973,7 @@ const handleRemoveSkill = (skillToRemove: Skill) => {
   formData.append("profile_image", selectedImage);
 
   const res = await fetch(
-    "https://jobseeker-backend-jy1y.onrender.com/api/profile/",
+    "http://127.0.0.1:8010/api/profile/",
     {
       method: "PATCH",
       headers: {
@@ -1097,10 +1093,9 @@ useEffect(() => {
   name: skill.name,
 })),
     };
-    console.log("Payload:", payload);
-    console.log("Token:", localStorage.getItem("auth_token"));
+  
     const res = await fetch(
-      "https://jobseeker-backend-jy1y.onrender.com/api/profile/",
+      "http://127.0.0.1:8010/api/profile/",
       {
         method: "PUT",
         headers: {
@@ -1110,7 +1105,6 @@ useEffect(() => {
         body: JSON.stringify(payload),
       }
     );
-    console.log("Response:", res);
     if (res.ok) {
       try {
         const data = await res.json();
@@ -1144,7 +1138,7 @@ useEffect(() => {
         });
       } catch (e) {
         // If response has no JSON body, silently skip state update
-        console.warn("Profile saved; response body parse skipped", e);
+        console.warn("Profile saved; response body parse skipped");
       }
       const userKey = getUserKey();
   if (userKey) {
@@ -1159,7 +1153,7 @@ useEffect(() => {
       });
     } else {
       const errText = await res.text();
-      console.error("Save profile failed:", errText);
+      console.error("Save profile failed");
       toast.error(`Error saving profile. ${errText}`);
     }
   };
@@ -1175,7 +1169,7 @@ useEffect(() => {
         }
 
         const res = await fetch(
-          "https://jobseeker-backend-jy1y.onrender.com/api/register/",
+          "http://127.0.0.1:8010/api/register/",
           {
             headers: {
               "Content-Type": "application/json",
@@ -1190,7 +1184,7 @@ useEffect(() => {
         }
 
         const data = await res.json();
-        console.log("Register API data:", data);
+        console.log("Register API data");
 
         // ✅ Handle both single object or array API responses
         const user = Array.isArray(data) ? data[0] : data;
@@ -1207,7 +1201,7 @@ useEffect(() => {
           },
         }));
       } catch (error) {
-        console.error("Error fetching user data:", error);
+        console.error("Error fetching user data");
       }
     };
 
@@ -1225,7 +1219,7 @@ useEffect(() => {
     }
 
     const response = await fetch(
-      "https://jobseeker-backend-jy1y.onrender.com/api/my-applied-jobs/",
+      "http://127.0.0.1:8010/api/my-applied-jobs/",
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -1264,7 +1258,7 @@ const removeAppliedJob = async (applicationId: number) => {
     }
 
     const response = await fetch(
-      `https://jobseeker-backend-jy1y.onrender.com/api/my-applied-jobs/${applicationId}/`,
+      `http://127.0.0.1:8010/api/my-applied-jobs/${applicationId}/`,
       {
         method: "DELETE",
         headers: {
@@ -1419,7 +1413,7 @@ const removeAppliedJob = async (applicationId: number) => {
                       className="w-full text-sm lg:text-base h-10 lg:h-11"
                       onClick={() => {
                         if (profileData?.personalInfo?.resume) {
-                          window.open(`https://jobseeker-backend-jy1y.onrender.com${profileData.personalInfo.resume}`, "_blank");
+                          window.open(`http://127.0.0.1:8010${profileData.personalInfo.resume}`, "_blank");
                         } else {
                           
                         }
@@ -1776,7 +1770,7 @@ const removeAppliedJob = async (applicationId: number) => {
                                   key={country.phonecode}
                                   value={country.phonecode}
                                 >
-                                  +{country.phonecode}
+                                  {country.name} (+{country.phonecode})
                                 </SelectItem>
                               ))}
                             </SelectContent>
@@ -3219,7 +3213,7 @@ const removeAppliedJob = async (applicationId: number) => {
                                 if (!token) return;
                                 try {
                                   const res = await fetch(
-                                    `https://jobseeker-backend-jy1y.onrender.com/api/saved-jobs/${savedJob.id}/`,
+                                    `http://127.0.0.1:8010/api/saved-jobs/${savedJob.id}/`,
                                     {
                                       method: "DELETE",
                                       headers: {
@@ -3234,8 +3228,7 @@ const removeAppliedJob = async (applicationId: number) => {
                                   }
                                 } catch (err) {
                                   console.error(
-                                    "Error deleting saved job:",
-                                    err
+                                    "Error deleting saved job"
                                   );
                                 }
                               }}
@@ -3348,7 +3341,7 @@ const removeAppliedJob = async (applicationId: number) => {
                   if (!token) return;
                   try {
                     const res = await fetch(
-                      `https://jobseeker-backend-jy1y.onrender.com/api/saved-jobs/${savedJob.id}/`,
+                      `http://127.0.0.1:8010/api/saved-jobs/${savedJob.id}/`,
                       {
                         method: "DELETE",
                         headers: { Authorization: `Bearer ${token}` },

@@ -578,7 +578,6 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
 
   useEffect(() => {
     const token = localStorage.getItem("auth_token");
-    console.log("LOG TOKEN:", token);
     setIsAuthenticated(!!token);
   }, []);
 
@@ -587,20 +586,17 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
       try {
         const token = localStorage.getItem("auth_token");
         if (!token) return;
-  
-        const decoded = jwtDecode(token);
-        console.log("DECODED:", decoded);
-        console.log("Employer ID:", decoded.user_id);
 
+        const decoded = jwtDecode<DecodedToken>(token);
         const res = await fetch(
-          `https://jobseeker-backend-jy1y.onrender.com/employeer/api/companies/${decoded.user_id}/`,
+          `http://127.0.0.1:8010/employeer/api/companies/${decoded.user_id}/`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
 
         if (!res.ok) {
-          console.error("FETCH FAILED:", res.status);
+          console.error("FETCH FAILED");
           return;
         }
 
@@ -609,7 +605,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
         setCompanyName(data.company_name)
         // console.log(data.company_name)
       } catch (err) {
-        console.error("Error:", err);
+        console.error("Error");
       }
     };
 
@@ -622,17 +618,17 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
         const token = localStorage.getItem("auth_token");
         if (!token) return;
         const res = await fetch(
-          "https://jobseeker-backend-jy1y.onrender.com/employeer/api/employer/applications/",
+          "http://127.0.0.1:8010/employeer/api/employer/applications/",
           {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
         if (!res.ok) {
-          console.error("Failed to fetch employer applications");
+          console.error("Failed to fetch applications");
           return;
         }
         const data = await res.json();
-        console.log("Employer applications:", data);
+      
         // Map API to UI candidate shape
         const mapped = (Array.isArray(data) ? data : []).map((app) => ({
           id: app.id,
@@ -663,7 +659,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
               : "Under Review",
 
           resumeUrl: app.profile?.resume
-            ? `https://jobseeker-backend-jy1y.onrender.com${app.profile.resume}`
+            ? `http://127.0.0.1:8010${app.profile.resume}`
             : "#",
           profileImage: null,
           summary: "",
@@ -674,7 +670,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
         }));
         setCandidates(mapped);
       } catch (e) {
-        console.error("Failed to fetch employer applications", e);
+        console.error("Failed to fetch applications");
       }
     };
     fetchApplications();
@@ -716,7 +712,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
       );
 
       // const response = await fetch(
-      //   "https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-list-view/",
+      //   "http://127.0.0.1:8010/employeer/api/job-list-view/",
       //   {
       //     method: "GET",
       //     headers: {
@@ -730,11 +726,9 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
         return;
       }
       const data = await response.json();
-      console.log("Here is the Job-list-view-data:",data)
-      console.log(data.category)
       setPostedJobs(data); // Set jobs into stateq
     } catch (error) {
-      console.error("Error fetching jobs:", error);
+      console.error("Error fetching jobs");
     }
   };
 
@@ -742,10 +736,9 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
   useEffect(() => {
     fetchPostedJobs();
   }, []);
-  console.log("Posted Jobs:", postedJobs);
 
   useEffect(() => {
-    fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/currencies/")
+    fetch("http://127.0.0.1:8010/master/api/currencies/")
       .then((res) => res.json())
       .then((data) => {
         // console.log("Currency data:", data);
@@ -756,7 +749,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
   useEffect(() => {
     // Fetch job categories
     fetch(
-      "https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_category/"
+      "http://127.0.0.1:8010/master/api/jobs_category/"
     )
       .then((res) => {
         if (!res.ok) {
@@ -766,12 +759,12 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
       })
       .then((data) => setJobCategories(data))
       .catch((err) => {
-        console.error("Failed to fetch job categories:", err);
+        console.error("Failed to fetch job categories");
         setJobCategories([]);
       });
 
     // Fetch country
-    fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/countries/")
+    fetch("http://127.0.0.1:8010/master/api/countries/")
       .then((res) => {
         if (!res.ok) {
           throw new Error(`HTTP error! status: ${res.status}`);
@@ -780,7 +773,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
       })
       .then((data) => setCities(data))
       .catch((err) => {
-        console.error("Failed to fetch cities:", err);
+        console.error("Failed to fetch cities");
         setCities([]);
       });
   }, []);
@@ -789,7 +782,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
   useEffect(() => {
     if (selectedCategory) {
       fetch(
-        `https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_title/?category=${selectedCategory}`
+        `http://127.0.0.1:8010/master/api/jobs_title/?category=${selectedCategory}`
       )
         .then((res) => {
           if (!res.ok) {
@@ -799,7 +792,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
         })
         .then((data) => setJobTitles(data))
         .catch((err) => {
-          console.error("Failed to fetch job titles:", err);
+          console.error("Failed to fetch job titles");
           setJobTitles([]);
         });
     } else {
@@ -822,7 +815,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
       const token = localStorage.getItem("auth_token");
 
       const response = await fetch(
-        `https://jobseeker-backend-jy1y.onrender.com/employeer/api/employer/applications/job/${jobId}`,
+        `http://127.0.0.1:8010/employeer/api/employer/applications/job/${jobId}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -835,7 +828,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
       // console.log("API RAW DATA:", data);
 
       if (!Array.isArray(data)) {
-        console.error("API did not return list:", data);
+        console.error("API did not return list");
         toast.error("Failed to load candidates! (Unauthorized?)", {
           description: "You might not have permission. Please log in or check your access."
         });
@@ -940,7 +933,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
       };
       // console.log("Payload:", payload);
       const response = await fetch(
-        "https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-postings/",
+        "http://127.0.0.1:8010/employeer/api/job-postings/",
         {
           method: "POST",
           headers: {
@@ -953,7 +946,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.error("Error posting job:", errorData);
+        console.error("Error posting job");
         toast.error("Failed to post job", {
           description: errorData.detail || "Unknown error. Please try again.",
         });
@@ -962,7 +955,6 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
       }
 
   const data = await response.json();
-  console.log("Job posted successfully:", data);
   setPostedJobs((prev) => [...prev, data]);
   toast.success("Job posted successfully!");
   await fetchPostedJobs();
@@ -1110,7 +1102,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
       try {
         const token = localStorage.getItem("auth_token");
         const response = await fetch(
-          `https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-list-view/${job.id}/`,
+          `http://127.0.0.1:8010/employeer/api/job-list-view/${job.id}/`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -1120,27 +1112,26 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
         const data = await response.json();
-        console.log("Job details:", data);
+       
         setSelectedJob(data);
         setIsEditMode(false);
         setIsModalOpen(true);
       } catch (err) {
-        console.error("Error fetching job details", err);
+        console.error("Error fetching job details");
       }
     };
-  //https://jobseeker-backend-jy1y.onrender.com
-    const handleEditJob = async (job) => {
+  //http://127.0.0.1:8010
+    const handleEditJob = async (job: any) => {
       try {
         const token = localStorage.getItem("auth_token");
         const response = await fetch(
-          `https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-list-view/${job.id}/`,
+          `http://127.0.0.1:8010/employeer/api/job-list-view/${job.id}/`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
       
         const data = await response.json();
-        console.log("Data is prefill", data);
         // Prefill the form
     setJobForm({
         title: data.title || "",
@@ -1169,7 +1160,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
       setSelectedJob(data);
       setIsEditMode(true);
     } catch (err) {
-      console.error("Error fetching job details for edit", err);
+      console.error("Error fetching job details for edit");
     }
   };
 
@@ -1187,7 +1178,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
 
       }
       const response = await fetch(
-        `https://jobseeker-backend-jy1y.onrender.com/employeer/job-postings/${job.id}/delete/`,
+        `http://127.0.0.1:8010/employeer/job-postings/${job.id}/delete/`,
         {
           method: "DELETE",
           headers: {
@@ -1208,7 +1199,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
         });
       }
     } catch (err) {
-      console.error("Error fetching job details for edit", err);
+      console.error("Error fetching job details for edit");
     }
   };
 
@@ -1234,7 +1225,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
 
     try {
       const response = await fetch(
-        `https://jobseeker-backend-jy1y.onrender.com/employeer/job-postings/${job.id}/update/`,
+        `http://127.0.0.1:8010/employeer/job-postings/${job.id}/update/`,
         {
           method: "PATCH",
           headers: {
@@ -1253,14 +1244,14 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
         );
         toast.success(`Job status changed to: ${newStatus}`);
       } else {
-        console.error("Failed to update job status:", result);
+        console.error("Failed to update job status");
 
         toast.error(result.detail || "Failed to update job status", {
           description: "Please check and try again.",
         });
       }
     } catch (err) {
-      console.error("Error updating job status:", err);
+      console.error("Error updating job status");
       toast.error("Network error. Please try again.");
     }
   };
@@ -1269,7 +1260,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
   // const handleUpdateJob = async () => {
   //   try {
   //     const token = localStorage.getItem("auth_token");
-  //     const response = await fetch(`https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-postings/${selectedJob.id}/`, {
+  //     const response = await fetch(`http://127.0.0.1:8010/employeer/api/job-postings/${selectedJob.id}/`, {
   //       method: "PUT",
   //       headers: {
   //         "Content-Type": "application/json",
@@ -1314,7 +1305,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
       }
 
       const response = await fetch(
-        `https://jobseeker-backend-jy1y.onrender.com/employeer/job-postings/${selectedJob.id}/update/`,
+        `http://127.0.0.1:8010/employeer/job-postings/${selectedJob.id}/update/`,
         {
           method: "PUT",
           headers: {
@@ -1327,7 +1318,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.error("Failed to update job:", errorData);
+        console.error("Failed to update job");
         toast.error(`Error: ${errorData.detail || "Unable to update job"}`, {
           description: "Please try again or check your network connection."
         });
@@ -1345,7 +1336,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
 
       toast.success("Job updated successfully!");
     } catch (err) {
-      console.error("Update job error:", err);
+      console.error("Update job error");
       toast.error("An error occurred while updating the job.", {
         description: "Please try again or check your network connection."
       });
@@ -1364,7 +1355,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
       }
 
       const response = await fetch(
-        `https://jobseeker-backend-jy1y.onrender.com/employeer/api/employer/applications/${candidate.id}/update/`,
+        `http://127.0.0.1:8010/employeer/api/employer/applications/${candidate.id}/update/`,
         {
           method: "PUT",
           headers: {
@@ -1408,7 +1399,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
 
       toast.success("Candidate Shortlisted!");
     } catch (err) {
-      console.log("Shortlist error:", err);
+      console.log("Shortlist error");
       toast.error("Network error. Please try again.");
     }
   };
@@ -1434,7 +1425,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
       }
 
       const response = await fetch(
-        `https://jobseeker-backend-jy1y.onrender.com/employeer/api/employer/applications/${candidate.id}/update/`,
+        `http://127.0.0.1:8010/employeer/api/employer/applications/${candidate.id}/update/`,
         {
           method: "PUT",
           headers: {
@@ -1502,7 +1493,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
 
       toast.error("Candidate Rejected!");
     } catch (err) {
-      console.log("Reject error: ", err);
+      console.log("Reject error");
       toast.error("Network error. Please try again.");
     }
   };
@@ -1528,7 +1519,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
                          });
   
       const res = await fetch(
-        `https://jobseeker-backend-jy1y.onrender.com/employeer/api/employer/applications/${selectedCandidate.id}/schedule-interview/`,
+        `http://127.0.0.1:8010/employeer/api/employer/applications/${selectedCandidate.id}/schedule-interview/`,
         {
           method: "PATCH",
           headers: {
@@ -1546,7 +1537,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
       // meet_link: meetLink,
       if (!res.ok) {
         const text = await res.text();
-        console.error("Backend error:", text);
+        console.error("Backend error");
         return toast.error("Failed to schedule interview", {
           description: "Please try again or check your network connection."
         });
@@ -1570,7 +1561,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
       toast.success("Interview Scheduled!");
       setOpenSchedule(false);
     } catch (err) {
-      console.error(err);
+      console.error("Network error");
       toast.error("Network error. Please try again.");
     }
   };
@@ -1639,7 +1630,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
         if (!token) return;
 
         const res = await fetch(
-          "https://jobseeker-backend-jy1y.onrender.com/employeer/api/employeer_register/",
+          "http://127.0.0.1:8010/employeer/api/employeer_register/",
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -1657,7 +1648,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
           }));
         }
       } catch (err) {
-        console.error("Company fetch error:", err);
+        console.error("Company fetch error");
       }
     };
 

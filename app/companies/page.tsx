@@ -37,7 +37,7 @@ export default function CompaniesPage() {
              : null;
 
         const res = await fetch(
-          "https://jobseeker-backend-jy1y.onrender.com/employeer/api/companies/",
+          "http://127.0.0.1:8010/employeer/api/companies/",
           {
             headers: {
                "Content-Type": "application/json",
@@ -68,7 +68,7 @@ export default function CompaniesPage() {
    
         setAllCompanies(mapped);
       } catch (error) {
-        console.error("Error fetching companies:", error);
+
         setAllCompanies([]);
       } finally {
         setLoading(false);

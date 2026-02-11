@@ -79,7 +79,7 @@ type Job = {
             { headers }
           ),
           fetch(
-            `https://jobseeker-backend-jy1y.onrender.com/employeer/api/companies/${id}/jobs/`,
+            `http://127.0.0.1:8010/employeer/api/companies/${id}/jobs/`,
             { headers }
           ),
         ]);
@@ -139,7 +139,7 @@ setCompany(mappedCompany);
 
         setJobs(jobList);
       } catch (error) {
-        console.error("Error fetching details:", error);
+        console.error("Error fetching details");
       } finally {
         setLoading(false);
       }
@@ -176,7 +176,6 @@ const redirectToHomeWithSearch = (jobTitle?: string) => {
   //     const data = await response.json();
   //     setUserData(data);
   //   } catch (error) {
-  //     console.error("Error fetching user data:", error);
   //   } finally {
   //     setLoadingUserData(false);
   //   }

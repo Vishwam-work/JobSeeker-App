@@ -94,7 +94,7 @@ interface Certification {
 }
 
     useEffect(() => {
-      fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_title/")
+      fetch("http://127.0.0.1:8010/master/api/jobs_title/")
         .then((res) => res.json())
         .then((data) => {
           setJobTitles(data);
@@ -103,7 +103,7 @@ interface Certification {
     }, []);
 
     useEffect(() => {
-      fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_category/")
+      fetch("http://127.0.0.1:8010/master/api/jobs_category/")
         .then((res) => res.json())
         .then((data) => {
           setJobCategories(data);
@@ -116,12 +116,11 @@ interface Certification {
     jobCategories.find((c) => c.id === id)?.name || "";
 
   const getJobTitleName = (id: number | string) => {
-    // console.log("jobTitles", jobTitles);
     return jobTitles.find((t) => t.id === id)?.title || "";
   };
   useEffect(() => {
     const loadProfile = async () => {
-      const res = await fetch("https://jobseeker-backend-jy1y.onrender.com/api/profile/", {
+      const res = await fetch("http://127.0.0.1:8010/api/profile/", {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
@@ -133,7 +132,6 @@ interface Certification {
 
       if (res.ok) {
         const data = await res.json();
-        // console.log("Profile Data: before", data);
 
  
 
@@ -193,7 +191,6 @@ interface Certification {
       </div>
     );
   }
-  // console.log("Profile Data: after", profileData);
   // Sample profile data - in a real app, this would come from an API or state management
 
 
