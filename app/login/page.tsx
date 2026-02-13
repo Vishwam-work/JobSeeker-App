@@ -6,43 +6,43 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Snackbar, Alert } from "@mui/material";
 import { Card, CardContent } from "@/components/ui/card";
-import { Chrome, CheckCircle, Eye, EyeOff,  ChevronDown, Search } from "lucide-react";
+import { Chrome, CheckCircle, Eye, EyeOff, ChevronDown, Search } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 // import { useSession, signIn, signOut } from "next-auth/react";
 import CookieConsent from "@/components/Cookie";
 
 export default function Login() {
-  
+
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [alertMessage, setAlertMessage] = useState("");
   const [alertOpen, setAlertOpen] = useState(false);
   const [alertType, setAlertType] = useState<"success" | "error">("success");
-    const [isEmployerDropdownOpen, setIsEmployerDropdownOpen] = useState(false);
-  
+  const [isEmployerDropdownOpen, setIsEmployerDropdownOpen] = useState(false);
+
   const router = useRouter();
 
-const REQUIRED_PROFILE_FIELDS = [
-  "full_name",
-  "phone",
-  "resume",
-  "skills",
-  "country",
-  "state",
-  "city",
-  "experiences",
-];
-const isProfileComplete = (profile: any) => {
-  return REQUIRED_PROFILE_FIELDS.every(
-    (field) =>
-      profile[field] &&
-      (Array.isArray(profile[field])
-        ? profile[field].length > 0
-        : true)
-  );
-};
+  const REQUIRED_PROFILE_FIELDS = [
+    "full_name",
+    "phone",
+    "resume",
+    "skills",
+    "country",
+    "state",
+    "city",
+    "experiences",
+  ];
+  const isProfileComplete = (profile: any) => {
+    return REQUIRED_PROFILE_FIELDS.every(
+      (field) =>
+        profile[field] &&
+        (Array.isArray(profile[field])
+          ? profile[field].length > 0
+          : true)
+    );
+  };
 
 
   // Email/Password login
@@ -67,25 +67,25 @@ const isProfileComplete = (profile: any) => {
         if (data.id) localStorage.setItem("user_id", data.id);
         window.dispatchEvent(new Event("user-email-updated"));
         // 🔹 profile API call
-const profileRes = await fetch(
-  "http://127.0.0.1:8010/api/profile/",
-  {
-    headers: {
-      Authorization: `Bearer ${data.access}`,
-    },
-  }
-);
+        const profileRes = await fetch(
+          "http://127.0.0.1:8010/api/profile/",
+          {
+            headers: {
+              Authorization: `Bearer ${data.access}`,
+            },
+          }
+        );
 
-const profileData = await profileRes.json();
+        const profileData = await profileRes.json();
 
-// 🔹 conditional redirect
-setTimeout(() => {
-  if (isProfileComplete(profileData)) {
-    router.push("/");        // profile complete → home
-  } else {
-    router.push("/profile"); // profile incomplete → profile page
-  }
-}, 2000);
+        // 🔹 conditional redirect
+        setTimeout(() => {
+          if (isProfileComplete(profileData)) {
+            router.push("/");        // profile complete → home
+          } else {
+            router.push("/profile"); // profile incomplete → profile page
+          }
+        }, 2000);
 
         setAlertType("success");
         setAlertMessage("Login Successful!");
@@ -194,7 +194,7 @@ setTimeout(() => {
                 jobseeker
               </span>
             </Link>
-              <div className="relative">
+            <div className="relative">
               <button
                 className="flex items-center space-x-1 text-gray-700 hover:text-purple-600 cursor-pointer transition-colors"
                 onClick={() =>

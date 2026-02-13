@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useSavedJobs } from "@/context/SavedJobsContext";
-import { BookmarkX , Check, ChevronsUpDown ,ChevronDown } from "lucide-react";
+import { BookmarkX, Check, ChevronsUpDown, ChevronDown } from "lucide-react";
 import { jwtDecode } from "jwt-decode";
 import { toast } from "sonner";
 import {
@@ -145,7 +145,7 @@ export default function Profile() {
     isCurrentJob: false,
     description: "",
   });
-  
+
   const [educationForm, setEducationForm] = useState<EducationForm>({
     degree: "",
     field: "",
@@ -202,30 +202,23 @@ type JobCategory = {
   name: string;
 };
 
-type JobTitle = {
-  id: string;
-  title: string;
-};
+  type JobTitle = {
+    id: string;
+    title: string;
+  };
 
-type ExperienceForm = {
-  company: string;
-  category_id: string;
-  job_title_id: string;
-  location_id: string;
-  startDate: dayjs.Dayjs | null;
-  endDate: dayjs.Dayjs | null;
-  isCurrentJob: boolean;
-  description: string;
-};
+  type ExperienceForm = {
+    company: string;
+    category_id: string;
+    job_title_id: string;
+    location_id: string;
+    startDate: dayjs.Dayjs | null;
+    endDate: dayjs.Dayjs | null;
+    isCurrentJob: boolean;
+    description: string;
+  };
 
-type ApiExperience = {
-  id?: string | number;
-  company?: string;
-  start_date?: string | null;
-  end_date?: string | null;
-  description?: string;
-
-  job_title?: {
+  type ApiExperience = {
     id?: string | number;
     title?: string;
   };
@@ -365,11 +358,155 @@ interface SavedJob {
   job_title?: string;
   job?: {
     company?: string;
+    start_date?: string | null;
+    end_date?: string | null;
+    description?: string;
+
+    job_title?: {
+      id?: string | number;
+      title?: string;
+    };
+
+    category?: {
+      id?: string | number;
+      name?: string;
+    };
+
     location?: {
+      id?: string | number;
       name?: string;
     };
   };
-}
+  type ProfileExperience = {
+    id?: string | number;
+    company: string;
+
+    category?: {
+      id: string | number;
+      name?: string;
+    };
+
+    job_title?: {
+      id: string | number;
+      title?: string;
+    };
+
+    location?: {
+      id: string | number;
+      name?: string;
+    };
+
+    // form / payload fields
+    category_id?: string;
+    job_title_id?: string;
+    location_id?: string;
+
+    start_date?: string;
+    end_date?: string | null;
+    description?: string;
+  };
+
+  type Certification = {
+    id?: string | number;
+    name: string;
+    issuer: string;
+    year?: number | string | null;
+  };
+
+  type CertificationForm = {
+    name: string;
+    issuer: string;
+    year: dayjs.Dayjs | null;
+  };
+
+  type ProfileData = {
+    personalInfo: {
+      fullName: string;
+      email: string;
+      phone: string;
+      phoneCode: string;
+      countryId: string;
+      stateId: string;
+      cityId: string;
+      currentcurrency: string;
+      expectedCurrency: string;
+      experience: string;
+      currentSalary: string;
+      expectedSalary: string;
+      noticePeriod: string;
+      resume?: string | null;
+      profile_image?: string | null;
+    };
+    experience: ProfileExperience[];
+    education: Education[];
+    skills: Skill[];
+    certifications: Certification[];
+    summary: string;
+  };
+  type Education = {
+    id?: string | number;
+    degree: string;
+    field: string;
+    institution: string;
+    year?: number | string | null;
+    percentage?: string;
+    score_type?: string;
+  };
+
+  type EducationForm = {
+    degree: string;
+    field: string;
+    institution: string;
+    year: dayjs.Dayjs | null;
+    percentage: string;
+    score_type: string;
+  };
+
+  type Skill = {
+    id?: string | number;
+    name: string;
+  };
+
+  type WithId = {
+    id: string | number;
+  };
+  type DeletableSection =
+    | "experience"
+    | "education"
+    | "skills"
+    | "certifications";
+
+  type Country = {
+    id: string | number;
+    name?: string;
+    phonecode: string;
+    currency: string;
+    currency_name: string;
+  };
+
+  type StateItem = {
+    id: string | number;
+    name: string;
+  };
+
+  type CityItem = {
+    id: string | number;
+    name: string;
+  };
+  type Company = {
+    id: string | number;
+    name: string;
+  };
+  interface SavedJob {
+    id: string | number;
+    job_title?: string;
+    job?: {
+      company?: string;
+      location?: {
+        name?: string;
+      };
+    };
+  }
 
 const validateDates = (start: Dayjs | null, end: Dayjs | null) => {
   if (!start || !end) return null;
@@ -380,19 +517,19 @@ const validateDates = (start: Dayjs | null, end: Dayjs | null) => {
 };
 
   const token =
-  typeof window !== "undefined"
-    ? localStorage.getItem("auth_token")
-    : null;
+    typeof window !== "undefined"
+      ? localStorage.getItem("auth_token")
+      : null;
 
-const getUserKey = () => {
-  if (!token) return null;
-  try {
-    const decoded: any = jwtDecode(token);
-    return decoded.user_id || decoded.id || decoded.email;
-  } catch {
-    return null;
-  }
-};
+  const getUserKey = () => {
+    if (!token) return null;
+    try {
+      const decoded: any = jwtDecode(token);
+      return decoded.user_id || decoded.id || decoded.email;
+    } catch {
+      return null;
+    }
+  };
 
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -421,7 +558,7 @@ const getUserKey = () => {
       description: "",
     });
   };
-  
+
 
   const resetEducationForm = () => {
     setEducationForm({
@@ -472,9 +609,9 @@ const getUserKey = () => {
       !experienceForm.job_title_id ||
       !experienceForm.startDate
     ) {
-      
+
       toast("Incomplete form", {
-       description: "Please fill in all required fields before continuing.",
+        description: "Please fill in all required fields before continuing.",
       });
 
       return;
@@ -533,7 +670,7 @@ const getUserKey = () => {
       field: edu.field,
       institution: edu.institution,
       year: edu.year ? dayjs(edu.year, "YYYY") : null,
-     percentage: edu.percentage ?? "",
+      percentage: edu.percentage ?? "",
       score_type: edu.score_type ? edu.score_type.toLowerCase() : "",
     });
     setEditingEducation(edu);
@@ -547,9 +684,9 @@ const getUserKey = () => {
       !educationForm.institution ||
       !educationForm.score_type
     ) {
-      
+
       toast("Incomplete form", {
-       description: "Please fill in all required fields before continuing.",
+        description: "Please fill in all required fields before continuing.",
       });
 
       return;
@@ -562,7 +699,7 @@ const getUserKey = () => {
       institution: educationForm.institution,
       year: educationForm.year ? educationForm.year.format("YYYY") : "",
       percentage: educationForm.percentage,
-      score_type : educationForm.score_type,
+      score_type: educationForm.score_type,
     };
 
     if (editingEducation) {
@@ -608,9 +745,9 @@ const getUserKey = () => {
 
   const handleSaveCertification = () => {
     if (!certificationForm.name || !certificationForm.issuer) {
-      
+
       toast("Incomplete form", {
-      description: "Please fill in all required fields before continuing.",
+        description: "Please fill in all required fields before continuing.",
       });
 
       return;
@@ -655,41 +792,41 @@ const getUserKey = () => {
     }
   };
 
-const handleAddSkill = () => {
-  const skillName = newSkill.trim();
-  if (!skillName) return;
+  const handleAddSkill = () => {
+    const skillName = newSkill.trim();
+    if (!skillName) return;
 
-  if (!profileData.skills.some((s) => s.name === skillName)) {
+    if (!profileData.skills.some((s) => s.name === skillName)) {
+      setProfileData((prev) => ({
+        ...prev,
+        skills: [...prev.skills, { name: skillName }],
+      }));
+      setNewSkill("");
+    }
+  };
+
+  const handleRemoveSkill = (skillToRemove: Skill) => {
     setProfileData((prev) => ({
       ...prev,
-      skills: [...prev.skills, { name: skillName }],
+      skills: prev.skills.filter((s) => s.name !== skillToRemove.name),
     }));
-    setNewSkill("");
-  }
-};
-  
-const handleRemoveSkill = (skillToRemove: Skill) => {
-  setProfileData((prev) => ({
-    ...prev,
-    skills: prev.skills.filter((s) => s.name !== skillToRemove.name),
-  }));
-};
+  };
 
   const handleDeleteItem = (
-  type: DeletableSection,
-  id: string | number
-) => {
-  setProfileData((prev) => {
-    if (!prev) return prev;
+    type: DeletableSection,
+    id: string | number
+  ) => {
+    setProfileData((prev) => {
+      if (!prev) return prev;
 
-    return {
-      ...prev,
-      [type]: (prev[type] as WithId[]).filter(
-        (item) => item.id !== id
-      ),
-    };
-  });
-};
+      return {
+        ...prev,
+        [type]: (prev[type] as WithId[]).filter(
+          (item) => item.id !== id
+        ),
+      };
+    });
+  };
 
 
   const handleResumeUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -782,7 +919,7 @@ const handleRemoveSkill = (skillToRemove: Skill) => {
               ...e,
               score_type: e.score_type?.toLowerCase() || "cgpa",
             })),
-            skills: (data.skills || []).map((skill: Skill) => ({id: skill.id,name: skill.name,})),
+            skills: (data.skills || []).map((skill: Skill) => ({ id: skill.id, name: skill.name, })),
             certifications: data.certifications || [],
             summary: "", // Optional: if you use a summary field
           });
@@ -792,14 +929,22 @@ const handleRemoveSkill = (skillToRemove: Skill) => {
       } catch (error) {
         console.error("Error fetching profile");
       }
-      finally { 
-         setLoading(false);
+      finally {
+        setLoading(false);
       }
     };
 
     fetchProfile();
   }, []);
 
+<<<<<<< HEAD
+=======
+<<<<<<< Updated upstream
+
+=======
+  console.log("Profile Data ---->After Fetch", profileData);
+>>>>>>> Stashed changes
+>>>>>>> a598b0f ([IMP] all : Implemented the pagination in the backend.)
   useEffect(() => {
     const fetchSavedJobs = async () => {
       const token = localStorage.getItem("auth_token");
@@ -836,7 +981,7 @@ const handleRemoveSkill = (skillToRemove: Skill) => {
         setCurrency(data);
       });
   }, []);
-  
+
   useEffect(() => {
     fetch("http://127.0.0.1:8010/master/api/countries/")
       .then((res) => res.json())
@@ -847,18 +992,18 @@ const handleRemoveSkill = (skillToRemove: Skill) => {
       .catch((err) => console.error(err));
   }, []);
 
- const uniqueCurrencies = Array.from(
-  new Map(
-    countries.map((c) => [
-      c.currency,
-      {
-        id: c.id, 
-        currency: c.currency,
-        currency_name: c.currency_name,
-      },
-    ])
-  ).values()
-);
+  const uniqueCurrencies = Array.from(
+    new Map(
+      countries.map((c) => [
+        c.currency,
+        {
+          id: c.id,
+          currency: c.currency,
+          currency_name: c.currency_name,
+        },
+      ])
+    ).values()
+  );
 
 
 
@@ -951,10 +1096,15 @@ const handleRemoveSkill = (skillToRemove: Skill) => {
         return true;
       } else {
         const error = await res.json();
+<<<<<<< Updated upstream
         console.error("Failed to upload resume");
         
+=======
+        console.error("Failed to upload resume:", error);
+
+>>>>>>> Stashed changes
         toast.error("Resume upload failed", {
-        description: error?.message || "Unknown error. Please try again.",
+          description: error?.message || "Unknown error. Please try again.",
         });
 
         return false;
@@ -966,12 +1116,13 @@ const handleRemoveSkill = (skillToRemove: Skill) => {
     }
   };
 
- const uploadProfileImage = async () => {
-  if (!selectedImage) return true;
+  const uploadProfileImage = async () => {
+    if (!selectedImage) return true;
 
-  const formData = new FormData();
-  formData.append("profile_image", selectedImage);
+    const formData = new FormData();
+    formData.append("profile_image", selectedImage);
 
+<<<<<<< Updated upstream
   const res = await fetch(
     "http://127.0.0.1:8010/api/profile/",
     {
@@ -980,56 +1131,66 @@ const handleRemoveSkill = (skillToRemove: Skill) => {
         Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
       },
       body: formData,
+=======
+    const res = await fetch(
+      "http://127.0.0.1:8010/api/profile/",
+      {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
+        },
+        body: formData,
+      }
+    );
+
+    return res.ok;
+  };
+
+
+  useEffect(() => {
+    const userKey = getUserKey();
+    if (!userKey) {
+      setIsProfileSubmitted(false);
+      return;
+>>>>>>> Stashed changes
     }
-  );
 
-  return res.ok;
-};
+    const submitted = localStorage.getItem(
+      `profile_submitted_${userKey}`
+    );
 
-
-useEffect(() => {
-  const userKey = getUserKey();
-  if (!userKey) {
-    setIsProfileSubmitted(false);
-    return;
-  }
-
-  const submitted = localStorage.getItem(
-    `profile_submitted_${userKey}`
-  );
-
-  setIsProfileSubmitted(submitted === "true");
-}, []);
+    setIsProfileSubmitted(submitted === "true");
+  }, []);
 
 
 
   // Save Api
   const handleSaveProfile = async () => {
 
-     //  REQUIRED FIELD VALIDATION
-  if (!profileData.personalInfo.fullName?.trim()) {
-    return toast.error("Full Name is required");
-  }
+    //  REQUIRED FIELD VALIDATION
+    if (!profileData.personalInfo.fullName?.trim()) {
+      return toast.error("Full Name is required");
+    }
 
-  if (!profileData.personalInfo.email?.trim()) {
-    return toast.error("Email is required");
-  }
+    if (!profileData.personalInfo.email?.trim()) {
+      return toast.error("Email is required");
+    }
 
-  if (!profileData.personalInfo.phone?.trim()) {
-    return toast.error("Phone number is required");
-  }
+    if (!profileData.personalInfo.phone?.trim()) {
+      return toast.error("Phone number is required");
+    }
 
-  if (!profileData.personalInfo.countryId) {
-    return toast.error("Country is required");
-  }
+    if (!profileData.personalInfo.countryId) {
+      return toast.error("Country is required");
+    }
 
-  if (!profileData.personalInfo.stateId) {
-    return toast.error("State is required");
-  }
+    if (!profileData.personalInfo.stateId) {
+      return toast.error("State is required");
+    }
 
-  if (!profileData.personalInfo.cityId) {
-    return toast.error("City is required");
-  }
+    if (!profileData.personalInfo.cityId) {
+      return toast.error("City is required");
+    }
 
     const resumeUploaded = await uploadResume();
     if (!resumeUploaded) {
@@ -1037,15 +1198,15 @@ useEffect(() => {
       return;
     }
     if (selectedImage) {
- 
-  const imageUploaded = await uploadProfileImage();
-  if (!imageUploaded) {
-    toast.error("Image upload failed", {
-    description: "Please try again.",
-  });
-    return;
-  }
-}
+
+      const imageUploaded = await uploadProfileImage();
+      if (!imageUploaded) {
+        toast.error("Image upload failed", {
+          description: "Please try again.",
+        });
+        return;
+      }
+    }
 
 
     const payload = {
@@ -1089,9 +1250,9 @@ useEffect(() => {
         score_type: edu.score_type?.toLowerCase() || "cgpa",
       })),
       certifications: profileData.certifications,
-      skills:profileData.skills.map((skill) => ({
-  name: skill.name,
-})),
+      skills: profileData.skills.map((skill) => ({
+        name: skill.name,
+      })),
     };
   
     const res = await fetch(
@@ -1129,10 +1290,10 @@ useEffect(() => {
           },
           experience: data.experiences || [],
           education: data.educations || [],
-          skills:(data.skills || []).map((s: Skill) => ({
-  id: s.id,
-  name: s.name,
-})),
+          skills: (data.skills || []).map((s: Skill) => ({
+            id: s.id,
+            name: s.name,
+          })),
           certifications: data.certifications || [],
           summary: profileData.summary,
         });
@@ -1141,15 +1302,15 @@ useEffect(() => {
         console.warn("Profile saved; response body parse skipped");
       }
       const userKey = getUserKey();
-  if (userKey) {
-    localStorage.setItem(
-      `profile_submitted_${userKey}`,
-      "true"
-    );
-    setIsProfileSubmitted(true);
-  }
+      if (userKey) {
+        localStorage.setItem(
+          `profile_submitted_${userKey}`,
+          "true"
+        );
+        setIsProfileSubmitted(true);
+      }
       toast.success("Profile saved successfully!", {
-      description: "Your changes have been saved.",
+        description: "Your changes have been saved.",
       });
     } else {
       const errText = await res.text();
@@ -1209,9 +1370,10 @@ useEffect(() => {
   }, []);
 
   const fetchAppliedJobs = async () => {
-  try {
-    setLoadingAppliedJobs(true);
+    try {
+      setLoadingAppliedJobs(true);
 
+<<<<<<< Updated upstream
     const token = localStorage.getItem("auth_token");
     if (!token) {
       toast.warning("Please login to view applied jobs");
@@ -1224,14 +1386,24 @@ useEffect(() => {
         headers: {
           Authorization: `Bearer ${token}`,
         },
+=======
+      const token = localStorage.getItem("auth_token");
+      if (!token) {
+        toast.warning("Please login to view applied jobs");
+        return;
+>>>>>>> Stashed changes
       }
-    );
 
-    if (!response.ok) {
-      toast.error("Failed to load applied jobs");
-      return;
-    }
+      const response = await fetch(
+        "http://127.0.0.1:8010/api/my-applied-jobs/",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
+<<<<<<< Updated upstream
     const data = await response.json();
     // console.log("Applied jobs data:", data);
     setAppliedJobs(data || []);
@@ -1264,23 +1436,62 @@ const removeAppliedJob = async (applicationId: number) => {
         headers: {
           Authorization: `Bearer ${token}`,
         },
+=======
+      if (!response.ok) {
+        toast.error("Failed to load applied jobs");
+        return;
+>>>>>>> Stashed changes
       }
-    );
 
-    if (!response.ok) {
-      toast.error("Failed to remove applied job");
-      return;
+      const data = await response.json();
+      console.log("Applied jobs data:", data);
+      setAppliedJobs(data || []);
+    } catch (error) {
+      console.error(error);
+      toast.error("Network error while loading applied jobs");
+    } finally {
+      setLoadingAppliedJobs(false);
     }
+  };
 
-    toast.success("Application removed");
+  useEffect(() => {
+    if (activeSection === "AppliedJobs") {
+      fetchAppliedJobs();
+    }
+  }, [activeSection]);
 
-    setAppliedJobs((prev) =>
-      prev.filter((job) => job.id !== applicationId)
-    );
-  } catch (error) {
-    toast.error("Network error. Please try again.");
-  }
-};
+  const removeAppliedJob = async (applicationId: number) => {
+    try {
+      const token = localStorage.getItem("auth_token");
+      if (!token) {
+        toast.error("Please login again");
+        return;
+      }
+
+      const response = await fetch(
+        `http://127.0.0.1:8010/api/my-applied-jobs/${applicationId}/`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        toast.error("Failed to remove applied job");
+        return;
+      }
+
+      toast.success("Application removed");
+
+      setAppliedJobs((prev) =>
+        prev.filter((job) => job.id !== applicationId)
+      );
+    } catch (error) {
+      toast.error("Network error. Please try again.");
+    }
+  };
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -1294,42 +1505,42 @@ const removeAppliedJob = async (applicationId: number) => {
               <Card className="lg:sticky lg:top-24">
                 <CardContent className="p-4 lg:p-6">
                   <div className="text-center mb-4 lg:mb-6">
-            
-                  <div className="relative inline-block">
-                <div className="w-20 h-20 lg:w-24 lg:h-24 bg-gray-100 rounded-full overflow-hidden flex items-center justify-center mx-auto mb-3 lg:mb-4">
-    
-                   {selectedImage ? (
-                    <img
-                    src={URL.createObjectURL(selectedImage)}
-                    className="w-full h-full object-cover"
-                    alt="Profile Preview"
-                    />
-                  ) : profileData.personalInfo.profile_image ? (
-                  <img
-                   src={profileData.personalInfo.profile_image}
-                   className="w-full h-full object-cover"
-                   alt="Profile"
-                  />
-                  ) : (
-                  <User className="w-10 h-10 lg:w-12 lg:h-12 text-purple-600" />
-                  )}
-                </div>
 
-                  <label className="absolute bottom-0 right-0 w-6 h-6 lg:w-8 lg:h-8 bg-purple-600 rounded-full flex items-center justify-center text-white hover:bg-purple-700 transition-colors cursor-pointer">
-                   <Camera className="w-3 h-3 lg:w-4 lg:h-4" />
-                   <input
-                   type="file"
-                   accept="image/*"
-                   className="hidden"
-                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                      setSelectedImage(file);
-                     }
-                   }}
-                    />
-                  </label>
-             </div>
+                    <div className="relative inline-block">
+                      <div className="w-20 h-20 lg:w-24 lg:h-24 bg-gray-100 rounded-full overflow-hidden flex items-center justify-center mx-auto mb-3 lg:mb-4">
+
+                        {selectedImage ? (
+                          <img
+                            src={URL.createObjectURL(selectedImage)}
+                            className="w-full h-full object-cover"
+                            alt="Profile Preview"
+                          />
+                        ) : profileData.personalInfo.profile_image ? (
+                          <img
+                            src={profileData.personalInfo.profile_image}
+                            className="w-full h-full object-cover"
+                            alt="Profile"
+                          />
+                        ) : (
+                          <User className="w-10 h-10 lg:w-12 lg:h-12 text-purple-600" />
+                        )}
+                      </div>
+
+                      <label className="absolute bottom-0 right-0 w-6 h-6 lg:w-8 lg:h-8 bg-purple-600 rounded-full flex items-center justify-center text-white hover:bg-purple-700 transition-colors cursor-pointer">
+                        <Camera className="w-3 h-3 lg:w-4 lg:h-4" />
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              setSelectedImage(file);
+                            }
+                          }}
+                        />
+                      </label>
+                    </div>
 
 
 
@@ -1464,10 +1675,10 @@ const removeAppliedJob = async (applicationId: number) => {
                           )}
 
                           {resumeFile && (
-                              <p className="text-sm font-medium text-blue-600 truncate">
-                                Selected File: <span className="text-gray-700">{resumeFile.name}</span>
-                              </p>
-                            )}
+                            <p className="text-sm font-medium text-blue-600 truncate">
+                              Selected File: <span className="text-gray-700">{resumeFile.name}</span>
+                            </p>
+                          )}
 
                           <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
                             <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
@@ -1526,17 +1737,17 @@ const removeAppliedJob = async (applicationId: number) => {
                    )}
                    
                     {/* PREVIEW BUTTON */}
-                   {isProfileSubmitted && (
+                    {isProfileSubmitted && (
                       <Link href="/review">
                         <Button
                           variant="outline"
                           className="w-full text-sm lg:text-base h-10 lg:h-11"
                         >
-                         <Eye className="w-4 h-4 mr-2" />
+                          <Eye className="w-4 h-4 mr-2" />
                           Preview Profile
                         </Button>
                       </Link>
-                   )}
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -1584,11 +1795,10 @@ const removeAppliedJob = async (applicationId: number) => {
                                 setActiveSection(section.id);
                                 setIsMobileMenuOpen(false);
                               }}
-                              className={`w-full flex items-center space-x-3 px-3 py-3 text-sm font-medium rounded-lg transition-colors ${
-                                activeSection === section.id
+                              className={`w-full flex items-center space-x-3 px-3 py-3 text-sm font-medium rounded-lg transition-colors ${activeSection === section.id
                                   ? "bg-purple-100 text-purple-700"
                                   : "text-gray-600 hover:bg-gray-100"
-                              }`}
+                                }`}
                             >
                               <IconComponent className="w-4 h-4" />
                               <span>{section.label}</span>
@@ -1613,13 +1823,12 @@ const removeAppliedJob = async (applicationId: number) => {
                         return (
                           <div key={tab.id} className="relative group">
                             <button
-                              className={`flex items-center space-x-2 px-4 xl:px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
-                                ["SavedJobs", "AppliedJobs"].includes(
-                                  activeSection
-                                )
+                              className={`flex items-center space-x-2 px-4 xl:px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${["SavedJobs", "AppliedJobs"].includes(
+                                activeSection
+                              )
                                   ? "border-purple-600 text-purple-600"
                                   : "border-transparent text-gray-600 hover:text-purple-600"
-                              }`}
+                                }`}
                             >
                               <IconComponent className="w-4 h-4" />
                               <span className="hidden xl:inline">
@@ -1661,11 +1870,10 @@ const removeAppliedJob = async (applicationId: number) => {
                         <button
                           key={tab.id}
                           onClick={() => setActiveSection(tab.id)}
-                          className={`flex items-center space-x-2 px-4 xl:px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
-                            activeSection === tab.id
+                          className={`flex items-center space-x-2 px-4 xl:px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${activeSection === tab.id
                               ? "border-purple-600 text-purple-600"
                               : "border-transparent text-gray-600 hover:text-purple-600"
-                          }`}
+                            }`}
                         >
                           <IconComponent className="w-4 h-4" />
                           <span className="hidden xl:inline">{tab.label}</span>
@@ -1678,89 +1886,32 @@ const removeAppliedJob = async (applicationId: number) => {
                   </div>
                 </div>
               </div>
-             {loading ? (
-              <div className="p-6 max-w-5xl mx-auto space-y-6 animate-pulse">
-                <div className="h-8 bg-gray-200 rounded w-1/3"></div>
-                <div className="space-y-4">
-                  {[...Array(6)].map((_, i) => (
-                    <div key={i} className="h-12 bg-gray-200 rounded"></div>
-                  ))}
+              {loading ? (
+                <div className="p-6 max-w-5xl mx-auto space-y-6 animate-pulse">
+                  <div className="h-8 bg-gray-200 rounded w-1/3"></div>
+                  <div className="space-y-4">
+                    {[...Array(6)].map((_, i) => (
+                      <div key={i} className="h-12 bg-gray-200 rounded"></div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ) : (
-              activeSection === "personal" && (
-                <Card>
-                  <CardHeader className="pb-4">
-                    <CardTitle className="flex items-center space-x-2 text-lg lg:text-xl">
-                      <User className="w-5 h-5" />
-                      <span>Personal Information</span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4 lg:space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
-                      <div>
-                        <Label
-                          htmlFor="fullName"
-                          className="text-sm font-medium"
-                        >
-                          Full Name *
-                        </Label>
-                        <Input
-                          id="fullName"
-                          value={profileData.personalInfo.fullName}
-                          onChange={(e) =>
-                            setProfileData((prev) => ({
-                              ...prev,
-                              personalInfo: {
-                                ...prev.personalInfo,
-                                fullName: e.target.value,
-                              },
-                            }))
-                          }
-                          className="mt-1 h-10 lg:h-11"
-                          required={true}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="email" className="text-sm font-medium">
-                          Email Address *
-                        </Label>
-                        <Input
-                          id="email"
-                          type="email"
-                          value={profileData.personalInfo.email}
-                          onChange={(e) =>
-                            setProfileData((prev) => ({
-                              ...prev,
-                              personalInfo: {
-                                ...prev.personalInfo,
-                                email: e.target.value,
-                              },
-                            }))
-                          }
-                          className="mt-1 h-10 lg:h-11"
-                          required
-                        />
-                      </div>
-                     
-                      <div>
-                        <Label htmlFor="phone" className="text-sm font-medium">
-                          Phone Number *
-                        </Label>
-                        <div className="flex gap-2 mt-1">
-                          <Select
-                            value={profileData.personalInfo.phoneCode || ""}
-                            // disabled
-                            onValueChange={(value) =>
-                              setProfileData((prev) => ({
-                                ...prev,
-                                personalInfo: {
-                                  ...prev.personalInfo,
-                                  phoneCode: value,
-                                },
-                              }))
-                            }
+              ) : (
+                activeSection === "personal" && (
+                  <Card>
+                    <CardHeader className="pb-4">
+                      <CardTitle className="flex items-center space-x-2 text-lg lg:text-xl">
+                        <User className="w-5 h-5" />
+                        <span>Personal Information</span>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4 lg:space-y-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
+                        <div>
+                          <Label
+                            htmlFor="fullName"
+                            className="text-sm font-medium"
                           >
+<<<<<<< Updated upstream
                             <SelectTrigger className="w-20 h-10 lg:h-11">
                               <SelectValue />
                             </SelectTrigger>
@@ -1776,27 +1927,49 @@ const removeAppliedJob = async (applicationId: number) => {
                             </SelectContent>
 
                           </Select>
+=======
+                            Full Name *
+                          </Label>
+>>>>>>> Stashed changes
                           <Input
-                            id="phone"
-                            value={profileData.personalInfo.phone}
+                            id="fullName"
+                            value={profileData.personalInfo.fullName}
                             onChange={(e) =>
                               setProfileData((prev) => ({
                                 ...prev,
                                 personalInfo: {
                                   ...prev.personalInfo,
-                                  phone: e.target.value,
+                                  fullName: e.target.value,
                                 },
                               }))
                             }
-                            className="flex-1 h-10 lg:h-11"
-                            placeholder="Enter phone number"
+                            className="mt-1 h-10 lg:h-11"
                             required={true}
                           />
                         </div>
-                      </div>
-                      <div>
-                        <Label className="text-sm font-medium">Country *</Label>
+                        <div>
+                          <Label htmlFor="email" className="text-sm font-medium">
+                            Email Address *
+                          </Label>
+                          <Input
+                            id="email"
+                            type="email"
+                            value={profileData.personalInfo.email}
+                            onChange={(e) =>
+                              setProfileData((prev) => ({
+                                ...prev,
+                                personalInfo: {
+                                  ...prev.personalInfo,
+                                  email: e.target.value,
+                                },
+                              }))
+                            }
+                            className="mt-1 h-10 lg:h-11"
+                            required
+                          />
+                        </div>
 
+<<<<<<< HEAD
                         <Popover open={countryOpen} onOpenChange={setCountryOpen}>
                           <PopoverTrigger asChild>
                             <button className="w-full mt-1 h-10 lg:h-11 border rounded px-3 flex items-center justify-between">
@@ -1820,14 +1993,34 @@ const removeAppliedJob = async (applicationId: number) => {
                                   .startsWith(search.toLowerCase())
                                   ? 1
                                   : 0
+=======
+                        <div>
+                          <Label htmlFor="phone" className="text-sm font-medium">
+                            Phone Number *
+                          </Label>
+                          <div className="flex gap-2 mt-1">
+                            <Select
+                              value={profileData.personalInfo.phoneCode || ""}
+                              // disabled
+                              onValueChange={(value) =>
+                                setProfileData((prev) => ({
+                                  ...prev,
+                                  personalInfo: {
+                                    ...prev.personalInfo,
+                                    phoneCode: value,
+                                  },
+                                }))
+>>>>>>> a598b0f ([IMP] all : Implemented the pagination in the backend.)
                               }
                             >
-                              <CommandInput placeholder="Search country..." />
-
-                              <CommandList>
-                                {countries.map((country) => (
-                                  <CommandItem
+                              <SelectTrigger className="w-20 h-10 lg:h-11">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {countries.map((country: Country) => (
+                                  <SelectItem
                                     key={country.id}
+<<<<<<< HEAD
                                     value={country.name}
                                     onSelect={() => {
                                       setProfileData((prev) => ({
@@ -1842,10 +2035,14 @@ const removeAppliedJob = async (applicationId: number) => {
                                       }));
                                       setCountryOpen(false);
                                     }}
+=======
+                                    value={country.phonecode}
+>>>>>>> a598b0f ([IMP] all : Implemented the pagination in the backend.)
                                   >
-                                    {country.name}
-                                  </CommandItem>
+                                    +{country.phonecode}
+                                  </SelectItem>
                                 ))}
+<<<<<<< HEAD
                               </CommandList>
                             </Command>
                           </PopoverContent>
@@ -1878,10 +2075,32 @@ const removeAppliedJob = async (applicationId: number) => {
                                   .startsWith(search.toLowerCase())
                                   ? 1
                                   : 0
+=======
+                              </SelectContent>
+                            </Select>
+                            <Input
+                              id="phone"
+                              value={profileData.personalInfo.phone}
+                              onChange={(e) =>
+                                setProfileData((prev) => ({
+                                  ...prev,
+                                  personalInfo: {
+                                    ...prev.personalInfo,
+                                    phone: e.target.value,
+                                  },
+                                }))
+>>>>>>> a598b0f ([IMP] all : Implemented the pagination in the backend.)
                               }
-                            >
-                              <CommandInput placeholder="Search state..." />
+                              className="flex-1 h-10 lg:h-11"
+                              placeholder="Enter phone number"
+                              required={true}
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <Label className="text-sm font-medium">Country *</Label>
 
+<<<<<<< HEAD
                               <CommandList>
                                 {states.map((state) => (
                                   <CommandItem
@@ -1919,162 +2138,247 @@ const removeAppliedJob = async (applicationId: number) => {
                               variant="outline"
                               className=" w-full mt-1 h-10 lg:h-11 border rounded px-3 flex items-center justify-between"
                             >
+=======
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <button className="w-full mt-1 h-10 lg:h-11 border rounded px-3 flex items-center justify-between">
+>>>>>>> a598b0f ([IMP] all : Implemented the pagination in the backend.)
                                 <span>
-                              {profileData.personalInfo.cityId
-                                ? cities.find(
-                                    (c: CityItem) =>
-                                      c.id == profileData.personalInfo.cityId
-                                  )?.name
-                                : "Select city"}
+                                  {profileData.personalInfo.countryId
+                                    ? countries.find(
+                                      (c) =>
+                                        c.id == profileData.personalInfo.countryId
+                                    )?.name
+                                    : "Select country"}
                                 </span>
-                              <ChevronDown className="h-4 w-4 opacity-60" />
-                            </Button>
-                          </PopoverTrigger>
+                                <ChevronDown className="h-4 w-4 opacity-60" />
+                              </button>
+                            </PopoverTrigger>
 
-                          <PopoverContent align="start" className="w-full p-0">
-                            <Command>
-                              <CommandInput
-                                placeholder="Search city..."
-                                value={citySearch}
-                                onValueChange={setCitySearch}
-                              />
+                            <PopoverContent className="p-0 w-[300px]">
+                              <Command
+                                filter={(value, search) =>
+                                  value
+                                    .toLowerCase()
+                                    .startsWith(search.toLowerCase())
+                                    ? 1
+                                    : 0
+                                }
+                              >
+                                <CommandInput placeholder="Search country..." />
 
-                              <CommandList className="max-h-60 overflow-y-auto">
-                                <CommandEmpty>No city found.</CommandEmpty>
+                                <CommandList>
+                                  {countries.map((country) => (
+                                    <CommandItem
+                                      key={country.id}
+                                      value={country.name}
+                                      onSelect={() => {
+                                        setProfileData((prev) => ({
+                                          ...prev,
+                                          personalInfo: {
+                                            ...prev.personalInfo,
+                                            countryId: country.id.toString(),
+                                            stateId: "",
+                                            cityId: "",
+                                            phoneCode: country.phonecode,
+                                          },
+                                        }));
+                                      }}
+                                    >
+                                      {country.name}
+                                    </CommandItem>
+                                  ))}
+                                </CommandList>
+                              </Command>
+                            </PopoverContent>
+                          </Popover>
+                        </div>
 
-                                <CommandGroup>
-                                  {cities
-                                    .filter((city) =>
-                                      city.name
-                                        .toLowerCase()
-                                        .startsWith(citySearch.toLowerCase())
-                                    )
-                                    .map((city) => (
-                                      <CommandItem
-                                        key={city.id}
-                                        value={city.name}
-                                        onSelect={() => {
-                                          setProfileData((prev) => ({
-                                            ...prev,
-                                            personalInfo: {
-                                              ...prev.personalInfo,
-                                              cityId: city.id.toString(),
-                                            },
-                                          }));
-                                          setCityOpen(false);
-                                        }}
-                                      >
-                                        {city.name}
-                                      </CommandItem>
-                                    ))}
-                                </CommandGroup>
-                              </CommandList>
-                            </Command>
-                          </PopoverContent>
-                        </Popover>
-                      </div>
+                        <div>
+                          <Label className="text-sm font-medium">State *</Label>
 
-                      <div>
-                        <Label
-                          htmlFor="experience"
-                          className="text-sm font-medium"
-                        >
-                          Total Experience
-                        </Label>
-                        <Select
-                          value={profileData.personalInfo.experience}
-                          onValueChange={(value) =>
-                            setProfileData((prev) => ({
-                              ...prev,
-                              personalInfo: {
-                                ...prev.personalInfo,
-                                experience: value,
-                              },
-                            }))
-                          }
-                          required={true}
-                        >
-                          <SelectTrigger className="mt-1 h-10 lg:h-11">
-                            <SelectValue placeholder="Select experience" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="fresher">Fresher</SelectItem>
-                            <SelectItem value="1 year">1 year</SelectItem>
-                            <SelectItem value="2 years">2 years</SelectItem>
-                            <SelectItem value="3 years">3 years</SelectItem>
-                            <SelectItem value="4 years">4 years</SelectItem>
-                            <SelectItem value="5+ years">5+ years</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <Label
-                          htmlFor="noticePeriod"
-                          className="text-sm font-medium"
-                        >
-                          Notice Period
-                        </Label>
-                        <Select
-                          value={profileData.personalInfo.noticePeriod}
-                          onValueChange={(value) =>
-                            setProfileData((prev) => ({
-                              ...prev,
-                              personalInfo: {
-                                ...prev.personalInfo,
-                                noticePeriod: value,
-                              },
-                            }))
-                          }
-                        >
-                          <SelectTrigger className="mt-1 h-10 lg:h-11">
-                            <SelectValue placeholder="Select notice period" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {noticeRanges.map((range) => (
-                              <SelectItem key={range} value={range}>
-                                {range}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <Label
-                          htmlFor="currentSalary"
-                          className="text-sm font-medium"
-                        >
-                          Current Salary (Annual)
-                        </Label>
-                        <div className="flex gap-2 mt-1">           
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <button className="w-full mt-1 h-10 lg:h-11 border rounded px-3 flex items-center justify-between">
+                                <span>
+                                  {profileData.personalInfo.stateId
+                                    ? states.find(
+                                      (s) =>
+                                        s.id == profileData.personalInfo.stateId
+                                    )?.name
+                                    : "Select state"}
+                                </span>
+                                <ChevronDown className="h-4 w-4 opacity-60" />
+                              </button>
+                            </PopoverTrigger>
+
+                            <PopoverContent className="p-0 w-[300px]">
+                              <Command
+                                filter={(value, search) =>
+                                  value
+                                    .toLowerCase()
+                                    .startsWith(search.toLowerCase())
+                                    ? 1
+                                    : 0
+                                }
+                              >
+                                <CommandInput placeholder="Search state..." />
+
+                                <CommandList>
+                                  {states.map((state) => (
+                                    <CommandItem
+                                      key={state.id}
+                                      value={state.name}
+                                      onSelect={() => {
+                                        setProfileData((prev) => ({
+                                          ...prev,
+                                          personalInfo: {
+                                            ...prev.personalInfo,
+                                            stateId: state.id.toString(),
+                                            cityId: "",
+                                          },
+                                        }));
+                                      }}
+                                    >
+                                      {state.name}
+                                    </CommandItem>
+                                  ))}
+                                </CommandList>
+                              </Command>
+                            </PopoverContent>
+                          </Popover>
+                        </div>
+
+                        <div>
+                          <Label className="text-sm font-medium text-gray-700">
+                            City *
+                          </Label>
+
+                          <Popover open={cityOpen} onOpenChange={setCityOpen}>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant="outline"
+                                className=" w-full mt-1 h-10 lg:h-11 border rounded px-3 flex items-center justify-between"
+                              >
+                                <span>
+                                  {profileData.personalInfo.cityId
+                                    ? cities.find(
+                                      (c: CityItem) =>
+                                        c.id == profileData.personalInfo.cityId
+                                    )?.name
+                                    : "Select city"}
+                                </span>
+                                <ChevronDown className="h-4 w-4 opacity-60" />
+                              </Button>
+                            </PopoverTrigger>
+
+                            <PopoverContent align="start" className="w-full p-0">
+                              <Command>
+                                <CommandInput
+                                  placeholder="Search city..."
+                                  value={citySearch}
+                                  onValueChange={setCitySearch}
+                                />
+
+                                <CommandList className="max-h-60 overflow-y-auto">
+                                  <CommandEmpty>No city found.</CommandEmpty>
+
+                                  <CommandGroup>
+                                    {cities
+                                      .filter((city) =>
+                                        city.name
+                                          .toLowerCase()
+                                          .startsWith(citySearch.toLowerCase())
+                                      )
+                                      .map((city) => (
+                                        <CommandItem
+                                          key={city.id}
+                                          value={city.name}
+                                          onSelect={() => {
+                                            setProfileData((prev) => ({
+                                              ...prev,
+                                              personalInfo: {
+                                                ...prev.personalInfo,
+                                                cityId: city.id.toString(),
+                                              },
+                                            }));
+                                            setCityOpen(false);
+                                          }}
+                                        >
+                                          {city.name}
+                                        </CommandItem>
+                                      ))}
+                                  </CommandGroup>
+                                </CommandList>
+                              </Command>
+                            </PopoverContent>
+                          </Popover>
+                        </div>
+
+                        <div>
+                          <Label
+                            htmlFor="experience"
+                            className="text-sm font-medium"
+                          >
+                            Total Experience
+                          </Label>
                           <Select
-                            value={profileData.personalInfo.currentcurrency || ""}
+                            value={profileData.personalInfo.experience}
                             onValueChange={(value) =>
                               setProfileData((prev) => ({
                                 ...prev,
                                 personalInfo: {
                                   ...prev.personalInfo,
-                                  currentcurrency: value,
+                                  experience: value,
+                                },
+                              }))
+                            }
+                            required={true}
+                          >
+                            <SelectTrigger className="mt-1 h-10 lg:h-11">
+                              <SelectValue placeholder="Select experience" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="fresher">Fresher</SelectItem>
+                              <SelectItem value="1 year">1 year</SelectItem>
+                              <SelectItem value="2 years">2 years</SelectItem>
+                              <SelectItem value="3 years">3 years</SelectItem>
+                              <SelectItem value="4 years">4 years</SelectItem>
+                              <SelectItem value="5+ years">5+ years</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label
+                            htmlFor="noticePeriod"
+                            className="text-sm font-medium"
+                          >
+                            Notice Period
+                          </Label>
+                          <Select
+                            value={profileData.personalInfo.noticePeriod}
+                            onValueChange={(value) =>
+                              setProfileData((prev) => ({
+                                ...prev,
+                                personalInfo: {
+                                  ...prev.personalInfo,
+                                  noticePeriod: value,
                                 },
                               }))
                             }
                           >
-                            <SelectTrigger className="w-28 h-10 lg:h-11">
-                              <span>
-                                {profileData.personalInfo.currentcurrency
-                                  ? uniqueCurrencies.find(
-                                      (c) => String(c.id) === profileData.personalInfo.currentcurrency
-                                    )?.currency
-                                  : "Select currency"}
-                              </span>
+                            <SelectTrigger className="mt-1 h-10 lg:h-11">
+                              <SelectValue placeholder="Select notice period" />
                             </SelectTrigger>
                             <SelectContent>
-                              {uniqueCurrencies.map((curr) => (
-                                <SelectItem key={curr.currency} value={String(curr.id)}>
-                                  {curr.currency} - {curr.currency_name}
+                              {noticeRanges.map((range) => (
+                                <SelectItem key={range} value={range}>
+                                  {range}
                                 </SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
+<<<<<<< HEAD
                           <Input
                             id="currentSalary"
                             type="number"
@@ -2098,39 +2402,67 @@ const removeAppliedJob = async (applicationId: number) => {
                             placeholder="Enter amount"
                           />
 
+=======
+>>>>>>> a598b0f ([IMP] all : Implemented the pagination in the backend.)
                         </div>
-                      </div>
-                      
-                      <div>
-                        <Label
-                          htmlFor="expectedSalary"
-                          className="text-sm font-medium"
-                        >
-                          Expected Salary (Annual)
-                        </Label>
-                        <div className="flex gap-2 mt-1">          
-                         <Select
-                           value={profileData.personalInfo.currentcurrency || ""}
-                           onValueChange={(value) =>
-                             setProfileData((prev) => ({
-                               ...prev,
-                               personalInfo: {
-                                 ...prev.personalInfo,
-                                 currentcurrency: value, 
-                               },
-                             }))
-                           }                         
-                         >
-                           <SelectTrigger className="w-28 h-10 lg:h-11">
-                             <span>
-                               {profileData.personalInfo.currentcurrency
-                                 ? uniqueCurrencies.find(
-                                     (c) => String(c.id) === profileData.personalInfo.currentcurrency
-                                   )?.currency
-                                 : "Select currency"}
-                             </span>
-                           </SelectTrigger>
+                        <div>
+                          <Label
+                            htmlFor="currentSalary"
+                            className="text-sm font-medium"
+                          >
+                            Current Salary (Annual)
+                          </Label>
+                          <div className="flex gap-2 mt-1">
+                            <Select
+                              value={profileData.personalInfo.currentcurrency || ""}
+                              onValueChange={(value) =>
+                                setProfileData((prev) => ({
+                                  ...prev,
+                                  personalInfo: {
+                                    ...prev.personalInfo,
+                                    currentcurrency: value,
+                                  },
+                                }))
+                              }
+                            >
+                              <SelectTrigger className="w-28 h-10 lg:h-11">
+                                <span>
+                                  {profileData.personalInfo.currentcurrency
+                                    ? uniqueCurrencies.find(
+                                      (c) => String(c.id) === profileData.personalInfo.currentcurrency
+                                    )?.currency
+                                    : "Select currency"}
+                                </span>
+                              </SelectTrigger>
+                              <SelectContent>
+                                {uniqueCurrencies.map((curr) => (
+                                  <SelectItem key={curr.currency} value={String(curr.id)}>
+                                    {curr.currency} - {curr.currency_name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <Input
+                              id="currentSalary"
+                              type="number"
+                              value={profileData.personalInfo.currentSalary}
+                              onChange={(e) =>
+                                setProfileData((prev) => ({
+                                  ...prev,
+                                  personalInfo: {
+                                    ...prev.personalInfo,
+                                    currentSalary: e.target.value,
+                                  },
+                                }))
+                              }
+                              className="flex-1 h-10 lg:h-11"
+                              placeholder="Enter amount"
+                              max="0"
+                            />
+                          </div>
+                        </div>
 
+<<<<<<< HEAD
                            <SelectContent>
                              {uniqueCurrencies.map((curr) => (
                                <SelectItem key={curr.currency} value={String(curr.id)}>
@@ -2164,27 +2496,84 @@ const removeAppliedJob = async (applicationId: number) => {
                             min={0}  
                           />
 
+=======
+                        <div>
+                          <Label
+                            htmlFor="expectedSalary"
+                            className="text-sm font-medium"
+                          >
+                            Expected Salary (Annual)
+                          </Label>
+                          <div className="flex gap-2 mt-1">
+                            <Select
+                              value={profileData.personalInfo.currentcurrency || ""}
+                              onValueChange={(value) =>
+                                setProfileData((prev) => ({
+                                  ...prev,
+                                  personalInfo: {
+                                    ...prev.personalInfo,
+                                    currentcurrency: value,
+                                  },
+                                }))
+                              }
+                            >
+                              <SelectTrigger className="w-28 h-10 lg:h-11">
+                                <span>
+                                  {profileData.personalInfo.currentcurrency
+                                    ? uniqueCurrencies.find(
+                                      (c) => String(c.id) === profileData.personalInfo.currentcurrency
+                                    )?.currency
+                                    : "Select currency"}
+                                </span>
+                              </SelectTrigger>
+
+                              <SelectContent>
+                                {uniqueCurrencies.map((curr) => (
+                                  <SelectItem key={curr.currency} value={String(curr.id)}>
+                                    {curr.currency} - {curr.currency_name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <Input
+                              id="expectedSalary"
+                              type="number"
+                              value={profileData.personalInfo.expectedSalary}
+                              onChange={(e) =>
+                                setProfileData((prev) => ({
+                                  ...prev,
+                                  personalInfo: {
+                                    ...prev.personalInfo,
+                                    expectedSalary: e.target.value,
+                                  },
+                                }))
+                              }
+                              className="flex-1 h-10 lg:h-11"
+                              placeholder="Enter amount"
+                              max="0"
+                            />
+                          </div>
+>>>>>>> a598b0f ([IMP] all : Implemented the pagination in the backend.)
                         </div>
                       </div>
-                    </div>
-                    <div className="flex justify-between mt-6">
-                    <Button
-                      onClick={handleSaveProfile}
-                      className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-10 lg:h-11 mt-6"
-                    >
-                      SUBMIT
-                    </Button>
-                    <Button
-                      onClick={handleNext}
-                      className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-10 lg:h-11 mt-6"
-                    >
-                      Next
-                    </Button>
-                    
-                  </div>
-                  </CardContent>
-                </Card>
-              )
+                      <div className="flex justify-between mt-6">
+                        <Button
+                          onClick={handleSaveProfile}
+                          className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-10 lg:h-11 mt-6"
+                        >
+                          SUBMIT
+                        </Button>
+                        <Button
+                          onClick={handleNext}
+                          className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-10 lg:h-11 mt-6"
+                        >
+                          Next
+                        </Button>
+
+                      </div>
+                    </CardContent>
+                  </Card>
+                )
               )}
 
               {/* Experience Section */}
@@ -2242,8 +2631,8 @@ const removeAppliedJob = async (applicationId: number) => {
                                       -{" "}
                                       {exp.end_date
                                         ? dayjs(exp.end_date).format(
-                                            "MMM YYYY DD"
-                                          )
+                                          "MMM YYYY DD"
+                                        )
                                         : "Present"}
                                     </span>
                                   </div>
@@ -2288,8 +2677,9 @@ const removeAppliedJob = async (applicationId: number) => {
                             </CardTitle>
                           </CardHeader>
                           <CardContent className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">                           
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <div>
+<<<<<<< HEAD
                                <Label className="text-sm font-medium">Company *</Label>
                              
                                <Popover open={companyOpen} onOpenChange={setCompanyOpen}>
@@ -2336,6 +2726,52 @@ const removeAppliedJob = async (applicationId: number) => {
                                  </PopoverContent>
                                </Popover>
                               </div>                           
+=======
+                                <Label className="text-sm font-medium">Company *</Label>
+
+                                <Popover>
+                                  <PopoverTrigger asChild>
+                                    <button className="w-full mt-1 h-10 lg:h-11 border rounded px-3 flex items-center justify-between ">
+                                      <span >
+                                        {experienceForm.company || "Select company"}
+                                      </span>
+                                      <ChevronDown className="h-4 w-4 opacity-60" />
+                                    </button>
+                                  </PopoverTrigger>
+
+                                  <PopoverContent className="p-0 w-[300px]">
+                                    <Command
+                                      filter={(value, search) =>
+                                        value.toLowerCase().startsWith(search.toLowerCase()) ? 1 : 0
+                                      }
+                                    >
+                                      <CommandInput placeholder="Search company..." />
+
+                                      <CommandList>
+                                        {companies.length === 0 && (
+                                          <CommandItem disabled>No companies found</CommandItem>
+                                        )}
+
+                                        {companies.map((company: Company) => (
+                                          <CommandItem
+                                            key={company.id}
+                                            value={company.name}
+                                            onSelect={() =>
+                                              setExperienceForm((prev) => ({
+                                                ...prev,
+                                                company: company.name,
+                                              }))
+                                            }
+                                          >
+                                            {company.name}
+                                          </CommandItem>
+                                        ))}
+                                      </CommandList>
+                                    </Command>
+                                  </PopoverContent>
+                                </Popover>
+                              </div>
+>>>>>>> a598b0f ([IMP] all : Implemented the pagination in the backend.)
                               <div>
                                 <Label className="text-sm font-medium">Location *</Label>
 
@@ -2343,16 +2779,16 @@ const removeAppliedJob = async (applicationId: number) => {
                                   <PopoverTrigger asChild>
                                     <button className="w-full mt-1 h-10 lg:h-11 border rounded px-3 flex items-center justify-between ">
                                       <span >
-                                      {experienceForm.location_id
-                                        ? countries.find(
+                                        {experienceForm.location_id
+                                          ? countries.find(
                                             (c) => c.id == experienceForm.location_id
                                           )?.name
-                                        : "Select location"}
+                                          : "Select location"}
                                       </span>
                                       <ChevronDown className="h-4 w-4 opacity-60" />
                                     </button>
                                   </PopoverTrigger>
-                              
+
                                   <PopoverContent className="p-0 w-[300px]">
                                     <Command
                                       filter={(value, search) =>
@@ -2360,12 +2796,12 @@ const removeAppliedJob = async (applicationId: number) => {
                                       }
                                     >
                                       <CommandInput placeholder="Search location..." />
-                              
+
                                       <CommandList>
                                         {countries.length === 0 && (
                                           <CommandItem disabled>No locations found</CommandItem>
                                         )}
-                              
+
                                         {countries.map((location) => (
                                           <CommandItem
                                             key={location.id}
@@ -2469,17 +2905,26 @@ const removeAppliedJob = async (applicationId: number) => {
                               </div>
 
                               <div>
+<<<<<<< HEAD
                                <DatePicker
+=======
+                                <DatePicker
+>>>>>>> a598b0f ([IMP] all : Implemented the pagination in the backend.)
                                   label="Start Date *"
                                   value={experienceForm.startDate}
                                   onChange={(date) => {
                                     setExperienceForm((prev) => ({
                                       ...prev,
                                       startDate: date,
+<<<<<<< HEAD
                                     }));
                                     setDateError(validateDates(date, experienceForm.endDate));
                                   }}
                                   maxDate={dayjs()}   
+=======
+                                    }))
+                                  }
+>>>>>>> a598b0f ([IMP] all : Implemented the pagination in the backend.)
                                   views={["year", "month", "day"]}
                                   slotProps={{
                                     textField: {
@@ -2497,6 +2942,10 @@ const removeAppliedJob = async (applicationId: number) => {
                                     },
                                   }}
                                 />
+<<<<<<< HEAD
+=======
+
+>>>>>>> a598b0f ([IMP] all : Implemented the pagination in the backend.)
                               </div>
                               <div>
                                 <div className="space-y-2">
@@ -2508,9 +2957,15 @@ const removeAppliedJob = async (applicationId: number) => {
                                         setExperienceForm((prev) => ({
                                           ...prev,
                                           endDate: date,
+<<<<<<< HEAD
                                         }));
                                         setDateError(validateDates(experienceForm.startDate, date));
                                       }}
+=======
+                                        }))
+                                      }
+                                      views={["year", "month", "day"]}
+>>>>>>> a598b0f ([IMP] all : Implemented the pagination in the backend.)
                                       minDate={experienceForm.startDate ?? undefined}
                                       slotProps={{
                                         textField: {
@@ -2530,13 +2985,13 @@ const removeAppliedJob = async (applicationId: number) => {
                                     id="currentJob"
                                     checked={experienceForm.isCurrentJob}
                                     onCheckedChange={(checked) => {
-                                         const isChecked = checked === true; 
-                                       setExperienceForm((prev) => ({
-                                         ...prev,
-                                         isCurrentJob: isChecked,
-                                         endDate: isChecked ? null : prev.endDate,
-                                       }));
-                                     }}                                  
+                                      const isChecked = checked === true;
+                                      setExperienceForm((prev) => ({
+                                        ...prev,
+                                        isCurrentJob: isChecked,
+                                        endDate: isChecked ? null : prev.endDate,
+                                      }));
+                                    }}
                                   />
                                   <Label
                                     htmlFor="currentJob"
@@ -2583,19 +3038,19 @@ const removeAppliedJob = async (applicationId: number) => {
                       )}
                     </div>
                     <div className="flex justify-between mt-6">
-                    <Button
-                      onClick={handleSaveProfile}
-                      className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-10 lg:h-11 mt-6"
-                    >
-                      SUBMIT
-                    </Button>
-                    <Button
-                      onClick={handleNext}
-                      className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-10 lg:h-11 mt-6"
-                    >
-                      Next
-                    </Button>
-                   
+                      <Button
+                        onClick={handleSaveProfile}
+                        className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-10 lg:h-11 mt-6"
+                      >
+                        SUBMIT
+                      </Button>
+                      <Button
+                        onClick={handleNext}
+                        className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-10 lg:h-11 mt-6"
+                      >
+                        Next
+                      </Button>
+
                     </div>
                   </CardContent>
                 </Card>
@@ -2646,15 +3101,15 @@ const removeAppliedJob = async (applicationId: number) => {
                                 <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 text-xs lg:text-sm text-gray-600 mt-1 gap-1 sm:gap-0">
                                   <span>Year: {edu.year}</span>
                                   <span>
-                                  Score: {edu.percentage}{" "}
-                                  {edu.score_type === "percentage"
-                                    ? "(Percentage)"
-                                    : edu.score_type === "cgpa"
-                                    ? "(CGPA)"
-                                    : edu.score_type === "grade"
-                                    ? "(Grade)"
-                                    : ""}
-                                </span>
+                                    Score: {edu.percentage}{" "}
+                                    {edu.score_type === "percentage"
+                                      ? "(Percentage)"
+                                      : edu.score_type === "cgpa"
+                                        ? "(CGPA)"
+                                        : edu.score_type === "grade"
+                                          ? "(Grade)"
+                                          : ""}
+                                  </span>
                                 </div>
                               </div>
                             </div>
@@ -2703,7 +3158,7 @@ const removeAppliedJob = async (applicationId: number) => {
                                       className="w-full mt-1 h-10 lg:h-11 border rounded px-3 flex items-center justify-between "
                                     >
                                       <span >
-                                      {educationForm.degree || "Select degree"}
+                                        {educationForm.degree || "Select degree"}
                                       </span>
                                       <ChevronDown className="h-4 w-4 opacity-60" />
                                     </Button>
@@ -2789,8 +3244,9 @@ const removeAppliedJob = async (applicationId: number) => {
                                 />
                               </div>
                               <div>
-                                <Label  className="text-sm font-medium text-gray-700">
+                                <Label className="text-sm font-medium text-gray-700">
                                   Year of Graduation *
+<<<<<<< HEAD
                                   </Label>
                                   <div className="mt-1">
                                 <DatePicker
@@ -2814,11 +3270,35 @@ const removeAppliedJob = async (applicationId: number) => {
                                           height: "44px",
                                           borderRadius: "6px",
                                           padding: "0 12px",
+=======
+                                </Label>
+                                <div className="mt-1">
+                                  <DatePicker
+                                    value={educationForm.year ?? undefined}
+                                    onChange={(date) =>
+                                      setEducationForm((prev) => ({
+                                        ...prev,
+                                        year: date,
+                                      }))
+                                    }
+                                    views={["year"]}
+                                    disableFuture
+                                    slotProps={{
+                                      textField: {
+                                        fullWidth: true,
+                                        size: "small",
+                                        sx: {
+                                          mt: 1,
+                                          "& .MuiOutlinedInput-root": {
+                                            height: "44px",
+                                            borderRadius: "6px",
+                                            padding: "0 12px",
+                                          },
+>>>>>>> a598b0f ([IMP] all : Implemented the pagination in the backend.)
                                         },
                                       },
-                                    },
-                                  }}
-                                 />
+                                    }}
+                                  />
 
                                 </div>
                               </div>
@@ -2827,25 +3307,26 @@ const removeAppliedJob = async (applicationId: number) => {
                                   Score
                                 </Label>
                                 <div className="mt-1 flex gap-2">
-                                <Select
-                                value={educationForm.score_type}
-                                onValueChange={(value) =>
-                                  setEducationForm((prev) => ({
-                                    ...prev,
-                                    score_type: value,
-                                  }))
-                                }
-                              >
-                                <SelectTrigger className="h-10 w-[140px]">
-                                  <SelectValue placeholder="Score type" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="percentage">Percentage</SelectItem>
-                                  <SelectItem value="cgpa">CGPA</SelectItem>
-                                  <SelectItem value="grade">Grade</SelectItem>
-                                </SelectContent>
-                              </Select>
+                                  <Select
+                                    value={educationForm.score_type}
+                                    onValueChange={(value) =>
+                                      setEducationForm((prev) => ({
+                                        ...prev,
+                                        score_type: value,
+                                      }))
+                                    }
+                                  >
+                                    <SelectTrigger className="h-10 w-[140px]">
+                                      <SelectValue placeholder="Score type" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="percentage">Percentage</SelectItem>
+                                      <SelectItem value="cgpa">CGPA</SelectItem>
+                                      <SelectItem value="grade">Grade</SelectItem>
+                                    </SelectContent>
+                                  </Select>
 
+<<<<<<< HEAD
                                 <Input
   id="score"
   className="h-10 flex-1"
@@ -2893,10 +3374,30 @@ const removeAppliedJob = async (applicationId: number) => {
   }}
 />
 
+=======
+                                  <Input
+                                    id="percentage"
+                                    className="h-10 flex-1"
+                                    placeholder={
+                                      educationForm.score_type === "cgpa"
+                                        ? "e.g. 8.5"
+                                        : educationForm.score_type === "percentage"
+                                          ? "e.g. 85%"
+                                          : "e.g. A+"
+                                    }
+                                    value={educationForm.percentage}
+                                    onChange={(e) =>
+                                      setEducationForm((prev) => ({
+                                        ...prev,
+                                        percentage: e.target.value,
+                                      }))
+                                    }
+                                  />
+>>>>>>> a598b0f ([IMP] all : Implemented the pagination in the backend.)
                                 </div>
                               </div>
 
-                             
+
                             </div>
                             <div className="flex justify-end space-x-2">
                               <Button
@@ -2916,20 +3417,20 @@ const removeAppliedJob = async (applicationId: number) => {
                       )}
                     </div>
                     <div className="flex justify-between mt-6">
-                    <Button
-                      onClick={handleSaveProfile}
-                      className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-10 lg:h-11 mt-6"
-                    >
-                      SUBMIT
-                    </Button>
-                    <Button
-                      onClick={handleNext}
-                      className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-10 lg:h-11 mt-6"
-                    >
-                      Next
-                    </Button>
-                    
-                  </div>
+                      <Button
+                        onClick={handleSaveProfile}
+                        className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-10 lg:h-11 mt-6"
+                      >
+                        SUBMIT
+                      </Button>
+                      <Button
+                        onClick={handleNext}
+                        className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-10 lg:h-11 mt-6"
+                      >
+                        Next
+                      </Button>
+
+                    </div>
                   </CardContent>
                 </Card>
               )}
@@ -2972,7 +3473,7 @@ const removeAppliedJob = async (applicationId: number) => {
                             key={index}
                             className="inline-flex items-center px-3 py-1.5 rounded-full text-xs lg:text-sm bg-purple-100 text-purple-800 hover:bg-purple-200 transition-colors"
                           >
-                             <span key={skill.id ?? index}>
+                            <span key={skill.id ?? index}>
                               {skill.name}
                             </span>
                             <button
@@ -2986,18 +3487,18 @@ const removeAppliedJob = async (applicationId: number) => {
                       </div>
                     </div>
                     <div className="flex justify-between mt-6">
-                     <Button
-                      onClick={handleSaveProfile}
-                      className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-10 lg:h-11 mt-6"
-                    >
-                      SUBMIT
-                    </Button>
-                    <Button
-                      onClick={handleNext}
-                      className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-10 lg:h-11 mt-6"
-                    >
-                      Next
-                    </Button>
+                      <Button
+                        onClick={handleSaveProfile}
+                        className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-10 lg:h-11 mt-6"
+                      >
+                        SUBMIT
+                      </Button>
+                      <Button
+                        onClick={handleNext}
+                        className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-10 lg:h-11 mt-6"
+                      >
+                        Next
+                      </Button>
 
                     </div>
                   </CardContent>
@@ -3119,6 +3620,7 @@ const removeAppliedJob = async (applicationId: number) => {
                               <div>
                                 <Label>Year Obtained *</Label>
                                 <div className="mt-1">
+<<<<<<< HEAD
                                 <DatePicker
                                    value={certificationForm.year ?? undefined} 
                                   onChange={(date) =>
@@ -3138,11 +3640,31 @@ const removeAppliedJob = async (applicationId: number) => {
                                         "& .MuiOutlinedInput-root": {
                                           height: "44px",
                                           borderRadius: "6px",
+=======
+                                  <DatePicker
+                                    value={certificationForm.year ?? undefined}
+                                    onChange={(date) =>
+                                      setCertificationForm((prev) => ({
+                                        ...prev,
+                                        year: date,
+                                      }))
+                                    }
+                                    views={["year"]}
+                                    slotProps={{
+                                      textField: {
+                                        fullWidth: true,
+                                        size: "small",
+                                        sx: {
+                                          mt: 1,
+                                          "& .MuiOutlinedInput-root": {
+                                            height: "44px",
+                                            borderRadius: "6px",
+                                          },
+>>>>>>> a598b0f ([IMP] all : Implemented the pagination in the backend.)
                                         },
                                       },
-                                    },
-                                  }}
-                                />
+                                    }}
+                                  />
 
                                 </div>
                               </div>
@@ -3250,57 +3772,57 @@ const removeAppliedJob = async (applicationId: number) => {
               )}
 
               {activeSection === "AppliedJobs" && (
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-lg lg:text-xl">
-                          <Bookmark className="w-5 h-5" />
-                          <span>Applied Jobs</span>
-                        </CardTitle>
-                      </CardHeader>
-                  
-                      <CardContent>
-                        {loadingAppliedJobs && (
-                          <p className="text-sm text-gray-500">Loading applied jobs...</p>
-                        )}
-                  
-                        {!loadingAppliedJobs && appliedJobs.length === 0 && (
-                          <p className="text-sm text-gray-500">No applied jobs found.</p>
-                        )}
-                  
-                        {appliedJobs.map((appliedJob) => (
-                          <div
-                            key={appliedJob.id}
-                            className="border rounded-lg p-4 mb-4 hover:shadow-md transition-shadow"
-                          >
-                            <div className="flex justify-between items-start">
-                              <div>
-                                <h3 className="font-semibold text-base lg:text-lg text-gray-900">
-                                  {appliedJob.job_title}
-                                </h3>
-                  
-                                <p className="text-purple-600 font-medium text-sm">
-                                  {appliedJob.job?.company}
-                                </p>
-                  
-                                <p className="text-gray-600 text-xs">
-                                  {appliedJob.job?.location?.name}
-                                </p>
-                              </div>
-                  
-                             <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => removeAppliedJob(appliedJob.id)}
-                            className="text-red-600 text-xs font-medium bg-red-50 px-3 py-1 rounded-full hover:bg-red-100 transition"
-                          >
-                            Remove
-                          </button>
-                        </div>
-                  
-                            </div>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-lg lg:text-xl">
+                      <Bookmark className="w-5 h-5" />
+                      <span>Applied Jobs</span>
+                    </CardTitle>
+                  </CardHeader>
+
+                  <CardContent>
+                    {loadingAppliedJobs && (
+                      <p className="text-sm text-gray-500">Loading applied jobs...</p>
+                    )}
+
+                    {!loadingAppliedJobs && appliedJobs.length === 0 && (
+                      <p className="text-sm text-gray-500">No applied jobs found.</p>
+                    )}
+
+                    {appliedJobs.map((appliedJob) => (
+                      <div
+                        key={appliedJob.id}
+                        className="border rounded-lg p-4 mb-4 hover:shadow-md transition-shadow"
+                      >
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h3 className="font-semibold text-base lg:text-lg text-gray-900">
+                              {appliedJob.job_title}
+                            </h3>
+
+                            <p className="text-purple-600 font-medium text-sm">
+                              {appliedJob.job?.company}
+                            </p>
+
+                            <p className="text-gray-600 text-xs">
+                              {appliedJob.job?.location?.name}
+                            </p>
                           </div>
-                        ))}
-                      </CardContent>
-                    </Card>
+
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => removeAppliedJob(appliedJob.id)}
+                              className="text-red-600 text-xs font-medium bg-red-50 px-3 py-1 rounded-full hover:bg-red-100 transition"
+                            >
+                              Remove
+                            </button>
+                          </div>
+
+                        </div>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
               )}
 
 
@@ -3373,7 +3895,7 @@ const removeAppliedJob = async (applicationId: number) => {
             </div>
           </div>
         </div>
-         <Footer />
+        <Footer />
       </div>
     </LocalizationProvider>
   );

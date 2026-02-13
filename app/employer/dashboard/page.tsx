@@ -102,7 +102,7 @@ export default function EmployerDashboard() {
   const [jobTitles, setJobTitles] = useState<JobTitle[]>([]);
   const [cities, setCities] = useState<City[]>([]);
   const [selectedCategory, setSelectedCategory] = useState("");
-  const [selectedCandidate, setSelectedCandidate] =useState<Candidate | null>(null);
+  const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
   const [isCandidateModalOpen, setIsCandidateModalOpen] = useState(false);
   const [jobFilter, setJobFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
@@ -144,234 +144,234 @@ export default function EmployerDashboard() {
   const [isSubscribed, setIsSubscribed] = useState(false);
 
   interface DecodedToken {
-  user_id: number | string;
-  exp?: number;
-  iat?: number;
-}
-interface City {
-  id: number;
-  name: string;
-}
+    user_id: number | string;
+    exp?: number;
+    iat?: number;
+  }
+  interface City {
+    id: number;
+    name: string;
+  }
 
-interface ApplicationUpdateResponse {
-  id: number;
-  application_status: string;
-  detail?: string;
-}
+  interface ApplicationUpdateResponse {
+    id: number;
+    application_status: string;
+    detail?: string;
+  }
 
-interface JobCategory {
-  id: number;
-  name: string;
-}
+  interface JobCategory {
+    id: number;
+    name: string;
+  }
 
-interface JobTitle {
-  id: number;
-  title: string;
-}
+  interface JobTitle {
+    id: number;
+    title: string;
+  }
 
-interface Currency{
-  id: number;
-  symbol: string;
-}
+  interface Currency {
+    id: number;
+    symbol: string;
+  }
 
-interface Candidate {
-  id: number;
-  name: string;
-  email: string;
-  phone: string;
-  location: string;
-  experience: string;
-  currentRole: string;
-  currentCompany: string;
-  skills: string[];
-  education: string;
-  appliedFor: string;
-  job_title?: string;
-  appliedDate: string;
-  status: string;
-  expectedSalary?: string;
-  resumeUrl?: string;
-  profileImage?: string | null;
-  summary?: string;
-  workExperience: {
+  interface Candidate {
+    id: number;
+    name: string;
+    email: string;
+    phone: string;
+    location: string;
+    experience: string;
+    currentRole: string;
+    currentCompany: string;
+    skills: string[];
+    education: string;
+    appliedFor: string;
+    job_title?: string;
+    appliedDate: string;
+    status: string;
+    expectedSalary?: string;
+    resumeUrl?: string;
+    profileImage?: string | null;
+    summary?: string;
+    workExperience: {
+      company: string;
+      role: string;
+      duration: string;
+      description?: string;
+    }[];
+
+    educationDetails: {
+      degree: string;
+      field: string;
+      institution: string;
+      year: string;
+      grade?: string;
+    }[];
+
+    certifications: {
+      name: string;
+      issuer?: string;
+      year?: string;
+    }[];
+    phoneCode?: string;
+    qa?: CandidateQA[];
+  }
+
+  interface JobForm {
+    title: string;
+    category: string;
+    jobTitle: string;
     company: string;
-    role: string;
-    duration: string;
-    description?: string;
-  }[];
-
-  educationDetails: {
-    degree: string;
-    field: string;
-    institution: string;
-    year: string;
-    grade?: string;
-  }[];
-
-  certifications: {
-    name: string;
-    issuer?: string;
-    year?: string;
-  }[];
-  phoneCode?: string;
-  qa?: CandidateQA[];
-}
-
-interface JobForm {
-  title: string;
-  category: string;
-  jobTitle: string;
-  company: string;
-  location: string;
-  experience: string;
-  salary: string;
-  currency: string;
-  job_type: string;
-  workMode: string;
-  description: string;
-  requirements: string;
-  benefits: string;
-  skills: string[];
-  applicationDeadline: string;
-  vacancies: string;
-  isUrgent: boolean;
-  isRemote: boolean;
-  questions: string[];
-}
-interface ApiCandidate {
-  id: number;
-  full_name?: string;
-  email?: string;
-  phone?: string;
-  city?: string;
-  experience?: string;
-  job_title?: string;
-  application_status?: string;
-  applied_at?: string;
-
-  profile?: {
+    location: string;
+    experience: string;
+    salary: string;
+    currency: string;
+    job_type: string;
+    workMode: string;
+    description: string;
+    requirements: string;
+    benefits: string;
+    skills: string[];
+    applicationDeadline: string;
+    vacancies: string;
+    isUrgent: boolean;
+    isRemote: boolean;
+    questions: string[];
+  }
+  interface ApiCandidate {
+    id: number;
     full_name?: string;
+    email?: string;
     phone?: string;
+    city?: string;
     experience?: string;
-    resume?: string;
-    skills?: { name: string }[];
-    educations?: any[];
-    experiences?: any[];
-    certifications?: any[];
+    job_title?: string;
+    application_status?: string;
+    applied_at?: string;
+
+    profile?: {
+      full_name?: string;
+      phone?: string;
+      experience?: string;
+      resume?: string;
+      skills?: { name: string }[];
+      educations?: any[];
+      experiences?: any[];
+      certifications?: any[];
+    };
+
+    answers?: {
+      question_index: number;
+      question_text: string;
+      answer: string;
+    }[];
+  }
+
+  interface CandidateQA {
+    question_index?: number;
+    question_text?: string;
+    answer_text?: string;
+  }
+
+  const mapApiCandidateToUI = (item: ApiCandidate): Candidate => {
+    const experiences = item.profile?.experiences ?? [];
+    const educations = item.profile?.educations ?? [];
+
+    return {
+      id: item.id,
+      name: item.profile?.full_name || item.full_name || "",
+      email: item.email || "",
+      phone: item.profile?.phone || "",
+      location: item.city || "",
+      experience: item.profile?.experience || item.experience || "",
+
+      currentRole:
+        experiences[0]?.designation ||
+        item.job_title ||
+        "",
+
+      currentCompany:
+        experiences[0]?.company || "",
+
+      skills:
+        item.profile?.skills?.map((s) => s.name) || [],
+
+      education:
+        educations[0]?.degree || "",
+
+      appliedFor:
+        item.job_title || "",
+
+      job_title: item.job_title,
+
+      appliedDate:
+        item.applied_at || "",
+
+      status:
+        item.application_status || "Under Review",
+
+      resumeUrl:
+        item.profile?.resume,
+
+      profileImage: null,
+      summary: "",
+
+      workExperience:
+        experiences.map((ex: any) => ({
+          company: ex.company || "",
+          role: ex.designation || "",
+          duration: `${String(ex.start_date ?? "")} - ${String(
+            ex.end_date ?? "Present"
+          )}`,
+          description: ex.description,
+        })),
+
+      educationDetails:
+        educations.map((e: any) => ({
+          degree: e.degree || "",
+          field: e.field || "",
+          institution: e.institution || "",
+          year: String(e.year ?? ""),
+          grade: e.grade,
+        })),
+
+      certifications:
+        item.profile?.certifications?.map((c: any) => ({
+          name: c.name || "",
+          issuer: c.issuer,
+          year: c.year ? String(c.year) : undefined,
+        })) || [],
+    };
   };
 
-  answers?: {
-    question_index: number;
-    question_text: string;
-    answer: string;
-  }[];
-}
-
-interface CandidateQA {
-  question_index?: number;
-  question_text?: string;
-  answer_text?: string;
-}
-
-const mapApiCandidateToUI = (item: ApiCandidate): Candidate => {
-  const experiences = item.profile?.experiences ?? [];
-  const educations = item.profile?.educations ?? [];
-
-  return {
-    id: item.id,
-    name: item.profile?.full_name || item.full_name || "",
-    email: item.email || "",
-    phone: item.profile?.phone || "",
-    location: item.city || "",
-    experience: item.profile?.experience || item.experience || "",
-
-    currentRole:
-      experiences[0]?.designation ||
-      item.job_title ||
-      "",
-
-    currentCompany:
-      experiences[0]?.company || "",
-
-    skills:
-      item.profile?.skills?.map((s) => s.name) || [],
-
-    education:
-      educations[0]?.degree || "",
-
-    appliedFor:
-      item.job_title || "",
-
-    job_title: item.job_title,
-
-    appliedDate:
-      item.applied_at || "",
-
-    status:
-      item.application_status || "Under Review",
-
-    resumeUrl:
-      item.profile?.resume,
-
-    profileImage: null,
-    summary: "",
-
-    workExperience:
-      experiences.map((ex: any) => ({
-        company: ex.company || "",
-        role: ex.designation || "",
-        duration: `${String(ex.start_date ?? "")} - ${String(
-          ex.end_date ?? "Present"
-        )}`,
-        description: ex.description,
-      })),
-
-    educationDetails:
-      educations.map((e: any) => ({
-        degree: e.degree || "",
-        field: e.field || "",
-        institution: e.institution || "",
-        year: String(e.year ?? ""),
-        grade: e.grade,
-      })),
-
-    certifications:
-      item.profile?.certifications?.map((c: any) => ({
-        name: c.name || "",
-        issuer: c.issuer,
-        year: c.year ? String(c.year) : undefined,
-      })) || [],
-  };
-};
-
-interface PostedJob {
-  id: number;
-  title: string;
-  job_title: number;
-  company: string;
-  location_id: number;
-  experience: string;
-  salary: string;
-  job_type: string;
-  work_mode: string;
-  vacancies: number;
-  application_deadline: string;
-  description: string;
-  requirements: string;
-  benefits: string;
-  skills: string[];
-  is_urgent: boolean;
-  is_remote: boolean;
-  status: string;
-  location?: {
-    id?: number;
-    name: string;
-  };
-  created_at?: string;
-  applicants?: number;
-  apply_clicks?: number;
-  questions?: string[];
-}
+  interface PostedJob {
+    id: number;
+    title: string;
+    job_title: number;
+    company: string;
+    location_id: number;
+    experience: string;
+    salary: string;
+    job_type: string;
+    work_mode: string;
+    vacancies: number;
+    application_deadline: string;
+    description: string;
+    requirements: string;
+    benefits: string;
+    skills: string[];
+    is_urgent: boolean;
+    is_remote: boolean;
+    status: string;
+    location?: {
+      id?: number;
+      name: string;
+    };
+    created_at?: string;
+    applicants?: number;
+    apply_clicks?: number;
+    questions?: string[];
+  }
 
 
 
@@ -417,11 +417,11 @@ interface PostedJob {
   //     views: 156,
   //   },
   // ]);
-const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
+  const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
 
 
   // Sample data for candidates
-  const [candidates, setCandidates] =useState<Candidate[]>([
+  const [candidates, setCandidates] = useState<Candidate[]>([
     {
       id: 1,
       name: "Rahul Sharma",
@@ -701,8 +701,24 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
     try {
       const token = localStorage.getItem("auth_token");
       if (!token) return;
+<<<<<<< HEAD
       const response = await fetch(
         "https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-list-view/",
+=======
+<<<<<<< Updated upstream
+        const response = await fetch(
+          "http://127.0.0.1:8010/employeer/api/job-list-view/",
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+=======
+      const response = await fetch(
+        "http://127.0.0.1:8010/employeer/api/job-list-view/",
+>>>>>>> a598b0f ([IMP] all : Implemented the pagination in the backend.)
         {
           method: "GET",
           headers: {
@@ -710,6 +726,10 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
           },
         }
       );
+<<<<<<< HEAD
+=======
+>>>>>>> Stashed changes
+>>>>>>> a598b0f ([IMP] all : Implemented the pagination in the backend.)
 
       // const response = await fetch(
       //   "http://127.0.0.1:8010/employeer/api/job-list-view/",
@@ -726,6 +746,11 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
         return;
       }
       const data = await response.json();
+<<<<<<< Updated upstream
+=======
+      console.log("Here is the Job-list-view-data:", data)
+      console.log(data.category)
+>>>>>>> Stashed changes
       setPostedJobs(data); // Set jobs into stateq
     } catch (error) {
       console.error("Error fetching jobs");
@@ -835,6 +860,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
         return;
       }
 
+<<<<<<< HEAD
       const mappedCandidates = data.map((item) => ({
         id: item.id,
         name: item.profile?.full_name || item.full_name,
@@ -857,16 +883,40 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
           answer_text: ans.answer,
         })),
       }));
+=======
+      //   const mappedCandidates = data.map((item) => ({
+      //     id: item.id,
+      //     name: item.profile?.full_name || item.full_name,
+      //     email: item.email || item.user_email, 
+      //     phone: item.profile?.phone || item.phone,
+      //     phoneCode: item.profile?.phone_code || item.phone_code,
+      //     location: item.profile?.city || item.city,
+      //     experience: item.profile?.experience || item.experience,
+      //     job_title: item.job_title,
+      //     resumeUrl: item.profile?.resume || item.resume,
+      //     skills: item.profile?.skills || item.skills,
+      //     certifications: item.profile?.certifications || item.certifications,
+      //     educationDetails: item.profile?.educations || item.educations,
+      //     workExperience: item.profile?.experiences || item.experiences,
+      //     status: item.application_status || "Under Review",
+      //     appliedDate: item.applied_at,
+      //     qa: item.answers?.map((ans: any) => ({
+      //       question_index: ans.question_index,
+      //       question_text: ans.question_text,
+      //       answer_text: ans.answer,
+      //     })),
+      //   }));
+>>>>>>> a598b0f ([IMP] all : Implemented the pagination in the backend.)
 
-    //   console.log("MAPPED CANDIDATES:", mappedCandidates);
+      //   console.log("MAPPED CANDIDATES:", mappedCandidates);
 
-    //   setCandidates(mappedCandidates);
-    //   setActiveTab("candidates");
-    // } catch (error) {
-    //   console.error(error);
-    // }
-    const mappedCandidates: Candidate[] =
-      data.map(mapApiCandidateToUI);
+      //   setCandidates(mappedCandidates);
+      //   setActiveTab("candidates");
+      // } catch (error) {
+      //   console.error(error);
+      // }
+      const mappedCandidates: Candidate[] =
+        data.map(mapApiCandidateToUI);
 
       setCandidates(mappedCandidates);
       setActiveTab("candidates");
@@ -954,12 +1004,14 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
         return;
       }
 
+<<<<<<< Updated upstream
   const data = await response.json();
   setPostedJobs((prev) => [...prev, data]);
   toast.success("Job posted successfully!");
   await fetchPostedJobs();
 
       // Reset form
+<<<<<<< HEAD
       setJobForm({
         title: "",
         category: "",
@@ -1010,6 +1062,96 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
           return "bg-gray-100 text-gray-800";
       }
     };
+=======
+        setJobForm({
+          title: "",
+          category: "",
+          jobTitle: "",
+          company: "",
+          location: "",
+          experience: "",
+          salary: "",
+          currency: "",
+          job_type: "",
+          workMode: "",
+          description: "",
+          requirements: "",
+          benefits: "",
+          skills: [],
+          applicationDeadline: "",
+          vacancies: "",
+          isUrgent: false,
+          isRemote: false,
+          questions: [],
+        });
+        setSelectedCategory("");
+        setQuestions([]);
+        setAskQuestionEnabled(false); // uncheck the checkbox
+        setNewSkill("");
+        setNewQuestion("");
+      } catch (error) {
+        console.error("Error submitting job");
+        toast.error("An error occurred while posting the job.", {
+=======
+      const data = await response.json();
+      console.log("Job posted successfully:", data);
+      setPostedJobs((prev) => [...prev, data]);
+      toast.success("Job posted successfully!");
+      await fetchPostedJobs();
+
+      // Reset form
+      setJobForm({
+        title: "",
+        category: "",
+        jobTitle: "",
+        company: "",
+        location: "",
+        experience: "",
+        salary: "",
+        currency: "",
+        job_type: "",
+        workMode: "",
+        description: "",
+        requirements: "",
+        benefits: "",
+        skills: [],
+        applicationDeadline: "",
+        vacancies: "",
+        isUrgent: false,
+        isRemote: false,
+        questions: [],
+      });
+      setSelectedCategory("");
+      setQuestions([]);
+      setAskQuestionEnabled(false); // uncheck the checkbox
+      setNewSkill("");
+      setNewQuestion("");
+    } catch (error) {
+      console.error("Error submitting job:", error);
+      toast.error("An error occurred while posting the job.", {
+>>>>>>> Stashed changes
+        description: "Please try again or check your internet connection."
+      });
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "active":
+        return "bg-green-100 text-green-800";
+      case "closed":
+        return "bg-red-100 text-red-800";
+      case "Under Review":
+        return "bg-yellow-100 text-yellow-800";
+      case "Shortlisted":
+        return "bg-blue-100 text-blue-800";
+      case "Rejected":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+>>>>>>> a598b0f ([IMP] all : Implemented the pagination in the backend.)
 
   // Filter jobs based on status and search term
   const filteredJobs = postedJobs.filter((job) => {
@@ -1098,7 +1240,12 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
     city.name.toLowerCase().startsWith(searchTerm.toLowerCase())
   );
 
+<<<<<<< HEAD
     const handleViewJob = async (job) => {
+=======
+<<<<<<< Updated upstream
+    const handleViewJob = async (job: any) => {
+>>>>>>> a598b0f ([IMP] all : Implemented the pagination in the backend.)
       try {
         const token = localStorage.getItem("auth_token");
         const response = await fetch(
@@ -1134,6 +1281,45 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
         const data = await response.json();
         // Prefill the form
     setJobForm({
+=======
+  const handleViewJob = async (job: any) => {
+    try {
+      const token = localStorage.getItem("auth_token");
+      const response = await fetch(
+        `http://127.0.0.1:8010/employeer/api/job-list-view/${job.id}/`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      const data = await response.json();
+      console.log("Job details:", data);
+      setSelectedJob(data);
+      setIsEditMode(false);
+      setIsModalOpen(true);
+    } catch (err) {
+      console.error("Error fetching job details", err);
+    }
+  };
+  //http://127.0.0.1:8010
+  const handleEditJob = async (job: any) => {
+    try {
+      const token = localStorage.getItem("auth_token");
+      const response = await fetch(
+        `http://127.0.0.1:8010/employeer/api/job-list-view/${job.id}/`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      const data = await response.json();
+      console.log("Data is prefill", data);
+      // Prefill the form
+      setJobForm({
+>>>>>>> Stashed changes
         title: data.title || "",
         category: data.category?.name?.toString() || data.category || "",
         jobTitle: data.job_title?.id?.toString() || data.job_title || "",
@@ -1344,7 +1530,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
   };
 
   // SHORTLIST
-  const handleShortlistCandidate = async ( candidate: any) => {
+  const handleShortlistCandidate = async (candidate: any) => {
     try {
       const token = localStorage.getItem("auth_token");
       if (!token) {
@@ -1456,10 +1642,10 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
       }
 
       if (!data) {
-      toast.error("Invalid server response", {
-        description: "Please try again later."
-      });
-      return;
+        toast.error("Invalid server response", {
+          description: "Please try again later."
+        });
+        return;
       }
       const { id, application_status } = data;
       // setCandidates((prev) =>
@@ -1505,19 +1691,38 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
   };
 
   const handleScheduleSubmit = async () => {
+<<<<<<< HEAD
 
      if (!interviewDate) {
     toast.warning("Please select interview date");
     return;
   }
+=======
+    if (!selectedCandidate) {
+      toast.error("No candidate selected", {
+        description: "Please select a candidate and try again."
+      });
+      return;
+    }
+    if (!interviewDate) {
+      toast.warning("Please select interview date");
+      return;
+    }
+>>>>>>> a598b0f ([IMP] all : Implemented the pagination in the backend.)
 
 
     try {
       const token = localStorage.getItem("auth_token");
       if (!token) return toast.error("Token missing", {
+<<<<<<< HEAD
                          description: "Please log in again to continue."
                          });
   
+=======
+        description: "Please log in again to continue."
+      });
+
+>>>>>>> a598b0f ([IMP] all : Implemented the pagination in the backend.)
       const res = await fetch(
         `http://127.0.0.1:8010/employeer/api/employer/applications/${selectedCandidate.id}/schedule-interview/`,
         {
@@ -1689,14 +1894,22 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
             </Link>
             <div className="flex items-center gap-4">
               <div className="relative">
+<<<<<<< HEAD
                  <div               
                    onClick={() => setIsNotificationOpen(!isNotificationOpen)}
                    className="cursor-pointer relative select-none"
                   >
+=======
+                <div
+                  onClick={() => setIsNotificationOpen(!isNotificationOpen)}
+                  className="cursor-pointer relative select-none"
+                >
+>>>>>>> a598b0f ([IMP] all : Implemented the pagination in the backend.)
                   <Bell className="w-5 h-5 text-gray-700 hover:text-purple-600" />
                   <span className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full" />
                 </div>
 
+<<<<<<< HEAD
                  {isNotificationOpen && (
                    <>
                     
@@ -1706,6 +1919,17 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
                      />
                      <div
                        className="               
+=======
+                {isNotificationOpen && (
+                  <>
+
+                    <div
+                      className="fixed inset-0 z-40 bg-black/20 md:bg-transparent"
+                      onClick={() => setIsNotificationOpen(false)}
+                    />
+                    <div
+                      className="
+>>>>>>> a598b0f ([IMP] all : Implemented the pagination in the backend.)
                         fixed md:absolute
                         inset-x-0 bottom-0 md:inset-auto
                         md:right-0 md:top-full
@@ -1716,8 +1940,13 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
                         rounded-t-xl md:rounded-lg
                         z-50
                       "
+<<<<<<< HEAD
                      >
                        <div className="p-3 border-b font-semibold text-gray-700 flex justify-between items-center">               
+=======
+                    >
+                      <div className="p-3 border-b font-semibold text-gray-700 flex justify-between items-center">
+>>>>>>> a598b0f ([IMP] all : Implemented the pagination in the backend.)
                         Notifications
                         <button
                           className="md:hidden text-gray-500"
@@ -1787,8 +2016,13 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex items-center space-x-2 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${activeTab === tab.id
+<<<<<<< HEAD
                     ? "border-blue-600 text-blue-600"
                     : "border-transparent text-gray-600 hover:text-blue-600"
+=======
+                      ? "border-blue-600 text-blue-600"
+                      : "border-transparent text-gray-600 hover:text-blue-600"
+>>>>>>> a598b0f ([IMP] all : Implemented the pagination in the backend.)
                     }`}
                 >
                   <IconComponent className="w-4 h-4" />
@@ -2491,11 +2725,11 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
                                 {new Date(job.created_at).toLocaleDateString()}
                               </span> */}
                               <span>
-                            Posted:{" "}
-                            {job.created_at
-                              ? new Date(job.created_at).toLocaleDateString()
-                              : "N/A"}
-                          </span>
+                                Posted:{" "}
+                                {job.created_at
+                                  ? new Date(job.created_at).toLocaleDateString()
+                                  : "N/A"}
+                              </span>
                             </div>
                           </div>
                           <div className="flex items-center space-x-6 text-sm">
@@ -3225,8 +3459,13 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
                           setIsCandidateModalOpen(true);
                         }}
                         className={`p-4 cursor-pointer hover:bg-gray-50 border-l-4 transition-colors ${selectedCandidate?.id === candidate.id
+<<<<<<< HEAD
                           ? "border-l-blue-500 bg-blue-50"
                           : "border-l-transparent"
+=======
+                            ? "border-l-blue-500 bg-blue-50"
+                            : "border-l-transparent"
+>>>>>>> a598b0f ([IMP] all : Implemented the pagination in the backend.)
                           }`}
                       >
                         <div className="flex items-start space-x-3">
@@ -3574,6 +3813,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
                               <XCircle className="w-4 h-4 mr-2" />
                               Reject Application
                             </Button> */}
+<<<<<<< HEAD
                             
                          <AlertDialog>
                            <AlertDialogTrigger asChild>                         
@@ -3605,6 +3845,39 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
                             </AlertDialogFooter>
                            </AlertDialogContent>
                          </AlertDialog>
+=======
+
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  className="border-red-600 text-red-600 hover:bg-red-50 flex-1"
+                                >
+                                  <XCircle className="w-4 h-4 mr-2" />
+                                  Reject Application
+                                </Button>
+                              </AlertDialogTrigger>
+
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Reject this application?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    This action cannot be undone. The candidate will be marked as rejected.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    className="bg-red-600 hover:bg-red-700"
+                                    onClick={() => handleRejectCandidate(selectedCandidate)}
+                                  >
+                                    Yes, Reject
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+>>>>>>> a598b0f ([IMP] all : Implemented the pagination in the backend.)
                           </>
                         )}
 
@@ -3673,12 +3946,19 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
 
                                 />
                               </div>
+<<<<<<< HEAD
+
+                              {/* Interview Time */}
+                              <div className="flex space-x-2 items-center">
+                                <label className="text-sm font-medium">Interview Time</label>
+=======
+>>>>>>> a598b0f ([IMP] all : Implemented the pagination in the backend.)
 
                               {/* Interview Time */}
                               <div className="flex space-x-2 items-center">
                                 <label className="text-sm font-medium">Interview Time</label>
 
-          {/* <input
+                                {/* <input
             type="number"
             min="1"
             max="12"
@@ -3749,22 +4029,22 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
                                 </select>
                               </div>
 
-        {/* Interview Mode */}
-        <div>
-          <label className="text-sm font-medium">Interview Mode</label>
-          <select
-            className="w-full border rounded-lg p-2 mt-1 focus:ring-2 focus:ring-blue-500"
-            value={interviewMode}
-            onChange={(e) => setInterviewMode(e.target.value)}
-          >
-            <option>Online</option>
-            <option>Office</option>
-            <option>Phone Call</option>
-          </select>
-        </div>
+                              {/* Interview Mode */}
+                              <div>
+                                <label className="text-sm font-medium">Interview Mode</label>
+                                <select
+                                  className="w-full border rounded-lg p-2 mt-1 focus:ring-2 focus:ring-blue-500"
+                                  value={interviewMode}
+                                  onChange={(e) => setInterviewMode(e.target.value)}
+                                >
+                                  <option>Online</option>
+                                  <option>Office</option>
+                                  <option>Phone Call</option>
+                                </select>
+                              </div>
 
-        {/* Meet Link */}
-        {/* <div>
+                              {/* Meet Link */}
+                              {/* <div>
           <label className="text-sm text-gray-700">Google Meet link</label>
           <input
             className="w-full border rounded-md p-2 text-sm focus:ring-2 focus:ring-blue-500"
@@ -3825,7 +4105,11 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
         )}
 
         {activeTab === "profiles" && (
+<<<<<<< HEAD
           <CandidatesPage isSubscribed={isSubscribed} />
+=======
+          <CandidatesPage />
+>>>>>>> a598b0f ([IMP] all : Implemented the pagination in the backend.)
         )}
         {activeTab === "quota" && (
           <QuotaUsagePage />

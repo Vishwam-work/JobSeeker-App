@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSearchParams, useRouter  } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -49,6 +49,8 @@ import {
   Award,
   Eye,
   Send,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 
 export default function JobListings() {
@@ -65,7 +67,10 @@ export default function JobListings() {
   const [appliedJobs, setAppliedJobs] = useState<number[]>([]);
   // const { savedJobs, addJob, removeJob } = useSavedJobs();
   const [savedJobIds, setSavedJobIds] = useState<number[]>([]);
-  const [visibleCount, setVisibleCount] = useState(3);
+  const [page, setPage] = useState(1);
+  const [nextPage, setNextPage] = useState<string | null>(null);
+  const [previousPage, setPreviousPage] = useState<string | null>(null);
+  const [totalCount, setTotalCount] = useState(0);
   const searchParams = useSearchParams();
   const searchFromUrl = searchParams.get("search");
   const router = useRouter();
@@ -89,7 +94,7 @@ export default function JobListings() {
   const [locations, setLocations] = useState<Location[]>([]);
   const [skillsList, setSkillsList] = useState<string[]>([]);
 
-  
+
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
   const [searchLocation, setSearchLocation] = useState("");
   const [showCompanyDropdown, setShowCompanyDropdown] = useState(false);
@@ -98,46 +103,46 @@ export default function JobListings() {
   const [searchSkill, setSearchSkill] = useState("");
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [showLoginPopup, setShowLoginPopup] = useState(false);
- 
-  interface  Location  {
-  id: string | number;
-  name: string;
-};
-interface  JobLocation  {
-  id?: number | string;
-  name: string;
-};
 
- interface  Job  {
-  id: number | string;
-  title: string;
-  company: string;
-  skills: string[];
-  location?: JobLocation;
-  experience?: string; 
-  work_mode?: string;
-  job_type?: string;
-  salary?: string;
-  created_at?: string;
-  description?: string;
-  vacancies?: number;
-  urgentHiring?: boolean;
-  requirements?: string[];
-  benefits?: string[];
-  questions?: string[];
-};
-interface Filters {
-  skills: string[];
-   companies: string[];
-  experience?: string;
-  workMode?: string;
-  
-}
-interface Application {
-  id: number | string;
-  user_email: string;
-  job: number | string;
-}
+  interface Location {
+    id: string | number;
+    name: string;
+  };
+  interface JobLocation {
+    id?: number | string;
+    name: string;
+  };
+
+  interface Job {
+    id: number | string;
+    title: string;
+    company: string;
+    skills: string[];
+    location?: JobLocation;
+    experience?: string;
+    work_mode?: string;
+    job_type?: string;
+    salary?: string;
+    created_at?: string;
+    description?: string;
+    vacancies?: number;
+    urgentHiring?: boolean;
+    requirements?: string[];
+    benefits?: string[];
+    questions?: string[];
+  };
+  interface Filters {
+    skills: string[];
+    companies: string[];
+    experience?: string;
+    workMode?: string;
+
+  }
+  interface Application {
+    id: number | string;
+    user_email: string;
+    job: number | string;
+  }
 
 
   useEffect(() => {
@@ -154,13 +159,13 @@ interface Application {
     }
   }, []);
   useEffect(() => {
-  if (searchFromUrl) {
-    setFilters((prev) => ({
-      ...prev,
-      search: searchFromUrl,
-    }));
-  }
-}, [searchFromUrl]);
+    if (searchFromUrl) {
+      setFilters((prev) => ({
+        ...prev,
+        search: searchFromUrl,
+      }));
+    }
+  }, [searchFromUrl]);
 
 
   // Fetch companies from API
@@ -173,11 +178,11 @@ interface Application {
         const data = await res.json();
 
         const companyNames: string[] = Array.from(
-           new Set(
-             data
-               .map((item: { company?: string }) => item.company)
-               .filter((c: string | undefined): c is string => Boolean(c))
-           )
+          new Set(
+            data
+              .map((item: { company?: string }) => item.company)
+              .filter((c: string | undefined): c is string => Boolean(c))
+          )
         );
 
         setCompanies(companyNames);
@@ -195,10 +200,10 @@ interface Application {
         const res = await fetch("http://127.0.0.1:8010/api/saved-jobs/", {
           headers: { Authorization: `Bearer ${token}` },
         });
-    
+
         if (!res.ok) return;
         const data = await res.json();
-    
+
         // Store the IDs of saved jobs
         const jobIds = data.map((item: any) => item.job);
         setSavedJobIds(jobIds);
@@ -233,11 +238,17 @@ interface Application {
   }, []);
 
   useEffect(() => {
-    // Simulate API call
-    setTimeout(async () => {
+    fetchJobs(page);
+  }, [page]);
+
+  const fetchJobs = async (pageNumber: number) => {
+    try {
+      setLoading(true);
+
       const response = await fetch(
-        "http://127.0.0.1:8010/employeer/api/all-jobs/"
+        `http://127.0.0.1:8010/employeer/api/all-jobs/?page=${pageNumber}`
       );
+
       const data = await response.json();
       console.log("Jobs data:", data);
       setJobs(data);
@@ -256,11 +267,18 @@ interface Application {
        name: name, 
       }));
 
-      setLocations(uniqueLocations);
+      setJobs(data.results);
+      setFilteredJobs(data.results);
+      setNextPage(data.next);
+      setPreviousPage(data.previous);
+      setTotalCount(data.count);
+
+    } catch (error) {
+      console.error("Error fetching jobs:", error);
+    } finally {
       setLoading(false);
-      fetchUserData();
-    }, 1000);
-  }, []);
+    }
+  };
 
   // Load applied jobs per user
   useEffect(() => {
@@ -285,8 +303,8 @@ interface Application {
   }, [userEmail]);
 
   useEffect(() => {
-  setVisibleCount(3);
-}, [filters]);
+    setPage(1);
+  }, [filters]);
 
 
   useEffect(() => {
@@ -320,7 +338,7 @@ interface Application {
     // Experience filter
     if (filters.experience && filters.experience !== "All") {
       filtered = filtered.filter((job) => {
-         if (!job.experience) return false;
+        if (!job.experience) return false;
         const [minJobExp, maxJobExp] = job.experience.split("-").map(Number);
         let [minFilterExp, maxFilterExp] = [0, 100]; // default
 
@@ -466,21 +484,21 @@ interface Application {
     });
   };
 
-//   const handleSaveJob = (job) => {
-//   const isSaved = savedJobs.some((j) => j.id === job.id);
-//   if (isSaved) {
-//     removeJob(job.id);
-//   } else {
-//     addJob(job);
-//   }
-// };
+  //   const handleSaveJob = (job) => {
+  //   const isSaved = savedJobs.some((j) => j.id === job.id);
+  //   if (isSaved) {
+  //     removeJob(job.id);
+  //   } else {
+  //     addJob(job);
+  //   }
+  // };
 
-const saveJob = async (jobId: number) => {
-  const token = localStorage.getItem("auth_token");
-  if (!token) {
-    toast.warning("Please login to save jobs", {
-    description: "You need to be logged in to save a job.",
-   });
+  const saveJob = async (jobId: number) => {
+    const token = localStorage.getItem("auth_token");
+    if (!token) {
+      toast.warning("Please login to save jobs", {
+        description: "You need to be logged in to save a job.",
+      });
 
     return;
   }
@@ -501,17 +519,23 @@ const saveJob = async (jobId: number) => {
       return;
     }
 
-    if (!res.ok) throw new Error("Failed to save job");
+    try {
+      const res = await fetch("http://127.0.0.1:8010/api/saved-jobs/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ job: jobId }),
+      });
 
-    setSavedJobIds((prev) => [...prev, jobId]);
-  } catch (err) {
-    console.error("Error saving job:", err);
-  }
-};
+      if (res.status === 400) {
+        const data = await res.json();
+        console.log(data.detail || "Already saved.");
+        return;
+      }
 
-const unsaveJob = async (jobId: number) => {
-  const token = localStorage.getItem("auth_token");
-  if (!token) return;
+      if (!res.ok) throw new Error("Failed to save job");
 
   try {
     // We need to find the savedJobId (record ID) for this job
@@ -520,22 +544,39 @@ const unsaveJob = async (jobId: number) => {
     });
     const savedData = await res.json();
     const record = savedData.find((item: any) => item.job === jobId);
+      setSavedJobIds((prev) => [...prev, jobId]);
+    } catch (err) {
+      console.error("Error saving job:", err);
+    }
+  };
 
-    if (!record) return;
+  const unsaveJob = async (jobId: number) => {
+    const token = localStorage.getItem("auth_token");
+    if (!token) return;
 
-    const delRes = await fetch(`http://127.0.0.1:8010/api/saved-jobs/${record.id}/`, {
-      method: "DELETE",
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    try {
+      // We need to find the savedJobId (record ID) for this job
+      const res = await fetch("http://127.0.0.1:8010/api/saved-jobs/", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const savedData = await res.json();
+      const record = savedData.find((item: any) => item.job === jobId);
 
-    if (!delRes.ok && delRes.status !== 204)
-      throw new Error("Failed to unsave job");
+      if (!record) return;
 
-    setSavedJobIds((prev) => prev.filter((id) => id !== jobId));
-  } catch (err) {
-    console.error("Error unsaving job:", err);
-  }
-};
+      const delRes = await fetch(`http://127.0.0.1:8010/api/saved-jobs/${record.id}/`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!delRes.ok && delRes.status !== 204)
+        throw new Error("Failed to unsave job");
+
+      setSavedJobIds((prev) => prev.filter((id) => id !== jobId));
+    } catch (err) {
+      console.error("Error unsaving job:", err);
+    }
+  };
 
   useEffect(() => {
     if (!userEmail) {
@@ -550,16 +591,16 @@ const unsaveJob = async (jobId: number) => {
   const handleApply = (job: Job) => {
     const token = localStorage.getItem("auth_token");
     if (!token) {
-        setShowLoginPopup(true);
+      setShowLoginPopup(true);
       return;
     }
-      if (!userData || !isProfileComplete(userData)) {
-    toast.warning(
-      "Please complete your profile (Name, Phone, Resume, Skills, Experience) before applying."
-    );
-    router.push("/profile");
-    return;
-  }
+    if (!userData || !isProfileComplete(userData)) {
+      toast.warning(
+        "Please complete your profile (Name, Phone, Resume, Skills, Experience) before applying."
+      );
+      router.push("/profile");
+      return;
+    }
     setSelectedJob(job);
     setAnswers({});
     fetchUserData();
@@ -580,15 +621,15 @@ const unsaveJob = async (jobId: number) => {
         body: JSON.stringify({ request_id: requestId }),
       });
 
-        const response = await res.json();
-        console.log(response)
+      const response = await res.json();
+      console.log(response)
 
     } catch (err) {
       console.error("Error incrementing job views:", err);
     }
   };
 
-  const handleShare = (job : Job) => {
+  const handleShare = (job: Job) => {
     if (navigator.share) {
       navigator.share({
         title: job.title,
@@ -604,121 +645,121 @@ const unsaveJob = async (jobId: number) => {
     }
   };
 
-const REQUIRED_PROFILE_FIELDS = [
-  "full_name",
-  "phone",
-  "resume",
-  "skills",
-  "country",
-  "state",
-  "city",
-  "experiences"
-];
+  const REQUIRED_PROFILE_FIELDS = [
+    "full_name",
+    "phone",
+    "resume",
+    "skills",
+    "country",
+    "state",
+    "city",
+    "experiences"
+  ];
 
 
 
-const isProfileComplete = (profile: Record<string, any>) => {
-  return REQUIRED_PROFILE_FIELDS.every((field) => {
-    const value = profile?.[field];
+  const isProfileComplete = (profile: Record<string, any>) => {
+    return REQUIRED_PROFILE_FIELDS.every((field) => {
+      const value = profile?.[field];
 
-    if (Array.isArray(value)) {
-      return value.length > 0;
-    }
+      if (Array.isArray(value)) {
+        return value.length > 0;
+      }
 
-    if (typeof value === "object") {
-      return value !== null && Object.keys(value).length > 0;
-    }
+      if (typeof value === "object") {
+        return value !== null && Object.keys(value).length > 0;
+      }
 
-    return value !== null && value !== undefined && value !== "";
-  });
-};
+      return value !== null && value !== undefined && value !== "";
+    });
+  };
 
 
 
   const fetchUserProfile = async () => {
-  setLoadingUserData(true);
-  try {
-    const token = localStorage.getItem("auth_token");
+    setLoadingUserData(true);
+    try {
+      const token = localStorage.getItem("auth_token");
 
-    const response = await fetch(
-      "http://127.0.0.1:8010/api/profile/",
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      const response = await fetch(
+        "http://127.0.0.1:8010/api/profile/",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        console.log("Profile API failed:", response.status);
+        return;
       }
-    );
 
-    if (!response.ok) {
-      console.log("Profile API failed:", response.status);
-      return;
+      const profile = await response.json();
+
+      setUserData({
+        ...profile,
+        resume: profile.resume
+          ? `http://127.0.0.1:8010${profile.resume}`
+          : null,
+      });
+
+    } catch (error) {
+      console.error("Profile fetch error:", error);
+    } finally {
+      setLoadingUserData(false);
     }
-
-    const profile = await response.json();
-
-    setUserData({
-      ...profile,
-      resume: profile.resume
-        ? `http://127.0.0.1:8010${profile.resume}`
-        : null,
-    });
-
-  } catch (error) {
-    console.error("Profile fetch error:", error);
-  } finally {
-    setLoadingUserData(false);
-  }
-};
+  };
 
 
 
-const fetchUserData = async () => {
-  setLoadingUserData(true);
-  try {
-    const token = localStorage.getItem("auth_token");
-    const email = localStorage.getItem("user_email");
+  const fetchUserData = async () => {
+    setLoadingUserData(true);
+    try {
+      const token = localStorage.getItem("auth_token");
+      const email = localStorage.getItem("user_email");
 
-    const response = await fetch(
-      "http://127.0.0.1:8010/employeer/api/employer/applications/all/",
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
+      const response = await fetch(
+        "http://127.0.0.1:8010/employeer/api/employer/applications/all/",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        console.log("Applied API failed:", response.status);
+        return;
       }
-    );
 
-    if (!response.ok) {
-      console.log("Applied API failed:", response.status);
-      return;
+      const data = await response.json();
+      console.log("ALL applications from backend:", data);
+
+      const myApplications = data.filter((app: Application) => app.user_email === email);
+
+      console.log("MY Applications:", myApplications);
+
+      const appliedIDs = myApplications.map((app: Application) => Number(app.job));
+
+      localStorage.setItem(`applied_jobs_${email}`, JSON.stringify(appliedIDs));
+
+      setAppliedJobs(appliedIDs);
+
+      console.log("Saved my applied job IDs:", appliedIDs);
+
+    } catch (error) {
+      console.error("Fetch user data error:", error);
+    } finally {
+      setLoadingUserData(false);
     }
+  };
 
-    const data = await response.json();
-    // console.log("ALL applications from backend:", data);
-
-    const myApplications = data.filter((app: Application) => app.user_email === email);
-
-    // console.log("MY Applications:", myApplications);
-
-    const appliedIDs = myApplications.map((app: Application) => Number(app.job));
-
-    localStorage.setItem(`applied_jobs_${email}`, JSON.stringify(appliedIDs));
-
-    setAppliedJobs(appliedIDs);
-
-    // console.log("Saved my applied job IDs:", appliedIDs);
-
-  } catch (error) {
-    console.error("Fetch user data error:", error);
-  } finally {
-    setLoadingUserData(false);
-  }
-};
-
-useEffect(() => {
-  fetchUserProfile(); 
-  fetchUserData();    
-}, []);
+  useEffect(() => {
+    fetchUserProfile();
+    fetchUserData();
+  }, []);
 
   const handleAnswerChange = (questionIndex: number, value: string) => {
     setAnswers((prev) => ({
@@ -733,8 +774,8 @@ useEffect(() => {
 
       if (!token) {
         toast("Login required", {
-        description: "Please login to continue with your application.",
-      });
+          description: "Please login to continue with your application.",
+        });
 
         return;
       }
@@ -753,8 +794,8 @@ useEffect(() => {
         );
         if (unanswered) {
           toast("Incomplete Application", {
-           description: "Please answer all required questions before submitting.",
-        });
+            description: "Please answer all required questions before submitting.",
+          });
 
           return;
         }
@@ -782,12 +823,12 @@ useEffect(() => {
       );
       // console.log("Here is the data",response) 
       const result = await response.json();
-      console.log("Serialised data for error :",result)
-      
+      console.log("Serialised data for error :", result)
+
       if (response.ok) {
         toast.success("Application Submitted", {
-        description: `Your application for ${selectedJob.title} has been sent successfully.`,
-      });
+          description: `Your application for ${selectedJob.title} has been sent successfully.`,
+        });
 
         setIsApplyModalOpen(false);
         setSelectedJob(null);
@@ -805,18 +846,18 @@ useEffect(() => {
           return updated;
         });
 
-       
+
       } else {
         toast.error("Application Failed", {
-        description: result?.error || "Something went wrong. Please try again.",
-      });
+          description: result?.error || "Something went wrong. Please try again.",
+        });
 
       }
     } catch (error) {
       console.error("Error submitting application:", error);
       toast("Network error", {
-      description: "Please check your internet connection and try again",
-     });
+        description: "Please check your internet connection and try again",
+      });
 
     }
   };
@@ -911,11 +952,11 @@ useEffect(() => {
                     </div>
                   </div>
 
-                  {/* Location */}             
-                <div>
-                   <Label className="text-sm font-medium text-gray-700 mb-2 block">
-                     Location
-                   </Label>
+                  {/* Location */}
+                  <div>
+                    <Label className="text-sm font-medium text-gray-700 mb-2 block">
+                      Location
+                    </Label>
 
                    <Select
                      value={filters.location || undefined}
@@ -943,38 +984,50 @@ useEffect(() => {
                         />
                      </div>    
 
-                       {/* Loading */}
-                       {loading && (
-                         <p className="text-sm text-gray-500 p-2">Loading locations...</p>
-                       )}
+                      <SelectContent className="max-h-60">
+                        {/* Search input */}
+                        <div className="sticky top-0 z-20 bg-white p-2 border-b">
+                          <input
+                            type="text"
+                            placeholder="Search location..."
+                            value={searchLocation}
+                            onChange={(e) => setSearchLocation(e.target.value)}
+                            onKeyDown={(e) => e.stopPropagation()}
+                            className="w-full h-10 text-sm border rounded px-2 placeholder-gray-400 appearance-none focus:outline-none"
+                          />
+                        </div>
 
-                       {/* Location list */}
-                       {locations
-                         .filter((location) =>
-                           typeof location.name === "string" &&
-                           location.name.toLowerCase().startsWith(searchLocation.toLowerCase())
-                         )
-                         .map((location) => {
-                           const isSelected = filters.location === location.name;
+                        {/* Loading */}
+                        {loading && (
+                          <p className="text-sm text-gray-500 p-2">Loading locations...</p>
+                        )}
 
-                           return (
-                             <SelectItem
-                               key={location.id}
-                               value={location.name}
-                               className={`text-sm cursor-pointer
-                                 ${
-                                   isSelected
-                                     ? "bg-blue-100 text-blue-700 font-medium"
-                                     : "text-gray-700 hover:bg-gray-100"
-                                 }`}
-                             >
-                               {location.name}
-                             </SelectItem>
-                           );
-                         })}
-                     </SelectContent>
-                   </Select>
-                 </div>
+                        {/* Location list */}
+                        {locations
+                          .filter((location) =>
+                            typeof location.name === "string" &&
+                            location.name.toLowerCase().startsWith(searchLocation.toLowerCase())
+                          )
+                          .map((location) => {
+                            const isSelected = filters.location === location.name;
+
+                            return (
+                              <SelectItem
+                                key={location.id}
+                                value={location.name}
+                                className={`text-sm cursor-pointer
+                                 ${isSelected
+                                    ? "bg-blue-100 text-blue-700 font-medium"
+                                    : "text-gray-700 hover:bg-gray-100"
+                                  }`}
+                              >
+                                {location.name}
+                              </SelectItem>
+                            );
+                          })}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
                   {/* Experience */}
                   <div>
@@ -1095,7 +1148,7 @@ useEffect(() => {
                     </Select>
                   </div>
 
-                  {/* Companies */}                
+                  {/* Companies */}
                   <div>
                     <Label className="text-sm font-medium text-gray-700 mb-2 block">
                       Companies
@@ -1113,10 +1166,10 @@ useEffect(() => {
                       <SelectTrigger>
                         <SelectValue placeholder="Select company" />
                       </SelectTrigger>
-                  
+
                       <SelectContent className="max-h-60">
 
-                      
+
                         <div className="sticky top-0 bg-white z-10 p-2 border-b">
                           <input
                             type="text"
@@ -1146,9 +1199,9 @@ useEffect(() => {
 
                   {/* Skills */}
                   <div>
-                     <Label className="text-sm font-medium text-gray-700 mb-2 block">
-                       Skills
-                     </Label>
+                    <Label className="text-sm font-medium text-gray-700 mb-2 block">
+                      Skills
+                    </Label>
 
                      <Select
                        open={open} 
@@ -1166,24 +1219,24 @@ useEffect(() => {
                          />
                        </SelectTrigger>
 
-                       <SelectContent className="max-h-60">
-                         <div className="sticky top-0 bg-white z-10 p-2 border-b">
-                           <input
-                             type="text"
-                             placeholder="Search skills..."
-                             value={searchSkill}
-                             onChange={(e) => setSearchSkill(e.target.value)}
-                             onKeyDown={(e) => e.stopPropagation()}
-                             className="w-full h-8 text-sm border rounded px-2"
-                           />
-                         </div>
+                      <SelectContent className="max-h-60">
+                        <div className="sticky top-0 bg-white z-10 p-2 border-b">
+                          <input
+                            type="text"
+                            placeholder="Search skills..."
+                            value={searchSkill}
+                            onChange={(e) => setSearchSkill(e.target.value)}
+                            onKeyDown={(e) => e.stopPropagation()}
+                            className="w-full h-8 text-sm border rounded px-2"
+                          />
+                        </div>
 
-                         {skillsList
-                           .filter((skill) =>
-                             skill.toLowerCase().startsWith(searchSkill.toLowerCase())
-                           )
-                           .map((skill) => {
-                             const isSelected = filters.skills.includes(skill);
+                        {skillsList
+                          .filter((skill) =>
+                            skill.toLowerCase().startsWith(searchSkill.toLowerCase())
+                          )
+                          .map((skill) => {
+                            const isSelected = filters.skills.includes(skill);
 
                              return (
                                <div
@@ -1210,8 +1263,8 @@ useEffect(() => {
                              );
                            })}
                       </SelectContent>
-                     </Select>
-                   </div>
+                    </Select>
+                  </div>
 
                 </div>
               </div>
@@ -1246,190 +1299,226 @@ useEffect(() => {
                 </div>
               ) : (
                 filteredJobs
-                .slice(0, visibleCount)
-                .map((job) => (
-                  <Card
-                    key={job.id}
-                    className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-transparent hover:border-l-purple-500"
-                  >
-                    <CardContent className="p-4 md:p-6">
-                      <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
-                        {/* Job Info */}
-                        <div className="flex-1">
-                          <div className="flex items-start justify-between mb-3">
-                            <div className="flex items-start space-x-3">
-                              <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                <Building2 className="w-6 h-6 text-purple-600" />
-                              </div>
-                              <div className="min-w-0 flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                  <h3 className="text-lg md:text-xl font-semibold text-gray-900 hover:text-purple-600 transition-colors">
-                                    <a
-                                      href={`/job-details?id=${job.id}`}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="hover:underline"
-                                    >
-                                      {job.title}
-                                    </a>
-                                  </h3>
 
-                                  {job.urgentHiring && (
-                                    <Badge className="bg-red-100 text-red-800 text-xs">
-                                      Urgent
-                                    </Badge>
-                                  )}
+                  .map((job) => (
+                    <Card
+                      key={job.id}
+                      className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-transparent hover:border-l-purple-500"
+                    >
+                      <CardContent className="p-4 md:p-6">
+                        <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+                          {/* Job Info */}
+                          <div className="flex-1">
+                            <div className="flex items-start justify-between mb-3">
+                              <div className="flex items-start space-x-3">
+                                <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                  <Building2 className="w-6 h-6 text-purple-600" />
                                 </div>
-                                <p className="text-purple-600 font-medium text-base md:text-lg mb-2">
-                                  {job.company}
-                                </p>
-                                <div className="flex flex-wrap items-center gap-3 md:gap-4 text-sm text-gray-600 mb-3">
-                                  <div className="flex items-center">
-                                    <MapPin className="w-4 h-4 mr-1 flex-shrink-0" />
-                                    <span>{job.location?.name ?? "N/A"}</span>
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <h3 className="text-lg md:text-xl font-semibold text-gray-900 hover:text-purple-600 transition-colors">
+                                      <a
+                                        href={`/job-details?id=${job.id}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="hover:underline"
+                                      >
+                                        {job.title}
+                                      </a>
+                                    </h3>
+
+                                    {job.urgentHiring && (
+                                      <Badge className="bg-red-100 text-red-800 text-xs">
+                                        Urgent
+                                      </Badge>
+                                    )}
                                   </div>
-                                  <div className="flex items-center">
-                                    <Briefcase className="w-4 h-4 mr-1 flex-shrink-0" />
-                                    <span>{job.experience}</span>
+                                  <p className="text-purple-600 font-medium text-base md:text-lg mb-2">
+                                    {job.company}
+                                  </p>
+                                  <div className="flex flex-wrap items-center gap-3 md:gap-4 text-sm text-gray-600 mb-3">
+                                    <div className="flex items-center">
+                                      <MapPin className="w-4 h-4 mr-1 flex-shrink-0" />
+                                      <span>{job.location?.name ?? "N/A"}</span>
+                                    </div>
+                                    <div className="flex items-center">
+                                      <Briefcase className="w-4 h-4 mr-1 flex-shrink-0" />
+                                      <span>{job.experience}</span>
+                                    </div>
+                                    <div className="flex items-center">
+                                      <DollarSign className="w-4 h-4 mr-1 flex-shrink-0" />
+                                      <span>{job.salary}</span>
+                                    </div>
+                                    <Badge
+                                      className={getWorkModeColor(job.work_mode ?? "")}
+                                    >
+                                      {job.work_mode}
+                                    </Badge>
                                   </div>
-                                  <div className="flex items-center">
-                                    <DollarSign className="w-4 h-4 mr-1 flex-shrink-0" />
-                                    <span>{job.salary}</span>
-                                  </div>
-                                  <Badge
-                                    className={getWorkModeColor(job.work_mode ?? "")}
-                                  >
-                                    {job.work_mode}
-                                  </Badge>
                                 </div>
                               </div>
                             </div>
                             <div className="flex items-center space-x-2">
 
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() =>
-                                savedJobIds.includes(Number(job.id))
-                                  ? unsaveJob(Number(job.id))
-                                  : saveJob(Number(job.id))
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() =>
+                                    savedJobIds.includes(Number(job.id))
+                                      ? unsaveJob(Number(job.id))
+                                      : saveJob(Number(job.id))
+                                  }
+                                  className={`${savedJobIds.includes(Number(job.id))
+                                    ? "text-green-600"
+                                    : "text-gray-400 hover:text-green-500"
+                                    }`}
+                                >
+                                  <Bookmark
+                                    className={`w-4 h-4 transition-all duration-300 ${savedJobIds.includes(Number(job.id))
+                                      ? "fill-green-500 drop-shadow-[0_0_6px_rgba(34,197,94,0.8)]"
+                                      : ""
+                                      }`}
+                                  />
+                                </Button>
+
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleShare(job)}
+                                  className="text-gray-400 hover:text-gray-600"
+                                >
+                                  <Share2 className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            </div>
+
+                            {/* Job Description */}
+                            <p className="text-gray-700 text-sm md:text-base leading-relaxed mb-4 line-clamp-2">
+                              {job.description}
+                            </p>
+
+                            {/* Skills */}
+                            <div className="flex flex-wrap gap-2 mb-4">
+                              {job.skills.slice(0, 5).map((skill, index) => (
+                                <Badge
+                                  key={index}
+                                  variant="secondary"
+                                  className="text-xs bg-gray-100 text-gray-700"
+                                >
+                                  {skill}
+                                </Badge>
+                              ))}
+                              {job.skills.length > 5 && (
+                                <Badge
+                                  variant="secondary"
+                                  className="text-xs bg-gray-100 text-gray-700"
+                                >
+                                  +{job.skills.length - 5} more
+                                </Badge>
+                              )}
+                            </div>
+
+                            {/* Footer Info */}
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-xs md:text-sm text-gray-500">
+                              <div className="flex items-center space-x-4">
+                                <div className="flex items-center">
+                                  <Clock className="w-4 h-4 mr-1" />
+                                  <span>
+                                    {getTimeSincePosted(job.created_at ?? "")}
+                                  </span>
+                                </div>
+                                <div className="flex items-center">
+                                  <Users className="w-4 h-4 mr-1" />
+                                  <span>{job.vacancies} Vacancies</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Action Buttons */}
+                          <div className="flex flex-col sm:flex-row lg:flex-col gap-2 lg:w-32">
+                            {(() => {
+                              const token = localStorage.getItem("auth_token");
+                              const jobIdNum = Number(job.id);
+                              const appliedList = appliedJobs.map(Number);
+
+                              if (token && appliedList.includes(jobIdNum)) {
+                                return null;
                               }
-                              className={`${
-                                savedJobIds.includes(Number(job.id))
-                                  ? "text-green-600"
-                                  : "text-gray-400 hover:text-green-500"
-                              }`}
+
+                              return (
+                                <Button
+                                  onClick={() => handleApply(job)}
+                                  className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
+                                >
+                                  Apply Now
+                                </Button>
+                              );
+                            })()}
+
+                            <Button
+                              variant="outline"
+                              className="border-purple-200 text-purple-600 hover:bg-purple-50"
+                              onClick={() => handleViewDetails(job)}
                             >
-                              <Bookmark
-                                className={`w-4 h-4 transition-all duration-300 ${
-                                  savedJobIds.includes(Number(job.id))
-                                    ? "fill-green-500 drop-shadow-[0_0_6px_rgba(34,197,94,0.8)]"
-                                    : ""
-                                }`}
-                              />
+                              <Eye className="w-4 h-4 mr-2" />
+                              View Details
                             </Button>
-
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleShare(job)}
-                                className="text-gray-400 hover:text-gray-600"
-                              >
-                                <Share2 className="w-4 h-4" />
-                              </Button>
-                            </div>
-                          </div>
-
-                          {/* Job Description */}
-                          <p className="text-gray-700 text-sm md:text-base leading-relaxed mb-4 line-clamp-2">
-                            {job.description}
-                          </p>
-
-                          {/* Skills */}
-                          <div className="flex flex-wrap gap-2 mb-4">
-                            {job.skills.slice(0, 5).map((skill, index) => (
-                              <Badge
-                                key={index}
-                                variant="secondary"
-                                className="text-xs bg-gray-100 text-gray-700"
-                              >
-                                {skill}
-                              </Badge>
-                            ))}
-                            {job.skills.length > 5 && (
-                              <Badge
-                                variant="secondary"
-                                className="text-xs bg-gray-100 text-gray-700"
-                              >
-                                +{job.skills.length - 5} more
-                              </Badge>
-                            )}
-                          </div>
-
-                          {/* Footer Info */}
-                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-xs md:text-sm text-gray-500">
-                            <div className="flex items-center space-x-4">
-                              <div className="flex items-center">
-                                <Clock className="w-4 h-4 mr-1" />
-                                <span>
-                                  {getTimeSincePosted(job.created_at ?? "")}
-                                </span>
-                              </div>
-                              <div className="flex items-center">
-                                <Users className="w-4 h-4 mr-1" />
-                                <span>{job.vacancies} Vacancies</span>
-                              </div>
-                            </div>
                           </div>
                         </div>
-
-                        {/* Action Buttons */}
-                        <div className="flex flex-col sm:flex-row lg:flex-col gap-2 lg:w-32">
-                          {(() => {
-                            const token = localStorage.getItem("auth_token");
-                            const jobIdNum = Number(job.id);
-                            const appliedList = appliedJobs.map(Number);
-
-                            if (token && appliedList.includes(jobIdNum)) {
-                              return null;
-                            }
-
-                            return (
-                              <Button
-                                onClick={() => handleApply(job)}
-                                className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
-                              >
-                                Apply Now
-                              </Button>
-                            );
-                          })()}
-
-                          <Button
-                            variant="outline"
-                            className="border-purple-200 text-purple-600 hover:bg-purple-50"
-                            onClick={() => handleViewDetails(job)}
-                          >
-                            <Eye className="w-4 h-4 mr-2" />
-                            View Details
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))
+                      </CardContent>
+                    </Card>
+                  ))
               )}
             </div>
 
-            {/* Load More Button */}
-            {visibleCount < filteredJobs.length && (
-              <div className="text-center mt-8">
-                <Button
-                  variant="outline"
-                  className="px-8 py-3"
-                  onClick={() => setVisibleCount((prev) => prev + 3)}
-                >
-                  Load More Jobs
-                </Button>
+            {/* Pagination Controls */}
+            {totalCount > 0 && (
+              <div className="flex flex-col sm:flex-row items-center justify-between mt-8 gap-4 border-t pt-6">
+                <div className="text-sm text-gray-500 order-2 sm:order-1">
+                  Showing <span className="font-medium">{Math.min((page - 1) * 5 + 1, totalCount)}</span> to{" "}
+                  <span className="font-medium">{Math.min(page * 5, totalCount)}</span> of{" "}
+                  <span className="font-medium">{totalCount}</span> results
+                </div>
+
+                <div className="flex items-center space-x-2 order-1 sm:order-2">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => {
+                      const newPage = page - 1;
+                      if (newPage >= 1) {
+                        setPage(newPage);
+                        window.scrollTo({ top: 0, behavior: "smooth" });
+                      }
+                    }}
+                    disabled={!previousPage || loading}
+                    className="h-9 w-9"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+
+                  <span className="text-sm font-medium text-gray-700 min-w-[80px] text-center">
+                    Page {page} of {Math.ceil(totalCount / 5)}
+                  </span>
+
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => {
+                      const newPage = page + 1;
+                      const totalPages = Math.ceil(totalCount / 5);
+                      if (newPage <= totalPages) {
+                        setPage(newPage);
+                        window.scrollTo({ top: 0, behavior: "smooth" });
+                      }
+                    }}
+                    disabled={!nextPage || loading}
+                    className="h-9 w-9"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             )}
 
@@ -1520,7 +1609,7 @@ useEffect(() => {
                     </h4>
                     <ul className="space-y-2">
                       {Array.isArray(selectedJob?.requirements) &&
-                      selectedJob.requirements.length > 0 ? (
+                        selectedJob.requirements.length > 0 ? (
                         selectedJob.requirements.map((req, index) => (
                           <li key={index} className="flex items-start">
                             <CheckCircle className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
@@ -1542,7 +1631,7 @@ useEffect(() => {
                     </h4>
                     <ul className="space-y-2">
                       {Array.isArray(selectedJob?.benefits) &&
-                      selectedJob.benefits.length > 0 ? (
+                        selectedJob.benefits.length > 0 ? (
                         selectedJob.benefits.map((req, index) => (
                           <li key={index} className="flex items-start">
                             <CheckCircle className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
@@ -1564,7 +1653,7 @@ useEffect(() => {
                     </h4>
                     <div className="flex flex-wrap gap-2">
                       {Array.isArray(selectedJob?.skills) &&
-                      selectedJob.skills.length > 0 ? (
+                        selectedJob.skills.length > 0 ? (
                         selectedJob.skills.map((req, index) => (
                           <li key={index} className="flex items-start">
                             <CheckCircle className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
@@ -1583,26 +1672,24 @@ useEffect(() => {
                   <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t">
                     
 
-                   <Button
-                    variant="outline"
-                    onClick={() =>
-                      savedJobIds.includes(Number(selectedJob.id))
-                        ? unsaveJob(Number(selectedJob.id))
-                        : saveJob(Number(selectedJob.id))
-                                      }
-                    className={`flex-1 ${
-                      savedJobIds.includes(Number(selectedJob.id))
+                    <Button
+                      variant="outline"
+                      onClick={() =>
+                        savedJobIds.includes(Number(selectedJob.id))
+                          ? unsaveJob(Number(selectedJob.id))
+                          : saveJob(Number(selectedJob.id))
+                      }
+                      className={`flex-1 ${savedJobIds.includes(Number(selectedJob.id))
                         ? "border-purple-600 text-purple-600"
                         : ""
-                    }`}
+                        }`}
                     >
-                    <Bookmark
-                      className={`w-4 h-4 mr-2 ${
-                        savedJobIds.includes(Number(selectedJob.id)) ? "fill-current" : ""
-                      }`}
-                    />
-                    {savedJobIds.includes(Number(selectedJob.id)) ? "Saved" : "Save Job"}
-                  </Button>
+                      <Bookmark
+                        className={`w-4 h-4 mr-2 ${savedJobIds.includes(Number(selectedJob.id)) ? "fill-current" : ""
+                          }`}
+                      />
+                      {savedJobIds.includes(Number(selectedJob.id)) ? "Saved" : "Save Job"}
+                    </Button>
 
 
 
@@ -1631,130 +1718,130 @@ useEffect(() => {
                     Apply for {selectedJob.title}
                   </DialogTitle>
                 </DialogHeader>
-                  <div className="space-y-3">
-                    <p className="text-sm text-gray-700">
-                      Your profile and resume will be sent to the employer.
-                    </p>
-                    <div className="flex items-center space-x-2 text-sm text-gray-600">
-                      <CheckCircle className="w-4 h-4 text-green-500" />
-                      <span>Profile information</span>
-                    </div>
-                    <div className="p-4 bg-gray-50 rounded-lg">
-                      {loadingUserData ? (
-                        <div className="flex items-center justify-center py-4">
-                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
-                        </div>
-                      ) : (
-                        userData && (
-                          <div className="p-4 bg-gray-50 rounded-lg space-y-2">
-                            <h4 className="font-semibold text-gray-900">
-                              Your Application Details
-                            </h4>
-                            <div className="text-sm text-gray-600 space-y-1">
-                              <p>
-                                <span className="font-medium">Name:</span>
-                                {userData.name || userData.full_name}
-                              </p>
-                              <p>
-                                <span className="font-medium">Email:</span>
-                                {userData.email}
-                              </p>
-                              <p>                             
-                                <span className="font-medium">Phone:</span>
-                                {userData.phone || "Not provided"}
-                              </p>
-                            </div>
-                          </div>
-                        )
-                      )}
-                    </div>
-                    <div className="flex items-center space-x-2 text-sm text-gray-600">
-                      <CheckCircle className="w-4 h-4 text-green-500" />
-                      <span>Resume/CV</span>
-                    </div>
-                    {userData?.resume ? (
-                      <a
-                        href={userData.resume}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-purple-600 hover:text-purple-800 underline flex items-center gap-1"
-                      >
-                        View Resume
-                        <ExternalLink className="w-3 h-3" />
-                      </a>
+                <div className="space-y-3">
+                  <p className="text-sm text-gray-700">
+                    Your profile and resume will be sent to the employer.
+                  </p>
+                  <div className="flex items-center space-x-2 text-sm text-gray-600">
+                    <CheckCircle className="w-4 h-4 text-green-500" />
+                    <span>Profile information</span>
+                  </div>
+                  <div className="p-4 bg-gray-50 rounded-lg">
+                    {loadingUserData ? (
+                      <div className="flex items-center justify-center py-4">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+                      </div>
                     ) : (
-                      <span className="text-gray-400 italic">
-                        No resume uploaded
-                      </span>
+                      userData && (
+                        <div className="p-4 bg-gray-50 rounded-lg space-y-2">
+                          <h4 className="font-semibold text-gray-900">
+                            Your Application Details
+                          </h4>
+                          <div className="text-sm text-gray-600 space-y-1">
+                            <p>
+                              <span className="font-medium">Name:</span>
+                              {userData.name || userData.full_name}
+                            </p>
+                            <p>
+                              <span className="font-medium">Email:</span>
+                              {userData.email}
+                            </p>
+                            <p>
+                              <span className="font-medium">Phone:</span>
+                              {userData.phone || "Not provided"}
+                            </p>
+                          </div>
+                        </div>
+                      )
                     )}
                   </div>
-                  <div>
-                    <h4 className="text-lg font-semibold text-gray-900 mb-3">
-                      Required Skills
-                    </h4>
-                    <div className="flex flex-wrap gap-2">
-                      {Array.isArray(selectedJob?.questions) &&
-                        selectedJob.questions.length > 0 && (
-                          <div className="space-y-4">
-                            <h4 className="text-lg font-semibold text-gray-900">
-                              Additional Questions
-                            </h4>
-                            {selectedJob.questions.map((question, index) => (
-                              <div key={index} className="space-y-2">
-                                <Label
-                                  htmlFor={`question-${index}`}
-                                  className="font-medium text-gray-800"
-                                >
-                                  {index + 1}. {question}
-                                </Label>
-                                <Input
-                                  id={`question-${index}`}
-                                  placeholder="Type your answer here..."
-                                  value={answers[index] || ""}
-                                  onChange={(e) =>
-                                    handleAnswerChange(index, e.target.value)
-                                  }
-                                  className="w-full"
-                                />
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                    </div>
+                  <div className="flex items-center space-x-2 text-sm text-gray-600">
+                    <CheckCircle className="w-4 h-4 text-green-500" />
+                    <span>Resume/CV</span>
                   </div>
-                  <div className="flex flex-col sm:flex-row gap-3 pt-4">
-                    <Button
-                      onClick={submitApplication}
-                      className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 flex-1"
+                  {userData?.resume ? (
+                    <a
+                      href={userData.resume}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-purple-600 hover:text-purple-800 underline flex items-center gap-1"
                     >
-                      <Send className="w-4 h-4 mr-2" />
-                      Submit Application
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={() => setIsApplyModalOpen(false)}
-                      className="flex-1"
-                    >
-                      Cancel
-                    </Button>
+                      View Resume
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  ) : (
+                    <span className="text-gray-400 italic">
+                      No resume uploaded
+                    </span>
+                  )}
+                </div>
+                <div>
+                  <h4 className="text-lg font-semibold text-gray-900 mb-3">
+                    Required Skills
+                  </h4>
+                  <div className="flex flex-wrap gap-2">
+                    {Array.isArray(selectedJob?.questions) &&
+                      selectedJob.questions.length > 0 && (
+                        <div className="space-y-4">
+                          <h4 className="text-lg font-semibold text-gray-900">
+                            Additional Questions
+                          </h4>
+                          {selectedJob.questions.map((question, index) => (
+                            <div key={index} className="space-y-2">
+                              <Label
+                                htmlFor={`question-${index}`}
+                                className="font-medium text-gray-800"
+                              >
+                                {index + 1}. {question}
+                              </Label>
+                              <Input
+                                id={`question-${index}`}
+                                placeholder="Type your answer here..."
+                                value={answers[index] || ""}
+                                onChange={(e) =>
+                                  handleAnswerChange(index, e.target.value)
+                                }
+                                className="w-full"
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      )}
                   </div>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-3 pt-4">
+                  <Button
+                    onClick={submitApplication}
+                    className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 flex-1"
+                  >
+                    <Send className="w-4 h-4 mr-2" />
+                    Submit Application
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsApplyModalOpen(false)}
+                    className="flex-1"
+                  >
+                    Cancel
+                  </Button>
+                </div>
               </>
             )}
           </DialogContent>
         </Dialog>
 
-       
-          {/* Login Required Popup */}
-        <Dialog open={showLoginPopup} onOpenChange={setShowLoginPopup}>          
-           <DialogContent className="max-w-md rounded-2xl p-0 overflow-hidden">
-               {/* Header */}
+
+        {/* Login Required Popup */}
+        <Dialog open={showLoginPopup} onOpenChange={setShowLoginPopup}>
+          <DialogContent className="max-w-md rounded-2xl p-0 overflow-hidden">
+            {/* Header */}
             <div className="bg-gradient-to-r from-purple-600 to-blue-600 p-6 text-white">
               <h2 className="text-xl font-semibold">Login Required</h2>
               <p className="text-sm opacity-90 mt-1">
                 You need to login before applying for jobs
               </p>
             </div>
-        
+
             {/* Body */}
             <div className="p-6 space-y-4">
               <div className="flex items-start gap-3 bg-purple-50 border border-purple-100 rounded-lg p-4">
@@ -1767,29 +1854,29 @@ useEffect(() => {
                 </p>
               </div>
 
-               {/* Buttons */}
-               <div className="flex gap-3 pt-2">
-                 <Button
-                   className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 shadow-md"
-                   onClick={() => {
-                     setShowLoginPopup(false);
-                     window.location.href = "/login";
-                   }}
-                 >
-                   Login Now
-                 </Button>
-         
-                 <Button
-                   variant="outline"
-                   className="flex-1"
-                   onClick={() => setShowLoginPopup(false)}
-                 >
-                   Cancel
-                 </Button>
-               </div>
-             </div>
-           </DialogContent>
-       </Dialog>
+              {/* Buttons */}
+              <div className="flex gap-3 pt-2">
+                <Button
+                  className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 shadow-md"
+                  onClick={() => {
+                    setShowLoginPopup(false);
+                    window.location.href = "/login";
+                  }}
+                >
+                  Login Now
+                </Button>
+
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => setShowLoginPopup(false)}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
 
 
       </div>

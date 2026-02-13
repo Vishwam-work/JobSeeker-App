@@ -17,16 +17,16 @@ export default function CompaniesPage() {
   const [loading, setLoading] = useState(true);
 
   type CompanyListItem = {
-  id: string | number;
-  name: string;
-  type: string;
-  industry: string;
-  employees: string;
-  locations: string[];
-  rating: number;
-  reviews: number;
-  founded: number | null;
-};
+    id: string | number;
+    name: string;
+    type: string;
+    industry: string;
+    employees: string;
+    locations: string[];
+    rating: number;
+    reviews: number;
+    founded: number | null;
+  };
 
   useEffect(() => {
     const fetchCompanies = async () => {
@@ -115,7 +115,7 @@ export default function CompaniesPage() {
     );
 
   return (
-    <div  className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50">
       <Header />
       <HeroCarousel />
 

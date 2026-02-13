@@ -293,8 +293,14 @@ export default function EmployerRegister() {
     // console.log("Form Data:", formData);
   };
 
+<<<<<<< Updated upstream
   const handleEmailChange = (value:string) => {
     setemail(value)
+=======
+  const handleEmailChange = (value: string) => {
+    setemail(value);
+    console.log("Form Data:", formData);
+>>>>>>> Stashed changes
   };
 
   const handleNext = () => {
@@ -304,10 +310,21 @@ export default function EmployerRegister() {
   };
 
   const handlePrevious = () => {
+<<<<<<< Updated upstream
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
     }
     if(currentStep!=1){
+=======
+    console.log("Current step before prev click : ", currentStep)
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+      console.log("Current step after prev click with 1 : ", currentStep)
+    }
+    if (currentStep != 1) {
+
+      console.log("Current step after prev click with 2 : ", currentStep)
+>>>>>>> Stashed changes
     }
   };
 
