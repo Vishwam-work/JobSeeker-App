@@ -266,19 +266,28 @@ export default function JobListings() {
        id: name,   
        name: name, 
       }));
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
-      setJobs(data.results);
-      setFilteredJobs(data.results);
+      const data = await response.json();
+      const results = Array.isArray(data.results) ? data.results : [];
+
+      setJobs(results);
+      setFilteredJobs(results);
       setNextPage(data.next);
       setPreviousPage(data.previous);
-      setTotalCount(data.count);
+      setTotalCount(data.count || 0);
 
     } catch (error) {
       console.error("Error fetching jobs:", error);
+      setJobs([]);
+      setFilteredJobs([]);
     } finally {
       setLoading(false);
     }
   };
+
 
   // Load applied jobs per user
   useEffect(() => {
@@ -500,22 +509,6 @@ export default function JobListings() {
         description: "You need to be logged in to save a job.",
       });
 
-    return;
-  }
-
-  try {
-    const res = await fetch("http://127.0.0.1:8010/api/saved-jobs/", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ job: jobId }),
-    });
-
-    if (res.status === 400) {
-      const data = await res.json();
-      console.log(data.detail || "Already saved.");
       return;
     }
 
@@ -537,13 +530,6 @@ export default function JobListings() {
 
       if (!res.ok) throw new Error("Failed to save job");
 
-  try {
-    // We need to find the savedJobId (record ID) for this job
-    const res = await fetch("http://127.0.0.1:8010/api/saved-jobs/", {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    const savedData = await res.json();
-    const record = savedData.find((item: any) => item.job === jobId);
       setSavedJobIds((prev) => [...prev, jobId]);
     } catch (err) {
       console.error("Error saving job:", err);
@@ -733,6 +719,7 @@ export default function JobListings() {
         console.log("Applied API failed:", response.status);
         return;
       }
+
 
       const data = await response.json();
       console.log("ALL applications from backend:", data);
