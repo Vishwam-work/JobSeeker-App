@@ -227,13 +227,7 @@ export default function CandidatesPage() {
         >
           Filters
         </button>
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search by skill, keyword, company..."
-          className="border rounded px-3 py-2 w-full ml-2"
-        />
+        
       </div>
       <div className="max-w-7xl mx-auto grid grid-cols-12 gap-4 p-4">
         {/* LEFT FILTERS */}
@@ -650,17 +644,6 @@ export default function CandidatesPage() {
 
             <hr className="mb-4" />
 
-            {/* Filters Title */}
-            <div className="flex items-center gap-2 font-semibold mb-4">
-              <span className="material-icons text-gray-500">tune</span>
-              Filters
-              <span className="text-xs bg-orange-500 text-white px-2 rounded">
-                New
-              </span>
-            </div>
-
-            <hr className="mb-4" />
-
             {/* Premium */}
             <label className="flex items-center gap-2 mb-4">
               <input type="checkbox" />
@@ -995,14 +978,14 @@ export default function CandidatesPage() {
         </div>
 
         {!selectedCandidate ? (
-          <main className="col-span-9 space-y-4">
+          <main className="col-span-12 lg:col-span-9 space-y-4 px-2 sm:px-4">
             {filteredCandidates.map((c) => (
               <div
                 key={c.id}
-                className="bg-white rounded-xl shadow-sm p-4 flex flex-col md:flex-row gap-4"
+                className="bg-white rounded-xl shadow-sm p-4 flex flex-col lg:flex-row gap-4"
               >
                 {/* Checkbox */}
-                <input type="checkbox" className="mt-2 md:mt-0" />
+                <input type="checkbox" className="self-start mt-1" />
 
                 {/* MAIN INFO */}
                 <div className="flex-1 flex flex-col gap-2">
@@ -1070,10 +1053,11 @@ export default function CandidatesPage() {
                 </div>
 
                 {/* RIGHT ACTION PANEL */}
-                <div className="flex md:flex-col items-center md:items-center justify-between md:justify-center gap-2 md:gap-3 md:w-52 w-full border-t md:border-t-0 md:border-l pt-3 md:pt-0 md:pl-4 relative">
+                <div className="flex flex-row lg:flex-col items-center justify-between gap-3 w-full lg:w-52 border-t lg:border-t-0 lg:border-l pt-3 lg:pt-0 lg:pl-4 relative">
+
                   {/* SAVE ICON */}
                   <span
-                    className="absolute top-2 right-2 text-gray-400"
+                    className="absolute top-2 right-2 lg:top-2 lg:right-2 text-gray-400"
                     title="Save candidate"
                   >
                     <Bookmark size={20} />
@@ -1088,10 +1072,10 @@ export default function CandidatesPage() {
                           )}`
                     }
                     alt={c.full_name}
-                    className="w-14 h-14 md:w-16 md:h-16 rounded-full object-cover border"
+                    className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-full object-cover border"
                   />
 
-                  <p className="text-xs text-gray-500 flex items-center gap-1">
+                  <p className="text-xs text-gray-500 flex items-center gap-1 break-all">
                     <Mail size={14} /> <Highlight text={c.email} />
                   </p>
 
@@ -1100,7 +1084,7 @@ export default function CandidatesPage() {
                       href={`https://jobseeker-backend-jy1y.onrender.com${c.resume}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-xs text-gray-600 flex items-center gap-1 hover:underline"
+                      className="text-xs text-gray-600 flex items-center gap-1 hover:underline break-all"
                     >
                       <FileText size={14} /> View CV
                     </a>
@@ -1157,14 +1141,14 @@ function CandidateDetail({
   };
 
   return (
-    <div className="grid grid-cols-12 gap-4">
+    <div className="grid grid-cols-12 gap-4 px-2 sm:px-4 lg:px-0">
       {/* LEFT PROFILE */}
-      <div className="col-span-12 lg:col-span-8 bg-white rounded-xl p-6 shadow-sm">
+      <div className="col-span-12 lg:col-span-8 bg-white rounded-xl p-4 sm:p-6 shadow-sm">
         <button onClick={onBack} className="text-blue-600 text-sm mb-4">
           ← Back to profiles
         </button>
 
-        <div className="flex gap-4">
+        <div className="flex flex-col sm:flex-row gap-4 items-start">
           <img
             src={
               candidate.profile_image
@@ -1174,7 +1158,7 @@ function CandidateDetail({
                   )}`
             }
             alt={candidate.full_name}
-            className="w-20 h-20 rounded-full object-cover border"
+           className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover border"
           />
 
           <div>
@@ -1196,7 +1180,7 @@ function CandidateDetail({
 
         <h3 className="font-medium mb-2">Compensation</h3>
 
-        <div className="grid grid-cols-2 gap-3 text-sm">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
           <p>
             <b>Current:</b> <HighlightText text={candidate.current_salary} />
           </p>
@@ -1298,7 +1282,7 @@ function CandidateDetail({
         <hr className="my-4" />
 
         <h3 className="font-medium mb-2">Contact</h3>
-        <p className="flex items-center gap-2 text-sm">
+        <p className="flex items-center gap-2 text-sm break-all">
           <Mail size={14} />
           <HighlightText text={candidate.email} />
         </p>
@@ -1318,7 +1302,7 @@ function CandidateDetail({
       </div>
 
       {/* RIGHT SIMILAR */}
-      <div className="col-span-12 lg:col-span-4 bg-white rounded-xl p-4 shadow-sm">
+      <div className="col-span-12 lg:col-span-4 bg-white rounded-xl p-4 sm:p-5 shadow-sm">
         <h3 className="font-semibold mb-3">Similar Profiles</h3>
 
         {candidates

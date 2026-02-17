@@ -291,7 +291,7 @@ useEffect(() => {
                 </div>
               </Link>
               <Link href="/contact">
-                <div className="flex items-center space-x-1 text-gray-700 hover:text-purple-600 cursor-pointer transition-colors">
+                <div className="flex items-center space-x-1 text-gray-700 hover:text-purple-600 cursor-pointer transition-colors px-2 py-1">
                   <Phone className="w-4 h-4" />
                   <span>Contact</span>
                 </div>

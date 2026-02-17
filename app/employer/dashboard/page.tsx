@@ -2391,12 +2391,14 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
         {activeTab === "manage-jobs" && (
           <Card>
             <CardHeader>
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <CardTitle>Manage Your Jobs</CardTitle>
-                <div className="flex items-center space-x-2">
-                  {/*  Date Filter */}
+
+                <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
+    
+                  {/* Date Filter */}
                   <Select value={dateFilter} onValueChange={setDateFilter}>
-                    <SelectTrigger className="w-32">
+                    <SelectTrigger className="w-full sm:w-32">
                       <SelectValue placeholder="Filter by Date" />
                     </SelectTrigger>
                     <SelectContent>
@@ -2408,8 +2410,9 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
                     </SelectContent>
                   </Select>
 
+                  {/* Job Filter */}
                   <Select value={jobFilter} onValueChange={setJobFilter}>
-                    <SelectTrigger className="w-32">
+                    <SelectTrigger className="w-full sm:w-32">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -2418,25 +2421,21 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
                       <SelectItem value="closed">Closed</SelectItem>
                     </SelectContent>
                   </Select>
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+
+                  {/* Search */}
+                  <div className="relative w-full sm:w-56 md:w-64">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <Input
                       placeholder="Search jobs..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10 w-48"
+                      className="pl-10 w-full"
                     />
                   </div>
-                  {/* <Button variant="outline" size="sm">
-                    <Filter className="w-4 h-4 mr-2" />
-                    Filter
-                  </Button>
-                  <Button variant="outline" size="sm">
-                    <Download className="w-4 h-4 mr-2" />
-                    Export
-                  </Button> */}
+
                 </div>
               </div>
+
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -2679,19 +2678,6 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
                   <ul className="space-y-2">{selectedJob.requirements}</ul>
                 </div>
 
-                {/* Responsibilities */}
-                {/* <div>
-                            <h4 className="text-lg font-semibold text-gray-900 mb-3">Responsibilities</h4>
-                            <ul className="space-y-2">
-                              {selectedJob.responsibilities.map((resp, index) => (
-                                <li key={index} className="flex items-start">
-                                  <Star className="w-4 h-4 text-purple-500 mr-2 mt-0.5 flex-shrink-0" />
-                                  <span className="text-gray-700">{resp}</span>
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                          */}
                 {/* Benefits */}
                 <div>
                   <h4 className="text-lg font-semibold text-gray-900 mb-3">
@@ -3288,7 +3274,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
               {selectedCandidate ? (
                 <Card className="h-full">
                   <CardHeader>
-                    <div className="flex items-start justify-between">
+                    <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                       <div className="flex items-start space-x-4">
                         <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-blue-100 rounded-full flex items-center justify-center">
                           <Users className="w-8 h-8 text-purple-600" />
@@ -3315,16 +3301,12 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
                           </div>
                         </div>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <Button variant="outline" size="sm">
+                      <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                        <Button variant="outline" size="sm" className="w-full sm:w-auto">
                           <Mail className="w-4 h-4 mr-2" />
                           Email
                         </Button>
-                        <Button variant="outline" size="sm">
-                          <Phone className="w-4 h-4 mr-2" />
-                          Call
-                        </Button>
-
+                                             
                         <Button variant="outline" size="sm">
                           {selectedCandidate.resumeUrl ? (
                             <a
@@ -3581,17 +3563,6 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
                               Shortlist Candidate
                             </Button>
 
-                            {/* <Button
-                              variant="outline"
-                              className="border-red-600 text-red-600 hover:bg-red-50 flex-1"
-                              onClick={() =>
-                                handleRejectCandidate(selectedCandidate)
-                              }
-                            >
-                              <XCircle className="w-4 h-4 mr-2" />
-                              Reject Application
-                            </Button> */}
-
                          <AlertDialog>
                            <AlertDialogTrigger asChild>
                              <Button
@@ -3695,25 +3666,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
         <div className="flex space-x-2 items-center">
           <label className="text-sm font-medium">Interview Time</label>
 
-          {/* <input
-            type="number"
-            min="1"
-            max="12"
-            className="w-16 border rounded-lg p-2"
-            value={hour}
-            onChange={(e) => setHour(e.target.value)}
-          />
-
-          <span>:</span>
-
-          <input
-            type="number"
-            min="0"
-            max="59"
-            className="w-16 border rounded-lg p-2"
-            value={minute}
-            onChange={(e) => setMinute(e.target.value)}
-          /> */}
+          
 
                 <input
                  type="text"
@@ -3779,17 +3732,6 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
             <option>Phone Call</option>
           </select>
         </div>
-
-        {/* Meet Link */}
-        {/* <div>
-          <label className="text-sm text-gray-700">Google Meet link</label>
-          <input
-            className="w-full border rounded-md p-2 text-sm focus:ring-2 focus:ring-blue-500"
-            placeholder="Enter meet link..."
-            value={meetLink}
-            onChange={(e) => setMeetLink(e.target.value)}
-          />
-        </div> */}
 
         {/* Notes */}
         <div>
