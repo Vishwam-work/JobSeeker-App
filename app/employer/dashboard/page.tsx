@@ -13,6 +13,7 @@ import { toast } from "sonner";
 // import Pricing from "@/components/Pricing";
 import CandidatesPage from "@/app/employer/dashboard/candidate_listing/page";
 import QuotaUsagePage from "@/app/employer/dashboard/quota-usage/page";
+import Footer from "@/components/Footer";
 import {
   Select,
   SelectContent,
@@ -3969,6 +3970,8 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
           </div>
         </div>
       )}
+      <Footer />
     </div>
+    
   );
 }
