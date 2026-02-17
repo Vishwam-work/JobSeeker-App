@@ -694,11 +694,11 @@ const fetchUserData = async () => {
     }
 
     const data = await response.json();
-    console.log("ALL applications from backend:", data);
+    // console.log("ALL applications from backend:", data);
 
     const myApplications = data.filter((app: Application) => app.user_email === email);
 
-    console.log("MY Applications:", myApplications);
+    // console.log("MY Applications:", myApplications);
 
     const appliedIDs = myApplications.map((app: Application) => Number(app.job));
 
@@ -706,7 +706,7 @@ const fetchUserData = async () => {
 
     setAppliedJobs(appliedIDs);
 
-    console.log("Saved my applied job IDs:", appliedIDs);
+    // console.log("Saved my applied job IDs:", appliedIDs);
 
   } catch (error) {
     console.error("Fetch user data error:", error);
@@ -780,7 +780,7 @@ useEffect(() => {
           body: JSON.stringify(applicationData),
         }
       );
-      console.log("Here is the data",response) 
+      // console.log("Here is the data",response) 
       const result = await response.json();
       console.log("Serialised data for error :",result)
       
@@ -1305,18 +1305,6 @@ useEffect(() => {
                               </div>
                             </div>
                             <div className="flex items-center space-x-2">
-                              {/* <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleBookmark(job.id)}
-                                className={
-                                  job.isBookmarked
-                                    ? "text-purple-600"
-                                    : "text-gray-400"
-                                }
-                              >
-                                <Bookmark className={`w-4 h-4 ${job.isBookmarked ? 'fill-current' : ''}`} />
-                              </Button> */}
 
                             <Button
                               variant="ghost"
@@ -1591,38 +1579,9 @@ useEffect(() => {
                     </div>
                   </div>
 
-                  {/* <div>
-                    <h4 className="text-lg font-semibold text-gray-900 mb-3">Required Skills</h4>
-                    <div className="flex flex-wrap gap-2">
-                       {Array.isArray(selectedJob?.questions) && selectedJob.questions.length > 0 ? (
-                            selectedJob.questions.map((req, index) => (
-                              <div> <p className="font-medium text-gray-800">{req}:-</p>
-                                  <Input
-                                    placeholder="Type your answer here..."
-                                    // value={answers[q.id] || ''}
-                                    // onChange={e => handleChange(q.id, e.target.value)}
-                                  />
-                              </div>
-                              
-                            ))
-                        ) : (
-                            <p className="text-gray-500 italic">{selectedJob.questions}</p>
-                        )}
-                    </div>
-                  </div> */}
-
                   {/* Action Buttons */}
                   <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t">
-                    {/* <Button
-                      onClick={() => {
-                        setIsJobDetailOpen(false);
-                        handleApply(selectedJob);
-                      }}
-                      className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 flex-1"
-                    >
-                      <Send className="w-4 h-4 mr-2" />
-                      Apply Now
-                    </Button> */}
+                    
 
                    <Button
                     variant="outline"

@@ -603,9 +603,9 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
         }
 
         const data = await res.json();
-        console.log("Applications:", data);
+        // console.log("Applications:", data);
         setCompanyName(data.company_name)
-        console.log(data.company_name)
+        // console.log(data.company_name)
       } catch (err) {
         console.error("Error:", err);
       }
@@ -728,8 +728,8 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
         return;
       }
       const data = await response.json();
-      console.log("Here is the Job-list-view-data:",data)
-      console.log(data.category)
+      // console.log("Here is the Job-list-view-data:",data)
+      // console.log(data.category)
       setPostedJobs(data); // Set jobs into stateq
     } catch (error) {
       console.error("Error fetching jobs:", error);
@@ -746,7 +746,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
     fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/currencies/")
       .then((res) => res.json())
       .then((data) => {
-        console.log("Currency data:", data);
+        // console.log("Currency data:", data);
         setCurrency(data);
       });
   }, []);
@@ -830,7 +830,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
       );
 
       const data = await response.json();
-      console.log("API RAW DATA:", data);
+      // console.log("API RAW DATA:", data);
 
       if (!Array.isArray(data)) {
         console.error("API did not return list:", data);
@@ -936,7 +936,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
         status: "active",
         questions: Array.isArray(jobForm.questions) ? jobForm.questions : [],
       };
-      console.log("Payload:", payload);
+      // console.log("Payload:", payload);
       const response = await fetch(
         "https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-postings/",
         {
@@ -960,7 +960,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
       }
 
   const data = await response.json();
-  console.log("Job posted successfully:", data);
+  // console.log("Job posted successfully:", data);
   setPostedJobs((prev) => [...prev, data]);
   toast.success("Job posted successfully!");
   await fetchPostedJobs();
@@ -1118,7 +1118,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
         const data = await response.json();
-        console.log("Job details:", data);
+        // console.log("Job details:", data);
         setSelectedJob(data);
         setIsEditMode(false);
         setIsModalOpen(true);
@@ -1138,7 +1138,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
         );
       
         const data = await response.json();
-        console.log("Data is prefill", data);
+        // console.log("Data is prefill", data);
         // Prefill the form
     setJobForm({
         title: data.title || "",
@@ -1177,7 +1177,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
       if (
         window.confirm(`Are you sure you want to delete the job: ${job.title}?`)
       ) {
-        console.log("Deleting job:", job);
+        // console.log("Deleting job:", job);
 
         toast.success("Job deleted", {
         description: `The job "${job.title}" has been successfully removed.`
@@ -1376,7 +1376,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
       );
 
       const updated = await response.json();
-      console.log("Updated Response:", updated);
+      // console.log("Updated Response:", updated);
 
       if (!response.ok) {
          toast.error(updated.error || "Update failed", {
@@ -1402,7 +1402,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
       //     ? { ...prev, status: updated.application_status }
       //     : prev
       // );
-      console.log("Now>>>>>>>", selectedCandidate);
+      // console.log("Now>>>>>>>", selectedCandidate);
 
       toast.success("Candidate Shortlisted!");
     } catch (err) {
@@ -1414,7 +1414,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
   /* REJECT */
   const handleRejectCandidate = async (candidate: Pick<Candidate, "id">) => {
     try {
-      console.log("Rejecting candidate: ", candidate);
+      // console.log("Rejecting candidate: ", candidate);
 
       if (!candidate?.id) {
         toast.error("Candidate ID missing", {
@@ -1446,7 +1446,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
       );
 
       const text = await response.text();
-      console.log("Raw Response → ", text);
+      // console.log("Raw Response → ", text);
 
       let data: ApplicationUpdateResponse | null = null;
       try {
@@ -1651,7 +1651,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
         );
 
         const data = await res.json();
-        console.log("Company API → ", data);
+        // console.log("Company API → ", data);
 
         if (data?.company_name) {
           setJobForm((prev) => ({
