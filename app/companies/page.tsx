@@ -31,20 +31,26 @@ export default function CompaniesPage() {
   useEffect(() => {
     const fetchCompanies = async () => {
       try {
-        const token = localStorage.getItem("auth_token");
+         const token =
+           typeof window !== "undefined"
+             ? localStorage.getItem("auth_token")
+             : null;
 
         const res = await fetch(
           "https://jobseeker-backend-jy1y.onrender.com/employeer/api/companies/",
           {
             headers: {
-              "Content-Type": "application/json",
-              Authorization: token ? `Bearer ${token}` : "",
+               "Content-Type": "application/json",
+              ...(token && { Authorization: `Bearer ${token}` }),
             },
-          }
+           }
         );
+   
+        if (!res.ok) {
+          throw new Error("Failed to fetch companies");
+        }
 
         const data = await res.json();
-        console.log("API Response:", data);
 
         const mapped: CompanyListItem[] = (data.data || data).map(
         (item: any): CompanyListItem => ({
@@ -59,6 +65,7 @@ export default function CompaniesPage() {
           founded: item.founded_year || null,
         })
       );
+   
         setAllCompanies(mapped);
       } catch (error) {
         console.error("Error fetching companies:", error);
@@ -66,10 +73,11 @@ export default function CompaniesPage() {
       } finally {
         setLoading(false);
       }
-    };
+     };
 
-    fetchCompanies();
-  }, []);
+     fetchCompanies();
+   }, []);
+
 
   //  Search filter
   const filteredCompanies = allCompanies.filter((company) => {
@@ -133,7 +141,7 @@ export default function CompaniesPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
              {filteredCompanies.slice(0, visibleCount).map((company) => (
               <Link
-               href={`/companies/detail?id=${company.id}`}
+               href={`/companies/${company.id}`}
                target="_blank"
                className="block"
                >

@@ -721,7 +721,7 @@ const handleRemoveSkill = (skillToRemove: Skill) => {
 
         const data = await res.json();
 
-        console.log("MAJORS API DATA ---->", data);
+        // console.log("MAJORS API DATA ---->", data);
 
         setMajors(data);
       } catch (error) {
@@ -802,7 +802,7 @@ const handleRemoveSkill = (skillToRemove: Skill) => {
     fetchProfile();
   }, []);
 
- console.log("Profile Data ---->After Fetch", profileData);
+//  console.log("Profile Data ---->After Fetch", profileData);
   useEffect(() => {
     const fetchSavedJobs = async () => {
       const token = localStorage.getItem("auth_token");
@@ -818,7 +818,7 @@ const handleRemoveSkill = (skillToRemove: Skill) => {
 
         if (res.ok) {
           const data = await res.json();
-          console.log("Saved jobs data:", data);
+          // console.log("Saved jobs data:", data);
           setSavedJobsData(data);
         } else {
           console.error("Failed to fetch saved jobs");
@@ -835,7 +835,7 @@ const handleRemoveSkill = (skillToRemove: Skill) => {
     fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/currencies/")
       .then((res) => res.json())
       .then((data) => {
-        console.log("Currency data:", data);
+        // console.log("Currency data:", data);
         setCurrency(data);
       });
   }, []);
@@ -844,7 +844,7 @@ const handleRemoveSkill = (skillToRemove: Skill) => {
     fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/countries/")
       .then((res) => res.json())
       .then((data) => {
-        console.log("Country data:", data);
+        // console.log("Country data:", data);
         setCountries(data);
       })
       .catch((err) => console.error(err));
@@ -941,8 +941,8 @@ const handleRemoveSkill = (skillToRemove: Skill) => {
 
       if (res.ok) {
         const data = await res.json();
-        console.log("Resume uploaded:", data.resume_url);
-        console.log("Resume Data uploaded:", data);
+        // console.log("Resume uploaded:", data.resume_url);
+        // console.log("Resume Data uploaded:", data);
         setProfileData((prev) => ({
           ...prev,
           personalInfo: {
@@ -1239,7 +1239,7 @@ useEffect(() => {
     }
 
     const data = await response.json();
-    console.log("Applied jobs data:", data);
+    // console.log("Applied jobs data:", data);
     setAppliedJobs(data || []);
   } catch (error) {
     console.error(error);

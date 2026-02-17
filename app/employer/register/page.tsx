@@ -295,7 +295,7 @@ interface City {
 
   const handleEmailChange = (value:string) => {
     setemail(value);
-    console.log("Form Data:", formData);
+    // console.log("Form Data:", formData);
   };
 
   const handleNext = () => {
@@ -351,7 +351,7 @@ interface City {
       email: email,
       is_verified : true,
     };
-    console.log("Payload:", payload);
+    // console.log("Payload:", payload);
     try {
       const response = await fetch(
         "https://jobseeker-backend-jy1y.onrender.com/employeer/api/employeer_register/",
@@ -369,7 +369,7 @@ interface City {
       }
 
       const result = await response.json();
-      console.log("Registration successful:", result);
+      // console.log("Registration successful:", result);
       router.push("/employer/login");
     } catch (error) {
       console.error("Registration error:", error);
@@ -438,7 +438,7 @@ interface City {
       );
 
       const data = await res.json();
-      console.log(data)
+      // console.log(data)
       if (!res.ok) {
         toast.error(data.error || "Invalid OTP");
         return;

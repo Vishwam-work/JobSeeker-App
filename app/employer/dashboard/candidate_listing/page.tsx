@@ -128,7 +128,7 @@ export default function CandidatesPage() {
     )
       .then((res) => res.json())
       .then((data) => {
-        console.log("Candidate data:", data);
+        // console.log("Candidate data:", data);
         setCandidates(Array.isArray(data) ? data : []);
         setLoading(false);
       });

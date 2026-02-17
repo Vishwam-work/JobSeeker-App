@@ -116,7 +116,7 @@ interface Certification {
     jobCategories.find((c) => c.id === id)?.name || "";
 
   const getJobTitleName = (id: number | string) => {
-    console.log("jobTitles", jobTitles);
+    // console.log("jobTitles", jobTitles);
     return jobTitles.find((t) => t.id === id)?.title || "";
   };
   useEffect(() => {
@@ -133,7 +133,7 @@ interface Certification {
 
       if (res.ok) {
         const data = await res.json();
-        console.log("Profile Data: before", data);
+        // console.log("Profile Data: before", data);
 
  
 
@@ -193,7 +193,7 @@ interface Certification {
       </div>
     );
   }
-  console.log("Profile Data: after", profileData);
+  // console.log("Profile Data: after", profileData);
   // Sample profile data - in a real app, this would come from an API or state management
 
 
