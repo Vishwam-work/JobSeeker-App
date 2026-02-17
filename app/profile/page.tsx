@@ -938,6 +938,7 @@ const validateDates = (start: Dayjs | null, end: Dayjs | null) => {
   }, []);
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< Updated upstream
 
@@ -945,6 +946,8 @@ const validateDates = (start: Dayjs | null, end: Dayjs | null) => {
   console.log("Profile Data ---->After Fetch", profileData);
 >>>>>>> Stashed changes
 >>>>>>> a598b0f ([IMP] all : Implemented the pagination in the backend.)
+=======
+>>>>>>> bd267ff ([FIX] all : completed the pagination feature of frontend.)
   useEffect(() => {
     const fetchSavedJobs = async () => {
       const token = localStorage.getItem("auth_token");
@@ -1096,13 +1099,7 @@ const validateDates = (start: Dayjs | null, end: Dayjs | null) => {
         return true;
       } else {
         const error = await res.json();
-<<<<<<< Updated upstream
         console.error("Failed to upload resume");
-        
-=======
-        console.error("Failed to upload resume:", error);
-
->>>>>>> Stashed changes
         toast.error("Resume upload failed", {
           description: error?.message || "Unknown error. Please try again.",
         });
@@ -1122,16 +1119,6 @@ const validateDates = (start: Dayjs | null, end: Dayjs | null) => {
     const formData = new FormData();
     formData.append("profile_image", selectedImage);
 
-<<<<<<< Updated upstream
-  const res = await fetch(
-    "http://127.0.0.1:8010/api/profile/",
-    {
-      method: "PATCH",
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
-      },
-      body: formData,
-=======
     const res = await fetch(
       "http://127.0.0.1:8010/api/profile/",
       {
@@ -1152,7 +1139,6 @@ const validateDates = (start: Dayjs | null, end: Dayjs | null) => {
     if (!userKey) {
       setIsProfileSubmitted(false);
       return;
->>>>>>> Stashed changes
     }
 
     const submitted = localStorage.getItem(
@@ -1373,7 +1359,6 @@ const validateDates = (start: Dayjs | null, end: Dayjs | null) => {
     try {
       setLoadingAppliedJobs(true);
 
-<<<<<<< Updated upstream
     const token = localStorage.getItem("auth_token");
     if (!token) {
       toast.warning("Please login to view applied jobs");
@@ -1386,24 +1371,9 @@ const validateDates = (start: Dayjs | null, end: Dayjs | null) => {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-=======
-      const token = localStorage.getItem("auth_token");
-      if (!token) {
-        toast.warning("Please login to view applied jobs");
-        return;
->>>>>>> Stashed changes
-      }
-
-      const response = await fetch(
-        "http://127.0.0.1:8010/api/my-applied-jobs/",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
         }
       );
 
-<<<<<<< Updated upstream
     const data = await response.json();
     // console.log("Applied jobs data:", data);
     setAppliedJobs(data || []);
@@ -1436,11 +1406,12 @@ const removeAppliedJob = async (applicationId: number) => {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-=======
+      }
+      )
+
       if (!response.ok) {
         toast.error("Failed to load applied jobs");
         return;
->>>>>>> Stashed changes
       }
 
       const data = await response.json();
@@ -1460,38 +1431,6 @@ const removeAppliedJob = async (applicationId: number) => {
     }
   }, [activeSection]);
 
-  const removeAppliedJob = async (applicationId: number) => {
-    try {
-      const token = localStorage.getItem("auth_token");
-      if (!token) {
-        toast.error("Please login again");
-        return;
-      }
-
-      const response = await fetch(
-        `http://127.0.0.1:8010/api/my-applied-jobs/${applicationId}/`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (!response.ok) {
-        toast.error("Failed to remove applied job");
-        return;
-      }
-
-      toast.success("Application removed");
-
-      setAppliedJobs((prev) =>
-        prev.filter((job) => job.id !== applicationId)
-      );
-    } catch (error) {
-      toast.error("Network error. Please try again.");
-    }
-  };
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -1911,7 +1850,6 @@ const removeAppliedJob = async (applicationId: number) => {
                             htmlFor="fullName"
                             className="text-sm font-medium"
                           >
-<<<<<<< Updated upstream
                             <SelectTrigger className="w-20 h-10 lg:h-11">
                               <SelectValue />
                             </SelectTrigger>
@@ -1925,12 +1863,14 @@ const removeAppliedJob = async (applicationId: number) => {
                                 </SelectItem>
                               ))}
                             </SelectContent>
+<<<<<<< HEAD
 
                           </Select>
 =======
                             Full Name *
+=======
+>>>>>>> bd267ff ([FIX] all : completed the pagination feature of frontend.)
                           </Label>
->>>>>>> Stashed changes
                           <Input
                             id="fullName"
                             value={profileData.personalInfo.fullName}

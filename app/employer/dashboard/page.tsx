@@ -702,11 +702,16 @@ export default function EmployerDashboard() {
       const token = localStorage.getItem("auth_token");
       if (!token) return;
 <<<<<<< HEAD
+<<<<<<< HEAD
       const response = await fetch(
         "https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-list-view/",
 =======
 <<<<<<< Updated upstream
         const response = await fetch(
+=======
+
+      const response = await fetch(
+>>>>>>> bd267ff ([FIX] all : completed the pagination feature of frontend.)
           "http://127.0.0.1:8010/employeer/api/job-list-view/",
           {
             method: "GET",
@@ -715,6 +720,7 @@ export default function EmployerDashboard() {
             },
           }
         );
+<<<<<<< HEAD
 =======
       const response = await fetch(
         "http://127.0.0.1:8010/employeer/api/job-list-view/",
@@ -730,6 +736,8 @@ export default function EmployerDashboard() {
 =======
 >>>>>>> Stashed changes
 >>>>>>> a598b0f ([IMP] all : Implemented the pagination in the backend.)
+=======
+>>>>>>> bd267ff ([FIX] all : completed the pagination feature of frontend.)
 
       // const response = await fetch(
       //   "http://127.0.0.1:8010/employeer/api/job-list-view/",
@@ -746,11 +754,6 @@ export default function EmployerDashboard() {
         return;
       }
       const data = await response.json();
-<<<<<<< Updated upstream
-=======
-      console.log("Here is the Job-list-view-data:", data)
-      console.log(data.category)
->>>>>>> Stashed changes
       setPostedJobs(data); // Set jobs into stateq
     } catch (error) {
       console.error("Error fetching jobs");
@@ -1004,7 +1007,6 @@ export default function EmployerDashboard() {
         return;
       }
 
-<<<<<<< Updated upstream
   const data = await response.json();
   setPostedJobs((prev) => [...prev, data]);
   toast.success("Job posted successfully!");
@@ -1092,44 +1094,6 @@ export default function EmployerDashboard() {
       } catch (error) {
         console.error("Error submitting job");
         toast.error("An error occurred while posting the job.", {
-=======
-      const data = await response.json();
-      console.log("Job posted successfully:", data);
-      setPostedJobs((prev) => [...prev, data]);
-      toast.success("Job posted successfully!");
-      await fetchPostedJobs();
-
-      // Reset form
-      setJobForm({
-        title: "",
-        category: "",
-        jobTitle: "",
-        company: "",
-        location: "",
-        experience: "",
-        salary: "",
-        currency: "",
-        job_type: "",
-        workMode: "",
-        description: "",
-        requirements: "",
-        benefits: "",
-        skills: [],
-        applicationDeadline: "",
-        vacancies: "",
-        isUrgent: false,
-        isRemote: false,
-        questions: [],
-      });
-      setSelectedCategory("");
-      setQuestions([]);
-      setAskQuestionEnabled(false); // uncheck the checkbox
-      setNewSkill("");
-      setNewQuestion("");
-    } catch (error) {
-      console.error("Error submitting job:", error);
-      toast.error("An error occurred while posting the job.", {
->>>>>>> Stashed changes
         description: "Please try again or check your internet connection."
       });
     }
@@ -1241,9 +1205,12 @@ export default function EmployerDashboard() {
   );
 
 <<<<<<< HEAD
+<<<<<<< HEAD
     const handleViewJob = async (job) => {
 =======
 <<<<<<< Updated upstream
+=======
+>>>>>>> bd267ff ([FIX] all : completed the pagination feature of frontend.)
     const handleViewJob = async (job: any) => {
 >>>>>>> a598b0f ([IMP] all : Implemented the pagination in the backend.)
       try {
@@ -1281,45 +1248,6 @@ export default function EmployerDashboard() {
         const data = await response.json();
         // Prefill the form
     setJobForm({
-=======
-  const handleViewJob = async (job: any) => {
-    try {
-      const token = localStorage.getItem("auth_token");
-      const response = await fetch(
-        `http://127.0.0.1:8010/employeer/api/job-list-view/${job.id}/`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-      const data = await response.json();
-      console.log("Job details:", data);
-      setSelectedJob(data);
-      setIsEditMode(false);
-      setIsModalOpen(true);
-    } catch (err) {
-      console.error("Error fetching job details", err);
-    }
-  };
-  //http://127.0.0.1:8010
-  const handleEditJob = async (job: any) => {
-    try {
-      const token = localStorage.getItem("auth_token");
-      const response = await fetch(
-        `http://127.0.0.1:8010/employeer/api/job-list-view/${job.id}/`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      const data = await response.json();
-      console.log("Data is prefill", data);
-      // Prefill the form
-      setJobForm({
->>>>>>> Stashed changes
         title: data.title || "",
         category: data.category?.name?.toString() || data.category || "",
         jobTitle: data.job_title?.id?.toString() || data.job_title || "",

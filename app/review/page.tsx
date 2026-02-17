@@ -93,23 +93,63 @@ interface Certification {
   year: string | number;
 }
 
-    useEffect(() => {
-      fetch("http://127.0.0.1:8010/master/api/jobs_title/")
-        .then((res) => res.json())
-        .then((data) => {
-          setJobTitles(data);
-        })
-        .catch((err) => console.error(err));
-    }, []);
+  interface Education {
+    id: string | number;
+    degree: string;
+    field: string;
+    institution: string;
+    year: string | number;
+    percentage: string;
+  }
 
-    useEffect(() => {
-      fetch("http://127.0.0.1:8010/master/api/jobs_category/")
-        .then((res) => res.json())
-        .then((data) => {
-          setJobCategories(data);
-        })
-        .catch((err) => console.error(err));
-    }, []);
+  interface Certification {
+    name: string;
+    issuer: string;
+    year: string | number;
+  }
+
+  interface ProfileData {
+    personalInfo: {
+      profile_image?: string | null;
+      fullName: string;
+      email: string;
+      phone: string;
+      location: string;
+      experience: string;
+      currentSalary: string;
+      expectedSalary: string;
+      noticePeriod: string;
+    };
+    experience: ProfileExperience[];
+    education: Education[];
+    certifications: Certification[];
+    skills: string[];
+    resume: string;
+  }
+  interface Certification {
+    id: string | number;
+    name: string;
+    issuer: string;
+    year: string | number;
+  }
+
+  useEffect(() => {
+    fetch("http://127.0.0.1:8010/master/api/jobs_title/")
+      .then((res) => res.json())
+      .then((data) => {
+        setJobTitles(data);
+      })
+      .catch((err) => console.error(err));
+  }, []);
+
+  useEffect(() => {
+    fetch("http://127.0.0.1:8010/master/api/jobs_category/")
+      .then((res) => res.json())
+      .then((data) => {
+        setJobCategories(data);
+      })
+      .catch((err) => console.error(err));
+  }, []);
 
 
   const getCategoryName = (id: number | string) =>
