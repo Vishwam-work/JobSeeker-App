@@ -179,6 +179,218 @@ export default function Profile() {
     "90+ days",
   ]);
 
+const uniquePhoneCodes = Array.from(
+  new Map(
+    countries.map((c) => [c.phonecode, c])
+  ).values()
+);
+useEffect(() => {
+  if (
+    profileData?.personalInfo?.countryId &&
+    uniquePhoneCodes?.length > 0
+  ) {
+    const selectedCountry = uniquePhoneCodes.find(
+      (country) =>
+        String(country.id) ===
+        String(profileData.personalInfo.countryId)
+    );
+
+    if (selectedCountry?.phonecode) {
+      setProfileData((prev) => ({
+        ...prev,
+        personalInfo: {
+          ...prev.personalInfo,
+          phoneCode: selectedCountry.phonecode,
+        },
+      }));
+    }
+  }
+}, [profileData.personalInfo.countryId, uniquePhoneCodes]);
+
+
+type JobCategory = {
+  id: string;
+  name: string;
+};
+
+type JobTitle = {
+  id: string;
+  title: string;
+};
+
+type ExperienceForm = {
+  company: string;
+  category_id: string;
+  job_title_id: string;
+  location_id: string;
+  startDate: dayjs.Dayjs | null;
+  endDate: dayjs.Dayjs | null;
+  isCurrentJob: boolean;
+  description: string;
+};
+
+type ApiExperience = {
+  id?: string | number;
+  company?: string;
+  start_date?: string | null;
+  end_date?: string | null;
+  description?: string;
+
+  job_title?: {
+    id?: string | number;
+    title?: string;
+  };
+
+  category?: {
+    id?: string | number;
+    name?: string;
+  };
+
+  location?: {
+    id?: string | number;
+    name?: string;
+  };
+};
+type ProfileExperience = {
+  id?: string | number;
+  company: string;
+
+  category?: {
+    id: string | number;
+    name?: string;
+  };
+
+  job_title?: {
+    id: string | number;
+    title?: string;
+  };
+
+  location?: {
+    id: string | number;
+    name?: string;
+  };
+
+  // form / payload fields
+  category_id?: string;
+  job_title_id?: string;
+  location_id?: string;
+
+  start_date?: string;
+  end_date?: string | null;
+  description?: string;
+};
+
+type Certification = {
+  id?: string | number;
+  name: string;
+  issuer: string;
+  year?: number | string | null;
+};
+
+type CertificationForm = {
+  name: string;
+  issuer: string;
+  year: dayjs.Dayjs | null;
+};
+
+type ProfileData = {
+  personalInfo: {
+    fullName: string;
+    email: string;
+    phone: string;
+    phoneCode: string;
+    countryId: string;
+    stateId: string;
+    cityId: string;
+    currentcurrency: string;
+    expectedCurrency: string;
+    experience: string;
+    currentSalary: number | null;
+    expectedSalary: number | null;
+    noticePeriod: string;
+    resume?: string | null;
+    profile_image?: string | null;
+  };
+  experience: ProfileExperience[]; 
+  education: Education[];
+  skills: Skill[];
+  certifications: Certification[];
+  summary: string;
+};
+type Education = {
+  id?: string | number;
+  degree: string;
+  field: string;
+  institution: string;
+  year?: number | string | null; 
+  percentage?: string;
+  score_type?: string;
+};
+
+type EducationForm = {
+  degree: string;
+  field: string;
+  institution: string;
+  year: dayjs.Dayjs | null; 
+  percentage: string;
+  score_type: string;
+};
+
+type Skill = {
+  id?: string | number;
+  name: string;
+};
+
+type WithId = {
+  id: string | number;
+};
+type DeletableSection =
+  | "experience"
+  | "education"
+  | "skills"
+  | "certifications";
+
+type Country = {
+  id: string | number;
+  name?: string;
+  phonecode: string;
+  code: string;
+  currency: string;
+  currency_name: string;
+};
+
+type StateItem = {
+  id: string | number;
+  name: string;
+};
+ 
+type CityItem = {
+  id: string | number;
+  name: string;
+};
+type Company = {
+  id: string | number;
+  name: string;
+};
+interface SavedJob {
+  id: string | number;
+  job_title?: string;
+  job?: {
+    company?: string;
+    location?: {
+      name?: string;
+    };
+  };
+}
+
+const validateDates = (start: Dayjs | null, end: Dayjs | null) => {
+  if (!start || !end) return null;
+  if (end.isBefore(start, "day")) {
+    return "End date can't be before start date";
+  }
+  return null;
+};
+
   const token =
   typeof window !== "undefined"
     ? localStorage.getItem("auth_token")
@@ -1535,13 +1747,14 @@ const removeAppliedJob = async (applicationId: number) => {
                         <div className="flex gap-2 mt-1">
                           <Select
                             value={profileData.personalInfo.phoneCode || ""}
-                            // disabled
+                            
                             onValueChange={(value) =>
                               setProfileData((prev) => ({
                                 ...prev,
                                 personalInfo: {
                                   ...prev.personalInfo,
                                   phoneCode: value,
+                                  
                                 },
                               }))
                             }

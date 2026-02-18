@@ -1792,7 +1792,7 @@ export default function EmployerDashboard() {
 
                   <div>
                     <Label htmlFor="salary" className="text-sm font-medium">
-                      Salary Range (PA)
+                      Salary Range (Annual)
                     </Label>
                     {/* <div className="flex gap-2 mt-1">
                       <Select defaultValue="INR">
@@ -1839,7 +1839,7 @@ export default function EmployerDashboard() {
                             salary: e.target.value,
                           }))
                         }
-                        placeholder="e.g., 5-8 PA"
+                        placeholder="e.g., 5-8 Annual"
                         className="flex-1"
                       />
                     </div>
@@ -2067,9 +2067,9 @@ export default function EmployerDashboard() {
                       Ask Question
                     </Label>
                   </div>
-
+                 </div>
                   {askQuestionEnabled && (
-                    <div className="space-y-2">
+                    <div className="mt-4 space-y-2 w-full sm:w-3/5 lg:w-2/5">
                       <div className="flex gap-2">
                         <Input
                           value={newQuestion}
@@ -2106,7 +2106,8 @@ export default function EmployerDashboard() {
                       </div>
                     </div>
                   )}
-                </div>
+                  
+               
 
                 {/* Submit Button */}
                 <div className="flex justify-end space-x-4">

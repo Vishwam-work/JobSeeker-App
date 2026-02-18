@@ -1092,7 +1092,7 @@ export default function JobListings() {
                   {/* Salary Range */}
                   <div>
                     <Label className="text-sm font-medium text-gray-700 mb-2 block">
-                      Salary Range (PA)
+                      Salary Range (Annual)
                     </Label>
                     <div className="px-2">
                       <Slider
@@ -1106,8 +1106,8 @@ export default function JobListings() {
                         className="w-full"
                       />
                       <div className="flex justify-between text-xs text-gray-500 mt-1">
-                        <span>{filters.salaryRange[0]} PA</span>
-                        <span>{filters.salaryRange[1]} PA</span>
+                        <span>{filters.salaryRange[0]} Annual</span>
+                        <span>{filters.salaryRange[1]} Annual</span>
                       </div>
                     </div>
                   </div>
