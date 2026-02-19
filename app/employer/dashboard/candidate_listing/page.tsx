@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Phone, FileText, Mail, CheckSquare, Briefcase, DollarSign, MapPin } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import Highlighter from "react-highlight-words";
 interface Candidate {
   id: number;
@@ -66,7 +67,6 @@ export default function CandidatesPage({ isSubscribed = false }: { isSubscribed?
     currentCompany: "",
     locationSearch: "",
     locations: [] as string[],
-    locationSearch: "",
     minExperience: "",
     maxExperience: "",
     minSalary: "",
@@ -90,7 +90,6 @@ export default function CandidatesPage({ isSubscribed = false }: { isSubscribed?
       currentCompany: "",
       locationSearch: "",
       locations: [],
-      locationSearch: "",
       minExperience: "",
       maxExperience: "",
       minSalary: "",
@@ -199,7 +198,7 @@ export default function CandidatesPage({ isSubscribed = false }: { isSubscribed?
       const company = filters.currentCompany.toLowerCase();
       const hasCompany =
         c.current_company?.toLowerCase().includes(company) ||
-        c.experiences?.some(ex => ex.company.toLowerCase().includes(company) && (!ex.end_date || ex.end_date.toLowerCase() === 'present'));
+        c.experiences?.some(ex => ex.company?.toLowerCase().includes(company) && (!ex.end_date || ex.end_date.toLowerCase() === 'present'));
       if (!hasCompany) return false;
     }
 
