@@ -10,7 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-// import Pricing from "@/components/Pricing";
+import Pricing from "@/app/pricing/page";
 import CandidatesPage from "@/app/employer/dashboard/candidate_listing/page";
 import QuotaUsagePage from "@/app/employer/dashboard/quota-usage/page";
 import {
@@ -1423,8 +1423,11 @@ export default function EmployerDashboard() {
               </span>
             </Link>
             <div className="flex items-center gap-4">
+             <Link href="/pricing">Pricing</Link>
+
               <div className="relative">
-                 <div               
+                 
+                 <div
                    onClick={() => setIsNotificationOpen(!isNotificationOpen)}
                    className="cursor-pointer relative select-none"
                   >
