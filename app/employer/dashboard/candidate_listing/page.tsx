@@ -1,23 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Phone, FileText, Mail, CheckSquare, Bookmark } from "lucide-react";
+import { Phone, FileText, Mail, CheckSquare, Briefcase, DollarSign, MapPin } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import Highlighter from "react-highlight-words";
-// interface Candidate {
-//   id: number;
-//   full_name: string;
-//   experience: string;
-//   current_salary: string;
-//   expected_salary?: string;
-//   notice_period?: string;
-//   email: string;
-//   city?: { name: string };
-//   state?: { name: string };
-//   profile_image?: string | null;
-//   skills?: { name: string }[];
-//   phone: string;
-//   resume?: string;
-// }
 interface Candidate {
   id: number;
   full_name: string;
@@ -35,7 +21,6 @@ interface Candidate {
   city?: { name: string };
   state?: { name: string };
   country?: { name: string };
-
   profile_image?: string | null;
   resume?: string;
 
@@ -65,52 +50,61 @@ interface Candidate {
 }
 
 
-export default function CandidatesPage() {
+export default function CandidatesPage({ isSubscribed = false }: { isSubscribed?: boolean }) {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [viewedCandidateIds, setViewedCandidateIds] = useState<number[]>([]);
-  const [selectedCities, setSelectedCities] = useState<string[]>([]);
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(
     null
   );
+
   const [filters, setFilters] = useState({
     hideProfiles: false,
     premiumOnly: false,
-    locations: [] as string[],
+    keywords: "",
+    currentCompany: "",
     locationSearch: "",
+    locations: [] as string[],
     minExperience: "",
     maxExperience: "",
     minSalary: "",
     maxSalary: "",
     designation: "",
-    department: "",
-    industry: "",
+    department: [] as string[],
+    industry: [] as string[],
     noticePeriod: [] as string[],
     gender: "",
     minAge: "",
     maxAge: "",
+    degree: [] as string[],
+    college: [] as string[],
   });
 
   const clearFilters = () => {
     setFilters({
       hideProfiles: false,
       premiumOnly: false,
-      locations: [],
+      keywords: "",
+      currentCompany: "",
       locationSearch: "",
+      locations: [],
       minExperience: "",
       maxExperience: "",
       minSalary: "",
       maxSalary: "",
       designation: "",
-      department: "",
-      industry: "",
+      department: [],
+      industry: [],
       noticePeriod: [],
       gender: "",
       minAge: "",
       maxAge: "",
+      degree: [],
+      college: [],
     });
+    setSearch("");
   };
   const cleanSearch = search.trim().replace(/\s+/g, " ");
 
@@ -135,48 +129,155 @@ export default function CandidatesPage() {
   }, []);
 
   const filteredCandidates = candidates.filter((c) => {
+    // 1. Global Search (Search Bar)
     const q = search.trim().toLowerCase();
-    if (!q) return true;
+    let matchesSearch = true;
+    if (q) {
+      const matches = (value: any) =>
+        value !== null &&
+        value !== undefined &&
+        String(value).toLowerCase().includes(q);
 
-    const matches = (value: any) =>
-      value !== null &&
-      value !== undefined &&
-      String(value).toLowerCase().includes(q);
+      matchesSearch =
+        matches(c.full_name) ||
+        matches(c.email) ||
+        matches(c.current_role) ||
+        matches(c.current_company) ||
+        matches(c.experience) ||
+        matches(c.current_salary) ||
+        matches(c.expected_salary) ||
+        matches(c.notice_period) ||
+        matches(c.city?.name) ||
+        matches(c.state?.name) ||
+        matches(c.country?.name) ||
+        c.skills?.some((s) => matches(s.name)) ||
+        c.certifications?.some(
+          (cert) =>
+            matches(cert.name) || matches(cert.issuer) || matches(cert.year)
+        ) ||
+        c.educations?.some(
+          (e) =>
+            matches(e.degree) ||
+            matches(e.field) ||
+            matches(e.institution) ||
+            matches(e.year)
+        ) ||
+        c.experiences?.some(
+          (ex) => matches(ex.designation) || matches(ex.company)
+        );
+    }
 
-    return (
-      // basic info
-      matches(c.full_name) ||
-      matches(c.email) ||
-      matches(c.current_role) ||
-      matches(c.current_company) ||
-      matches(c.experience) ||
-      matches(c.current_salary) ||
-      matches(c.expected_salary) ||
-      matches(c.notice_period) ||
-      // location
-      matches(c.city?.name) ||
-      matches(c.state?.name) ||
-      matches(c.country?.name) ||
-      // skills
-      c.skills?.some((s) => matches(s.name)) ||
-      // certifications
-      c.certifications?.some(
-        (cert) =>
-          matches(cert.name) || matches(cert.issuer) || matches(cert.year)
-      ) ||
-      // education
-      c.educations?.some(
-        (e) =>
-          matches(e.degree) ||
-          matches(e.field) ||
-          matches(e.institution) ||
-          matches(e.year)
-      ) ||
-      // experience details
-      c.experiences?.some(
-        (ex) => matches(ex.designation) || matches(ex.company)
-      )
-    );
+    // 2. Specific Filters
+
+    // Hide Profiles
+    if (filters.hideProfiles && viewedCandidateIds.includes(c.id)) return false;
+
+    // Premium Institute
+    if (filters.premiumOnly) {
+      const premiumKeywords = ["iit", "iim", "nit", "bits", "xlri", "isb", "iiit"];
+      const isPremium = c.educations?.some((e) => // Use c.educations if available from API (check interface, used in detail view, so assumed exists in list OR detail)
+        premiumKeywords.some((pk) => e.institution?.toLowerCase().includes(pk))
+      );
+      // If educations is not in list view item, this might fail or be false. 
+      // Assuming 'profile-all' returns full nested objects as seen in CandidatesPage detail view logic.
+      if (!isPremium) return false;
+    }
+
+    // Keywords
+    if (filters.keywords) {
+      const k = filters.keywords.toLowerCase();
+      const hasKeyword =
+        c.skills?.some((s) => s.name.toLowerCase().includes(k)) ||
+        c.full_name.toLowerCase().includes(k) ||
+        c.current_role?.toLowerCase().includes(k);
+      if (!hasKeyword) return false;
+    }
+
+    // Current Company
+    if (filters.currentCompany) {
+      const company = filters.currentCompany.toLowerCase();
+      const hasCompany =
+        c.current_company?.toLowerCase().includes(company) ||
+        c.experiences?.some(ex => ex.company?.toLowerCase().includes(company) && (!ex.end_date || ex.end_date.toLowerCase() === 'present'));
+      if (!hasCompany) return false;
+    }
+
+    // Location
+    if (filters.locations.length > 0) {
+      const locMatch = filters.locations.some(loc =>
+        c.city?.name.toLowerCase().includes(loc.toLowerCase()) ||
+        c.state?.name.toLowerCase().includes(loc.toLowerCase())
+      );
+      if (!locMatch) return false;
+    }
+    if (filters.locationSearch) {
+      const locS = filters.locationSearch.toLowerCase();
+      const locSearchMatch =
+        c.city?.name.toLowerCase().includes(locS) ||
+        c.state?.name.toLowerCase().includes(locS);
+      if (!locSearchMatch) return false;
+    }
+
+    // Experience
+    const expVal = parseFloat(c.experience) || 0;
+    if (filters.minExperience && expVal < parseFloat(filters.minExperience)) return false;
+    if (filters.maxExperience && expVal > parseFloat(filters.maxExperience)) return false;
+
+    // Salary
+    const salVal = parseFloat(c.current_salary) || 0;
+    if (filters.minSalary && salVal < parseFloat(filters.minSalary)) return false;
+    if (filters.maxSalary && salVal > parseFloat(filters.maxSalary)) return false;
+
+    // Designation
+    if (filters.designation) {
+      const des = filters.designation.toLowerCase();
+      const matchesDes = c.current_role?.toLowerCase().includes(des) ||
+        c.experiences?.some(ex => ex.designation.toLowerCase().includes(des));
+      if (!matchesDes) return false;
+    }
+
+    // Department (Search in rule)
+    if (filters.department.length > 0) {
+      const matchesDept = filters.department.some(dept =>
+        c.current_role?.toLowerCase().includes(dept.toLowerCase())
+      );
+      if (!matchesDept) return false;
+    }
+
+    // Industry - Placeholder logic
+    if (filters.industry.length > 0) {
+      // checks against current company or role for now
+      const matchesInd = filters.industry.some(ind =>
+        c.current_role?.toLowerCase().includes(ind.toLowerCase()) ||
+        c.current_company?.toLowerCase().includes(ind.toLowerCase())
+      );
+      if (!matchesInd) return false;
+    }
+
+    // Notice Period
+    if (filters.noticePeriod.length > 0) {
+      const matchesNP = filters.noticePeriod.some(np =>
+        c.notice_period?.toLowerCase() === np.toLowerCase() ||
+        c.notice_period?.toLowerCase().includes(np.toLowerCase())
+      );
+      if (!matchesNP) return false;
+    }
+
+    // Gender
+    if (filters.gender) {
+      if ((c as any).gender?.toLowerCase() !== filters.gender.toLowerCase()) return false;
+    }
+
+    // Age
+    if (filters.minAge || filters.maxAge) {
+      const age = (c as any).age ? parseInt((c as any).age) : 0;
+      if (age > 0) {
+        if (filters.minAge && age < parseInt(filters.minAge)) return false;
+        if (filters.maxAge && age > parseInt(filters.maxAge)) return false;
+      }
+    }
+
+    return matchesSearch;
   });
 
   type HighlightProps = {
@@ -195,6 +296,104 @@ export default function CandidatesPage() {
       />
     );
   };
+
+  const renderCandidateCard = (c: Candidate) => (
+    <div
+      key={c.id}
+      className={`bg-white rounded-xl shadow-sm p-4 flex flex-col md:flex-row gap-4 transition-all duration-300 ${selectedCandidate?.id === c.id
+        ? "border-l-4 border-l-blue-500 bg-blue-50"
+        : "border-l-4 border-l-transparent"
+        }`}
+    >
+      <input type="checkbox" className="mt-2 md:mt-0" />
+
+      <div className="flex-1 flex flex-col gap-2">
+        <h3
+          onClick={() => {
+            setSelectedCandidate(c);
+            setViewedCandidateIds((prev) =>
+              prev.includes(c.id) ? prev : [...prev, c.id]
+            );
+          }}
+          className="font-semibold text-gray-900 cursor-pointer hover:text-blue-600 flex items-center gap-2"
+        >
+          {viewedCandidateIds.includes(c.id) && (
+            <CheckSquare size={16} className="text-blue-600" />
+          )}
+          <span className="font-semibold text-gray-900">
+            <Highlight text={c.full_name} />
+          </span>
+        </h3>
+
+        <div className="text-xs md:text-sm text-gray-600 flex flex-wrap gap-2 md:gap-3">
+          <span>
+            <Highlight text={c.experience} />
+          </span>
+          <span>
+            <Highlight text={c.current_salary} />
+          </span>
+          {c.expected_salary && (
+            <span>
+              Expected: <Highlight text={c.expected_salary} />
+            </span>
+          )}
+          <span>
+            <Highlight text={c.city?.name} />, <Highlight text={c.state?.name} />
+          </span>
+        </div>
+
+        {c.notice_period && (
+          <p className="text-xs text-gray-500">
+            Notice period: <Highlight text={c.notice_period} />
+          </p>
+        )}
+
+        <div className="flex flex-wrap gap-2">
+          {c.skills?.slice(0, 6).map((s, i) => (
+            <span
+              key={i}
+              className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded"
+            >
+              <Highlight text={s.name} />
+            </span>
+          ))}
+        </div>
+
+        <p className="text-xs text-blue-600 mt-1 cursor-pointer">
+          View similar profiles
+        </p>
+      </div>
+
+      <div className="flex md:flex-col items-center md:items-center justify-between md:justify-center gap-2 md:gap-3 md:w-52 w-full border-t md:border-t-0 md:border-l pt-3 md:pt-0 md:pl-4">
+        <img
+          src={
+            c.profile_image
+              ? `https://jobseeker-backend-jy1y.onrender.com${c.profile_image}`
+              : `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                c.full_name
+              )}`
+          }
+          alt={c.full_name}
+          className="w-14 h-14 md:w-16 md:h-16 rounded-full object-cover border"
+        />
+
+        <p className="text-xs text-gray-500 flex items-center gap-1">
+          <Mail size={14} /> <Highlight text={c.email} />
+        </p>
+
+        {c.resume && (
+          <a
+            href={`https://jobseeker-backend-jy1y.onrender.com${c.resume}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-gray-600 flex items-center gap-1 hover:underline"
+          >
+            <FileText size={14} /> View CV
+          </a>
+        )}
+      </div>
+    </div>
+  );
 
   if (loading) {
     return (
@@ -231,7 +430,7 @@ export default function CandidatesPage() {
       </div>
       <div className="max-w-7xl mx-auto grid grid-cols-12 gap-4 p-4">
         {/* LEFT FILTERS */}
-        <aside className="hidden md:block col-span-3 bg-white rounded-xl p-4 shadow-sm">
+        <aside className="hidden md:block col-span-3 bg-white rounded-xl p-4 shadow-sm h-fit max-h-screen overflow-y-auto sticky top-4">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold text-sm">Filters</h3>
             <button
@@ -244,22 +443,26 @@ export default function CandidatesPage() {
 
           <hr className="mb-4" />
           {/* Hide Profiles */}
-          <label className="flex items-center gap-2 font-medium mb-4">
+          <label className="flex items-center gap-2 font-medium mb-4 cursor-pointer">
             <input
               type="checkbox"
-              checked={filters.premiumOnly}
+              checked={filters.hideProfiles}
               onChange={(e) =>
                 setFilters({ ...filters, hideProfiles: e.target.checked })
               }
             />
-            Hide Profiles
+            Hide Viewed Profiles
           </label>
 
           <hr className="mb-4" />
 
           {/* Premium */}
-          <label className="flex items-center gap-2 mb-4">
-            <input type="checkbox" />
+          <label className="flex items-center gap-2 mb-4 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={filters.premiumOnly}
+              onChange={(e) => setFilters({ ...filters, premiumOnly: e.target.checked })}
+            />
             Premium Institute Candidates
           </label>
 
@@ -270,6 +473,14 @@ export default function CandidatesPage() {
             <summary className="cursor-pointer font-medium flex justify-between">
               Keywords <span>⌄</span>
             </summary>
+            <div className="mt-2">
+              <input
+                className="w-full border rounded px-2 py-1 text-sm"
+                placeholder="e.g. React, Java"
+                value={filters.keywords}
+                onChange={(e) => setFilters({ ...filters, keywords: e.target.value })}
+              />
+            </div>
           </details>
 
           <hr className="mb-4" />
@@ -279,6 +490,14 @@ export default function CandidatesPage() {
             <summary className="cursor-pointer font-medium flex justify-between">
               Current company <span>⌄</span>
             </summary>
+            <div className="mt-2">
+              <input
+                className="w-full border rounded px-2 py-1 text-sm"
+                placeholder="Search company"
+                value={filters.currentCompany}
+                onChange={(e) => setFilters({ ...filters, currentCompany: e.target.value })}
+              />
+            </div>
           </details>
 
           <hr className="mb-4" />
@@ -306,12 +525,14 @@ export default function CandidatesPage() {
               ["Bengaluru", "1,111"],
               ["Pune", "516"],
               ["Chennai", "234"],
+              ["Delhi", "500"],
+              ["Mumbai", "600"],
             ].map(([city, count]) => (
               <label
                 key={city}
-                className="flex justify-between items-center mb-2"
+                className="flex justify-between items-center mb-2 cursor-pointer"
               >
-                <span className="flex gap-2">
+                <span className="flex gap-2 text-sm">
                   <input
                     type="checkbox"
                     checked={filters.locations.includes(city)}
@@ -326,13 +547,9 @@ export default function CandidatesPage() {
                   />
                   {city}
                 </span>
-                <span className="text-gray-400">{count}</span>
+                <span className="text-gray-400 text-xs">{count}</span>
               </label>
             ))}
-
-            <button className="text-blue-600 text-xs mt-2">
-              +16 more locations
-            </button>
           </details>
 
           <hr className="mb-4" />
@@ -343,9 +560,6 @@ export default function CandidatesPage() {
               Experience (Years) <span>⌃</span>
             </summary>
 
-            {/* Fake histogram bar */}
-            <div className="h-8 bg-gray-100 rounded mb-3"></div>
-
             <div className="flex items-center gap-2">
               <select
                 value={filters.minExperience}
@@ -354,10 +568,13 @@ export default function CandidatesPage() {
                 }
                 className="w-full border rounded px-2 py-1 text-sm"
               >
-                <option>Select</option>
-                <option>0</option>
-                <option>1</option>
-                <option>2</option>
+                <option value="">Min</option>
+                <option value="0">0</option>
+                <option value="1">1</option>
+                <option value="3">3</option>
+                <option value="5">5</option>
+                <option value="8">8</option>
+                <option value="10">10</option>
               </select>
 
               <span>to</span>
@@ -369,10 +586,12 @@ export default function CandidatesPage() {
                 }
                 className="w-full border rounded px-2 py-1 text-sm"
               >
-                <option>Select</option>
-                <option>5</option>
-                <option>10</option>
-                <option>14+</option>
+                <option value="">Max</option>
+                <option value="2">2</option>
+                <option value="5">5</option>
+                <option value="8">8</option>
+                <option value="12">12</option>
+                <option value="15">15+</option>
               </select>
             </div>
           </details>
@@ -385,29 +604,34 @@ export default function CandidatesPage() {
               Salary (INR-Lacs) <span>⌃</span>
             </summary>
 
-            {/* Histogram placeholder */}
-            <div className="h-8 bg-gray-100 rounded mb-3"></div>
-
             <div className="flex items-center gap-2">
-              <select className="w-full border rounded px-2 py-2 text-sm">
-                <option>Select</option>
-                <option>0</option>
-                <option>5</option>
-                <option>10</option>
-                <option>15</option>
-                <option>20</option>
-                <option>30+</option>
+              <select
+                className="w-full border rounded px-2 py-2 text-sm"
+                value={filters.minSalary}
+                onChange={(e) => setFilters({ ...filters, minSalary: e.target.value })}
+              >
+                <option value="">Min</option>
+                <option value="0">0</option>
+                <option value="3">3</option>
+                <option value="6">6</option>
+                <option value="10">10</option>
+                <option value="15">15</option>
+                <option value="20">20</option>
               </select>
 
               <span>to</span>
 
-              <select className="w-full border rounded px-2 py-2 text-sm">
-                <option>Select</option>
-                <option>10</option>
-                <option>15</option>
-                <option>20</option>
-                <option>25</option>
-                <option>30+</option>
+              <select
+                className="w-full border rounded px-2 py-2 text-sm"
+                value={filters.maxSalary}
+                onChange={(e) => setFilters({ ...filters, maxSalary: e.target.value })}
+              >
+                <option value="">Max</option>
+                <option value="5">5</option>
+                <option value="10">10</option>
+                <option value="15">15</option>
+                <option value="25">25</option>
+                <option value="50">50+</option>
               </select>
             </div>
           </details>
@@ -424,6 +648,8 @@ export default function CandidatesPage() {
               <input
                 placeholder="Add designation"
                 className="w-full border rounded px-3 py-2 text-sm"
+                value={filters.designation}
+                onChange={(e) => setFilters({ ...filters, designation: e.target.value })}
               />
               <span className="absolute right-3 top-2.5 text-gray-400">🔍</span>
             </div>
@@ -437,35 +663,36 @@ export default function CandidatesPage() {
               Department and Role <span>⌃</span>
             </summary>
 
-            <div className="relative mb-3">
-              <input
-                placeholder="Search department/role"
-                className="w-full border rounded px-3 py-2 text-sm"
-              />
-              <span className="absolute right-3 top-2.5 text-gray-400">🔍</span>
+            <div className="max-h-40 overflow-y-auto">
+              {[
+                "Engineering - Software & QA",
+                "Consulting",
+                "IT & Information Security",
+                "Project & Program Management",
+                "Sales",
+                "Marketing",
+                "HR"
+              ].map((name) => (
+                <label
+                  key={name}
+                  className="flex justify-between items-center mb-2 cursor-pointer"
+                >
+                  <span className="flex gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={filters.department.includes(name)}
+                      onChange={() => setFilters(prev => ({
+                        ...prev,
+                        department: prev.department.includes(name)
+                          ? prev.department.filter(d => d !== name)
+                          : [...prev.department, name]
+                      }))}
+                    />
+                    {name}
+                  </span>
+                </label>
+              ))}
             </div>
-
-            {[
-              ["Engineering - Software & QA", "1,682"],
-              ["Consulting", "1,133"],
-              ["IT & Information Security", "300"],
-              ["Project & Program Management", "75"],
-            ].map(([name, count]) => (
-              <label
-                key={name}
-                className="flex justify-between items-center mb-2"
-              >
-                <span className="flex gap-2">
-                  <input type="checkbox" />
-                  {name}
-                </span>
-                <span className="text-gray-400">{count}</span>
-              </label>
-            ))}
-
-            <button className="text-blue-600 text-xs mt-2">
-              +1 more department
-            </button>
           </details>
 
           <hr className="mb-4" />
@@ -476,31 +703,35 @@ export default function CandidatesPage() {
               Industry <span>⌃</span>
             </summary>
 
-            <div className="relative mb-3">
-              <input
-                placeholder="Search industry"
-                className="w-full border rounded px-3 py-2 text-sm"
-              />
-              <span className="absolute right-3 top-2.5 text-gray-400">🔍</span>
+            <div className="max-h-40 overflow-y-auto">
+              {[
+                "IT Services & Consulting",
+                "Software Product",
+                "Management Consulting",
+                "Emerging Technologies",
+                "Banking",
+                "Healthcare"
+              ].map((name) => (
+                <label
+                  key={name}
+                  className="flex justify-between items-center mb-2 cursor-pointer"
+                >
+                  <span className="flex gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={filters.industry.includes(name)}
+                      onChange={() => setFilters(prev => ({
+                        ...prev,
+                        industry: prev.industry.includes(name)
+                          ? prev.industry.filter(i => i !== name)
+                          : [...prev.industry, name]
+                      }))}
+                    />
+                    {name}
+                  </span>
+                </label>
+              ))}
             </div>
-
-            {[
-              ["IT Services & Consulting", "2,839"],
-              ["Software Product", "568"],
-              ["Management Consulting", "373"],
-              ["Emerging Technologies", "108"],
-            ].map(([name, count]) => (
-              <label
-                key={name}
-                className="flex justify-between items-center mb-2"
-              >
-                <span className="flex gap-2">
-                  <input type="checkbox" />
-                  {name}
-                </span>
-                <span className="text-gray-400">{count}</span>
-              </label>
-            ))}
           </details>
           <hr className="my-4" />
 
@@ -511,22 +742,30 @@ export default function CandidatesPage() {
             </summary>
 
             {[
-              ["0 - 15 days", "921"],
-              ["1 month", "951"],
-              ["2 months", "699"],
-              ["3 months", "1,106"],
-              ["More than 3 months", "56"],
-              ["Currently serving notice period", "160"],
-            ].map(([label, count]) => (
+              "0 - 15 days",
+              "1 month",
+              "2 months",
+              "3 months",
+              "More than 3 months",
+              "Serving Notice Period",
+            ].map((label) => (
               <label
                 key={label}
-                className="flex justify-between items-center mb-2"
+                className="flex justify-between items-center mb-2 cursor-pointer"
               >
-                <span className="flex gap-2">
-                  <input type="checkbox" />
+                <span className="flex gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={filters.noticePeriod.includes(label)}
+                    onChange={() => setFilters(prev => ({
+                      ...prev,
+                      noticePeriod: prev.noticePeriod.includes(label)
+                        ? prev.noticePeriod.filter(n => n !== label)
+                        : [...prev.noticePeriod, label]
+                    }))}
+                  />
                   {label}
                 </span>
-                <span className="text-gray-400">{count}</span>
               </label>
             ))}
           </details>
@@ -541,19 +780,13 @@ export default function CandidatesPage() {
 
             <div className="flex gap-3">
               <button
-                onClick={() => setFilters({ ...filters, gender: "Male" })}
-                className={`border rounded-full px-4 py-1 text-sm ${
-                  filters.gender === "Male" ? "bg-blue-100" : ""
-                }`}
-              >
+                onClick={() => setFilters({ ...filters, gender: filters.gender === 'Male' ? '' : 'Male' })}
+                className={`border rounded-full px-4 py-1 text-sm ${filters.gender === 'Male' ? 'bg-blue-100 border-blue-200' : 'hover:bg-gray-50'}`}>
                 Male
               </button>
               <button
-                onClick={() => setFilters({ ...filters, gender: "Female" })}
-                className={`border rounded-full px-4 py-1 text-sm ${
-                  filters.gender === "Female" ? "bg-blue-100" : ""
-                }`}
-              >
+                onClick={() => setFilters({ ...filters, gender: filters.gender === 'Female' ? '' : 'Female' })}
+                className={`border rounded-full px-4 py-1 text-sm ${filters.gender === 'Female' ? 'bg-blue-100 border-blue-200' : 'hover:bg-gray-50'}`}>
                 Female
               </button>
             </div>
@@ -569,13 +802,17 @@ export default function CandidatesPage() {
 
             <div className="flex items-center gap-2">
               <input
-                placeholder="Min age"
+                placeholder="Min"
                 className="w-full border rounded px-3 py-2 text-sm"
+                value={filters.minAge}
+                onChange={(e) => setFilters({ ...filters, minAge: e.target.value })}
               />
               <span>to</span>
               <input
-                placeholder="Max age"
+                placeholder="Max"
                 className="w-full border rounded px-3 py-2 text-sm"
+                value={filters.maxAge}
+                onChange={(e) => setFilters({ ...filters, maxAge: e.target.value })}
               />
             </div>
           </details>
@@ -587,18 +824,8 @@ export default function CandidatesPage() {
             <summary className="cursor-pointer font-medium flex justify-between mb-3">
               Degree/Course <span>⌄</span>
             </summary>
-
-            <div className="space-y-2 text-sm text-blue-600">
-              <button className="flex items-center gap-2">
-                <span className="text-lg">+</span> UG course
-              </button>
-              <button className="flex items-center gap-2">
-                <span className="text-lg">+</span> PG course
-              </button>
-              <button className="flex items-center gap-2">
-                <span className="text-lg">+</span> PPG course
-              </button>
-            </div>
+            {/* Expanded details could go here, for now keeping simple UI */}
+            <div className="text-sm text-gray-500 italic">Select degrees (Coming soon)</div>
           </details>
 
           <hr className="mb-4" />
@@ -608,25 +835,14 @@ export default function CandidatesPage() {
             <summary className="cursor-pointer font-medium flex justify-between mb-3">
               College name <span>⌄</span>
             </summary>
-
-            <div className="space-y-2 text-sm text-blue-600">
-              <button className="flex items-center gap-2">
-                <span className="text-lg">+</span> UG college
-              </button>
-              <button className="flex items-center gap-2">
-                <span className="text-lg">+</span> PG college
-              </button>
-              <button className="flex items-center gap-2">
-                <span className="text-lg">+</span> PPG college
-              </button>
-            </div>
+            {/* Expanded details for colleges */}
+            <div className="text-sm text-gray-500 italic">Select colleges (Coming soon)</div>
           </details>
         </aside>
 
         <div
-          className={`fixed inset-0 bg-black/40 z-50 md:hidden transition-transform ${
-            showFilters ? "translate-x-0" : "translate-x-full"
-          }`}
+          className={`fixed inset-0 bg-black/40 z-50 md:hidden transition-transform ${showFilters ? "translate-x-0" : "translate-x-full"
+            }`}
         >
           <div className="absolute right-0 w-3/4 max-w-xs h-full bg-white p-4 overflow-y-auto">
             <button
@@ -636,17 +852,35 @@ export default function CandidatesPage() {
               Close ✕
             </button>
 
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold text-sm">Filters</h3>
+              <button
+                onClick={clearFilters}
+                className="text-xs text-blue-600 hover:underline"
+              >
+                Clear all
+              </button>
+            </div>
+
             {/* Hide Profiles */}
-            <label className="flex items-center gap-2 font-medium mb-4">
-              <input type="checkbox" />
-              Hide Profiles
+            <label className="flex items-center gap-2 font-medium mb-4 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={filters.hideProfiles}
+                onChange={(e) => setFilters({ ...filters, hideProfiles: e.target.checked })}
+              />
+              Hide Viewed Profiles
             </label>
 
             <hr className="mb-4" />
 
             {/* Premium */}
-            <label className="flex items-center gap-2 mb-4">
-              <input type="checkbox" />
+            <label className="flex items-center gap-2 mb-4 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={filters.premiumOnly}
+                onChange={(e) => setFilters({ ...filters, premiumOnly: e.target.checked })}
+              />
               Premium Institute Candidates
             </label>
 
@@ -657,6 +891,14 @@ export default function CandidatesPage() {
               <summary className="cursor-pointer font-medium flex justify-between">
                 Keywords <span>⌄</span>
               </summary>
+              <div className="mt-2">
+                <input
+                  className="w-full border rounded px-2 py-1 text-sm"
+                  placeholder="e.g. React, Java"
+                  value={filters.keywords}
+                  onChange={(e) => setFilters({ ...filters, keywords: e.target.value })}
+                />
+              </div>
             </details>
 
             <hr className="mb-4" />
@@ -666,6 +908,14 @@ export default function CandidatesPage() {
               <summary className="cursor-pointer font-medium flex justify-between">
                 Current company <span>⌄</span>
               </summary>
+              <div className="mt-2">
+                <input
+                  className="w-full border rounded px-2 py-1 text-sm"
+                  placeholder="Search company"
+                  value={filters.currentCompany}
+                  onChange={(e) => setFilters({ ...filters, currentCompany: e.target.value })}
+                />
+              </div>
             </details>
 
             <hr className="mb-4" />
@@ -679,6 +929,8 @@ export default function CandidatesPage() {
               <input
                 placeholder="Search location"
                 className="w-full border rounded px-2 py-1 mb-3 text-sm"
+                value={filters.locationSearch}
+                onChange={(e) => setFilters({ ...filters, locationSearch: e.target.value })}
               />
 
               {[
@@ -689,19 +941,26 @@ export default function CandidatesPage() {
               ].map(([city, count]) => (
                 <label
                   key={city}
-                  className="flex justify-between items-center mb-2"
+                  className="flex justify-between items-center mb-2 cursor-pointer"
                 >
                   <span className="flex gap-2">
-                    <input type="checkbox" />
+                    <input
+                      type="checkbox"
+                      checked={filters.locations.includes(city)}
+                      onChange={() =>
+                        setFilters((prev) => ({
+                          ...prev,
+                          locations: prev.locations.includes(city)
+                            ? prev.locations.filter((c) => c !== city)
+                            : [...prev.locations, city],
+                        }))
+                      }
+                    />
                     {city}
                   </span>
                   <span className="text-gray-400">{count}</span>
                 </label>
               ))}
-
-              <button className="text-blue-600 text-xs mt-2">
-                +16 more locations
-              </button>
             </details>
 
             <hr className="mb-4" />
@@ -712,24 +971,38 @@ export default function CandidatesPage() {
                 Experience (Years) <span>⌃</span>
               </summary>
 
-              {/* Fake histogram bar */}
-              <div className="h-8 bg-gray-100 rounded mb-3"></div>
-
               <div className="flex items-center gap-2">
-                <select className="w-full border rounded px-2 py-1 text-sm">
-                  <option>Select</option>
-                  <option>0</option>
-                  <option>1</option>
-                  <option>2</option>
+                <select
+                  value={filters.minExperience}
+                  onChange={(e) =>
+                    setFilters({ ...filters, minExperience: e.target.value })
+                  }
+                  className="w-full border rounded px-2 py-1 text-sm"
+                >
+                  <option value="">Min</option>
+                  <option value="0">0</option>
+                  <option value="1">1</option>
+                  <option value="3">3</option>
+                  <option value="5">5</option>
+                  <option value="8">8</option>
+                  <option value="10">10</option>
                 </select>
 
                 <span>to</span>
 
-                <select className="w-full border rounded px-2 py-1 text-sm">
-                  <option>Select</option>
-                  <option>5</option>
-                  <option>10</option>
-                  <option>14+</option>
+                <select
+                  value={filters.maxExperience}
+                  onChange={(e) =>
+                    setFilters({ ...filters, maxExperience: e.target.value })
+                  }
+                  className="w-full border rounded px-2 py-1 text-sm"
+                >
+                  <option value="">Max</option>
+                  <option value="2">2</option>
+                  <option value="5">5</option>
+                  <option value="8">8</option>
+                  <option value="12">12</option>
+                  <option value="15">15+</option>
                 </select>
               </div>
             </details>
@@ -742,29 +1015,34 @@ export default function CandidatesPage() {
                 Salary (INR-Lacs) <span>⌃</span>
               </summary>
 
-              {/* Histogram placeholder */}
-              <div className="h-8 bg-gray-100 rounded mb-3"></div>
-
               <div className="flex items-center gap-2">
-                <select className="w-full border rounded px-2 py-2 text-sm">
-                  <option>Select</option>
-                  <option>0</option>
-                  <option>5</option>
-                  <option>10</option>
-                  <option>15</option>
-                  <option>20</option>
-                  <option>30+</option>
+                <select
+                  className="w-full border rounded px-2 py-2 text-sm"
+                  value={filters.minSalary}
+                  onChange={(e) => setFilters({ ...filters, minSalary: e.target.value })}
+                >
+                  <option value="">Min</option>
+                  <option value="0">0</option>
+                  <option value="3">3</option>
+                  <option value="6">6</option>
+                  <option value="10">10</option>
+                  <option value="15">15</option>
+                  <option value="20">20</option>
                 </select>
 
                 <span>to</span>
 
-                <select className="w-full border rounded px-2 py-2 text-sm">
-                  <option>Select</option>
-                  <option>10</option>
-                  <option>15</option>
-                  <option>20</option>
-                  <option>25</option>
-                  <option>30+</option>
+                <select
+                  className="w-full border rounded px-2 py-2 text-sm"
+                  value={filters.maxSalary}
+                  onChange={(e) => setFilters({ ...filters, maxSalary: e.target.value })}
+                >
+                  <option value="">Max</option>
+                  <option value="5">5</option>
+                  <option value="10">10</option>
+                  <option value="15">15</option>
+                  <option value="25">25</option>
+                  <option value="50">50+</option>
                 </select>
               </div>
             </details>
@@ -781,10 +1059,10 @@ export default function CandidatesPage() {
                 <input
                   placeholder="Add designation"
                   className="w-full border rounded px-3 py-2 text-sm"
+                  value={filters.designation}
+                  onChange={(e) => setFilters({ ...filters, designation: e.target.value })}
                 />
-                <span className="absolute right-3 top-2.5 text-gray-400">
-                  🔍
-                </span>
+                <span className="absolute right-3 top-2.5 text-gray-400">🔍</span>
               </div>
             </details>
 
@@ -801,34 +1079,39 @@ export default function CandidatesPage() {
                   placeholder="Search department/role"
                   className="w-full border rounded px-3 py-2 text-sm"
                 />
-                <span className="absolute right-3 top-2.5 text-gray-400">
-                  🔍
-                </span>
+                <span className="absolute right-3 top-2.5 text-gray-400">🔍</span>
               </div>
-
-              {[
-                ["Engineering - Software & QA", "1,682"],
-                ["Consulting", "1,133"],
-                ["IT & Information Security", "300"],
-                ["Project & Program Management", "75"],
-              ].map(([name, count]) => (
-                <label
-                  key={name}
-                  className="flex justify-between items-center mb-2"
-                >
-                  <span className="flex gap-2">
-                    <input type="checkbox" />
-                    {name}
-                  </span>
-                  <span className="text-gray-400">{count}</span>
-                </label>
-              ))}
-
-              <button className="text-blue-600 text-xs mt-2">
-                +1 more department
-              </button>
+              <div className="max-h-40 overflow-y-auto">
+                {[
+                  "Engineering - Software & QA",
+                  "Consulting",
+                  "IT & Information Security",
+                  "Project & Program Management",
+                  "Sales",
+                  "Marketing",
+                  "HR"
+                ].map((name) => (
+                  <label
+                    key={name}
+                    className="flex justify-between items-center mb-2 cursor-pointer"
+                  >
+                    <span className="flex gap-2">
+                      <input
+                        type="checkbox"
+                        checked={filters.department.includes(name)}
+                        onChange={() => setFilters(prev => ({
+                          ...prev,
+                          department: prev.department.includes(name)
+                            ? prev.department.filter(d => d !== name)
+                            : [...prev.department, name]
+                        }))}
+                      />
+                      {name}
+                    </span>
+                  </label>
+                ))}
+              </div>
             </details>
-
             <hr className="mb-4" />
 
             {/*  Industry  */}
@@ -837,33 +1120,35 @@ export default function CandidatesPage() {
                 Industry <span>⌃</span>
               </summary>
 
-              <div className="relative mb-3">
-                <input
-                  placeholder="Search industry"
-                  className="w-full border rounded px-3 py-2 text-sm"
-                />
-                <span className="absolute right-3 top-2.5 text-gray-400">
-                  🔍
-                </span>
+              <div className="max-h-40 overflow-y-auto">
+                {[
+                  "IT Services & Consulting",
+                  "Software Product",
+                  "Management Consulting",
+                  "Emerging Technologies",
+                  "Banking",
+                  "Healthcare"
+                ].map((name) => (
+                  <label
+                    key={name}
+                    className="flex justify-between items-center mb-2 cursor-pointer"
+                  >
+                    <span className="flex gap-2 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={filters.industry.includes(name)}
+                        onChange={() => setFilters(prev => ({
+                          ...prev,
+                          industry: prev.industry.includes(name)
+                            ? prev.industry.filter(i => i !== name)
+                            : [...prev.industry, name]
+                        }))}
+                      />
+                      {name}
+                    </span>
+                  </label>
+                ))}
               </div>
-
-              {[
-                ["IT Services & Consulting", "2,839"],
-                ["Software Product", "568"],
-                ["Management Consulting", "373"],
-                ["Emerging Technologies", "108"],
-              ].map(([name, count]) => (
-                <label
-                  key={name}
-                  className="flex justify-between items-center mb-2"
-                >
-                  <span className="flex gap-2">
-                    <input type="checkbox" />
-                    {name}
-                  </span>
-                  <span className="text-gray-400">{count}</span>
-                </label>
-              ))}
             </details>
             <hr className="my-4" />
 
@@ -874,22 +1159,30 @@ export default function CandidatesPage() {
               </summary>
 
               {[
-                ["0 - 15 days", "921"],
-                ["1 month", "951"],
-                ["2 months", "699"],
-                ["3 months", "1,106"],
-                ["More than 3 months", "56"],
-                ["Currently serving notice period", "160"],
-              ].map(([label, count]) => (
+                "0 - 15 days",
+                "1 month",
+                "2 months",
+                "3 months",
+                "More than 3 months",
+                "Serving Notice Period",
+              ].map((label) => (
                 <label
                   key={label}
-                  className="flex justify-between items-center mb-2"
+                  className="flex justify-between items-center mb-2 cursor-pointer"
                 >
-                  <span className="flex gap-2">
-                    <input type="checkbox" />
+                  <span className="flex gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={filters.noticePeriod.includes(label)}
+                      onChange={() => setFilters(prev => ({
+                        ...prev,
+                        noticePeriod: prev.noticePeriod.includes(label)
+                          ? prev.noticePeriod.filter(n => n !== label)
+                          : [...prev.noticePeriod, label]
+                      }))}
+                    />
                     {label}
                   </span>
-                  <span className="text-gray-400">{count}</span>
                 </label>
               ))}
             </details>
@@ -903,11 +1196,15 @@ export default function CandidatesPage() {
               </summary>
 
               <div className="flex gap-3">
-                <button className="border rounded-full px-4 py-1 text-sm hover:bg-gray-50">
-                  Male candidates
+                <button
+                  onClick={() => setFilters({ ...filters, gender: filters.gender === 'Male' ? '' : 'Male' })}
+                  className={`border rounded-full px-4 py-1 text-sm ${filters.gender === 'Male' ? 'bg-blue-100 border-blue-200' : 'hover:bg-gray-50'}`}>
+                  Male
                 </button>
-                <button className="border rounded-full px-4 py-1 text-sm hover:bg-gray-50">
-                  Female candidates
+                <button
+                  onClick={() => setFilters({ ...filters, gender: filters.gender === 'Female' ? '' : 'Female' })}
+                  className={`border rounded-full px-4 py-1 text-sm ${filters.gender === 'Female' ? 'bg-blue-100 border-blue-200' : 'hover:bg-gray-50'}`}>
+                  Female
                 </button>
               </div>
             </details>
@@ -920,72 +1217,34 @@ export default function CandidatesPage() {
                 Age <span>⌃</span>
               </summary>
 
-              <div className="flex items-center gap-2">
-                <input
-                  placeholder="Min age"
-                  className="w-full border rounded px-3 py-2 text-sm"
-                />
-                <span>to</span>
-                <input
-                  placeholder="Max age"
-                  className="w-full border rounded px-3 py-2 text-sm"
-                />
-              </div>
-            </details>
-
-            <hr className="mb-4" />
-
-            {/*  Degree / Course */}
-            <details className="mb-4">
-              <summary className="cursor-pointer font-medium flex justify-between mb-3">
-                Degree/Course <span>⌄</span>
-              </summary>
-
-              <div className="space-y-2 text-sm text-blue-600">
-                <button className="flex items-center gap-2">
-                  <span className="text-lg">+</span> UG course
-                </button>
-                <button className="flex items-center gap-2">
-                  <span className="text-lg">+</span> PG course
-                </button>
-                <button className="flex items-center gap-2">
-                  <span className="text-lg">+</span> PPG course
-                </button>
-              </div>
-            </details>
-
-            <hr className="mb-4" />
-
-            {/* College Name  */}
-            <details className="mb-2">
-              <summary className="cursor-pointer font-medium flex justify-between mb-3">
-                College name <span>⌄</span>
-              </summary>
-
-              <div className="space-y-2 text-sm text-blue-600">
-                <button className="flex items-center gap-2">
-                  <span className="text-lg">+</span> UG college
-                </button>
-                <button className="flex items-center gap-2">
-                  <span className="text-lg">+</span> PG college
-                </button>
-                <button className="flex items-center gap-2">
-                  <span className="text-lg">+</span> PPG college
-                </button>
-              </div>
-            </details>
+            <div className="flex items-center gap-2">
+              <input
+                placeholder="Min"
+                className="w-full border rounded px-3 py-2 text-sm"
+                value={filters.minAge}
+                onChange={(e) => setFilters({...filters, minAge: e.target.value})}
+              />
+              <span>to</span>
+              <input
+                placeholder="Max"
+                className="w-full border rounded px-3 py-2 text-sm"
+                value={filters.maxAge}
+                onChange={(e) => setFilters({...filters, maxAge: e.target.value})}
+              />
+            </div>
+          </details>
           </div>
         </div>
 
         {!selectedCandidate ? (
-          <main className="col-span-12 lg:col-span-9 space-y-4 px-2 sm:px-4">
+          <main className="col-span-12 md:col-span-9 space-y-4">
             {filteredCandidates.map((c) => (
               <div
                 key={c.id}
-                className="bg-white rounded-xl shadow-sm p-4 flex flex-col lg:flex-row gap-4"
+                className="bg-white rounded-xl shadow-sm p-4 flex flex-col md:flex-row gap-4"
               >
                 {/* Checkbox */}
-                <input type="checkbox" className="self-start mt-1" />
+                <input type="checkbox" className="mt-2 md:mt-0" />
 
                 {/* MAIN INFO */}
                 <div className="flex-1 flex flex-col gap-2">
@@ -1026,56 +1285,35 @@ export default function CandidatesPage() {
                       <Highlight text={c.state?.name} />
                     </span>
                   </div>
-
-                  {/* Notice period */}
-                  {c.notice_period && (
-                    <p className="text-xs text-gray-500">
-                      Notice period: <Highlight text={c.notice_period} />
-                    </p>
-                  )}
-
-                  {/* Skills */}
-                  <div className="flex flex-wrap gap-2">
-                    {c.skills?.slice(0, 6).map((s, i) => (
-                      <span
-                        key={i}
-                        className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded"
-                      >
-                        <Highlight text={s.name} />
-                      </span>
-                    ))}
-                  </div>
-
-                  {/* Similar profiles */}
-                  <p className="text-xs text-blue-600 mt-1 cursor-pointer">
-                    View similar profiles
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">Unlock Full Access</h3>
+                  <p className="text-gray-500 mb-6 text-center max-w-sm">
+                    Subscribe to our premium plan to view unlimited candidate profiles and access contact details.
                   </p>
+                  <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-2 rounded-full shadow-md transition-transform hover:scale-105">
+                    View Subscription Plans
+                  </Button>
+                </div>
+
+                {/* Blurred Content (Render next 3 as background) */}
+                <div className="space-y-4 blur-sm opacity-40 select-none pointer-events-none grayscale">
+                  {filteredCandidates.slice(3, 6).map((c) => renderCandidateCard(c))}
                 </div>
 
                 {/* RIGHT ACTION PANEL */}
-                <div className="flex flex-row lg:flex-col items-center justify-between gap-3 w-full lg:w-52 border-t lg:border-t-0 lg:border-l pt-3 lg:pt-0 lg:pl-4 relative">
-
-                  {/* SAVE ICON */}
-                  <span
-                    className="absolute top-2 right-2 lg:top-2 lg:right-2 text-gray-400"
-                    title="Save candidate"
-                  >
-                    <Bookmark size={20} />
-                  </span>
-
+                <div className="flex md:flex-col items-center md:items-center justify-between md:justify-center gap-2 md:gap-3 md:w-52 w-full border-t md:border-t-0 md:border-l pt-3 md:pt-0 md:pl-4">
                   <img
                     src={
                       c.profile_image
                         ? `https://jobseeker-backend-jy1y.onrender.com${c.profile_image}`
                         : `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                            c.full_name
-                          )}`
+                          c.full_name
+                        )}`
                     }
                     alt={c.full_name}
-                    className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-full object-cover border"
+                    className="w-14 h-14 md:w-16 md:h-16 rounded-full object-cover border"
                   />
 
-                  <p className="text-xs text-gray-500 flex items-center gap-1 break-all">
+                  <p className="text-xs text-gray-500 flex items-center gap-1">
                     <Mail size={14} /> <Highlight text={c.email} />
                   </p>
 
@@ -1084,7 +1322,7 @@ export default function CandidatesPage() {
                       href={`https://jobseeker-backend-jy1y.onrender.com${c.resume}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-xs text-gray-600 flex items-center gap-1 hover:underline break-all"
+                      className="text-xs text-gray-600 flex items-center gap-1 hover:underline"
                     >
                       <FileText size={14} /> View CV
                     </a>
@@ -1095,9 +1333,9 @@ export default function CandidatesPage() {
           </main>
         ) : (
           /*DETAIL VIEW  */
-          <main className="col-span-9">
+          <main className="col-span-12 md:col-span-9">
             <CandidateDetail
-              candidate={selectedCandidate}
+              candidate={selectedCandidate!}
               candidates={candidates}
               search={search}
               onBack={() => setSelectedCandidate(null)}
@@ -1154,8 +1392,8 @@ function CandidateDetail({
               candidate.profile_image
                 ? `https://jobseeker-backend-jy1y.onrender.com${candidate.profile_image}`
                 : `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                    candidate.full_name
-                  )}`
+                  candidate.full_name
+                )}`
             }
             alt={candidate.full_name}
            className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover border"
