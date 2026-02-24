@@ -38,7 +38,7 @@ export default function EmployerLogin() {
     e.preventDefault();
     try {
       const response = await fetch(
-        "http://127.0.0.1:8010/employeer/api/employeer_login/",
+        "https://jobseeker-backend-jy1y.onrender.com/employeer/api/employeer_login/",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

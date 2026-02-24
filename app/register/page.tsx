@@ -84,7 +84,7 @@ export default function Register() {
     e.preventDefault();
     try {
       const res = await fetch(
-        "http://127.0.0.1:8010/api/send_otp/",
+        "https://jobseeker-backend-jy1y.onrender.com/api/send_otp/",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -112,7 +112,7 @@ export default function Register() {
   const handleVerifyOTP = async () => {
     try {
       const res = await fetch(
-        "http://127.0.0.1:8010/api/verify-otp/",
+        "https://jobseeker-backend-jy1y.onrender.com/api/verify-otp/",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -153,7 +153,7 @@ export default function Register() {
 
     try {
       const res = await fetch(
-        "http://127.0.0.1:8010/api/register/",
+        "https://jobseeker-backend-jy1y.onrender.com/api/register/",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -178,7 +178,7 @@ export default function Register() {
     const fetchCountries = async () => {
       try {
         const res = await fetch(
-          "http://127.0.0.1:8010/master/api/countries/"
+          "https://jobseeker-backend-jy1y.onrender.com/master/api/countries/"
         );
         const data = await res.json();
         setCountries(data);
