@@ -271,7 +271,7 @@ export default function JobListings() {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const data = await response.json();
+     
       const results = Array.isArray(data.results) ? data.results : [];
 
       setJobs(results);
@@ -959,18 +959,7 @@ export default function JobListings() {
                        <SelectValue placeholder="Select location" />
                      </SelectTrigger>
                  
-                     <SelectContent className="max-h-60">
-                       {/* Search input */}
-                     <div className="sticky top-0 z-20 bg-white p-2 border-b">
-                       <input
-                         type="text"
-                         placeholder="Search location..."
-                         value={searchLocation}
-                         onChange={(e) => setSearchLocation(e.target.value)}
-                         onKeyDown={(e) => e.stopPropagation()}
-                         className="w-full h-10 text-sm border rounded px-2 placeholder-gray-400 appearance-none focus:outline-none"
-                        />
-                     </div>    
+                      
 
                       <SelectContent className="max-h-60">
                         {/* Search input */}
@@ -1378,7 +1367,7 @@ export default function JobListings() {
                                   <Share2 className="w-4 h-4" />
                                 </Button>
                               </div>
-                            </div>
+                            
 
                             {/* Job Description */}
                             <p className="text-gray-700 text-sm md:text-base leading-relaxed mb-4 line-clamp-2">
@@ -1865,8 +1854,6 @@ export default function JobListings() {
             </div>
           </DialogContent>
         </Dialog>
-
-
       </div>
     </section>
   );

@@ -847,26 +847,28 @@ export default function EmployerDashboard() {
 
 
        const mappedCandidates = data.map((item) => ({
-        id: item.id,
-        name: item.profile?.full_name || item.full_name,
-        email: item.email || item.user_email, 
-        phone: item.profile?.phone || item.phone,
-        phoneCode: item.profile?.phone_code || item.phone_code,
-        location: item.profile?.city || item.city,
-        experience: item.profile?.experience || item.experience,
-        job_title: item.job_title,
-        resumeUrl: item.profile?.resume || item.resume,
-        skills: item.profile?.skills || item.skills,
-        certifications: item.profile?.certifications || item.certifications,
-        educationDetails: item.profile?.educations || item.educations,
-        workExperience: item.profile?.experiences || item.experiences,
-        status: item.application_status || "Under Review",
-        appliedDate: item.applied_at,
-        qa: item.answers?.map((ans) => ({
-          question_index: ans.question_index,
-          question_text: ans.question_text,
-          answer_text: ans.answer,
-        })),
+          id: item.id,
+          name: item.profile?.full_name || item.full_name,
+          email: item.email || item.user_email, 
+          phone: item.profile?.phone || item.phone,
+          phoneCode: item.profile?.phone_code || item.phone_code,
+          location: item.profile?.city || item.city,
+          experience: item.profile?.experience || item.experience,
+          job_title: item.job_title,
+          resumeUrl: item.profile?.resume || item.resume,
+          skills: item.profile?.skills || item.skills,
+          certifications: item.profile?.certifications || item.certifications,
+          educationDetails: item.profile?.educations || item.educations,
+          workExperience: item.profile?.experiences || item.experiences,
+          status: item.application_status || "Under Review",
+          appliedDate: item.applied_at,
+          qa: item.answers?.map((ans) => ({
+            question_index: ans.question_index,
+            question_text: ans.question_text,
+            answer_text: ans.answer,
+          }
+        )
+        ),
       }));
 
       //   const mappedCandidates = data.map((item) => ({
@@ -1097,9 +1099,10 @@ export default function EmployerDashboard() {
         return "bg-gray-100 text-gray-800";
     }
   };
->>>>>>> a598b0f ([IMP] all : Implemented the pagination in the backend.)
+
 
   // Filter jobs based on status and search term
+
   const filteredJobs = postedJobs.filter((job) => {
     const matchesFilter =
       jobFilter === "all" ||
