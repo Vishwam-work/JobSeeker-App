@@ -878,7 +878,7 @@ const validateDates = (start: Dayjs | null, end: Dayjs | null) => {
       try {
         const res = await fetch(
 <<<<<<< HEAD
-          "http://127.0.0.1:8010/api/profile/",{
+          "https://jobseeker-backend-jy1y.onrender.com/api/profile/",{
 =======
           "https://jobseeker-backend-jy1y.onrender.com/api/profile/",
           {

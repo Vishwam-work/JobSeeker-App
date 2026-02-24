@@ -712,7 +712,7 @@ export default function EmployerDashboard() {
 
       const response = await fetch(
 >>>>>>> bd267ff ([FIX] all : completed the pagination feature of frontend.)
-          "http://127.0.0.1:8010/employeer/api/job-list-view/",
+          "https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-list-view/",
           {
             method: "GET",
             headers: {
@@ -723,7 +723,7 @@ export default function EmployerDashboard() {
 <<<<<<< HEAD
 =======
       const response = await fetch(
-        "http://127.0.0.1:8010/employeer/api/job-list-view/",
+        "https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-list-view/",
 >>>>>>> a598b0f ([IMP] all : Implemented the pagination in the backend.)
         {
           method: "GET",
