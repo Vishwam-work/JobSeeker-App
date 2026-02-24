@@ -679,7 +679,7 @@ export default function EmployerDashboard() {
   const exportToExcel = async () => {
     const XLSX = await import("xlsx");
 
-    const data = filteredCategories.map((c) => ({
+    const data = filteredCategories.map((c : any) => ({
       name: c.name || "",
       email: c.email || "",
       // phone: `+${c.phoneCode}${c.phone}` || "",
@@ -701,30 +701,18 @@ export default function EmployerDashboard() {
     try {
       const token = localStorage.getItem("auth_token");
       if (!token) return;
-<<<<<<< HEAD
-<<<<<<< HEAD
-      const response = await fetch(
-        "https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-list-view/",
-=======
-<<<<<<< Updated upstream
-        const response = await fetch(
-=======
+      // const response = await fetch
+      //     "https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-list-view/",
+      //     {
+      //       method: "GET",
+      //       headers: {
+      //         Authorization: `Bearer ${token}`,
+      //       },
+      //     }
+      //   );
 
       const response = await fetch(
->>>>>>> bd267ff ([FIX] all : completed the pagination feature of frontend.)
-          "https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-list-view/",
-          {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-<<<<<<< HEAD
-=======
-      const response = await fetch(
         "https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-list-view/",
->>>>>>> a598b0f ([IMP] all : Implemented the pagination in the backend.)
         {
           method: "GET",
           headers: {
@@ -732,12 +720,6 @@ export default function EmployerDashboard() {
           },
         }
       );
-<<<<<<< HEAD
-=======
->>>>>>> Stashed changes
->>>>>>> a598b0f ([IMP] all : Implemented the pagination in the backend.)
-=======
->>>>>>> bd267ff ([FIX] all : completed the pagination feature of frontend.)
 
       // const response = await fetch(
       //   "https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-list-view/",
@@ -863,8 +845,8 @@ export default function EmployerDashboard() {
         return;
       }
 
-<<<<<<< HEAD
-      const mappedCandidates = data.map((item) => ({
+
+       const mappedCandidates = data.map((item) => ({
         id: item.id,
         name: item.profile?.full_name || item.full_name,
         email: item.email || item.user_email, 
@@ -886,7 +868,7 @@ export default function EmployerDashboard() {
           answer_text: ans.answer,
         })),
       }));
-=======
+
       //   const mappedCandidates = data.map((item) => ({
       //     id: item.id,
       //     name: item.profile?.full_name || item.full_name,
@@ -909,7 +891,7 @@ export default function EmployerDashboard() {
       //       answer_text: ans.answer,
       //     })),
       //   }));
->>>>>>> a598b0f ([IMP] all : Implemented the pagination in the backend.)
+
 
       //   console.log("MAPPED CANDIDATES:", mappedCandidates);
 
@@ -1013,7 +995,7 @@ export default function EmployerDashboard() {
   await fetchPostedJobs();
 
       // Reset form
-<<<<<<< HEAD
+
       setJobForm({
         title: "",
         category: "",
@@ -1064,7 +1046,7 @@ export default function EmployerDashboard() {
           return "bg-gray-100 text-gray-800";
       }
     };
-=======
+
         setJobForm({
           title: "",
           category: "",
@@ -1823,42 +1805,23 @@ export default function EmployerDashboard() {
             </Link>
             <div className="flex items-center gap-4">
               <div className="relative">
-<<<<<<< HEAD
+
                  <div               
                    onClick={() => setIsNotificationOpen(!isNotificationOpen)}
                    className="cursor-pointer relative select-none"
                   >
-=======
-                <div
-                  onClick={() => setIsNotificationOpen(!isNotificationOpen)}
-                  className="cursor-pointer relative select-none"
-                >
->>>>>>> a598b0f ([IMP] all : Implemented the pagination in the backend.)
                   <Bell className="w-5 h-5 text-gray-700 hover:text-purple-600" />
                   <span className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full" />
                 </div>
 
-<<<<<<< HEAD
-                 {isNotificationOpen && (
+            {isNotificationOpen && (
                    <>
-                    
                      <div
                        className="fixed inset-0 z-40 bg-black/20 md:bg-transparent"
                        onClick={() => setIsNotificationOpen(false)}
                      />
-                     <div
-                       className="               
-=======
-                {isNotificationOpen && (
-                  <>
-
-                    <div
-                      className="fixed inset-0 z-40 bg-black/20 md:bg-transparent"
-                      onClick={() => setIsNotificationOpen(false)}
-                    />
                     <div
                       className="
->>>>>>> a598b0f ([IMP] all : Implemented the pagination in the backend.)
                         fixed md:absolute
                         inset-x-0 bottom-0 md:inset-auto
                         md:right-0 md:top-full
@@ -1869,13 +1832,9 @@ export default function EmployerDashboard() {
                         rounded-t-xl md:rounded-lg
                         z-50
                       "
-<<<<<<< HEAD
                      >
-                       <div className="p-3 border-b font-semibold text-gray-700 flex justify-between items-center">               
-=======
-                    >
-                      <div className="p-3 border-b font-semibold text-gray-700 flex justify-between items-center">
->>>>>>> a598b0f ([IMP] all : Implemented the pagination in the backend.)
+                       <div className="p-3 border-b font-semibold text-gray-700 flex justify-between items-center">
+
                         Notifications
                         <button
                           className="md:hidden text-gray-500"
@@ -1945,13 +1904,8 @@ export default function EmployerDashboard() {
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex items-center space-x-2 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${activeTab === tab.id
-<<<<<<< HEAD
                     ? "border-blue-600 text-blue-600"
                     : "border-transparent text-gray-600 hover:text-blue-600"
-=======
-                      ? "border-blue-600 text-blue-600"
-                      : "border-transparent text-gray-600 hover:text-blue-600"
->>>>>>> a598b0f ([IMP] all : Implemented the pagination in the backend.)
                     }`}
                 >
                   <IconComponent className="w-4 h-4" />
@@ -3388,13 +3342,8 @@ export default function EmployerDashboard() {
                           setIsCandidateModalOpen(true);
                         }}
                         className={`p-4 cursor-pointer hover:bg-gray-50 border-l-4 transition-colors ${selectedCandidate?.id === candidate.id
-<<<<<<< HEAD
-                          ? "border-l-blue-500 bg-blue-50"
-                          : "border-l-transparent"
-=======
                             ? "border-l-blue-500 bg-blue-50"
                             : "border-l-transparent"
->>>>>>> a598b0f ([IMP] all : Implemented the pagination in the backend.)
                           }`}
                       >
                         <div className="flex items-start space-x-3">
@@ -3742,7 +3691,7 @@ export default function EmployerDashboard() {
                               <XCircle className="w-4 h-4 mr-2" />
                               Reject Application
                             </Button> */}
-<<<<<<< HEAD
+
                             
                          <AlertDialog>
                            <AlertDialogTrigger asChild>                         
@@ -3774,39 +3723,7 @@ export default function EmployerDashboard() {
                             </AlertDialogFooter>
                            </AlertDialogContent>
                          </AlertDialog>
-=======
 
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button
-                                  variant="outline"
-                                  className="border-red-600 text-red-600 hover:bg-red-50 flex-1"
-                                >
-                                  <XCircle className="w-4 h-4 mr-2" />
-                                  Reject Application
-                                </Button>
-                              </AlertDialogTrigger>
-
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Reject this application?</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    This action cannot be undone. The candidate will be marked as rejected.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction
-                                    className="bg-red-600 hover:bg-red-700"
-                                    onClick={() => handleRejectCandidate(selectedCandidate)}
-                                  >
-                                    Yes, Reject
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
->>>>>>> a598b0f ([IMP] all : Implemented the pagination in the backend.)
                           </>
                         )}
 
