@@ -50,7 +50,7 @@ export default function Login() {
     e.preventDefault();
     try {
       const response = await fetch(
-        "https://jobseeker-backend-jy1y.onrender.com/api/login/",
+        "http://127.0.0.1:8010/api/login/",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -68,7 +68,7 @@ export default function Login() {
         window.dispatchEvent(new Event("user-email-updated"));
         // 🔹 profile API call
         const profileRes = await fetch(
-          "https://jobseeker-backend-jy1y.onrender.com/api/profile/",
+          "http://127.0.0.1:8010/api/profile/",
           {
             headers: {
               Authorization: `Bearer ${data.access}`,
@@ -115,7 +115,7 @@ export default function Login() {
   //   try {
 
   //     const response = await fetch(
-  //       "https://jobseeker-backend-jy1y.onrender.com/api/login/",
+  //       "http://127.0.0.1:8010/api/login/",
   //       {
   //         method: "POST",
   //         headers: { "Content-Type": "application/json" },

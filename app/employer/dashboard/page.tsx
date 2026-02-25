@@ -360,7 +360,7 @@ export default function EmployerDashboard() {
         console.log("Employer ID:", decoded.user_id);
   
         const res = await fetch(
-          `https://jobseeker-backend-jy1y.onrender.com/employeer/api/companies/${decoded.user_id}/`,
+          `http://127.0.0.1:8010/employeer/api/companies/${decoded.user_id}/`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -389,7 +389,7 @@ export default function EmployerDashboard() {
         const token = localStorage.getItem("auth_token");
         if (!token) return;
         const res = await fetch(
-          "https://jobseeker-backend-jy1y.onrender.com/employeer/api/employer/applications/",
+          "http://127.0.0.1:8010/employeer/api/employer/applications/",
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -430,7 +430,7 @@ export default function EmployerDashboard() {
              : "Under Review",
 
           resumeUrl: app.profile?.resume
-            ? `https://jobseeker-backend-jy1y.onrender.com${app.profile.resume}`
+            ? `http://127.0.0.1:8010${app.profile.resume}`
             : "#",
           profileImage: null,
           summary: "",
@@ -473,7 +473,7 @@ export default function EmployerDashboard() {
       const token = localStorage.getItem("auth_token");
       if (!token) return;
         const response = await fetch(
-          "https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-list-view/",
+          "http://127.0.0.1:8010/employeer/api/job-list-view/",
           {
             method: "GET",
             headers: {
@@ -483,7 +483,7 @@ export default function EmployerDashboard() {
         );
 
       // const response = await fetch(
-      //   "https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-list-view/",
+      //   "http://127.0.0.1:8010/employeer/api/job-list-view/",
       //   {
       //     method: "GET",
       //     headers: {
@@ -512,7 +512,7 @@ export default function EmployerDashboard() {
   console.log("Posted Jobs:", postedJobs);
 
   useEffect(() => {
-    fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/currencies/")
+    fetch("http://127.0.0.1:8010/master/api/currencies/")
       .then((res) => res.json())
       .then((data) => {
         console.log("Currency data:", data);
@@ -523,7 +523,7 @@ export default function EmployerDashboard() {
   useEffect(() => {
     // Fetch job categories
     fetch(
-      "https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_category/"
+      "http://127.0.0.1:8010/master/api/jobs_category/"
     )
       .then((res) => {
         if (!res.ok) {
@@ -538,7 +538,7 @@ export default function EmployerDashboard() {
       });
 
     // Fetch country
-    fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/countries/")
+    fetch("http://127.0.0.1:8010/master/api/countries/")
       .then((res) => {
         if (!res.ok) {
           throw new Error(`HTTP error! status: ${res.status}`);
@@ -556,7 +556,7 @@ export default function EmployerDashboard() {
   useEffect(() => {
     if (selectedCategory) {
       fetch(
-        `https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_title/?category=${selectedCategory}`
+        `http://127.0.0.1:8010/master/api/jobs_title/?category=${selectedCategory}`
       )
         .then((res) => {
           if (!res.ok) {
@@ -589,7 +589,7 @@ export default function EmployerDashboard() {
       const token = localStorage.getItem("auth_token");
 
       const response = await fetch(
-        `https://jobseeker-backend-jy1y.onrender.com/employeer/api/employer/applications/job/${jobId}`,
+        `http://127.0.0.1:8010/employeer/api/employer/applications/job/${jobId}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -699,7 +699,7 @@ export default function EmployerDashboard() {
       };
       console.log("Payload:", payload);
       const response = await fetch(
-        "https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-postings/",
+        "http://127.0.0.1:8010/employeer/api/job-postings/",
         {
           method: "POST",
           headers: {
@@ -869,7 +869,7 @@ export default function EmployerDashboard() {
       try {
         const token = localStorage.getItem("auth_token");
         const response = await fetch(
-          `https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-list-view/${job.id}/`,
+          `http://127.0.0.1:8010/employeer/api/job-list-view/${job.id}/`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -887,12 +887,12 @@ export default function EmployerDashboard() {
         console.error("Error fetching job details", err);
       }
     };
-  //https://jobseeker-backend-jy1y.onrender.com
+  //http://127.0.0.1:8010
     const handleEditJob = async (job) => {
       try {
         const token = localStorage.getItem("auth_token");
         const response = await fetch(
-          `https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-list-view/${job.id}/`,
+          `http://127.0.0.1:8010/employeer/api/job-list-view/${job.id}/`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -946,7 +946,7 @@ export default function EmployerDashboard() {
 
       }
       const response = await fetch(
-        `https://jobseeker-backend-jy1y.onrender.com/employeer/job-postings/${job.id}/delete/`,
+        `http://127.0.0.1:8010/employeer/job-postings/${job.id}/delete/`,
         {
           method: "DELETE",
           headers: {
@@ -993,7 +993,7 @@ export default function EmployerDashboard() {
 
     try {
       const response = await fetch(
-        `https://jobseeker-backend-jy1y.onrender.com/employeer/job-postings/${job.id}/update/`,
+        `http://127.0.0.1:8010/employeer/job-postings/${job.id}/update/`,
         {
           method: "PATCH",
           headers: {
@@ -1028,7 +1028,7 @@ export default function EmployerDashboard() {
   // const handleUpdateJob = async () => {
   //   try {
   //     const token = localStorage.getItem("auth_token");
-  //     const response = await fetch(`https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-postings/${selectedJob.id}/`, {
+  //     const response = await fetch(`http://127.0.0.1:8010/employeer/api/job-postings/${selectedJob.id}/`, {
   //       method: "PUT",
   //       headers: {
   //         "Content-Type": "application/json",
@@ -1073,7 +1073,7 @@ export default function EmployerDashboard() {
       }
 
       const response = await fetch(
-        `https://jobseeker-backend-jy1y.onrender.com/employeer/job-postings/${selectedJob.id}/update/`,
+        `http://127.0.0.1:8010/employeer/job-postings/${selectedJob.id}/update/`,
         {
           method: "PUT",
           headers: {
@@ -1123,7 +1123,7 @@ export default function EmployerDashboard() {
       }
 
       const response = await fetch(
-        `https://jobseeker-backend-jy1y.onrender.com/employeer/api/employer/applications/${candidate.id}/update/`,
+        `http://127.0.0.1:8010/employeer/api/employer/applications/${candidate.id}/update/`,
         {
           method: "PUT",
           headers: {
@@ -1193,7 +1193,7 @@ export default function EmployerDashboard() {
       }
 
       const response = await fetch(
-        `https://jobseeker-backend-jy1y.onrender.com/employeer/api/employer/applications/${candidate.id}/update/`,
+        `http://127.0.0.1:8010/employeer/api/employer/applications/${candidate.id}/update/`,
         {
           method: "PUT",
           headers: {
@@ -1269,7 +1269,7 @@ export default function EmployerDashboard() {
                          });
   
       const res = await fetch(
-        `https://jobseeker-backend-jy1y.onrender.com/employeer/api/employer/applications/${selectedCandidate.id}/schedule-interview/`,
+        `http://127.0.0.1:8010/employeer/api/employer/applications/${selectedCandidate.id}/schedule-interview/`,
         {
           method: "PATCH",
           headers: {
@@ -1380,7 +1380,7 @@ export default function EmployerDashboard() {
         if (!token) return;
 
         const res = await fetch(
-          "https://jobseeker-backend-jy1y.onrender.com/employeer/api/employeer_register/",
+          "http://127.0.0.1:8010/employeer/api/employeer_register/",
           {
             headers: {
               Authorization: `Bearer ${token}`,
