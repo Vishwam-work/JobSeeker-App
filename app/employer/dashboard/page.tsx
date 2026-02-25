@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useReducer } from "react";
+import { useState, useEffect,useReducer } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,7 +13,6 @@ import { toast } from "sonner";
 // import Pricing from "@/components/Pricing";
 import CandidatesPage from "@/app/employer/dashboard/candidate_listing/page";
 import QuotaUsagePage from "@/app/employer/dashboard/quota-usage/page";
-import Footer from "@/components/Footer";
 import {
   Select,
   SelectContent,
@@ -98,11 +97,11 @@ import {
 
 export default function EmployerDashboard() {
   const [activeTab, setActiveTab] = useState("post-job");
-  const [jobCategories, setJobCategories] = useState<JobCategory[]>([]);
-  const [jobTitles, setJobTitles] = useState<JobTitle[]>([]);
-  const [cities, setCities] = useState<City[]>([]);
+  const [jobCategories, setJobCategories] = useState([]);
+  const [jobTitles, setJobTitles] = useState([]);
+  const [cities, setCities] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("");
-  const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
+  const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [isCandidateModalOpen, setIsCandidateModalOpen] = useState(false);
   const [jobFilter, setJobFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
@@ -111,7 +110,7 @@ export default function EmployerDashboard() {
   const [newQuestion, setNewQuestion] = useState("");
   // The Dialog box
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedJob, setSelectedJob] = useState<PostedJob | null>(null);
+  const [selectedJob, setSelectedJob] = useState(null);
   const [isEditMode, setIsEditMode] = useState(false);
   const [CompanyName, setCompanyName] = useState("");
   const [filter, setFilter] = useState("All");
@@ -141,237 +140,6 @@ export default function EmployerDashboard() {
   const [time, setTime] = useState("");
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [showResume, setShowResume] = useState(false);
-  const [isSubscribed, setIsSubscribed] = useState(false);
-
-  interface DecodedToken {
-    user_id: number | string;
-    exp?: number;
-    iat?: number;
-  }
-  interface City {
-    id: number;
-    name: string;
-  }
-
-  interface ApplicationUpdateResponse {
-    id: number;
-    application_status: string;
-    detail?: string;
-  }
-
-  interface JobCategory {
-    id: number;
-    name: string;
-  }
-
-  interface JobTitle {
-    id: number;
-    title: string;
-  }
-
-  interface Currency {
-    id: number;
-    symbol: string;
-  }
-
-  interface Candidate {
-    id: number;
-    name: string;
-    email: string;
-    phone: string;
-    location: string;
-    experience: string;
-    currentRole: string;
-    currentCompany: string;
-    skills: string[];
-    education: string;
-    appliedFor: string;
-    job_title?: string;
-    appliedDate: string;
-    status: string;
-    expectedSalary?: string;
-    resumeUrl?: string;
-    profileImage?: string | null;
-    summary?: string;
-    workExperience: {
-      company: string;
-      role: string;
-      duration: string;
-      description?: string;
-    }[];
-
-    educationDetails: {
-      degree: string;
-      field: string;
-      institution: string;
-      year: string;
-      grade?: string;
-    }[];
-
-    certifications: {
-      name: string;
-      issuer?: string;
-      year?: string;
-    }[];
-    phoneCode?: string;
-    qa?: CandidateQA[];
-  }
-
-  interface JobForm {
-    title: string;
-    category: string;
-    jobTitle: string;
-    company: string;
-    location: string;
-    experience: string;
-    salary: string;
-    currency: string;
-    job_type: string;
-    workMode: string;
-    description: string;
-    requirements: string;
-    benefits: string;
-    skills: string[];
-    applicationDeadline: string;
-    vacancies: string;
-    isUrgent: boolean;
-    isRemote: boolean;
-    questions: string[];
-  }
-  interface ApiCandidate {
-    id: number;
-    full_name?: string;
-    email?: string;
-    phone?: string;
-    city?: string;
-    experience?: string;
-    job_title?: string;
-    application_status?: string;
-    applied_at?: string;
-
-    profile?: {
-      full_name?: string;
-      phone?: string;
-      experience?: string;
-      resume?: string;
-      skills?: { name: string }[];
-      educations?: any[];
-      experiences?: any[];
-      certifications?: any[];
-    };
-
-    answers?: {
-      question_index: number;
-      question_text: string;
-      answer: string;
-    }[];
-  }
-
-  interface CandidateQA {
-    question_index?: number;
-    question_text?: string;
-    answer_text?: string;
-  }
-
-  const mapApiCandidateToUI = (item: ApiCandidate): Candidate => {
-    const experiences = item.profile?.experiences ?? [];
-    const educations = item.profile?.educations ?? [];
-
-    return {
-      id: item.id,
-      name: item.profile?.full_name || item.full_name || "",
-      email: item.email || "",
-      phone: item.profile?.phone || "",
-      location: item.city || "",
-      experience: item.profile?.experience || item.experience || "",
-
-      currentRole:
-        experiences[0]?.designation ||
-        item.job_title ||
-        "",
-
-      currentCompany:
-        experiences[0]?.company || "",
-
-      skills:
-        item.profile?.skills?.map((s) => s.name) || [],
-
-      education:
-        educations[0]?.degree || "",
-
-      appliedFor:
-        item.job_title || "",
-
-      job_title: item.job_title,
-
-      appliedDate:
-        item.applied_at || "",
-
-      status:
-        item.application_status || "Under Review",
-
-      resumeUrl:
-        item.profile?.resume,
-
-      profileImage: null,
-      summary: "",
-
-      workExperience:
-        experiences.map((ex: any) => ({
-          company: ex.company || "",
-          role: ex.designation || "",
-          duration: `${String(ex.start_date ?? "")} - ${String(
-            ex.end_date ?? "Present"
-          )}`,
-          description: ex.description,
-        })),
-
-      educationDetails:
-        educations.map((e: any) => ({
-          degree: e.degree || "",
-          field: e.field || "",
-          institution: e.institution || "",
-          year: String(e.year ?? ""),
-          grade: e.grade,
-        })),
-
-      certifications:
-        item.profile?.certifications?.map((c: any) => ({
-          name: c.name || "",
-          issuer: c.issuer,
-          year: c.year ? String(c.year) : undefined,
-        })) || [],
-    };
-  };
-
-  interface PostedJob {
-    id: number;
-    title: string;
-    job_title: number;
-    company: string;
-    location_id: number;
-    experience: string;
-    salary: string;
-    job_type: string;
-    work_mode: string;
-    vacancies: number;
-    application_deadline: string;
-    description: string;
-    requirements: string;
-    benefits: string;
-    skills: string[];
-    is_urgent: boolean;
-    is_remote: boolean;
-    status: string;
-    location?: {
-      id?: number;
-      name: string;
-    };
-    created_at?: string;
-    applicants?: number;
-    apply_clicks?: number;
-    questions?: string[];
-  }
 
 
 
@@ -417,11 +185,10 @@ export default function EmployerDashboard() {
   //     views: 156,
   //   },
   // ]);
-  const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
-
+  const [postedJobs, setPostedJobs] = useState([]);
 
   // Sample data for candidates
-  const [candidates, setCandidates] = useState<Candidate[]>([
+  const [candidates, setCandidates] = useState([
     {
       id: 1,
       name: "Rahul Sharma",
@@ -550,7 +317,7 @@ export default function EmployerDashboard() {
     },
   ]);
 
-  const [jobForm, setJobForm] = useState<JobForm>({
+  const [jobForm, setJobForm] = useState({
     title: "",
     category: "",
     jobTitle: "",
@@ -573,11 +340,12 @@ export default function EmployerDashboard() {
   });
 
   const [newSkill, setNewSkill] = useState("");
-  const [currency, setCurrency] = useState<Currency[]>([]);
+  const [currency, setCurrency] = useState([]);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("auth_token");
+    console.log("LOG TOKEN:", token);
     setIsAuthenticated(!!token);
   }, []);
 
@@ -586,29 +354,32 @@ export default function EmployerDashboard() {
       try {
         const token = localStorage.getItem("auth_token");
         if (!token) return;
-
-        const decoded = jwtDecode<DecodedToken>(token);
+  
+        const decoded = jwtDecode(token);
+        console.log("DECODED:", decoded);
+        console.log("Employer ID:", decoded.user_id);
+  
         const res = await fetch(
           `https://jobseeker-backend-jy1y.onrender.com/employeer/api/companies/${decoded.user_id}/`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
-
+  
         if (!res.ok) {
-          console.error("FETCH FAILED");
+          console.error("FETCH FAILED:", res.status);
           return;
         }
-
+     
         const data = await res.json();
-        // console.log("Applications:", data);
+        console.log("Applications:", data);
         setCompanyName(data.company_name)
-        // console.log(data.company_name)
+        console.log(data.company_name)
       } catch (err) {
-        console.error("Error");
+        console.error("Error:", err);
       }
     };
-
+  
     run();
   }, []);
 
@@ -624,11 +395,11 @@ export default function EmployerDashboard() {
           }
         );
         if (!res.ok) {
-          console.error("Failed to fetch applications");
+          console.error("Failed to fetch employer applications");
           return;
         }
         const data = await res.json();
-      
+        console.log("Employer applications:", data);
         // Map API to UI candidate shape
         const mapped = (Array.isArray(data) ? data : []).map((app) => ({
           id: app.id,
@@ -653,10 +424,10 @@ export default function EmployerDashboard() {
           appliedDate: app.applied_at,
           // status: app.application_status || "Under Review",
           status:
-            app.application_status &&
-              app.application_status !== "application_status"
-              ? app.application_status
-              : "Under Review",
+             app.application_status &&
+             app.application_status !== "application_status"
+             ? app.application_status
+             : "Under Review",
 
           resumeUrl: app.profile?.resume
             ? `https://jobseeker-backend-jy1y.onrender.com${app.profile.resume}`
@@ -670,7 +441,7 @@ export default function EmployerDashboard() {
         }));
         setCandidates(mapped);
       } catch (e) {
-        console.error("Failed to fetch applications");
+        console.error("Failed to fetch employer applications", e);
       }
     };
     fetchApplications();
@@ -679,7 +450,7 @@ export default function EmployerDashboard() {
   const exportToExcel = async () => {
     const XLSX = await import("xlsx");
 
-    const data = filteredCategories.map((c : any) => ({
+    const data = filteredCategories.map((c) => ({
       name: c.name || "",
       email: c.email || "",
       // phone: `+${c.phoneCode}${c.phone}` || "",
@@ -701,25 +472,15 @@ export default function EmployerDashboard() {
     try {
       const token = localStorage.getItem("auth_token");
       if (!token) return;
-      // const response = await fetch
-      //     "https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-list-view/",
-      //     {
-      //       method: "GET",
-      //       headers: {
-      //         Authorization: `Bearer ${token}`,
-      //       },
-      //     }
-      //   );
-
-      const response = await fetch(
-        "https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-list-view/",
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+        const response = await fetch(
+          "https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-list-view/",
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
       // const response = await fetch(
       //   "https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-list-view/",
@@ -736,9 +497,11 @@ export default function EmployerDashboard() {
         return;
       }
       const data = await response.json();
+      console.log("Here is the Job-list-view-data:",data)
+      console.log(data.category)
       setPostedJobs(data); // Set jobs into stateq
     } catch (error) {
-      console.error("Error fetching jobs");
+      console.error("Error fetching jobs:", error);
     }
   };
 
@@ -746,12 +509,13 @@ export default function EmployerDashboard() {
   useEffect(() => {
     fetchPostedJobs();
   }, []);
+  console.log("Posted Jobs:", postedJobs);
 
   useEffect(() => {
     fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/currencies/")
       .then((res) => res.json())
       .then((data) => {
-        // console.log("Currency data:", data);
+        console.log("Currency data:", data);
         setCurrency(data);
       });
   }, []);
@@ -769,7 +533,7 @@ export default function EmployerDashboard() {
       })
       .then((data) => setJobCategories(data))
       .catch((err) => {
-        console.error("Failed to fetch job categories");
+        console.error("Failed to fetch job categories:", err);
         setJobCategories([]);
       });
 
@@ -783,7 +547,7 @@ export default function EmployerDashboard() {
       })
       .then((data) => setCities(data))
       .catch((err) => {
-        console.error("Failed to fetch cities");
+        console.error("Failed to fetch cities:", err);
         setCities([]);
       });
   }, []);
@@ -802,7 +566,7 @@ export default function EmployerDashboard() {
         })
         .then((data) => setJobTitles(data))
         .catch((err) => {
-          console.error("Failed to fetch job titles");
+          console.error("Failed to fetch job titles:", err);
           setJobTitles([]);
         });
     } else {
@@ -820,7 +584,7 @@ export default function EmployerDashboard() {
     }
   };
 
-  const handleApplicationsClick = async (jobId: number) => {
+  const handleApplicationsClick = async (jobId) => {
     try {
       const token = localStorage.getItem("auth_token");
 
@@ -835,75 +599,40 @@ export default function EmployerDashboard() {
       );
 
       const data = await response.json();
-      // console.log("API RAW DATA:", data);
+      console.log("API RAW DATA:", data);
 
       if (!Array.isArray(data)) {
-        console.error("API did not return list");
+        console.error("API did not return list:", data);
         toast.error("Failed to load candidates! (Unauthorized?)", {
-          description: "You might not have permission. Please log in or check your access."
+        description: "You might not have permission. Please log in or check your access."
         });
         return;
       }
 
-
-       const mappedCandidates = data.map((item) => ({
-          id: item.id,
-          name: item.profile?.full_name || item.full_name,
-          email: item.email || item.user_email, 
-          phone: item.profile?.phone || item.phone,
-          phoneCode: item.profile?.phone_code || item.phone_code,
-          location: item.profile?.city || item.city,
-          experience: item.profile?.experience || item.experience,
-          job_title: item.job_title,
-          resumeUrl: item.profile?.resume || item.resume,
-          skills: item.profile?.skills || item.skills,
-          certifications: item.profile?.certifications || item.certifications,
-          educationDetails: item.profile?.educations || item.educations,
-          workExperience: item.profile?.experiences || item.experiences,
-          status: item.application_status || "Under Review",
-          appliedDate: item.applied_at,
-          qa: item.answers?.map((ans) => ({
-            question_index: ans.question_index,
-            question_text: ans.question_text,
-            answer_text: ans.answer,
-          }
-        )
-        ),
+      const mappedCandidates = data.map((item) => ({
+        id: item.id,
+        name: item.profile?.full_name || item.full_name,
+        email: item.email || item.user_email, 
+        phone: item.profile?.phone || item.phone,
+        phoneCode: item.profile?.phone_code || item.phone_code,
+        location: item.profile?.city || item.city,
+        experience: item.profile?.experience || item.experience,
+        job_title: item.job_title,
+        resumeUrl: item.profile?.resume || item.resume,
+        skills: item.profile?.skills || item.skills,
+        certifications: item.profile?.certifications || item.certifications,
+        educationDetails: item.profile?.educations || item.educations,
+        workExperience: item.profile?.experiences || item.experiences,
+        status: item.application_status || "Under Review",
+        appliedDate: item.applied_at,
+        qa: item.answers?.map((ans) => ({
+          question_index: ans.question_index,
+          question_text: ans.question_text,
+          answer_text: ans.answer,
+        })),
       }));
 
-      //   const mappedCandidates = data.map((item) => ({
-      //     id: item.id,
-      //     name: item.profile?.full_name || item.full_name,
-      //     email: item.email || item.user_email, 
-      //     phone: item.profile?.phone || item.phone,
-      //     phoneCode: item.profile?.phone_code || item.phone_code,
-      //     location: item.profile?.city || item.city,
-      //     experience: item.profile?.experience || item.experience,
-      //     job_title: item.job_title,
-      //     resumeUrl: item.profile?.resume || item.resume,
-      //     skills: item.profile?.skills || item.skills,
-      //     certifications: item.profile?.certifications || item.certifications,
-      //     educationDetails: item.profile?.educations || item.educations,
-      //     workExperience: item.profile?.experiences || item.experiences,
-      //     status: item.application_status || "Under Review",
-      //     appliedDate: item.applied_at,
-      //     qa: item.answers?.map((ans: any) => ({
-      //       question_index: ans.question_index,
-      //       question_text: ans.question_text,
-      //       answer_text: ans.answer,
-      //     })),
-      //   }));
-
-
-      //   console.log("MAPPED CANDIDATES:", mappedCandidates);
-
-      //   setCandidates(mappedCandidates);
-      //   setActiveTab("candidates");
-      // } catch (error) {
-      //   console.error(error);
-      // }
-      const mappedCandidates: Candidate[] =
-        data.map(mapApiCandidateToUI);
+      console.log("MAPPED CANDIDATES:", mappedCandidates);
 
       setCandidates(mappedCandidates);
       setActiveTab("candidates");
@@ -921,7 +650,7 @@ export default function EmployerDashboard() {
     }
   };
 
-  const handleRemoveQuestion = (indexToRemove: number) => {
+  const handleRemoveQuestion = (indexToRemove) => {
     const updated = jobForm.questions.filter(
       (_, index) => index !== indexToRemove
     );
@@ -929,20 +658,20 @@ export default function EmployerDashboard() {
     setQuestions(updated);
   };
 
-  const handleRemoveSkill = (skillToRemove: string) => {
+  const handleRemoveSkill = (skillToRemove) => {
     setJobForm((prev) => ({
       ...prev,
       skills: prev.skills.filter((skill) => skill !== skillToRemove),
     }));
   };
 
-  const handleSubmitJob = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmitJob = async (e) => {
     e.preventDefault();
     try {
       const token = localStorage.getItem("auth_token");
       if (!token) {
         toast.error("You must be logged in to post a job.", {
-          description: "Please log in to continue."
+        description: "Please log in to continue."
         });
         return;
       }
@@ -968,7 +697,7 @@ export default function EmployerDashboard() {
         status: "active",
         questions: Array.isArray(jobForm.questions) ? jobForm.questions : [],
       };
-      // console.log("Payload:", payload);
+      console.log("Payload:", payload);
       const response = await fetch(
         "https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-postings/",
         {
@@ -983,72 +712,21 @@ export default function EmployerDashboard() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.error("Error posting job");
+        console.error("Error posting job:", errorData);
         toast.error("Failed to post job", {
-          description: errorData.detail || "Unknown error. Please try again.",
+        description: errorData.detail || "Unknown error. Please try again.",
         });
 
         return;
       }
 
   const data = await response.json();
+  console.log("Job posted successfully:", data);
   setPostedJobs((prev) => [...prev, data]);
   toast.success("Job posted successfully!");
   await fetchPostedJobs();
 
       // Reset form
-
-      setJobForm({
-        title: "",
-        category: "",
-        jobTitle: "",
-        company: "",
-        location: "",
-        experience: "",
-        salary: "",
-        currency: "",
-        job_type: "",
-        workMode: "",
-        description: "",
-        requirements: "",
-        benefits: "",
-        skills: [],
-        applicationDeadline: "",
-        vacancies: "",
-        isUrgent: false,
-        isRemote: false,
-        questions: [],
-      });
-      setSelectedCategory("");
-      setQuestions([]);
-      setAskQuestionEnabled(false); // uncheck the checkbox
-      setNewSkill("");
-      setNewQuestion("");
-    } catch (error) {
-      console.error("Error submitting job:", error);
-      toast.error("An error occurred while posting the job.", {
-        description: "Please try again or check your internet connection."
-        });    
-       }
-    };
-
-    const getStatusColor = (status) => {
-      switch (status) {
-        case "active":
-          return "bg-green-100 text-green-800";
-        case "closed":
-          return "bg-red-100 text-red-800";
-        case "Under Review":
-          return "bg-yellow-100 text-yellow-800";
-        case "Shortlisted":
-          return "bg-blue-100 text-blue-800";
-        case "Rejected":
-          return "bg-red-100 text-red-800";
-        default:
-          return "bg-gray-100 text-gray-800";
-      }
-    };
-
         setJobForm({
           title: "",
           category: "",
@@ -1076,33 +754,31 @@ export default function EmployerDashboard() {
         setNewSkill("");
         setNewQuestion("");
       } catch (error) {
-        console.error("Error submitting job");
+        console.error("Error submitting job:", error);
         toast.error("An error occurred while posting the job.", {
         description: "Please try again or check your internet connection."
-      });
-    }
-  };
+        });    
+       }
+    };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "active":
-        return "bg-green-100 text-green-800";
-      case "closed":
-        return "bg-red-100 text-red-800";
-      case "Under Review":
-        return "bg-yellow-100 text-yellow-800";
-      case "Shortlisted":
-        return "bg-blue-100 text-blue-800";
-      case "Rejected":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
+    const getStatusColor = (status) => {
+      switch (status) {
+        case "active":
+          return "bg-green-100 text-green-800";
+        case "closed":
+          return "bg-red-100 text-red-800";
+        case "Under Review":
+          return "bg-yellow-100 text-yellow-800";
+        case "Shortlisted":
+          return "bg-blue-100 text-blue-800";
+        case "Rejected":
+          return "bg-red-100 text-red-800";
+        default:
+          return "bg-gray-100 text-gray-800";
+      }
+    };
 
   // Filter jobs based on status and search term
-
   const filteredJobs = postedJobs.filter((job) => {
     const matchesFilter =
       jobFilter === "all" ||
@@ -1136,7 +812,7 @@ export default function EmployerDashboard() {
       c.currentRole?.toLowerCase().startsWith(searchTerm.toLowerCase()) ||
       c.appliedFor?.toLowerCase().startsWith(searchTerm.toLowerCase()) ||
       c.skills?.some((skill) =>
-        skill.toLowerCase().includes(searchTerm.toLowerCase())
+      skill.toLowerCase().includes(searchTerm.toLowerCase())
       );
 
     const statusMatch =
@@ -1151,7 +827,7 @@ export default function EmployerDashboard() {
       jobTitleFilter === "All" ||
       c.appliedFor?.toLowerCase() === jobTitleFilter.toLowerCase();
 
-    const salary = parseInt(c.expectedSalary ?? "0", 10);
+    const salary = parseInt(c.expectedSalary) || 0;
     const salaryMatch =
       salaryFilter === "All" ||
       (salaryFilter === "Below 20000" && salary < 20000) ||
@@ -1189,15 +865,7 @@ export default function EmployerDashboard() {
     city.name.toLowerCase().startsWith(searchTerm.toLowerCase())
   );
 
-<<<<<<< HEAD
-<<<<<<< HEAD
     const handleViewJob = async (job) => {
-=======
-<<<<<<< Updated upstream
-=======
->>>>>>> bd267ff ([FIX] all : completed the pagination feature of frontend.)
-    const handleViewJob = async (job: any) => {
->>>>>>> a598b0f ([IMP] all : Implemented the pagination in the backend.)
       try {
         const token = localStorage.getItem("auth_token");
         const response = await fetch(
@@ -1211,16 +879,16 @@ export default function EmployerDashboard() {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
         const data = await response.json();
-       
+        console.log("Job details:", data);
         setSelectedJob(data);
         setIsEditMode(false);
         setIsModalOpen(true);
       } catch (err) {
-        console.error("Error fetching job details");
+        console.error("Error fetching job details", err);
       }
     };
   //https://jobseeker-backend-jy1y.onrender.com
-    const handleEditJob = async (job: any) => {
+    const handleEditJob = async (job) => {
       try {
         const token = localStorage.getItem("auth_token");
         const response = await fetch(
@@ -1231,6 +899,7 @@ export default function EmployerDashboard() {
         );
       
         const data = await response.json();
+        console.log("Data is prefill", data);
         // Prefill the form
     setJobForm({
         title: data.title || "",
@@ -1259,20 +928,20 @@ export default function EmployerDashboard() {
       setSelectedJob(data);
       setIsEditMode(true);
     } catch (err) {
-      console.error("Error fetching job details for edit");
+      console.error("Error fetching job details for edit", err);
     }
   };
 
-  const handleDeleteJob = async (job: any) => {
+  const handleDeleteJob = async (job) => {
     const token = localStorage.getItem("auth_token");
     try {
       if (
         window.confirm(`Are you sure you want to delete the job: ${job.title}?`)
       ) {
-        // console.log("Deleting job:", job);
+        console.log("Deleting job:", job);
 
         toast.success("Job deleted", {
-          description: `The job "${job.title}" has been successfully removed.`
+        description: `The job "${job.title}" has been successfully removed.`
         });
 
       }
@@ -1288,17 +957,17 @@ export default function EmployerDashboard() {
       if (response.ok) {
         setPostedJobs((prev) => prev.filter((j) => j.id !== job.id));
         toast.success("Job deleted", {
-          description: `The job "${job.title}" has been successfully removed.`
+        description: `The job "${job.title}" has been successfully removed.`
         });
 
       } else {
         console.error("Failed to delete job");
         toast.error("Failed to delete job", {
-          description: "Please try again or check your internet connection."
+        description: "Please try again or check your internet connection."
         });
       }
     } catch (err) {
-      console.error("Error fetching job details for edit");
+      console.error("Error fetching job details for edit", err);
     }
   };
 
@@ -1309,12 +978,12 @@ export default function EmployerDashboard() {
   //   alert(`Job status changed to: ${newStatus}`);
   // };
 
-  const handleToggleJobStatus = async (job: any) => {
+  const handleToggleJobStatus = async (job) => {
     const token = localStorage.getItem("auth_token");
 
     if (!token) {
       toast.error("You are not logged in. Please log in again.", {
-        description: "Your session may have expired."
+      description: "Your session may have expired."
       });
       return;
     }
@@ -1343,14 +1012,14 @@ export default function EmployerDashboard() {
         );
         toast.success(`Job status changed to: ${newStatus}`);
       } else {
-        console.error("Failed to update job status");
-
+        console.error("Failed to update job status:", result);
+        
         toast.error(result.detail || "Failed to update job status", {
-          description: "Please check and try again.",
-        });
+       description: "Please check and try again.",
+       });
       }
     } catch (err) {
-      console.error("Error updating job status");
+      console.error("Error updating job status:", err);
       toast.error("Network error. Please try again.");
     }
   };
@@ -1389,8 +1058,8 @@ export default function EmployerDashboard() {
   const handleUpdateJob = async () => {
     if (!selectedJob?.id) {
       toast.error("No job selected for update", {
-        description: "Please select a job and try again."
-      });
+      description: "Please select a job and try again."
+     });
       return;
     }
 
@@ -1398,7 +1067,7 @@ export default function EmployerDashboard() {
       const token = localStorage.getItem("auth_token");
       if (!token) {
         toast.error("You must be logged in to update a job.", {
-          description: "Please log in and try again."
+        description: "Please log in and try again."
         });
         return;
       }
@@ -1417,9 +1086,9 @@ export default function EmployerDashboard() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.error("Failed to update job");
+        console.error("Failed to update job:", errorData);
         toast.error(`Error: ${errorData.detail || "Unable to update job"}`, {
-          description: "Please try again or check your network connection."
+        description: "Please try again or check your network connection."
         });
         return;
       }
@@ -1432,23 +1101,23 @@ export default function EmployerDashboard() {
       );
 
       setIsEditMode(false); // Close the dialog
-
+      
       toast.success("Job updated successfully!");
     } catch (err) {
-      console.error("Update job error");
+      console.error("Update job error:", err);
       toast.error("An error occurred while updating the job.", {
-        description: "Please try again or check your network connection."
+      description: "Please try again or check your network connection."
       });
     }
   };
 
   // SHORTLIST
-  const handleShortlistCandidate = async (candidate: any) => {
+  const handleShortlistCandidate = async (candidate) => {
     try {
       const token = localStorage.getItem("auth_token");
       if (!token) {
         toast.error("Token missing", {
-          description: "Please log in again to continue."
+        description: "Please log in again to continue."
         });
         return;
       }
@@ -1468,12 +1137,12 @@ export default function EmployerDashboard() {
       );
 
       const updated = await response.json();
-      // console.log("Updated Response:", updated);
+      console.log("Updated Response:", updated);
 
       if (!response.ok) {
-        toast.error(updated.error || "Update failed", {
-          description: "Please check and try again."
-        });
+         toast.error(updated.error || "Update failed", {
+         description: "Please check and try again."
+         });
         return;
       }
 
@@ -1494,23 +1163,23 @@ export default function EmployerDashboard() {
       //     ? { ...prev, status: updated.application_status }
       //     : prev
       // );
-      // console.log("Now>>>>>>>", selectedCandidate);
+      console.log("Now>>>>>>>", selectedCandidate);
 
       toast.success("Candidate Shortlisted!");
     } catch (err) {
-      console.log("Shortlist error");
+      console.log("Shortlist error:", err);
       toast.error("Network error. Please try again.");
     }
   };
 
   /* REJECT */
-  const handleRejectCandidate = async (candidate: Pick<Candidate, "id">) => {
+  const handleRejectCandidate = async (candidate) => {
     try {
-      // console.log("Rejecting candidate: ", candidate);
+      console.log("Rejecting candidate: ", candidate);
 
       if (!candidate?.id) {
         toast.error("Candidate ID missing", {
-          description: "Please select a candidate and try again."
+        description: "Please select a candidate and try again."
         });
         return;
       }
@@ -1518,7 +1187,7 @@ export default function EmployerDashboard() {
       const token = localStorage.getItem("auth_token");
       if (!token) {
         toast.error("Token missing", {
-          description: "Please log in again to continue."
+         description: "Please log in again to continue."
         });
         return;
       }
@@ -1538,132 +1207,21 @@ export default function EmployerDashboard() {
       );
 
       const text = await response.text();
-      // console.log("Raw Response → ", text);
+      console.log("Raw Response → ", text);
 
-      let data: ApplicationUpdateResponse | null = null;
+      let data = null;
       try {
-        data = JSON.parse(text) as ApplicationUpdateResponse
+        data = JSON.parse(text);
       } catch {
         console.log("HTML Error Response Received");
       }
 
       if (!response.ok) {
         toast.error(data?.detail || "Update failed", {
-          description: "Please check and try again."
+        description: "Please check and try again."
         });
         return;
       }
-
-      if (!data) {
-        toast.error("Invalid server response", {
-          description: "Please try again later."
-        });
-        return;
-      }
-      const { id, application_status } = data;
-      // setCandidates((prev) =>
-      //   prev.map((c) =>
-      //     c.id === data.id ? { ...c, status: data.application_status } : c
-      //   )
-      // );
-
-      // setSelectedCandidate((prev) =>
-      //   prev && prev.id === data.id
-      //     ? { ...prev, status: data.application_status }
-      //     : prev
-      // );
-      setCandidates((prev) =>
-        prev.map((c) =>
-          c.id === id ? { ...c, status: application_status } : c
-        )
-      );
-
-      setSelectedCandidate((prev) =>
-        prev && prev.id === id
-          ? { ...prev, status: application_status }
-          : prev
-      );
-
-      // setSelectedCandidate((prev) =>
-      //   prev && prev.id === data.id
-      //     ? { ...prev, status: data.application_status }
-      //     : prev
-      // );
-
-      toast.error("Candidate Rejected!");
-    } catch (err) {
-      console.log("Reject error");
-      toast.error("Network error. Please try again.");
-    }
-  };
-
-  // INTERVIEW SCHEDULE
-  const handleScheduleInterview = (candidate: any) => {
-    setSelectedCandidate(candidate);
-    setOpenSchedule(true);
-  };
-
-  const handleScheduleSubmit = async () => {
-<<<<<<< HEAD
-
-     if (!interviewDate) {
-    toast.warning("Please select interview date");
-    return;
-  }
-=======
-    if (!selectedCandidate) {
-      toast.error("No candidate selected", {
-        description: "Please select a candidate and try again."
-      });
-      return;
-    }
-    if (!interviewDate) {
-      toast.warning("Please select interview date");
-      return;
-    }
->>>>>>> a598b0f ([IMP] all : Implemented the pagination in the backend.)
-
-
-    try {
-      const token = localStorage.getItem("auth_token");
-      if (!token) return toast.error("Token missing", {
-<<<<<<< HEAD
-                         description: "Please log in again to continue."
-                         });
-  
-=======
-        description: "Please log in again to continue."
-      });
-
->>>>>>> a598b0f ([IMP] all : Implemented the pagination in the backend.)
-      const res = await fetch(
-        `https://jobseeker-backend-jy1y.onrender.com/employeer/api/employer/applications/${selectedCandidate.id}/schedule-interview/`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            interview_date: interviewDate,
-            interview_time: interviewTime,
-            interview_mode: interviewMode,
-            notes: interviewNotes,
-           application_status : true, // needs improvement, the application status is 
-          }),
-        }
-      );
-      // meet_link: meetLink,
-      if (!res.ok) {
-        const text = await res.text();
-        console.error("Backend error");
-        return toast.error("Failed to schedule interview", {
-          description: "Please try again or check your network connection."
-        });
-
-      }
-
-      const data = await res.json();
 
       setCandidates((prev) =>
         prev.map((c) =>
@@ -1677,14 +1235,87 @@ export default function EmployerDashboard() {
           : prev
       );
 
-      toast.success("Interview Scheduled!");
-      setOpenSchedule(false);
+      // setSelectedCandidate((prev) =>
+      //   prev && prev.id === data.id
+      //     ? { ...prev, status: data.application_status }
+      //     : prev
+      // );
+
+      toast.error("Candidate Rejected!");
     } catch (err) {
-      console.error("Network error");
+      console.log("Reject error: ", err);
       toast.error("Network error. Please try again.");
     }
   };
 
+  // INTERVIEW SCHEDULE
+  const handleScheduleInterview = (candidate) => {
+    setSelectedCandidate(candidate);
+    setOpenSchedule(true);
+  };
+
+  const handleScheduleSubmit = async () => {
+
+     if (!interviewDate) {
+    toast.warning("Please select interview date");
+    return;
+  }
+
+                    
+    try {
+      const token = localStorage.getItem("auth_token");
+      if (!token) return toast.error("Token missing", {
+                         description: "Please log in again to continue."
+                         });
+  
+      const res = await fetch(
+        `https://jobseeker-backend-jy1y.onrender.com/employeer/api/employer/applications/${selectedCandidate.id}/schedule-interview/`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            interview_date: interviewDate,
+            interview_time: interviewTime,
+            interview_mode: interviewMode,
+            notes: interviewNotes,
+          }),
+        }
+      );
+   // meet_link: meetLink,
+      if (!res.ok) {
+        const text = await res.text();
+        console.error("Backend error:", text);
+        return toast.error("Failed to schedule interview", {
+        description: "Please try again or check your network connection."
+         });
+
+      }
+  
+      const data = await res.json();
+  
+      setCandidates((prev) =>
+        prev.map((c) =>
+          c.id === data.id ? { ...c, status: data.application_status } : c
+        )
+      );
+  
+      setSelectedCandidate((prev) =>
+        prev && prev.id === data.id
+          ? { ...prev, status: data.application_status }
+          : prev
+      );
+  
+      toast.success("Interview Scheduled!");
+      setOpenSchedule(false);
+    } catch (err) {
+      console.error(err);
+      toast.error("Network error. Please try again.");
+    }
+  };
+  
 
   const handleLogout = () => {
     localStorage.removeItem("auth_token");
@@ -1698,20 +1329,20 @@ export default function EmployerDashboard() {
     { id: "candidates", label: "Candidates", icon: Users },
     // { id: 'analytics', label: 'Analytics', icon: TrendingUp }
     {
-      id: "profiles",
-      label: "profiles",
-      icon: UserCircle,
-      component: <CandidatesPage />,
-    },
+    id: "profiles",
+    label: "profiles",
+    icon: UserCircle,
+    component: <CandidatesPage />,
+  },
     {
-      id: "quota",
-      label: "Quota Usage",
-      icon: BarChart3,
-      component: <QuotaUsagePage />,
-    },
+    id: "quota",
+    label: "Quota Usage",
+    icon: BarChart3,
+    component: <QuotaUsagePage />,
+  },
   ];
 
-  const getWorkModeColor = (workMode: string) => {
+  const getWorkModeColor = (workMode) => {
     switch (workMode) {
       case "Remote":
         return "bg-green-100 text-green-800";
@@ -1724,9 +1355,9 @@ export default function EmployerDashboard() {
     }
   };
 
-  const getTimeSincePosted = (postedDate: string) => {
-    const now = new Date().getTime();
-    const posted = new Date(postedDate).getTime();
+  const getTimeSincePosted = (postedDate) => {
+    const now = new Date();
+    const posted = new Date(postedDate);
     const diffTime = Math.abs(now - posted);
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
@@ -1758,7 +1389,7 @@ export default function EmployerDashboard() {
         );
 
         const data = await res.json();
-        // console.log("Company API → ", data);
+        console.log("Company API → ", data);
 
         if (data?.company_name) {
           setJobForm((prev) => ({
@@ -1767,27 +1398,12 @@ export default function EmployerDashboard() {
           }));
         }
       } catch (err) {
-        console.error("Company fetch error");
+        console.error("Company fetch error:", err);
       }
     };
 
     fetchCompany();
   }, []);
-
-  const [filters, setFilters] = useState({
-    search: "",
-    location: "",
-    experience: "",
-    salaryRange: [0, 50],
-    designation: "",
-    department_Role: "",
-    Industry: "",
-    Notice_Period: "",
-    Gender: "",
-    Age: [0, 50],
-    Degree_Course: "",
-    college_Name: "",
-  });
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -1808,23 +1424,23 @@ export default function EmployerDashboard() {
             </Link>
             <div className="flex items-center gap-4">
               <div className="relative">
-
                  <div               
                    onClick={() => setIsNotificationOpen(!isNotificationOpen)}
                    className="cursor-pointer relative select-none"
                   >
                   <Bell className="w-5 h-5 text-gray-700 hover:text-purple-600" />
-                  <span className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full" />
-                </div>
+                <span className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full" />
+                 </div>
 
-            {isNotificationOpen && (
+                 {isNotificationOpen && (
                    <>
+                    
                      <div
                        className="fixed inset-0 z-40 bg-black/20 md:bg-transparent"
                        onClick={() => setIsNotificationOpen(false)}
                      />
-                    <div
-                      className="
+                     <div
+                       className="               
                         fixed md:absolute
                         inset-x-0 bottom-0 md:inset-auto
                         md:right-0 md:top-full
@@ -1836,8 +1452,7 @@ export default function EmployerDashboard() {
                         z-50
                       "
                      >
-                       <div className="p-3 border-b font-semibold text-gray-700 flex justify-between items-center">
-
+                       <div className="p-3 border-b font-semibold text-gray-700 flex justify-between items-center">               
                         Notifications
                         <button
                           className="md:hidden text-gray-500"
@@ -1845,15 +1460,15 @@ export default function EmployerDashboard() {
                         >
                           ✕
                         </button>
-                      </div>
+                       </div>
 
-                      <div className="max-h-64 overflow-y-auto">
-                        <div className="px-4 py-3 hover:bg-gray-50 cursor-pointer">
-                          <p className="text-sm font-medium text-gray-800">
-                            New job matched your profile
-                          </p>
-                          <p className="text-xs text-gray-500">2 minutes ago</p>
-                        </div>
+                       <div className="max-h-64 overflow-y-auto">
+                         <div className="px-4 py-3 hover:bg-gray-50 cursor-pointer">
+                           <p className="text-sm font-medium text-gray-800">
+                             New job matched your profile
+                           </p>
+                           <p className="text-xs text-gray-500">2 minutes ago</p>
+                         </div>
 
                         <div className="px-4 py-3 hover:bg-gray-50 cursor-pointer">
                           <p className="text-sm font-medium text-gray-800">
@@ -1906,10 +1521,11 @@ export default function EmployerDashboard() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center space-x-2 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${activeTab === tab.id
-                    ? "border-blue-600 text-blue-600"
-                    : "border-transparent text-gray-600 hover:text-blue-600"
-                    }`}
+                  className={`flex items-center space-x-2 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                    activeTab === tab.id
+                      ? "border-blue-600 text-blue-600"
+                      : "border-transparent text-gray-600 hover:text-blue-600"
+                  }`}
                 >
                   <IconComponent className="w-4 h-4" />
                   <span>{tab.label}</span>
@@ -1987,7 +1603,7 @@ export default function EmployerDashboard() {
                         </div>
 
                         {Array.isArray(jobCategories) &&
-                          jobCategories.length > 0 ? (
+                        jobCategories.length > 0 ? (
                           jobCategories
                             .filter((category) => {
                               if (!searchTerm) return true;
@@ -2294,7 +1910,6 @@ export default function EmployerDashboard() {
                     <Input
                       id="deadline"
                       type="date"
-                       min={new Date().toISOString().split("T")[0]}
                       value={jobForm.applicationDeadline}
                       onChange={(e) =>
                         setJobForm((prev) => ({
@@ -2420,7 +2035,7 @@ export default function EmployerDashboard() {
                       id="urgent"
                       checked={jobForm.isUrgent}
                       onCheckedChange={(checked) =>
-                        setJobForm((prev) => ({ ...prev, isUrgent: checked === true }))
+                        setJobForm((prev) => ({ ...prev, isUrgent: checked }))
                       }
                     />
                     <Label htmlFor="urgent" className="text-sm">
@@ -2432,7 +2047,7 @@ export default function EmployerDashboard() {
                       id="remote"
                       checked={jobForm.isRemote}
                       onCheckedChange={(checked) =>
-                        setJobForm((prev) => ({ ...prev, isRemote: checked === true }))
+                        setJobForm((prev) => ({ ...prev, isRemote: checked }))
                       }
                     />
                     <Label htmlFor="remote" className="text-sm">
@@ -2512,14 +2127,12 @@ export default function EmployerDashboard() {
         {activeTab === "manage-jobs" && (
           <Card>
             <CardHeader>
-              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <CardTitle>Manage Your Jobs</CardTitle>
-
-                <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
-    
-                  {/* Date Filter */}
+                <div className="flex items-center space-x-2">
+                  {/*  Date Filter */}
                   <Select value={dateFilter} onValueChange={setDateFilter}>
-                    <SelectTrigger className="w-full sm:w-32">
+                    <SelectTrigger className="w-32">
                       <SelectValue placeholder="Filter by Date" />
                     </SelectTrigger>
                     <SelectContent>
@@ -2531,9 +2144,8 @@ export default function EmployerDashboard() {
                     </SelectContent>
                   </Select>
 
-                  {/* Job Filter */}
                   <Select value={jobFilter} onValueChange={setJobFilter}>
-                    <SelectTrigger className="w-full sm:w-32">
+                    <SelectTrigger className="w-32">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -2542,21 +2154,25 @@ export default function EmployerDashboard() {
                       <SelectItem value="closed">Closed</SelectItem>
                     </SelectContent>
                   </Select>
-
-                  {/* Search */}
-                  <div className="relative w-full sm:w-56 md:w-64">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <Input
                       placeholder="Search jobs..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10 w-full"
+                      className="pl-10 w-48"
                     />
                   </div>
-
+                  {/* <Button variant="outline" size="sm">
+                    <Filter className="w-4 h-4 mr-2" />
+                    Filter
+                  </Button>
+                  <Button variant="outline" size="sm">
+                    <Download className="w-4 h-4 mr-2" />
+                    Export
+                  </Button> */}
                 </div>
               </div>
-
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -2606,15 +2222,9 @@ export default function EmployerDashboard() {
                             </div>
                             <div className="flex items-center">
                               <Calendar className="w-4 h-4 mr-1" />
-                              {/* <span>
-                                Posted:{" "}
-                                {new Date(job.created_at).toLocaleDateString()}
-                              </span> */}
                               <span>
                                 Posted:{" "}
-                                {job.created_at
-                                  ? new Date(job.created_at).toLocaleDateString()
-                                  : "N/A"}
+                                {new Date(job.created_at).toLocaleDateString()}
                               </span>
                             </div>
                           </div>
@@ -2624,12 +2234,12 @@ export default function EmployerDashboard() {
                               onClick={() => handleApplicationsClick(job.id)}
                             >
                               <Users className="w-4 h-4 mr-1" />
-                              <span>{job.applicants || 0} Applications</span>
+                              <span>{job.applicants} Applications</span>
                             </div>
 
                             <div className="flex items-center text-green-600">
                               <Eye className="w-4 h-4 mr-1" />
-                              <span>{job.apply_clicks || 0} Views</span>
+                              <span>{job.apply_clicks} Views</span>
                             </div>
                           </div>
                         </div>
@@ -2673,7 +2283,7 @@ export default function EmployerDashboard() {
                                 onClick={() => handleToggleJobStatus(job)}
                               >
                                 {job.status?.toLowerCase() === "active" ||
-                                  job.status?.toLowerCase() === "open" ? (
+                                job.status?.toLowerCase() === "open" ? (
                                   <>
                                     <XCircle className="w-4 h-4 mr-2 text-red-500" />
                                     Close Job
@@ -2775,7 +2385,7 @@ export default function EmployerDashboard() {
                     <div className="flex items-center text-gray-600">
                       <Calendar className="w-4 h-4 mr-2" />
                       <span>
-                        Posted {selectedJob.created_at ? getTimeSincePosted(selectedJob.created_at) : "N/A"}
+                        Posted {getTimeSincePosted(selectedJob.created_at)}
                       </span>
                     </div>
                   </div>
@@ -2799,6 +2409,19 @@ export default function EmployerDashboard() {
                   <ul className="space-y-2">{selectedJob.requirements}</ul>
                 </div>
 
+                {/* Responsibilities */}
+                {/* <div>
+                            <h4 className="text-lg font-semibold text-gray-900 mb-3">Responsibilities</h4>
+                            <ul className="space-y-2">
+                              {selectedJob.responsibilities.map((resp, index) => (
+                                <li key={index} className="flex items-start">
+                                  <Star className="w-4 h-4 text-purple-500 mr-2 mt-0.5 flex-shrink-0" />
+                                  <span className="text-gray-700">{resp}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                          */}
                 {/* Benefits */}
                 <div>
                   <h4 className="text-lg font-semibold text-gray-900 mb-3">
@@ -2832,7 +2455,7 @@ export default function EmployerDashboard() {
                   </h4>
                   <div className="flex flex-wrap gap-2">
                     {selectedJob.questions &&
-                      selectedJob.questions.length > 0 ? (
+                    selectedJob.questions.length > 0 ? (
                       selectedJob.questions.map((question, index) => (
                         <Badge
                           key={index}
@@ -3264,7 +2887,7 @@ export default function EmployerDashboard() {
                         <SelectItem value="5+ Years">5+ Years</SelectItem>
                       </SelectContent>
                     </Select>
-
+                   
                     <Select
                       value={jobTitleFilter}
                       onValueChange={setJobTitleFilter}
@@ -3344,10 +2967,11 @@ export default function EmployerDashboard() {
                           setSelectedCandidate(candidate);
                           setIsCandidateModalOpen(true);
                         }}
-                        className={`p-4 cursor-pointer hover:bg-gray-50 border-l-4 transition-colors ${selectedCandidate?.id === candidate.id
+                        className={`p-4 cursor-pointer hover:bg-gray-50 border-l-4 transition-colors ${
+                          selectedCandidate?.id === candidate.id
                             ? "border-l-blue-500 bg-blue-50"
                             : "border-l-transparent"
-                          }`}
+                        }`}
                       >
                         <div className="flex items-start space-x-3">
                           <div className="w-10 h-10 bg-gradient-to-br from-purple-100 to-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
@@ -3394,7 +3018,7 @@ export default function EmployerDashboard() {
               {selectedCandidate ? (
                 <Card className="h-full">
                   <CardHeader>
-                    <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                    <div className="flex items-start justify-between">
                       <div className="flex items-start space-x-4">
                         <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-blue-100 rounded-full flex items-center justify-center">
                           <Users className="w-8 h-8 text-purple-600" />
@@ -3421,12 +3045,16 @@ export default function EmployerDashboard() {
                           </div>
                         </div>
                       </div>
-                      <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                        <Button variant="outline" size="sm" className="w-full sm:w-auto">
+                      <div className="flex items-center space-x-2">
+                        <Button variant="outline" size="sm">
                           <Mail className="w-4 h-4 mr-2" />
                           Email
                         </Button>
-                                             
+                        <Button variant="outline" size="sm">
+                          <Phone className="w-4 h-4 mr-2" />
+                          Call
+                        </Button>
+
                         <Button variant="outline" size="sm">
                           {selectedCandidate.resumeUrl ? (
                             <a
@@ -3461,7 +3089,7 @@ export default function EmployerDashboard() {
                           <Phone className="w-4 h-4 mr-2 text-gray-400" />
                            
                           <span>
-                            +{selectedCandidate.phoneCode}
+                           +{selectedCandidate.phoneCode}
                             {selectedCandidate.phone}
                           </span>
                         </div>
@@ -3615,7 +3243,7 @@ export default function EmployerDashboard() {
                         </div>
                       )}
 
-
+                     
 
                     {selectedCandidate.certifications.length > 0 && (
                       <div>
@@ -3648,25 +3276,25 @@ export default function EmployerDashboard() {
                       </div>
                     )}
 
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setShowResume(!showResume)}
-                    >
-                      View Resume
-                    </Button>
+                       <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowResume(!showResume)}
+                      >
+                        View Resume
+                      </Button>
 
-                    {showResume && selectedCandidate.resumeUrl && (
-                      <div className="mt-4 h-[500px] border rounded">
-                        <iframe
-                          src={`https://docs.google.com/gview?url=${encodeURIComponent(
-                            selectedCandidate.resumeUrl
-                          )}&embedded=true`}
-                          className="w-full h-full"
-                          title="Resume Preview"
-                        />
-                      </div>
-                    )}
+                      {showResume && selectedCandidate.resumeUrl && (
+                        <div className="mt-4 h-[500px] border rounded">
+                          <iframe
+                            src={`https://docs.google.com/gview?url=${encodeURIComponent(
+                              selectedCandidate.resumeUrl
+                            )}&embedded=true`}
+                            className="w-full h-full"
+                            title="Resume Preview"
+                          />
+                        </div>
+                      )}
 
                     {/* Action Buttons */}
                     <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t">
@@ -3694,7 +3322,6 @@ export default function EmployerDashboard() {
                               <XCircle className="w-4 h-4 mr-2" />
                               Reject Application
                             </Button> */}
-
                             
                          <AlertDialog>
                            <AlertDialogTrigger asChild>                         
@@ -3726,7 +3353,6 @@ export default function EmployerDashboard() {
                             </AlertDialogFooter>
                            </AlertDialogContent>
                          </AlertDialog>
-
                           </>
                         )}
 
@@ -3758,55 +3384,49 @@ export default function EmployerDashboard() {
                       </div>
 
                       {openSchedule && (
-                        <Dialog open={openSchedule} onOpenChange={() => setOpenSchedule(false)}>
-                          <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto rounded-xl">
-                            <DialogHeader>
-                              <DialogTitle className="text-lg font-semibold">
-                                Schedule Interview
-                              </DialogTitle>
-                            </DialogHeader>
+  <Dialog open={openSchedule} onOpenChange={() => setOpenSchedule(false)}>
+    <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto rounded-xl">
+      <DialogHeader>
+        <DialogTitle className="text-lg font-semibold">
+          Schedule Interview
+        </DialogTitle>
+      </DialogHeader>
 
-                            <div className="space-y-4 mt-3">
-                              {/* Candidate Name */}
-                              <div className="bg-gray-50 p-3 rounded-lg border">
-                                <p className="text-xs text-gray-500">Candidate</p>
-                                <p className="font-semibold text-gray-800">
-                                  {selectedCandidate?.name}
-                                </p>
-                              </div>
+      <div className="space-y-4 mt-3">
+        {/* Candidate Name */}
+        <div className="bg-gray-50 p-3 rounded-lg border">
+          <p className="text-xs text-gray-500">Candidate</p>
+          <p className="font-semibold text-gray-800">
+            {selectedCandidate?.name}
+          </p>
+        </div>
 
-                              {/* Candidate Email */}
-                              <div className="bg-gray-50 p-3 rounded-lg border">
-                                <p className="text-xs text-gray-500">Email</p>
-                                <p className="font-semibold text-gray-800">
-                                  {selectedCandidate?.email}
-                                </p>
-                              </div>
+        {/* Candidate Email */}
+        <div className="bg-gray-50 p-3 rounded-lg border">
+          <p className="text-xs text-gray-500">Email</p>
+          <p className="font-semibold text-gray-800">
+            {selectedCandidate?.email}
+          </p>
+        </div>
 
-                              {/* Interview Date */}
-                              <div>
-                                <label className="text-sm font-medium">Interview Date</label>
-                                <input
-                                  required
-                                  type="date"
-                                  className="w-full border rounded-lg p-2 mt-1 focus:ring-2 focus:ring-blue-500"
-                                  value={interviewDate}
-                                  onChange={(e) => setInterviewDate(e.target.value)}
+        {/* Interview Date */}
+        <div>
+          <label className="text-sm font-medium">Interview Date</label>
+          <input
+          required
+            type="date"
+            className="w-full border rounded-lg p-2 mt-1 focus:ring-2 focus:ring-blue-500"
+            value={interviewDate}
+            onChange={(e) => setInterviewDate(e.target.value)}
+            
+          />
+        </div>
 
-                                />
-                              </div>
+        {/* Interview Time */}
+        <div className="flex space-x-2 items-center">
+          <label className="text-sm font-medium">Interview Time</label>
 
-
-                              {/* Interview Time */}
-                              <div className="flex space-x-2 items-center">
-                                <label className="text-sm font-medium">Interview Time</label>
-
-
-                              {/* Interview Time */}
-                              <div className="flex space-x-2 items-center">
-                                <label className="text-sm font-medium">Interview Time</label>
-
-                                {/* <input
+          {/* <input
             type="number"
             min="1"
             max="12"
@@ -3826,73 +3446,73 @@ export default function EmployerDashboard() {
             onChange={(e) => setMinute(e.target.value)}
           /> */}
 
-                                <input
-                                  type="text"
-                                  placeholder="hh:mm AM"
-                                  className="w-32 border rounded-lg p-2 text-center"
-                                  value={time}
-                                  onChange={(e) => {
-                                    let value = e.target.value.toUpperCase();
+                <input
+                 type="text"
+                 placeholder="hh:mm AM"
+                 className="w-32 border rounded-lg p-2 text-center"
+                 value={time}
+                 onChange={(e) => {
+                   let value = e.target.value.toUpperCase();
+               
+                   value = value.replace(/[^0-9:APM ]/g, "");
+                               
+                   if (value.length === 2 && !value.includes(":")) {
+                     value = value + ":";
+                   }
+               
+                   if (value.length > 8) return;
+               
+                   setTime(value);
+                 }}
+                 onBlur={() => {
+                  
+                   const regex = /^(0?[1-9]|1[0-2]):[0-5][0-9]\s?(AM|PM)$/;
+                   if (!regex.test(time)) {
+                     setTime(""); 
+                   }
+                 }}
+               />
 
-                                    value = value.replace(/[^0-9:APM ]/g, "");
 
-                                    if (value.length === 2 && !value.includes(":")) {
-                                      value = value + ":";
-                                    }
+          <select
+            className="border rounded-lg p-2"
+            value={ampm}
+            onChange={(e) => setAmPm(e.target.value)}
+          >
+            <option>AM</option>
+            <option>PM</option>
+          </select>
 
-                                    if (value.length > 8) return;
+            {/* ✅ Time Zone Dropdown */}
+          <select
+            className="border rounded-lg p-2"
+            value={timeZone}
+            onChange={(e) => setTimeZone(e.target.value)}
+          >
+            <option value="IST">IST</option>
+            <option value="UTC">UTC</option>
+            <option value="EST">EST</option>
+            <option value="PST">PST</option>
+            <option value="CST">CST</option>
+          </select>
+        </div>
 
-                                    setTime(value);
-                                  }}
-                                  onBlur={() => {
+        {/* Interview Mode */}
+        <div>
+          <label className="text-sm font-medium">Interview Mode</label>
+          <select
+            className="w-full border rounded-lg p-2 mt-1 focus:ring-2 focus:ring-blue-500"
+            value={interviewMode}
+            onChange={(e) => setInterviewMode(e.target.value)}
+          >
+            <option>Online</option>
+            <option>Office</option>
+            <option>Phone Call</option>
+          </select>
+        </div>
 
-                                    const regex = /^(0?[1-9]|1[0-2]):[0-5][0-9]\s?(AM|PM)$/;
-                                    if (!regex.test(time)) {
-                                      setTime("");
-                                    }
-                                  }}
-                                />
-
-
-                                <select
-                                  className="border rounded-lg p-2"
-                                  value={ampm}
-                                  onChange={(e) => setAmPm(e.target.value)}
-                                >
-                                  <option>AM</option>
-                                  <option>PM</option>
-                                </select>
-
-                                {/* ✅ Time Zone Dropdown */}
-                                <select
-                                  className="border rounded-lg p-2"
-                                  value={timeZone}
-                                  onChange={(e) => setTimeZone(e.target.value)}
-                                >
-                                  <option value="IST">IST</option>
-                                  <option value="UTC">UTC</option>
-                                  <option value="EST">EST</option>
-                                  <option value="PST">PST</option>
-                                  <option value="CST">CST</option>
-                                </select>
-                              </div>
-
-                              {/* Interview Mode */}
-                              <div>
-                                <label className="text-sm font-medium">Interview Mode</label>
-                                <select
-                                  className="w-full border rounded-lg p-2 mt-1 focus:ring-2 focus:ring-blue-500"
-                                  value={interviewMode}
-                                  onChange={(e) => setInterviewMode(e.target.value)}
-                                >
-                                  <option>Online</option>
-                                  <option>Office</option>
-                                  <option>Phone Call</option>
-                                </select>
-                              </div>
-
-                              {/* Meet Link */}
-                              {/* <div>
+        {/* Meet Link */}
+        {/* <div>
           <label className="text-sm text-gray-700">Google Meet link</label>
           <input
             className="w-full border rounded-md p-2 text-sm focus:ring-2 focus:ring-blue-500"
@@ -3902,34 +3522,34 @@ export default function EmployerDashboard() {
           />
         </div> */}
 
-                              {/* Notes */}
-                              <div>
-                                <label className="text-sm text-gray-700">Notes</label>
-                                <textarea
-                                  className="w-full border rounded-md p-2 mt-1 text-sm focus:ring-2 focus:ring-blue-500"
-                                  rows={3}
-                                  placeholder="Enter instructions or notes..."
-                                  value={interviewNotes}
-                                  onChange={(e) => setInterviewNotes(e.target.value)}
-                                />
-                              </div>
-                            </div>
+        {/* Notes */}
+        <div>
+          <label className="text-sm text-gray-700">Notes</label>
+          <textarea
+            className="w-full border rounded-md p-2 mt-1 text-sm focus:ring-2 focus:ring-blue-500"
+            rows={3}
+            placeholder="Enter instructions or notes..."
+            value={interviewNotes}
+            onChange={(e) => setInterviewNotes(e.target.value)}
+          />
+        </div>
+      </div>
 
-                            <DialogFooter className="mt-3">
-                              <Button variant="outline" onClick={() => setOpenSchedule(false)}>
-                                Cancel
-                              </Button>
-                              <Button
-                                type="button"
-                                className="bg-blue-600 hover:bg-blue-700"
-                                onClick={handleScheduleSubmit}
-                              >
-                                Schedule
-                              </Button>
-                            </DialogFooter>
-                          </DialogContent>
-                        </Dialog>
-                      )}
+      <DialogFooter className="mt-3">
+        <Button variant="outline" onClick={() => setOpenSchedule(false)}>
+          Cancel
+        </Button>
+        <Button
+          type="button"
+          className="bg-blue-600 hover:bg-blue-700"
+          onClick={handleScheduleSubmit}
+        >
+          Schedule
+        </Button>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
+)}
 
                     </div>
                   </CardContent>
@@ -3953,14 +3573,11 @@ export default function EmployerDashboard() {
         )}
 
         {activeTab === "profiles" && (
-
-          <CandidatesPage isSubscribed={isSubscribed} />
-
-
-        )}
-        {activeTab === "quota" && (
-          <QuotaUsagePage />
-        )}
+        <CandidatesPage/>
+         )}
+         {activeTab === "quota" && (
+        <QuotaUsagePage />
+         )}
         {/* Analytics Tab */}
         {activeTab === "analytics" && (
           <Card>
@@ -4084,8 +3701,6 @@ export default function EmployerDashboard() {
           </div>
         </div>
       )}
-      <Footer />
     </div>
-    
   );
 }
