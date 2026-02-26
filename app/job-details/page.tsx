@@ -21,7 +21,25 @@ import Footer from "@/components/Footer";
 export default function JobDetailsPage() {
   const searchParams = useSearchParams();
   const jobId = searchParams.get("id");
-  const [selectedJob, setSelectedJob] = useState<any>(null);
+  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+  interface Job {
+  id: number;
+  title: string;
+  company: string;
+  vacancies: number;
+  location?: {
+    name: string;
+  };
+  experience: string;
+  salary: string;
+  job_type: string;
+  created_at: string;
+  description: string;
+  requirements?: string[];
+  benefits?: string[];
+  skills?: string[];
+  // Add other fields as needed
+}
 
   useEffect(() => {
     if (!jobId) return;

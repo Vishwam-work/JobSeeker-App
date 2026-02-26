@@ -195,13 +195,13 @@ useEffect(() => {
               {isEmployerDropdownOpen && (
                 <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
                   <Link
-                    href="/employer/login"
+                    href="/employer/home"
                     className="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-colors"
                   >
                     Employer Login
                   </Link>
                   <Link
-                    href="/employer/register"
+                    href="/employer/home"
                     className="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-colors"
                   >
                     Register as Employer
@@ -291,7 +291,7 @@ useEffect(() => {
                 </div>
               </Link>
               <Link href="/contact">
-                <div className="flex items-center space-x-1 text-gray-700 hover:text-purple-600 cursor-pointer transition-colors">
+                <div className="flex items-center space-x-1 text-gray-700 hover:text-purple-600 cursor-pointer transition-colors px-2 py-1">
                   <Phone className="w-4 h-4" />
                   <span>Contact</span>
                 </div>

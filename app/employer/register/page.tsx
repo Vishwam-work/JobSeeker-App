@@ -68,9 +68,9 @@ export default function EmployerRegister() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
-  const [countries, setCountries] = useState([]);
-  const [states, setStates] = useState([]);
-  const [cities, setCities] = useState([]);
+  const [countries, setCountries] = useState<Country[]>([]);
+  const [states, setStates] = useState<State[]>([]);
+  const [cities, setCities] = useState<City[]>([]);
   const [industrySearch, setIndustrySearch] = useState("");
   const [countrySearch, setCountrySearch] = useState("");
   const [countryOpen, setCountryOpen] = useState(false);
@@ -85,7 +85,7 @@ export default function EmployerRegister() {
   const router = useRouter();
   const [email,setemail] = useState("");
   const [showText,setShowText] =useState(false)
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     // Company Information
     companyName: "",
     companyType: "",
@@ -174,13 +174,60 @@ export default function EmployerRegister() {
     },
   ];
 
-  const filteredIndustries = industries.filter((item) =>
-    item.toLowerCase().includes(industrySearch.toLowerCase())
-  );
+  // const filteredIndustries = industries.filter((item) =>
+  //   item.toLowerCase().includes(industrySearch.toLowerCase())
+  // );
 
-  const filteredCountries = countries.filter((c) =>
-    c.name.toLowerCase().includes(countrySearch.toLowerCase())
-  );
+  // const filteredCountries = countries.filter((c) =>
+  //   c.name.toLowerCase().includes(countrySearch.toLowerCase())
+  // );
+
+  interface FormData {
+  // Company Information
+  companyName: string;
+  companyType: string;
+  industry: string;
+  companySize: string;
+  website: string;
+  description: string;
+
+  // Contact Information
+  contactPersonName: string;
+  designation: string;
+  email: string;
+  phone: string;
+  phoneCode: string;
+
+  // Address Information
+  address: string;
+  countryId: string;
+  stateId: string;
+  cityId: string;
+  pincode: string;
+
+  // Account Information
+  password: string;
+  confirmPassword: string;
+
+  // Agreements
+  agreeTerms: boolean;
+  agreeMarketing: boolean;
+}
+
+interface Country {
+  id: string; // or number, depending on your API
+  name: string;
+  phonecode: string;
+}
+interface State {
+  id: string; // or number, depending on your API
+  name: string;
+}
+interface City {
+  id: string; // or number, depending on your API
+  name: string;
+}
+
   const handleResendOTP = async() => {
     const response =  await handlesendotp()
     setTimeLeft(OTP_EXPIRY_SECONDS);
@@ -238,7 +285,7 @@ export default function EmployerRegister() {
     }
   }, [formData.stateId]);
 
-  const handleInputChange = (field, value) => {
+  const handleInputChange = <K extends keyof FormData>(field: K, value: FormData[K]) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
@@ -248,7 +295,7 @@ export default function EmployerRegister() {
 
   const handleEmailChange = (value:string) => {
     setemail(value);
-    console.log("Form Data:", formData);
+    // console.log("Form Data:", formData);
   };
 
   const handleNext = () => {
@@ -304,7 +351,7 @@ export default function EmployerRegister() {
       email: email,
       is_verified : true,
     };
-    console.log("Payload:", payload);
+    // console.log("Payload:", payload);
     try {
       const response = await fetch(
         "https://jobseeker-backend-jy1y.onrender.com/employeer/api/employeer_register/",
@@ -322,7 +369,7 @@ export default function EmployerRegister() {
       }
 
       const result = await response.json();
-      console.log("Registration successful:", result);
+      // console.log("Registration successful:", result);
       router.push("/employer/login");
     } catch (error) {
       console.error("Registration error:", error);
@@ -391,7 +438,7 @@ export default function EmployerRegister() {
       );
 
       const data = await res.json();
-      console.log(data)
+      // console.log(data)
       if (!res.ok) {
         toast.error(data.error || "Invalid OTP");
         return;
@@ -1114,7 +1161,7 @@ export default function EmployerRegister() {
                             id="agreeTerms"
                             checked={formData.agreeTerms}
                             onCheckedChange={(checked) =>
-                              handleInputChange("agreeTerms", checked)
+                              handleInputChange("agreeTerms", Boolean(checked))
                             }
                             className="mt-1"
                           />
@@ -1144,7 +1191,7 @@ export default function EmployerRegister() {
                             id="agreeMarketing"
                             checked={formData.agreeMarketing}
                             onCheckedChange={(checked) =>
-                              handleInputChange("agreeMarketing", checked)
+                              handleInputChange("agreeMarketing", Boolean(checked))
                             }
                             className="mt-1"
                           />
@@ -1207,9 +1254,7 @@ export default function EmployerRegister() {
           </div>
         </div>
       </div>
-      import { useEffect, useState } from "react";
-
-const OTP_EXPIRY_SECONDS = 60; // change as needed
+      
 
 <Dialog open={isOtpOpen} onOpenChange={setIsOtpOpen}>
   <DialogContent>

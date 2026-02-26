@@ -28,10 +28,71 @@ import Header from '@/components/Header';
 import Link from 'next/link';
 import DownloadProfilePDF from '@/components/DownloadProfilePDF';
 export default function ProfileReview() {
-  const [profileData, setProfileData] = useState(null);
-  const [jobTitles, setJobTitles] = useState([]);
-  const [jobCategories, setJobCategories] = useState([]);
+  const [profileData, setProfileData] = useState<ProfileData | null>(null);
+  const [jobTitles, setJobTitles] = useState<JobTitle[]>([]);
+  const [jobCategories, setJobCategories] = useState<JobCategory[]>([]);
   const [isPDF, setIsPDF] = useState(false);
+  interface JobCategory {
+  id: number | string;
+  name: string;
+}
+interface JobTitle {
+  id: number | string;
+  title: string;
+}
+interface ProfileExperience {
+  id: string | number;
+  company: string;
+  position: string;
+  category: string;
+  duration: string;
+  location: string;
+  description: string;
+}
+
+interface Education {
+  id: string | number;
+  degree: string;
+  field: string;
+  institution: string;
+  year: string | number;
+  percentage: string;
+}
+
+interface Certification {
+  name: string;
+  issuer: string;
+  year: string | number;
+}
+
+interface ProfileData {
+  personalInfo: {
+    profile_image?: string | null;
+    fullName: string;
+    email: string;
+    phone: string;
+    phoneCode?: string;
+    location: string;
+    experience: string;
+    currentSalary: string;
+    currentCurrency: string;
+    expectedCurrency: string;
+    expectedSalary: string;
+    noticePeriod: string;
+  };
+  experience: ProfileExperience[];
+  education: Education[];
+  certifications: Certification[];
+  skills: string[];
+  resume: string;
+}
+interface Certification {
+  id: string | number; 
+  name: string;
+  issuer: string;
+  year: string | number;
+}
+
     useEffect(() => {
       fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_title/")
         .then((res) => res.json())
@@ -55,7 +116,7 @@ export default function ProfileReview() {
     jobCategories.find((c) => c.id === id)?.name || "";
 
   const getJobTitleName = (id: number | string) => {
-    console.log("jobTitles", jobTitles);
+    // console.log("jobTitles", jobTitles);
     return jobTitles.find((t) => t.id === id)?.title || "";
   };
   useEffect(() => {
@@ -72,7 +133,7 @@ export default function ProfileReview() {
 
       if (res.ok) {
         const data = await res.json();
-        console.log("Profile Data: before", data);
+        // console.log("Profile Data: before", data);
 
  
 
@@ -82,13 +143,17 @@ export default function ProfileReview() {
             fullName: data.full_name,
             email: data.email,
             phone: data.phone,
+            phoneCode: data.phone_code || data.phoneCode || "",
             location: `${data.city?.name || ""}, ${data.state?.name || ""}`,
             experience: data.experience,
             currentSalary: data.current_salary,
+            currentCurrency: data?.current_currency?.symbol ?? "",
+            expectedCurrency: data?.expected_currency?.symbol ?? "",
+
             expectedSalary: data.expected_salary,
             noticePeriod: data.notice_period,
           },
-          experience: data.experiences.map((exp) => ({
+          experience: data.experiences.map((exp: any) => ({
             id: exp.id,
             company: exp.company,
             position: exp.job_title?.title || "N/A",  
@@ -97,7 +162,7 @@ export default function ProfileReview() {
             location: exp.location?.name || "N/A",
             description: exp.description,
           })),
-          education: data.educations.map((edu) => ({
+          education: data.educations.map((edu: any) => ({
             id: edu.id,
             degree: edu.degree,
             field: edu.field_of_study,
@@ -105,12 +170,12 @@ export default function ProfileReview() {
             year: edu.year,
             percentage: edu.percentage,
           })),
-          certifications: data.certifications.map((cert) => ({
+          certifications: data.certifications.map((cert: any) => ({
             name : cert.name,
             issuer : cert.issuer,
             year : cert.year
           })),
-          skills: data.skills.map((s) => s.name),
+          skills: data.skills.map((s: any) => s.name),
           resume: data.resume || "",
         });
       } else {
@@ -128,7 +193,7 @@ export default function ProfileReview() {
       </div>
     );
   }
-  console.log("Profile Data: after", profileData);
+  // console.log("Profile Data: after", profileData);
   // Sample profile data - in a real app, this would come from an API or state management
 
 
@@ -221,8 +286,18 @@ export default function ProfileReview() {
                       <span>{profileData.personalInfo.email}</span>
                     </div>
                     <div className="flex items-center space-x-2 text-gray-600">
-                      {isPDF ? ' ☎' : <Phone className="w-4 h-4" />}
-                      <span>{profileData.personalInfo.phone}</span>
+                      {isPDF ? ' ' : <Phone className="w-4 h-4" />}
+                      <span>
+                        {[
+                           profileData.personalInfo.phoneCode
+                            ? `+${profileData.personalInfo.phoneCode}`
+                            : null,
+                          profileData.personalInfo.phone,
+                        ]
+                          .filter(Boolean)
+                          .join(" ")}
+                       </span>
+
                     </div>
                     <div className="flex items-center space-x-2 text-gray-600">
                       {isPDF ? '📍' : <MapPin className="w-4 h-4" />}
@@ -233,12 +308,28 @@ export default function ProfileReview() {
                       <span>{profileData.personalInfo.experience} Experience</span>
                     </div>
                     <div className="flex items-center space-x-2 text-gray-600">
-                      {isPDF ? ' $ ' : <DollarSign className="w-4 h-4" />}
-                      <span>Current: {profileData.personalInfo.currentSalary}</span>
+                       {isPDF ? (
+                         <span>{profileData.personalInfo.currentCurrency}</span>
+                       ) : (
+                         <span className="text-sm font-medium">
+                           {profileData.personalInfo.currentCurrency}
+                         </span>
+                       )}
+                       <span>
+                         Current: {profileData.personalInfo.currentSalary}
+                       </span>
                     </div>
                     <div className="flex items-center space-x-2 text-gray-600">
-                      {isPDF ? ' $ ' : <DollarSign className="w-4 h-4" />}
-                      <span>Expected: {profileData.personalInfo.expectedSalary}</span>
+                       {isPDF ? (
+                         <span>{profileData.personalInfo.expectedCurrency}</span>
+                       ) : (
+                         <span className="text-sm font-medium">
+                           {profileData.personalInfo.expectedCurrency}
+                         </span>
+                       )}
+                       <span>
+                         Expected: {profileData.personalInfo.expectedSalary}
+                       </span>
                     </div>
                     <div className="flex items-center space-x-2 text-gray-600">
                       {isPDF ? '🕒' : <Clock className="w-4 h-4" />}

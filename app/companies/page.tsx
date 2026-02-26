@@ -11,30 +11,49 @@ import HeroCarousel from "@/components/Carousel";
 import Footer from "@/components/Footer";
 
 export default function CompaniesPage() {
-  const [allCompanies, setAllCompanies] = useState([]);
+  const [allCompanies, setAllCompanies] = useState<CompanyListItem[]>([]);
   const [visibleCount, setVisibleCount] = useState(9);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
 
+  type CompanyListItem = {
+  id: string | number;
+  name: string;
+  type: string;
+  industry: string;
+  employees: string;
+  locations: string[];
+  rating: number;
+  reviews: number;
+  founded: number | null;
+};
+
   useEffect(() => {
     const fetchCompanies = async () => {
       try {
-        const token = localStorage.getItem("auth_token");
+         const token =
+           typeof window !== "undefined"
+             ? localStorage.getItem("auth_token")
+             : null;
 
         const res = await fetch(
           "https://jobseeker-backend-jy1y.onrender.com/employeer/api/companies/",
           {
             headers: {
-              "Content-Type": "application/json",
-              Authorization: token ? `Bearer ${token}` : "",
+               "Content-Type": "application/json",
+              ...(token && { Authorization: `Bearer ${token}` }),
             },
-          }
+           }
         );
+   
+        if (!res.ok) {
+          throw new Error("Failed to fetch companies");
+        }
 
         const data = await res.json();
-        console.log("API Response:", data);
 
-        const mapped = (data.data || data).map((item) => ({
+        const mapped: CompanyListItem[] = (data.data || data).map(
+        (item: any): CompanyListItem => ({
           id: item.id,
           name: item.company_name,
           type: item.company_type || "N/A",
@@ -44,8 +63,9 @@ export default function CompaniesPage() {
           rating: Math.floor(Math.random() * 2) + 3,
           reviews: Math.floor(Math.random() * 200) + 10,
           founded: item.founded_year || null,
-        }));
-
+        })
+      );
+   
         setAllCompanies(mapped);
       } catch (error) {
         console.error("Error fetching companies:", error);
@@ -53,10 +73,11 @@ export default function CompaniesPage() {
       } finally {
         setLoading(false);
       }
-    };
+     };
 
-    fetchCompanies();
-  }, []);
+     fetchCompanies();
+   }, []);
+
 
   //  Search filter
   const filteredCompanies = allCompanies.filter((company) => {
@@ -120,7 +141,7 @@ export default function CompaniesPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
              {filteredCompanies.slice(0, visibleCount).map((company) => (
               <Link
-               href={`/companies/detail?id=${company.id}`}
+               href={`/companies/${company.id}`}
                target="_blank"
                className="block"
                >
