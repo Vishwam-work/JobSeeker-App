@@ -8,20 +8,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import {
-  Chrome,
   CheckCircle,
-  Mail,
-  Lock,
-  Phone,
   User,
   Search,
-  ArrowRight,
   ChevronDown,
 } from "lucide-react";
-
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-
 import {
   Popover,
   PopoverTrigger,
@@ -40,7 +33,6 @@ import {
 import {
   InputOTP,
   InputOTPGroup,
-  InputOTPSeparator,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
 
@@ -140,6 +132,13 @@ export default function Register() {
   // ----------------------------
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+     const phone = profileData.personalInfo.phone;
+
+       if (!/^[0-9]{10}$/.test(phone)) {
+       toast.error("Mobile number must be exactly 10 digits");
+        return;
+       }
 
     const data = {
       full_name: fullName,
@@ -167,7 +166,8 @@ export default function Register() {
 
       router.push("/login");
     } catch (error) {
-      console.error("Registration error");
+      toast.error("This password is too common or too weak. Please choose a stronger password.");
+      console.error("Registration error:", error);
     }
   };
 
