@@ -102,7 +102,7 @@ export default function Register() {
       toast.success("OTP Sent Successfully");
     } catch (error) {
       console.error(error);
-      toast.warning("Something went wrong");  
+      toast.warning("Something went wrong");
     }
   };
 
@@ -163,11 +163,11 @@ export default function Register() {
       if (!res.ok) throw new Error("Registration failed");
 
       const result = await res.json();
-      console.log("Registration Successful:", result);
+      console.log("Registration Successful");
 
       router.push("/login");
     } catch (error) {
-      console.error("Registration error:", error);
+      console.error("Registration error");
     }
   };
 
@@ -299,12 +299,12 @@ export default function Register() {
                 <PopoverTrigger asChild>
                   <Button variant="outline" className="w-full mt-1 h-10 lg:h-11 border rounded px-3 flex items-center justify-between">
                     <span>
-                    {profileData.personalInfo.countryId
-                      ? countries.find(
+                      {profileData.personalInfo.countryId
+                        ? countries.find(
                           (c) =>
                             c.id == profileData.personalInfo.countryId
                         )?.name
-                      : "Select Country"}
+                        : "Select Country"}
                     </span>
                     <ChevronDown className="h-4 w-4 opacity-60" />
                   </Button>
@@ -361,7 +361,7 @@ export default function Register() {
                 <Input
                   className="w-24 h-12 bg-gray-100"
                   value={`+${phoneCode}`}
-                  // readOnly
+                // readOnly
                 />
                 <Input
                   className="h-12"
@@ -386,11 +386,10 @@ export default function Register() {
 
               <div className="grid grid-cols-2 gap-4 mt-2">
                 <Card
-                  className={`cursor-pointer ${
-                    workStatus === "experienced"
+                  className={`cursor-pointer ${workStatus === "experienced"
                       ? "ring-2 ring-purple-500 bg-purple-50"
                       : ""
-                  }`}
+                    }`}
                   onClick={() => setWorkStatus("experienced")}
                 >
                   <CardContent className="p-4">
@@ -400,11 +399,10 @@ export default function Register() {
                 </Card>
 
                 <Card
-                  className={`cursor-pointer ${
-                    workStatus === "fresher"
+                  className={`cursor-pointer ${workStatus === "fresher"
                       ? "ring-2 ring-purple-500 bg-purple-50"
                       : ""
-                  }`}
+                    }`}
                   onClick={() => setWorkStatus("fresher")}
                 >
                   <CardContent className="p-4">

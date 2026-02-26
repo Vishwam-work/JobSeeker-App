@@ -33,13 +33,13 @@ interface Candidate {
   }[];
 
   educations?: {
-  degree?: string;
-  field?: string;
-  institution?: string;
-  year?: string | number;
-  score_type?: string;
-  percentage?: string | number;
-}[];
+    degree?: string;
+    field?: string;
+    institution?: string;
+    year?: string | number;
+    score_type?: string;
+    percentage?: string | number;
+  }[];
 
   experiences?: {
     designation?: string;
@@ -1469,7 +1469,7 @@ function CandidateDetail({
           ))}
         </div>
 
-          {candidate.experiences && candidate.experiences.length > 0 && (
+        {candidate.experiences && candidate.experiences.length > 0 && (
           <>
             <hr className="my-4" />
             <h3 className="font-medium mb-2">Experience</h3>
@@ -1486,8 +1486,8 @@ function CandidateDetail({
                 </p>
                 <p className="text-gray-500 text-xs">
                   <p className="text-gray-500 text-xs">
-                    <HighlightText text={ex.start_date ? String(ex.start_date) : undefined}/>{" "}
-                  – <HighlightText text={ex.end_date !== undefined && ex.end_date !== null ? String(ex.end_date): "Present"}/>
+                    <HighlightText text={ex.start_date ? String(ex.start_date) : undefined} />{" "}
+                    – <HighlightText text={ex.end_date !== undefined && ex.end_date !== null ? String(ex.end_date) : "Present"} />
 
                   </p>
                 </p>

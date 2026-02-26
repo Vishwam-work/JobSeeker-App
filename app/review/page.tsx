@@ -4,15 +4,15 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { 
-  User, 
-  Mail, 
-  Phone, 
-  MapPin, 
-  Calendar, 
-  Briefcase, 
-  GraduationCap, 
-  Award, 
+import {
+  User,
+  Mail,
+  Phone,
+  MapPin,
+  Calendar,
+  Briefcase,
+  GraduationCap,
+  Award,
   Edit,
   Download,
   Eye,
@@ -93,30 +93,69 @@ interface Certification {
   year: string | number;
 }
 
-    useEffect(() => {
-      fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_title/")
-        .then((res) => res.json())
-        .then((data) => {
-          setJobTitles(data);
-        })
-        .catch((err) => console.error(err));
-    }, []);
+  interface Education {
+    id: string | number;
+    degree: string;
+    field: string;
+    institution: string;
+    year: string | number;
+    percentage: string;
+  }
 
-    useEffect(() => {
-      fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_category/")
-        .then((res) => res.json())
-        .then((data) => {
-          setJobCategories(data);
-        })
-        .catch((err) => console.error(err));
-    }, []);
+  interface Certification {
+    name: string;
+    issuer: string;
+    year: string | number;
+  }
+
+  interface ProfileData {
+    personalInfo: {
+      profile_image?: string | null;
+      fullName: string;
+      email: string;
+      phone: string;
+      location: string;
+      experience: string;
+      currentSalary: string;
+      expectedSalary: string;
+      noticePeriod: string;
+    };
+    experience: ProfileExperience[];
+    education: Education[];
+    certifications: Certification[];
+    skills: string[];
+    resume: string;
+  }
+  interface Certification {
+    id: string | number;
+    name: string;
+    issuer: string;
+    year: string | number;
+  }
+
+  useEffect(() => {
+    fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_title/")
+      .then((res) => res.json())
+      .then((data) => {
+        setJobTitles(data);
+      })
+      .catch((err) => console.error(err));
+  }, []);
+
+  useEffect(() => {
+    fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_category/")
+      .then((res) => res.json())
+      .then((data) => {
+        setJobCategories(data);
+      })
+      .catch((err) => console.error(err));
+  }, []);
 
 
-    const getCategoryName = (id: number | string) =>
+  const getCategoryName = (id: number | string) =>
     jobCategories.find((c) => c.id === id)?.name || "";
 
   const getJobTitleName = (id: number | string) => {
-    // console.log("jobTitles", jobTitles);
     return jobTitles.find((t) => t.id === id)?.title || "";
   };
   useEffect(() => {
@@ -128,14 +167,13 @@ interface Certification {
         },
       });
 
-    
+
 
 
       if (res.ok) {
         const data = await res.json();
-        // console.log("Profile Data: before", data);
 
- 
+
 
         setProfileData({
           personalInfo: {
@@ -156,7 +194,7 @@ interface Certification {
           experience: data.experiences.map((exp: any) => ({
             id: exp.id,
             company: exp.company,
-            position: exp.job_title?.title || "N/A",  
+            position: exp.job_title?.title || "N/A",
             category: exp.category?.name || "N/A",
             duration: `${exp.start_date} - ${exp.end_date || "Present"}`,
             location: exp.location?.name || "N/A",
@@ -171,9 +209,9 @@ interface Certification {
             percentage: edu.percentage,
           })),
           certifications: data.certifications.map((cert: any) => ({
-            name : cert.name,
-            issuer : cert.issuer,
-            year : cert.year
+            name: cert.name,
+            issuer: cert.issuer,
+            year: cert.year
           })),
           skills: data.skills.map((s: any) => s.name),
           resume: data.resume || "",
@@ -193,7 +231,6 @@ interface Certification {
       </div>
     );
   }
-  // console.log("Profile Data: after", profileData);
   // Sample profile data - in a real app, this would come from an API or state management
 
 
@@ -232,58 +269,85 @@ interface Certification {
                 </Button>
               </Link>
             </div>
-            <div className="flex flex-col sm:flex-row gap-2">            
-             <DownloadProfilePDF
-              onStart={() => setIsPDF(true)}
-              onEnd={() => setIsPDF(false)}
-             />
+            <div className="flex flex-col sm:flex-row gap-2">
+              <DownloadProfilePDF
+                onStart={() => setIsPDF(true)}
+                onEnd={() => setIsPDF(false)}
+              />
             </div>
           </div>
         </div>
 
-        <div>    
-          <div  className="space-y-6 bg-white px-6 pb-6 pt-10" >
+        <div>
+          <div className="space-y-6 bg-white px-6 pb-6 pt-10" >
             <div
               id="profile-review-ui"
               className={isPDF ? 'pdf-mode' : ''}
             >
-      <div id="pdf-page-1">
-        {/* COMPLETE REVIEW UI */}
-          {/* Personal Information */}
-          <Card>
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center space-x-2">
-                {isPDF ? '👤' : <User className="w-5 h-5 text-purple-600" />}
-                <span>Personal Information</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-col lg:flex-row gap-6">
-                <div className="flex-shrink-0">
-                  <div className="profile-image-box w-24 h-24 lg:w-32 lg:h-32 bg-gradient-to-br from-purple-100 to-blue-100 rounded-full flex items-center justify-center overflow-hidden">
+              <div id="pdf-page-1">
+                {/* COMPLETE REVIEW UI */}
+                {/* Personal Information */}
+                <Card>
+                  <CardHeader className="pb-4">
+                    <CardTitle className="flex items-center space-x-2">
+                      {isPDF ? '👤' : <User className="w-5 h-5 text-purple-600" />}
+                      <span>Personal Information</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-col lg:flex-row gap-6">
+                      <div className="flex-shrink-0">
+                        <div className="profile-image-box w-24 h-24 lg:w-32 lg:h-32 bg-gradient-to-br from-purple-100 to-blue-100 rounded-full flex items-center justify-center overflow-hidden">
 
-                   {profileData.personalInfo.profile_image ? (
-                    <img
-                        src={`/api/image-proxy?url=${encodeURIComponent(
-                        profileData.personalInfo.profile_image
-                      )}`}
-                      alt="Profile"
-                      className="w-full h-full object-cover"
-                    />
+                          {profileData.personalInfo.profile_image ? (
+                            <img
+                              src={`/api/image-proxy?url=${encodeURIComponent(
+                                profileData.personalInfo.profile_image
+                              )}`}
+                              alt="Profile"
+                              className="w-full h-full object-cover"
+                            />
 
-                   ) : (
-                   <User className="w-12 h-12 lg:w-16 lg:h-16 text-purple-600" />
-                    )}
-                  </div>
-                </div>
-                <div className="flex-1">
-                  <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">
-                    {profileData.personalInfo.fullName}
-                  </h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm lg:text-base">
-                    <div className="flex items-center space-x-2 text-gray-600">
-                         {isPDF ? '✉️' : <Mail className="w-4 h-4" />}
-                      <span>{profileData.personalInfo.email}</span>
+                          ) : (
+                            <User className="w-12 h-12 lg:w-16 lg:h-16 text-purple-600" />
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex-1">
+                        <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">
+                          {profileData.personalInfo.fullName}
+                        </h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm lg:text-base">
+                          <div className="flex items-center space-x-2 text-gray-600">
+                            {isPDF ? '✉️' : <Mail className="w-4 h-4" />}
+                            <span>{profileData.personalInfo.email}</span>
+                          </div>
+                          <div className="flex items-center space-x-2 text-gray-600">
+                            {isPDF ? ' ☎' : <Phone className="w-4 h-4" />}
+                            <span>{profileData.personalInfo.phone}</span>
+                          </div>
+                          <div className="flex items-center space-x-2 text-gray-600">
+                            {isPDF ? '📍' : <MapPin className="w-4 h-4" />}
+                            <span>{profileData.personalInfo.location}</span>
+                          </div>
+                          <div className="flex items-center space-x-2 text-gray-600">
+                            {isPDF ? '💼' : <Briefcase className="w-4 h-4" />}
+                            <span>{profileData.personalInfo.experience} Experience</span>
+                          </div>
+                          <div className="flex items-center space-x-2 text-gray-600">
+                            {isPDF ? ' $ ' : <DollarSign className="w-4 h-4" />}
+                            <span>Current: {profileData.personalInfo.currentSalary}</span>
+                          </div>
+                          <div className="flex items-center space-x-2 text-gray-600">
+                            {isPDF ? ' $ ' : <DollarSign className="w-4 h-4" />}
+                            <span>Expected: {profileData.personalInfo.expectedSalary}</span>
+                          </div>
+                          <div className="flex items-center space-x-2 text-gray-600">
+                            {isPDF ? '🕒' : <Clock className="w-4 h-4" />}
+                            <span>Notice Period: {profileData.personalInfo.noticePeriod}</span>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                     <div className="flex items-center space-x-2 text-gray-600">
                       {isPDF ? ' ' : <Phone className="w-4 h-4" />}
@@ -341,7 +405,7 @@ interface Certification {
             </CardContent>
           </Card>
 
-          {/* <Card>
+                {/* <Card>
             <CardHeader className="pb-4">
               <CardTitle className="flex items-center space-x-2">
                 <Edit className="w-5 h-5 text-purple-600" />
@@ -355,164 +419,164 @@ interface Certification {
             </CardContent>
           </Card> */}
 
-          {/* Work Experience */}
-          <Card>
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center space-x-2">
-                {isPDF ? '💼' : <Briefcase className="w-4 h-4 text-purple-600" />}
-                <span>Work Experience</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div  className="space-y-6">
-                {profileData.experience.map((exp, index) => (
-                  <div key={exp.id} className="relative">
-                    {index !== profileData.experience.length - 1 && (
-                      <div className="absolute left-6 top-12 w-0.5 h-full bg-gray-200"></div>
-                    )}
-                    <div className="flex items-start space-x-4">
-                      <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <Building2 className="w-6 h-6 text-purple-600" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-lg text-gray-900">{getJobTitleName(exp.position)}</h3>
-                        <p className="text-purple-600 font-medium">{exp.company}</p>
-                        <h2 className='text-gray-400 font-semibold'>{getCategoryName(exp.category)}</h2>
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 text-sm text-gray-600 mt-1 gap-1 sm:gap-0">
-                          <div className="flex items-center">
-                            {isPDF ? '🕒' : <Clock className="w-4 h-4" />}
-                            <span>{exp.duration}</span>
-                          </div>
-                          <div className="flex items-center">
-                            {isPDF ? '📍' : <MapPin className="w-4 h-4" />}
-                            <span>{exp.location}</span>
-                          </div>
-                        </div>
-                        <p className="text-gray-700 mt-2 leading-relaxed text-sm lg:text-base">
-                          {exp.description}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Education */}
-          <Card>
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center space-x-2">
-                {isPDF ? '🎓' : <GraduationCap className="w-5 h-5 text-purple-600" />}
-                <span>Education</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                {profileData.education.map((edu, index) => (
-                  <div key={edu.id} className="relative">
-                    {index !== profileData.education.length - 1 && (
-                      <div className="absolute left-6 top-12 w-0.5 h-full bg-gray-200"></div>
-                    )}
-                    <div className="flex items-start space-x-4">
-                      <div className="w-12 h-12 bg-gradient-to-br from-green-100 to-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <GraduationCap className="w-6 h-6 text-green-600" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-lg text-gray-900">{edu.degree}</h3>
-                        <p className="text-green-600 font-medium">{edu.field}</p>
-                        <p className="text-gray-600">{edu.institution}</p>
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 text-sm text-gray-600 mt-1 gap-1 sm:gap-0">
-                          <div className="flex items-center">
-                            {isPDF ? '📅' : <Calendar className="w-4 h-4 mr-1" />}
-                            <span>Graduated: {edu.year}</span>
-                          </div>
-                          <div className="flex items-center">
-                            {isPDF ? '🎖  ' : <Award className="w-5 h-5 text-purple-600" />}
-                            <span>Score: {edu.percentage}</span>
+                {/* Work Experience */}
+                <Card>
+                  <CardHeader className="pb-4">
+                    <CardTitle className="flex items-center space-x-2">
+                      {isPDF ? '💼' : <Briefcase className="w-4 h-4 text-purple-600" />}
+                      <span>Work Experience</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-6">
+                      {profileData.experience.map((exp, index) => (
+                        <div key={exp.id} className="relative">
+                          {index !== profileData.experience.length - 1 && (
+                            <div className="absolute left-6 top-12 w-0.5 h-full bg-gray-200"></div>
+                          )}
+                          <div className="flex items-start space-x-4">
+                            <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                              <Building2 className="w-6 h-6 text-purple-600" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-semibold text-lg text-gray-900">{getJobTitleName(exp.position)}</h3>
+                              <p className="text-purple-600 font-medium">{exp.company}</p>
+                              <h2 className='text-gray-400 font-semibold'>{getCategoryName(exp.category)}</h2>
+                              <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 text-sm text-gray-600 mt-1 gap-1 sm:gap-0">
+                                <div className="flex items-center">
+                                  {isPDF ? '🕒' : <Clock className="w-4 h-4" />}
+                                  <span>{exp.duration}</span>
+                                </div>
+                                <div className="flex items-center">
+                                  {isPDF ? '📍' : <MapPin className="w-4 h-4" />}
+                                  <span>{exp.location}</span>
+                                </div>
+                              </div>
+                              <p className="text-gray-700 mt-2 leading-relaxed text-sm lg:text-base">
+                                {exp.description}
+                              </p>
+                            </div>
                           </div>
                         </div>
-                      </div>
+                      ))}
                     </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                  </CardContent>
+                </Card>
 
-          {/* Skills */}
-          <Card>
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center space-x-2">
-                {isPDF ? '🎖  ' : <Award className="w-5 h-5 text-purple-600" />}
-                <span>Skills</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-wrap gap-2">
-                {profileData.skills.map((skill, index) => (
-                  <Badge
-                    key={index}
-                    variant="secondary"
-                    className="px-3 py-1.5 text-sm bg-purple-100 text-purple-800 hover:bg-purple-200 transition-colors"
-                  >
-                    {skill}
-                  </Badge>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-
-          {/* Certifications */}
-          <Card>
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center space-x-2">
-                {isPDF ? '🎖  ' : <Award className="w-5 h-5 text-purple-600" />}
-                <span>Certifications</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {profileData.certifications.map((cert) => (
-                  <div key={cert.id} className="flex items-start space-x-4 p-4 bg-gray-50 rounded-lg">
-                    <div className="w-12 h-12 bg-gradient-to-br from-yellow-100 to-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <Award className="w-5 h-5 text-purple-600" />
+                {/* Education */}
+                <Card>
+                  <CardHeader className="pb-4">
+                    <CardTitle className="flex items-center space-x-2">
+                      {isPDF ? '🎓' : <GraduationCap className="w-5 h-5 text-purple-600" />}
+                      <span>Education</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-6">
+                      {profileData.education.map((edu, index) => (
+                        <div key={edu.id} className="relative">
+                          {index !== profileData.education.length - 1 && (
+                            <div className="absolute left-6 top-12 w-0.5 h-full bg-gray-200"></div>
+                          )}
+                          <div className="flex items-start space-x-4">
+                            <div className="w-12 h-12 bg-gradient-to-br from-green-100 to-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                              <GraduationCap className="w-6 h-6 text-green-600" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-semibold text-lg text-gray-900">{edu.degree}</h3>
+                              <p className="text-green-600 font-medium">{edu.field}</p>
+                              <p className="text-gray-600">{edu.institution}</p>
+                              <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 text-sm text-gray-600 mt-1 gap-1 sm:gap-0">
+                                <div className="flex items-center">
+                                  {isPDF ? '📅' : <Calendar className="w-4 h-4 mr-1" />}
+                                  <span>Graduated: {edu.year}</span>
+                                </div>
+                                <div className="flex items-center">
+                                  {isPDF ? '🎖  ' : <Award className="w-5 h-5 text-purple-600" />}
+                                  <span>Score: {edu.percentage}</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-lg text-gray-900">{cert.name}</h3>
-                      <p className="text-yellow-600 font-medium">{cert.issuer}</p>
-                      <div className="flex items-center text-sm text-gray-600 mt-1">
-                        {isPDF ? '📅' : <Calendar className="w-4 h-4 mr-1" />}
-                        <span>Issued: {cert.year}</span>
-                      </div>
+                  </CardContent>
+                </Card>
+
+                {/* Skills */}
+                <Card>
+                  <CardHeader className="pb-4">
+                    <CardTitle className="flex items-center space-x-2">
+                      {isPDF ? '🎖  ' : <Award className="w-5 h-5 text-purple-600" />}
+                      <span>Skills</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-wrap gap-2">
+                      {profileData.skills.map((skill, index) => (
+                        <Badge
+                          key={index}
+                          variant="secondary"
+                          className="px-3 py-1.5 text-sm bg-purple-100 text-purple-800 hover:bg-purple-200 transition-colors"
+                        >
+                          {skill}
+                        </Badge>
+                      ))}
                     </div>
-                  </div>
-                ))}
+                  </CardContent>
+                </Card>
+
+
+                {/* Certifications */}
+                <Card>
+                  <CardHeader className="pb-4">
+                    <CardTitle className="flex items-center space-x-2">
+                      {isPDF ? '🎖  ' : <Award className="w-5 h-5 text-purple-600" />}
+                      <span>Certifications</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {profileData.certifications.map((cert) => (
+                        <div key={cert.id} className="flex items-start space-x-4 p-4 bg-gray-50 rounded-lg">
+                          <div className="w-12 h-12 bg-gradient-to-br from-yellow-100 to-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <Award className="w-5 h-5 text-purple-600" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-lg text-gray-900">{cert.name}</h3>
+                            <p className="text-yellow-600 font-medium">{cert.issuer}</p>
+                            <div className="flex items-center text-sm text-gray-600 mt-1">
+                              {isPDF ? '📅' : <Calendar className="w-4 h-4 mr-1" />}
+                              <span>Issued: {cert.year}</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
               </div>
-            </CardContent>
-          </Card>
-       
+            </div>
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 pt-6">
+              <Link href="/profile" className="flex-1">
+                <Button variant="outline" className="w-full h-12">
+                  <Edit className="w-4 h-4 mr-2" />
+                  Edit Profile
+                </Button>
+              </Link>
+              <Link href={profileData.resume}>
+                <Button className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-12">
+                  Preview Resume
+                </Button>
+              </Link>
+            </div>
+
           </div>
-          </div>
-          {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 pt-6">
-            <Link href="/profile" className="flex-1">
-              <Button variant="outline" className="w-full h-12">
-                <Edit className="w-4 h-4 mr-2" />
-                Edit Profile
-              </Button>
-            </Link>
-            <Link href={profileData.resume}>
-            <Button className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-12">
-             Preview Resume
-            </Button>
-           </Link>
-          </div>
-          
         </div>
       </div>
-    </div>
     </div>
   );
 }

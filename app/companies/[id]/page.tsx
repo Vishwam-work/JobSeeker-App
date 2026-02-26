@@ -2,7 +2,7 @@
 
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { useRouter } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   Dialog,
@@ -36,27 +36,27 @@ export default function CompanyDetailPage(
   const [loadingUserData, setLoadingUserData] = useState(false);
   const [answers, setAnswers] = useState([]);
 
- type Company = {
-  id: string | number;
-  name: string;
-  type?: string;
-  industry?: string;
-  size?: string;
-  city?: string;
-  state?: string;
-  country?: string;
-  website?: string;
-  description?: string;
-};
-type Job = {
-  id: string | number;
-  title: string;
-  description: string;
-  location: string;
-  salary: string;
-  type: string;
-  questions: any[];
-};
+  type Company = {
+    id: string | number;
+    name: string;
+    type?: string;
+    industry?: string;
+    size?: string;
+    city?: string;
+    state?: string;
+    country?: string;
+    website?: string;
+    description?: string;
+  };
+  type Job = {
+    id: string | number;
+    title: string;
+    description: string;
+    location: string;
+    salary: string;
+    type: string;
+    questions: any[];
+  };
 
   useEffect(() => {
      if (!id) return;
@@ -75,7 +75,7 @@ type Job = {
 
         const [companyRes, jobsRes] = await Promise.all([
           fetch(
-            `https://jobseeker-backend-jy1y.onrender.com/employeer/api/companies/`,
+            `https://jobseeker-backend-jy1y.onrender.com/employeer/api/companies/${id}/`,
             { headers }
           ),
           fetch(
@@ -123,23 +123,23 @@ setCompany(mappedCompany);
 
         const jobList: Job[] =
           Array.isArray(jobsData) ||
-          Array.isArray(jobsData.data) ||
-          Array.isArray(jobsData.results)
+            Array.isArray(jobsData.data) ||
+            Array.isArray(jobsData.results)
             ? (jobsData.data || jobsData.results || jobsData).map(
-                (job: any): Job => ({
-                  id: job.id,
-                  title: job.title || job.job_title || "Untitled Job",
-                  description: job.description || "No description provided.",
-                  location: job.location?.name || job.city?.name || "N/A",
-                  salary: job.salary || "Not specified",
-                  type: job.job_type || job.type || "Not specified",
-                  questions: job.questions || [],
-                }))
+              (job: any): Job => ({
+                id: job.id,
+                title: job.title || job.job_title || "Untitled Job",
+                description: job.description || "No description provided.",
+                location: job.location?.name || job.city?.name || "N/A",
+                salary: job.salary || "Not specified",
+                type: job.job_type || job.type || "Not specified",
+                questions: job.questions || [],
+              }))
             : [];
 
         setJobs(jobList);
       } catch (error) {
-        console.error("Error fetching details:", error);
+        console.error("Error fetching details");
       } finally {
         setLoading(false);
       }
@@ -148,11 +148,10 @@ setCompany(mappedCompany);
     if (id) fetchCompanyDetails();
   }, [id]);
 
-
-const redirectToHomeWithSearch = (jobTitle?: string) => {
-  if (!jobTitle) return;
-  router.push(`/?search=${encodeURIComponent(jobTitle)}`);
-};
+  const redirectToHomeWithSearch = (jobTitle?: string) => {
+    if (!jobTitle) return;
+    router.push(`/?search=${encodeURIComponent(jobTitle)}`);
+  };
 
 
   // const handleApply = async (job) => {
@@ -176,7 +175,6 @@ const redirectToHomeWithSearch = (jobTitle?: string) => {
   //     const data = await response.json();
   //     setUserData(data);
   //   } catch (error) {
-  //     console.error("Error fetching user data:", error);
   //   } finally {
   //     setLoadingUserData(false);
   //   }
@@ -221,7 +219,7 @@ const redirectToHomeWithSearch = (jobTitle?: string) => {
   if (!company) return <p className="p-6">Company not found.</p>;
 
   return (
-   <div key={id} className="w-full min-h-screen bg-gray-50">
+    <div key={id} className="w-full min-h-screen bg-gray-50">
 
       <Header />
 
@@ -229,7 +227,7 @@ const redirectToHomeWithSearch = (jobTitle?: string) => {
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 border-b pb-6 w-full">
           <div className="flex-1">
             <h1 className="text-2xl sm:text-3xl font-bold">
-             {company?.name || "Company name not available"}
+              {company?.name || "Company name not available"}
             </h1>
 
             <p className="text-gray-600 text-sm sm:text-base">

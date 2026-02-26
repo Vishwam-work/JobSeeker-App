@@ -78,13 +78,13 @@ export default function EmployerRegister() {
   const [stateOpen, setStateOpen] = useState(false);
   const [cityOpen, setCityOpen] = useState(false);
   const [citySearch, setCitySearch] = useState("");
-  const [isOtpOpen,setIsOtpOpen] =useState(false);
-  const [otp,setOtp] = useState("");
-  const [IsOtpVerified,setIsOtpVerified] =useState(false);
+  const [isOtpOpen, setIsOtpOpen] = useState(false);
+  const [otp, setOtp] = useState("");
+  const [IsOtpVerified, setIsOtpVerified] = useState(false);
   const isRegDisabled = currentStep === 2 && !IsOtpVerified;
   const router = useRouter();
-  const [email,setemail] = useState("");
-  const [showText,setShowText] =useState(false)
+  const [email, setemail] = useState("");
+  const [showText, setShowText] = useState(false)
   const [formData, setFormData] = useState<FormData>({
     // Company Information
     companyName: "",
@@ -183,53 +183,53 @@ export default function EmployerRegister() {
   // );
 
   interface FormData {
-  // Company Information
-  companyName: string;
-  companyType: string;
-  industry: string;
-  companySize: string;
-  website: string;
-  description: string;
+    // Company Information
+    companyName: string;
+    companyType: string;
+    industry: string;
+    companySize: string;
+    website: string;
+    description: string;
 
-  // Contact Information
-  contactPersonName: string;
-  designation: string;
-  email: string;
-  phone: string;
-  phoneCode: string;
+    // Contact Information
+    contactPersonName: string;
+    designation: string;
+    email: string;
+    phone: string;
+    phoneCode: string;
 
-  // Address Information
-  address: string;
-  countryId: string;
-  stateId: string;
-  cityId: string;
-  pincode: string;
+    // Address Information
+    address: string;
+    countryId: string;
+    stateId: string;
+    cityId: string;
+    pincode: string;
 
-  // Account Information
-  password: string;
-  confirmPassword: string;
+    // Account Information
+    password: string;
+    confirmPassword: string;
 
-  // Agreements
-  agreeTerms: boolean;
-  agreeMarketing: boolean;
-}
+    // Agreements
+    agreeTerms: boolean;
+    agreeMarketing: boolean;
+  }
 
-interface Country {
-  id: string; // or number, depending on your API
-  name: string;
-  phonecode: string;
-}
-interface State {
-  id: string; // or number, depending on your API
-  name: string;
-}
-interface City {
-  id: string; // or number, depending on your API
-  name: string;
-}
+  interface Country {
+    id: string; // or number, depending on your API
+    name: string;
+    phonecode: string;
+  }
+  interface State {
+    id: string; // or number, depending on your API
+    name: string;
+  }
+  interface City {
+    id: string; // or number, depending on your API
+    name: string;
+  }
 
-  const handleResendOTP = async() => {
-    const response =  await handlesendotp()
+  const handleResendOTP = async () => {
+    const response = await handlesendotp()
     setTimeLeft(OTP_EXPIRY_SECONDS);
   };
 
@@ -237,9 +237,9 @@ interface City {
 
   useEffect(() => {
     if (!isOtpOpen) return;
-  
+
     setTimeLeft(OTP_EXPIRY_SECONDS);
-  
+
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
@@ -249,10 +249,10 @@ interface City {
         return prev - 1;
       });
     }, 1000);
-  
+
     return () => clearInterval(timer);
   }, [isOtpOpen]);
-  
+
   // Fetch the Data from the MASTER DB
   useEffect(() => {
     fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/countries/")
@@ -260,7 +260,7 @@ interface City {
       .then((data) => {
         setCountries(data);
       })
-      .catch((err) => console.error(err));
+      .catch((err) => console.error("Country fetch error"));
   }, []);
 
   useEffect(() => {
@@ -270,7 +270,7 @@ interface City {
       )
         .then((res) => res.json())
         .then(setStates)
-        .catch(console.error);
+        .catch((err) => console.error("State fetch error"));
     }
   }, [formData.countryId]);
 
@@ -281,7 +281,7 @@ interface City {
       )
         .then((res) => res.json())
         .then(setCities)
-        .catch(console.error);
+        .catch((err) => console.error("City fetch error"));
     }
   }, [formData.stateId]);
 
@@ -294,25 +294,20 @@ interface City {
   };
 
   const handleEmailChange = (value:string) => {
-    setemail(value);
-    // console.log("Form Data:", formData);
+    setemail(value)
   };
 
   const handleNext = () => {
-    
-      setCurrentStep(prev => Math.min(prev + 1, 3));
+
+    setCurrentStep(prev => Math.min(prev + 1, 3));
 
   };
 
   const handlePrevious = () => {
-    console.log("Current step before prev click : ",currentStep)
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
-      console.log("Current step after prev click with 1 : ",currentStep)
     }
     if(currentStep!=1){
-     
-      console.log("Current step after prev click with 2 : ",currentStep)
     }
   };
 
@@ -349,9 +344,9 @@ interface City {
       password: formData.password,
       confirm_password: formData.confirmPassword,
       email: email,
-      is_verified : true,
+      is_verified: true,
     };
-    // console.log("Payload:", payload);
+   
     try {
       const response = await fetch(
         "https://jobseeker-backend-jy1y.onrender.com/employeer/api/employeer_register/",
@@ -369,7 +364,7 @@ interface City {
       }
 
       const result = await response.json();
-      // console.log("Registration successful:", result);
+      console.log("Registration successful");
       router.push("/employer/login");
     } catch (error) {
       console.error("Registration error:", error);
@@ -381,19 +376,17 @@ interface City {
       {[1, 2, 3].map((step) => (
         <div key={step} className="flex items-center">
           <div
-            className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-              currentStep >= step
+            className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${currentStep >= step
                 ? "bg-purple-600 text-white"
                 : "bg-gray-200 text-gray-600"
-            }`}
+              }`}
           >
             {step}
           </div>
           {step < 3 && (
             <div
-              className={`w-16 h-1 mx-2 ${
-                currentStep > step ? "bg-purple-600" : "bg-gray-200"
-              }`}
+              className={`w-16 h-1 mx-2 ${currentStep > step ? "bg-purple-600" : "bg-gray-200"
+                }`}
             />
           )}
         </div>
@@ -438,7 +431,6 @@ interface City {
       );
 
       const data = await res.json();
-      // console.log(data)
       if (!res.ok) {
         toast.error(data.error || "Invalid OTP");
         return;
@@ -448,7 +440,7 @@ interface City {
       setIsOtpOpen(false);
       toast.success("OTP Verified Successfully!");
     } catch (err) {
-      console.error(err);
+      console.error("OTP Verification error");
     }
   };
 
@@ -759,13 +751,13 @@ interface City {
                                 className="w-full mt-1 h-10 lg:h-11 border rounded px-3 flex items-center justify-between"
                               >
                                 <span>
-                                {formData.countryId
-                                  ? countries.find(
+                                  {formData.countryId
+                                    ? countries.find(
                                       (c) => c.id == formData.countryId
                                     )?.name
-                                  : "Select country"}
-                                  </span>
-                                  <ChevronDown className="h-4 w-4 opacity-60" />
+                                    : "Select country"}
+                                </span>
+                                <ChevronDown className="h-4 w-4 opacity-60" />
                               </Button>
                             </PopoverTrigger>
 
@@ -791,7 +783,7 @@ interface City {
                                             .toLowerCase()
                                             .startsWith(
                                               countrySearch.toLowerCase()
-                                            ) 
+                                            )
                                       )
                                       .map((country) => (
                                         <CommandItem
@@ -805,7 +797,7 @@ interface City {
                                             handleInputChange(
                                               "phoneCode",
                                               country.phonecode
-                                            ); 
+                                            );
                                             setCountryOpen(false);
                                           }}
                                         >
@@ -832,12 +824,12 @@ interface City {
                                 className="w-full mt-1 h-10 lg:h-11 border rounded px-3 flex items-center justify-between"
                               >
                                 <span>
-                                {formData.stateId
-                                  ? states.find((s) => s.id == formData.stateId)
+                                  {formData.stateId
+                                    ? states.find((s) => s.id == formData.stateId)
                                       ?.name
-                                  : "Select state"}
-                                  </span>
-                                  <ChevronDown className="h-4 w-4 opacity-60" />
+                                    : "Select state"}
+                                </span>
+                                <ChevronDown className="h-4 w-4 opacity-60" />
                               </Button>
                             </PopoverTrigger>
 
@@ -897,12 +889,12 @@ interface City {
                                 className="w-full mt-1 h-10 lg:h-11 border rounded px-3 flex items-center justify-between"
                               >
                                 <span>
-                                {formData.cityId
-                                  ? cities.find((c) => c.id == formData.cityId)
+                                  {formData.cityId
+                                    ? cities.find((c) => c.id == formData.cityId)
                                       ?.name
-                                  : "Select city"}
-                                  </span>
-                                  <ChevronDown className="h-4 w-4 opacity-60" />
+                                    : "Select city"}
+                                </span>
+                                <ChevronDown className="h-4 w-4 opacity-60" />
                               </Button>
                             </PopoverTrigger>
 
@@ -989,7 +981,7 @@ interface City {
                             </Label>
 
                             <div className="flex gap-2 mt-1">
-                             
+
                               <input
                                 className="w-20 h-10 lg:h-11 border rounded px-3 bg-gray-100 text-gray-700"
                                 value={
@@ -998,7 +990,7 @@ interface City {
                                     : ""
                                 }
                                 readOnly
-                               
+
                               />
 
                               <Input
@@ -1221,7 +1213,7 @@ interface City {
                     )}
 
                     {currentStep < 3 ? (
-                      
+
                       <Button
                         type="button"
                         onClick={handleNext}
@@ -1229,9 +1221,9 @@ interface City {
                         className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 h-12 px-6 ml-auto"
                       >
                         Next
-                      
+
                       </Button>
-                    
+
                     ) : (
                       <Button
                         type="submit"
@@ -1242,7 +1234,7 @@ interface City {
                     )}
                   </div>
                 </form>
-                  
+
                 <div className="mt-8 pt-6 border-t border-gray-200">
                   <div className="flex items-center justify-center space-x-2 text-sm text-gray-600">
                     <CheckCircle className="w-4 h-4 text-green-500" />
@@ -1254,49 +1246,49 @@ interface City {
           </div>
         </div>
       </div>
-      
 
-<Dialog open={isOtpOpen} onOpenChange={setIsOtpOpen}>
-  <DialogContent>
-    <div className="text-center">
-      <h1 className="text-xl font-bold mb-4">Enter OTP</h1>
 
-      <InputOTP maxLength={6} value={otp} onChange={setOtp}>
-        <InputOTPGroup>
-          {[0, 1, 2, 3, 4, 5].map((i) => (
-            <InputOTPSlot key={i} index={i} />
-          ))}
-        </InputOTPGroup>
-      </InputOTP>
+      <Dialog open={isOtpOpen} onOpenChange={setIsOtpOpen}>
+        <DialogContent>
+          <div className="text-center">
+            <h1 className="text-xl font-bold mb-4">Enter OTP</h1>
 
-      <Button
-        className="w-full mt-4 bg-indigo-600 text-white"
-        onClick={handleVerifyOTP}
-      >
-        Verify
-      </Button>
+            <InputOTP maxLength={6} value={otp} onChange={setOtp}>
+              <InputOTPGroup>
+                {[0, 1, 2, 3, 4, 5].map((i) => (
+                  <InputOTPSlot key={i} index={i} />
+                ))}
+              </InputOTPGroup>
+            </InputOTP>
 
-      {/* Footer */}
-      <div className="mt-4 text-sm text-gray-600">
-        {timeLeft > 0 ? (
-          <p>
-            Resend OTP in{" "}
-            <span className="font-semibold text-indigo-600">
-              {timeLeft}s
-            </span>
-          </p>
-        ) : (
-          <button
-            onClick={handleResendOTP}
-            className="text-indigo-600 font-semibold hover:underline"
-          >
-            Resend OTP
-          </button>
-        )}
-      </div>
-    </div>
-  </DialogContent>
-</Dialog>
+            <Button
+              className="w-full mt-4 bg-indigo-600 text-white"
+              onClick={handleVerifyOTP}
+            >
+              Verify
+            </Button>
+
+            {/* Footer */}
+            <div className="mt-4 text-sm text-gray-600">
+              {timeLeft > 0 ? (
+                <p>
+                  Resend OTP in{" "}
+                  <span className="font-semibold text-indigo-600">
+                    {timeLeft}s
+                  </span>
+                </p>
+              ) : (
+                <button
+                  onClick={handleResendOTP}
+                  className="text-indigo-600 font-semibold hover:underline"
+                >
+                  Resend OTP
+                </button>
+              )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
     </div>
   );
