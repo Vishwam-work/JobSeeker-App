@@ -13,11 +13,8 @@ import { toast } from "sonner";
 import Pricing from "@/app/pricing/page";
 import CandidatesPage from "@/app/employer/dashboard/candidate_listing/page";
 import QuotaUsagePage from "@/app/employer/dashboard/quota-usage/page";
-<<<<<<< HEAD
-=======
 import EmployerHeader from "@/components/Employerheader";
 import EmployerFooter from "@/components/Employerfooter";
->>>>>>> bcd86b6 ( [ADD] account page,Employerfooterand Employerheader)
 import {
   Select,
   SelectContent,
@@ -3618,10 +3615,7 @@ export default function EmployerDashboard() {
           </div>
         </div>
       )}
-<<<<<<< HEAD
-=======
       <EmployerFooter />
->>>>>>> bcd86b6 ( [ADD] account page,Employerfooterand Employerheader)
     </div>
   );
 }
