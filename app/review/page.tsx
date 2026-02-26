@@ -134,7 +134,7 @@ interface Certification {
   }
 
   useEffect(() => {
-    fetch("http://127.0.0.1:8010/master/api/jobs_title/")
+    fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_title/")
       .then((res) => res.json())
       .then((data) => {
         setJobTitles(data);
@@ -143,7 +143,7 @@ interface Certification {
   }, []);
 
   useEffect(() => {
-    fetch("http://127.0.0.1:8010/master/api/jobs_category/")
+    fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_category/")
       .then((res) => res.json())
       .then((data) => {
         setJobCategories(data);
@@ -160,7 +160,7 @@ interface Certification {
   };
   useEffect(() => {
     const loadProfile = async () => {
-      const res = await fetch("http://127.0.0.1:8010/api/profile/", {
+      const res = await fetch("https://jobseeker-backend-jy1y.onrender.com/api/profile/", {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("auth_token")}`,

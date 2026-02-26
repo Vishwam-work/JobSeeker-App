@@ -113,7 +113,7 @@ export default function CandidatesPage({ isSubscribed = false }: { isSubscribed?
     if (!token) return;
 
     fetch(
-      "http://127.0.0.1:8010/employeer/api/profile-all/",
+      "https://jobseeker-backend-jy1y.onrender.com/employeer/api/profile-all/",
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -368,7 +368,7 @@ export default function CandidatesPage({ isSubscribed = false }: { isSubscribed?
         <img
           src={
             c.profile_image
-              ? `http://127.0.0.1:8010${c.profile_image}`
+              ? `https://jobseeker-backend-jy1y.onrender.com${c.profile_image}`
               : `https://ui-avatars.com/api/?name=${encodeURIComponent(
                 c.full_name
               )}`
@@ -383,7 +383,7 @@ export default function CandidatesPage({ isSubscribed = false }: { isSubscribed?
 
         {c.resume && (
           <a
-            href={`http://127.0.0.1:8010${c.resume}`}
+            href={`https://jobseeker-backend-jy1y.onrender.com${c.resume}`}
             target="_blank"
             rel="noopener noreferrer"
             className="text-xs text-gray-600 flex items-center gap-1 hover:underline"
@@ -1304,7 +1304,7 @@ export default function CandidatesPage({ isSubscribed = false }: { isSubscribed?
                   <img
                     src={
                       c.profile_image
-                        ? `http://127.0.0.1:8010${c.profile_image}`
+                        ? `https://jobseeker-backend-jy1y.onrender.com${c.profile_image}`
                         : `https://ui-avatars.com/api/?name=${encodeURIComponent(
                           c.full_name
                         )}`
@@ -1319,7 +1319,7 @@ export default function CandidatesPage({ isSubscribed = false }: { isSubscribed?
 
                   {c.resume && (
                     <a
-                      href={`http://127.0.0.1:8010${c.resume}`}
+                      href={`https://jobseeker-backend-jy1y.onrender.com${c.resume}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-xs text-gray-600 flex items-center gap-1 hover:underline"
@@ -1390,7 +1390,7 @@ function CandidateDetail({
           <img
             src={
               candidate.profile_image
-                ? `http://127.0.0.1:8010${candidate.profile_image}`
+                ? `https://jobseeker-backend-jy1y.onrender.com${candidate.profile_image}`
                 : `https://ui-avatars.com/api/?name=${encodeURIComponent(
                   candidate.full_name
                 )}`
@@ -1530,7 +1530,7 @@ function CandidateDetail({
 
         {candidate.resume && (
           <a
-            href={`http://127.0.0.1:8010${candidate.resume}`}
+            href={`https://jobseeker-backend-jy1y.onrender.com${candidate.resume}`}
             target="_blank"
             className="inline-flex items-center gap-1 mt-3 text-blue-600 underline text-sm"
           >

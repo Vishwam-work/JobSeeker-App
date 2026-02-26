@@ -173,7 +173,7 @@ export default function JobListings() {
     const fetchCompanies = async () => {
       try {
         const res = await fetch(
-          "http://127.0.0.1:8010/employeer/api/all-jobs/"
+          "https://jobseeker-backend-jy1y.onrender.com/employeer/api/all-jobs/"
         );
         const data = await res.json();
         if (!res.ok) {
@@ -207,7 +207,7 @@ export default function JobListings() {
         if (!token) return;
 
 
-        const res = await fetch("http://127.0.0.1:8010/api/saved-jobs/", {
+        const res = await fetch("https://jobseeker-backend-jy1y.onrender.com/api/saved-jobs/", {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -232,7 +232,7 @@ export default function JobListings() {
     const fetchSkills = async () => {
       try {
         const response = await fetch(
-          "http://127.0.0.1:8010/master/api/jobs_category/"
+          "https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_category/"
         );
         const data = await response.json();
 
@@ -256,7 +256,7 @@ export default function JobListings() {
       setLoading(true);
 
       const response = await fetch(
-        `http://127.0.0.1:8010/employeer/api/all-jobs/?page=${pageNumber}`
+        `https://jobseeker-backend-jy1y.onrender.com/employeer/api/all-jobs/?page=${pageNumber}`
       );
 
       const data = await response.json();
@@ -525,7 +525,7 @@ export default function JobListings() {
     }
 
     try {
-      const res = await fetch("http://127.0.0.1:8010/api/saved-jobs/", {
+      const res = await fetch("https://jobseeker-backend-jy1y.onrender.com/api/saved-jobs/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -554,7 +554,7 @@ export default function JobListings() {
 
     try {
       // We need to find the savedJobId (record ID) for this job
-      const res = await fetch("http://127.0.0.1:8010/api/saved-jobs/", {
+      const res = await fetch("https://jobseeker-backend-jy1y.onrender.com/api/saved-jobs/", {
         headers: { Authorization: `Bearer ${token}` },
       });
       const savedData = await res.json();
@@ -562,7 +562,7 @@ export default function JobListings() {
 
       if (!record) return;
 
-      const delRes = await fetch(`http://127.0.0.1:8010/api/saved-jobs/${record.id}/`, {
+      const delRes = await fetch(`https://jobseeker-backend-jy1y.onrender.com/api/saved-jobs/${record.id}/`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -610,7 +610,7 @@ export default function JobListings() {
     setIsJobDetailOpen(true);
     try {
       const requestId = uuidv4();
-      const res = await fetch(`http://127.0.0.1:8010/employeer/api/${job.id}/click/`, {
+      const res = await fetch(`https://jobseeker-backend-jy1y.onrender.com/employeer/api/${job.id}/click/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -680,7 +680,7 @@ export default function JobListings() {
       const token = localStorage.getItem("auth_token");
 
       const response = await fetch(
-        "http://127.0.0.1:8010/api/profile/",
+        "https://jobseeker-backend-jy1y.onrender.com/api/profile/",
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -698,7 +698,7 @@ export default function JobListings() {
       setUserData({
         ...profile,
         resume: profile.resume
-          ? `http://127.0.0.1:8010${profile.resume}`
+          ? `https://jobseeker-backend-jy1y.onrender.com${profile.resume}`
           : null,
       });
 
@@ -718,7 +718,7 @@ export default function JobListings() {
       const email = localStorage.getItem("user_email");
 
       const response = await fetch(
-        "http://127.0.0.1:8010/employeer/api/employer/applications/all/",
+        "https://jobseeker-backend-jy1y.onrender.com/employeer/api/employer/applications/all/",
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -810,7 +810,7 @@ export default function JobListings() {
       };
 
       const response = await fetch(
-        "http://127.0.0.1:8010//employeer/api/applications/submit/",
+        "https://jobseeker-backend-jy1y.onrender.com//employeer/api/applications/submit/",
         {
           method: "POST",
           headers: {
