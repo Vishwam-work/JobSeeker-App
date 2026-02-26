@@ -13,6 +13,11 @@ import { toast } from "sonner";
 import Pricing from "@/app/pricing/page";
 import CandidatesPage from "@/app/employer/dashboard/candidate_listing/page";
 import QuotaUsagePage from "@/app/employer/dashboard/quota-usage/page";
+<<<<<<< HEAD
+=======
+import EmployerHeader from "@/components/Employerheader";
+import EmployerFooter from "@/components/Employerfooter";
+>>>>>>> bcd86b6 ( [ADD] account page,Employerfooterand Employerheader)
 import {
   Select,
   SelectContent,
@@ -1317,11 +1322,7 @@ export default function EmployerDashboard() {
   };
   
 
-  const handleLogout = () => {
-    localStorage.removeItem("auth_token");
-    setIsAuthenticated(false);
-    router.push("/employer/login");
-  };
+ 
 
   const tabs = [
     { id: "post-job", label: "Post a Job", icon: Plus },
@@ -1407,95 +1408,7 @@ export default function EmployerDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-            <Link href="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
-                <Search className="w-4 h-4 text-white" />
-              </div>
-              <span className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-                jobseeker
-              </span>
-              <span className="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded-full font-medium">
-                Employer Dashboard
-              </span>
-            </Link>
-            <div className="flex items-center gap-4">
-             <Link href="/pricing">Pricing</Link>
-
-              <div className="relative">
-                 
-                 <div
-                   onClick={() => setIsNotificationOpen(!isNotificationOpen)}
-                   className="cursor-pointer relative select-none"
-                  >
-                  <Bell className="w-5 h-5 text-gray-700 hover:text-purple-600" />
-                <span className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full" />
-                 </div>
-
-                 {isNotificationOpen && (
-                   <>
-                    
-                     <div
-                       className="fixed inset-0 z-40 bg-black/20 md:bg-transparent"
-                       onClick={() => setIsNotificationOpen(false)}
-                     />
-                     <div
-                       className="               
-                        fixed md:absolute
-                        inset-x-0 bottom-0 md:inset-auto
-                        md:right-0 md:top-full
-                        w-full md:w-80
-                        bg-white
-                        border
-                        shadow-lg
-                        rounded-t-xl md:rounded-lg
-                        z-50
-                      "
-                     >
-                       <div className="p-3 border-b font-semibold text-gray-700 flex justify-between items-center">               
-                        Notifications
-                        <button
-                          className="md:hidden text-gray-500"
-                          onClick={() => setIsNotificationOpen(false)}
-                        >
-                          ✕
-                        </button>
-                       </div>
-
-                       <div className="max-h-64 overflow-y-auto">
-                         <div className="px-4 py-3 hover:bg-gray-50 cursor-pointer">
-                           <p className="text-sm font-medium text-gray-800">
-                             New job matched your profile
-                           </p>
-                           <p className="text-xs text-gray-500">2 minutes ago</p>
-                         </div>
-
-                        <div className="px-4 py-3 hover:bg-gray-50 cursor-pointer">
-                          <p className="text-sm font-medium text-gray-800">
-                            Employer viewed your profile
-                          </p>
-                          <p className="text-xs text-gray-500">1 hour ago</p>
-                        </div>
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
-
-              <Button
-                variant="outline"
-                className="border-red-600 text-red-600 hover:bg-red-50"
-                onClick={handleLogout}
-              >
-                Logout
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <EmployerHeader/>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Welcome Section */}
@@ -3705,6 +3618,10 @@ export default function EmployerDashboard() {
           </div>
         </div>
       )}
+<<<<<<< HEAD
+=======
+      <EmployerFooter />
+>>>>>>> bcd86b6 ( [ADD] account page,Employerfooterand Employerheader)
     </div>
   );
 }

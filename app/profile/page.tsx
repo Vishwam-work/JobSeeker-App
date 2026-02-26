@@ -383,6 +383,20 @@ interface SavedJob {
   };
 }
 
+
+useEffect(() => {
+  const userKey = getUserKey();
+  if (!userKey) return;
+
+  const submitted = localStorage.getItem(
+    `profile_submitted_${userKey}`
+  );
+
+  if (submitted === "true") {
+    setIsProfileSubmitted(true);
+  }
+}, []);
+
 const validateDates = (start: Dayjs | null, end: Dayjs | null) => {
   if (!start || !end) return null;
   if (end.isBefore(start, "day")) {

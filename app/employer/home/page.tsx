@@ -9,7 +9,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import Footer from "@/components/Footer";
+import EmployerFooter from "@/components/Employerfooter";
 const slides = [
   {
     title: "Decode India’s largest talent pool",
@@ -322,7 +322,7 @@ export default function EmployerHome() {
           </div>
         </section>
       </div>
-      <Footer />
+      <EmployerFooter />
     </div>
   );
 }

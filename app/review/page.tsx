@@ -172,6 +172,7 @@ interface Certification {
 
       if (res.ok) {
         const data = await res.json();
+        console.log("Profile Data: before", data);
 
 
 

@@ -1,18 +1,28 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Bell, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import Image from "next/image";
 
-
-export default function EmployerNavbar() {
+export default function EmployerHeader() {
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
-  const router = useRouter();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
+  const [openAccountMenu, setOpenAccountMenu] = useState(false);
+  const router = useRouter();
+  const companyLogo = "/companies_logos/zenoti.png";
+
+  useEffect(() => {
+    const token = localStorage.getItem("auth_token");
+    console.log("LOG TOKEN:", token);
+    setIsAuthenticated(!!token);
+  }, []);
   const handleLogout = () => {
     localStorage.removeItem("auth_token");
+    setIsAuthenticated(false);
     router.push("/employer/login");
   };
 
@@ -20,7 +30,6 @@ export default function EmployerNavbar() {
     <div className="bg-white shadow-sm border-b">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-          
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2">
             <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
@@ -36,7 +45,41 @@ export default function EmployerNavbar() {
 
           {/* Right Side */}
           <div className="flex items-center gap-4">
-             <Link
+            <div className="relative">
+              <button
+                onClick={() => setOpenAccountMenu(!openAccountMenu)}
+                className="text-gray-700 hover:text-purple-600 font-medium"
+              >
+                Account
+              </button>
+
+              {openAccountMenu && (
+                <div className="absolute right-0 mt-3 w-44 bg-white shadow-lg rounded-lg border z-50">
+                  <button
+                    onClick={() => router.push("/employer/account")}
+                    className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                  >
+                    View Account
+                  </button>
+
+                  <button
+                    onClick={() => router.push("/employer/edit-account")}
+                    className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                  >
+                    Edit Account
+                  </button>
+
+                  <button
+                    onClick={() => router.push("/employer/settings")}
+                    className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                  >
+                    Settings
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <Link
               href="/employer/dashboard"
               className="text-gray-700 hover:text-purple-600 font-medium"
             >
@@ -76,7 +119,15 @@ export default function EmployerNavbar() {
                 </>
               )}
             </div>
-
+            <Link href="/employer/account">
+              <Image
+                src={companyLogo}
+                alt="Company Logo"
+                width={40}
+                height={40}
+                className="rounded-full border-2 border-purple-600 cursor-pointer"
+              />
+            </Link>
             <Button
               variant="outline"
               className="border-red-600 text-red-600 hover:bg-red-50"

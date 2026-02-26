@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import Header from "../employer/header/page";
-import Footer from "@/components/Footer";
+import EmployerHeader from "@/components/Employerheader";
+import EmployerFooter from "@/components/Employerfooter";
 type BillingType = "monthly" | "yearly";
 
 type Plan = {
@@ -93,7 +93,7 @@ export default function PricingPage() {
 
   return (
     <div>
-      <Header />
+      <EmployerHeader />
       <section className="bg-gray-50 py-16 px-4">
         <div className="max-w-7xl mx-auto">
           {/* Floating Background Blur Circles */}
@@ -288,7 +288,8 @@ export default function PricingPage() {
           </div>
         </div>
       </section>
-      <Footer />
+
+      <EmployerFooter />
     </div>
   );
 }
