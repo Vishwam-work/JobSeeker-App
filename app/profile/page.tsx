@@ -195,7 +195,7 @@ useEffect(() => {
         String(profileData.personalInfo.countryId)
     );
 
-    if (selectedCountry?.phonecode) {
+    if (selectedCountry.phonecode) {
       setProfileData((prev) => ({
         ...prev,
         personalInfo: {

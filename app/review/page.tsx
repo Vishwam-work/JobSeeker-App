@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
   User,
   Mail,
@@ -14,37 +14,32 @@ import {
   GraduationCap,
   Award,
   Edit,
-  Download,
-  Eye,
-  Star,
   Building2,
   Clock,
   DollarSign,
   ArrowLeft,
-  CheckCircle,
-  AlertCircle
-} from 'lucide-react';
-import Header from '@/components/Header';
-import Link from 'next/link';
-import DownloadProfilePDF from '@/components/DownloadProfilePDF';
-export default function ProfileReview() {
-  const [profileData, setProfileData] = useState<ProfileData | null>(null);
-  const [jobTitles, setJobTitles] = useState<JobTitle[]>([]);
-  const [jobCategories, setJobCategories] = useState<JobCategory[]>([]);
-  const [isPDF, setIsPDF] = useState(false);
-  interface JobCategory {
+} from "lucide-react";
+import Header from "@/components/Header";
+import Link from "next/link";
+import DownloadProfilePDF from "@/components/DownloadProfilePDF";
+
+interface JobCategory {
   id: number | string;
   name: string;
 }
+
 interface JobTitle {
   id: number | string;
   title: string;
 }
+
 interface ProfileExperience {
   id: string | number;
   company: string;
+  positionId?: number | string;
   position: string;
-  category: string;
+  categoryId?: number | string;
+  categoryName: string;
   duration: string;
   location: string;
   description: string;
@@ -60,6 +55,7 @@ interface Education {
 }
 
 interface Certification {
+  id: string | number;
   name: string;
   issuer: string;
   year: string | number;
@@ -86,52 +82,12 @@ interface ProfileData {
   skills: string[];
   resume: string;
 }
-interface Certification {
-  id: string | number; 
-  name: string;
-  issuer: string;
-  year: string | number;
-}
 
-  interface Education {
-    id: string | number;
-    degree: string;
-    field: string;
-    institution: string;
-    year: string | number;
-    percentage: string;
-  }
-
-  interface Certification {
-    name: string;
-    issuer: string;
-    year: string | number;
-  }
-
-  interface ProfileData {
-    personalInfo: {
-      profile_image?: string | null;
-      fullName: string;
-      email: string;
-      phone: string;
-      location: string;
-      experience: string;
-      currentSalary: string;
-      expectedSalary: string;
-      noticePeriod: string;
-    };
-    experience: ProfileExperience[];
-    education: Education[];
-    certifications: Certification[];
-    skills: string[];
-    resume: string;
-  }
-  interface Certification {
-    id: string | number;
-    name: string;
-    issuer: string;
-    year: string | number;
-  }
+export default function ProfileReview() {
+  const [profileData, setProfileData] = useState<ProfileData | null>(null);
+  const [jobTitles, setJobTitles] = useState<JobTitle[]>([]);
+  const [jobCategories, setJobCategories] = useState<JobCategory[]>([]);
+  const [isPDF, setIsPDF] = useState(false);
 
   useEffect(() => {
     fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_title/")
@@ -143,14 +99,15 @@ interface Certification {
   }, []);
 
   useEffect(() => {
-    fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_category/")
+    fetch(
+      "https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_category/",
+    )
       .then((res) => res.json())
       .then((data) => {
         setJobCategories(data);
       })
       .catch((err) => console.error(err));
   }, []);
-
 
   const getCategoryName = (id: number | string) =>
     jobCategories.find((c) => c.id === id)?.name || "";
@@ -160,21 +117,19 @@ interface Certification {
   };
   useEffect(() => {
     const loadProfile = async () => {
-      const res = await fetch("https://jobseeker-backend-jy1y.onrender.com/api/profile/", {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
+      const res = await fetch(
+        "https://jobseeker-backend-jy1y.onrender.com/api/profile/",
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
+          },
         },
-      });
-
-
-
+      );
 
       if (res.ok) {
         const data = await res.json();
         console.log("Profile Data: before", data);
-
-
 
         setProfileData({
           personalInfo: {
@@ -188,33 +143,43 @@ interface Certification {
             currentSalary: data.current_salary,
             currentCurrency: data?.current_currency?.symbol ?? "",
             expectedCurrency: data?.expected_currency?.symbol ?? "",
-
             expectedSalary: data.expected_salary,
             noticePeriod: data.notice_period,
           },
-          experience: data.experiences.map((exp: any) => ({
-            id: exp.id,
-            company: exp.company,
-            position: exp.job_title?.title || "N/A",
-            category: exp.category?.name || "N/A",
-            duration: `${exp.start_date} - ${exp.end_date || "Present"}`,
-            location: exp.location?.name || "N/A",
-            description: exp.description,
-          })),
-          education: data.educations.map((edu: any) => ({
-            id: edu.id,
-            degree: edu.degree,
-            field: edu.field_of_study,
-            institution: edu.institution,
-            year: edu.year,
-            percentage: edu.percentage,
-          })),
-          certifications: data.certifications.map((cert: any) => ({
-            name: cert.name,
-            issuer: cert.issuer,
-            year: cert.year
-          })),
-          skills: data.skills.map((s: any) => s.name),
+          experience: Array.isArray(data.experiences)
+            ? data.experiences.map((exp: any) => ({
+                id: exp.id,
+                company: exp.company,
+                positionId: exp.job_title?.id ?? exp.job_title?.title ?? "",
+                position: exp.job_title?.title || "N/A",
+                categoryId: exp.category?.id ?? exp.category?.name ?? "",
+                categoryName: exp.category?.name || "N/A",
+                duration: `${exp.start_date} - ${exp.end_date || "Present"}`,
+                location: exp.location?.name || "N/A",
+                description: exp.description || "",
+              }))
+            : [],
+          education: Array.isArray(data.educations)
+            ? data.educations.map((edu: any) => ({
+                id: edu.id,
+                degree: edu.degree,
+                field: edu.field_of_study,
+                institution: edu.institution,
+                year: edu.year,
+                percentage: edu.percentage,
+              }))
+            : [],
+          certifications: Array.isArray(data.certifications)
+            ? data.certifications.map((cert: any) => ({
+                id: cert.id ?? cert.name,
+                name: cert.name,
+                issuer: cert.issuer,
+                year: cert.year,
+              }))
+            : [],
+          skills: Array.isArray(data.skills)
+            ? data.skills.map((s: any) => s.name)
+            : [],
           resume: data.resume || "",
         });
       } else {
@@ -233,7 +198,6 @@ interface Certification {
     );
   }
   // Sample profile data - in a real app, this would come from an API or state management
-
 
   // Calculate profile completion percentage
   // const calculateCompletionPercentage = () => {
@@ -280,18 +244,19 @@ interface Certification {
         </div>
 
         <div>
-          <div className="space-y-6 bg-white px-6 pb-6 pt-10" >
-            <div
-              id="profile-review-ui"
-              className={isPDF ? 'pdf-mode' : ''}
-            >
+          <div className="space-y-6 bg-white px-6 pb-6 pt-10">
+            <div id="profile-review-ui" className={isPDF ? "pdf-mode" : ""}>
               <div id="pdf-page-1">
                 {/* COMPLETE REVIEW UI */}
                 {/* Personal Information */}
                 <Card>
                   <CardHeader className="pb-4">
                     <CardTitle className="flex items-center space-x-2">
-                      {isPDF ? '👤' : <User className="w-5 h-5 text-purple-600" />}
+                      {isPDF ? (
+                        "👤"
+                      ) : (
+                        <User className="w-5 h-5 text-purple-600" />
+                      )}
                       <span>Personal Information</span>
                     </CardTitle>
                   </CardHeader>
@@ -299,16 +264,14 @@ interface Certification {
                     <div className="flex flex-col lg:flex-row gap-6">
                       <div className="flex-shrink-0">
                         <div className="profile-image-box w-24 h-24 lg:w-32 lg:h-32 bg-gradient-to-br from-purple-100 to-blue-100 rounded-full flex items-center justify-center overflow-hidden">
-
                           {profileData.personalInfo.profile_image ? (
                             <img
                               src={`/api/image-proxy?url=${encodeURIComponent(
-                                profileData.personalInfo.profile_image
+                                profileData.personalInfo.profile_image,
                               )}`}
                               alt="Profile"
                               className="w-full h-full object-cover"
                             />
-
                           ) : (
                             <User className="w-12 h-12 lg:w-16 lg:h-16 text-purple-600" />
                           )}
@@ -320,91 +283,101 @@ interface Certification {
                         </h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm lg:text-base">
                           <div className="flex items-center space-x-2 text-gray-600">
-                            {isPDF ? '✉️' : <Mail className="w-4 h-4" />}
+                            {isPDF ? "✉️" : <Mail className="w-4 h-4" />}
                             <span>{profileData.personalInfo.email}</span>
                           </div>
                           <div className="flex items-center space-x-2 text-gray-600">
-                            {isPDF ? ' ☎' : <Phone className="w-4 h-4" />}
+                            {isPDF ? " ☎" : <Phone className="w-4 h-4" />}
                             <span>{profileData.personalInfo.phone}</span>
                           </div>
                           <div className="flex items-center space-x-2 text-gray-600">
-                            {isPDF ? '📍' : <MapPin className="w-4 h-4" />}
+                            {isPDF ? "📍" : <MapPin className="w-4 h-4" />}
                             <span>{profileData.personalInfo.location}</span>
                           </div>
                           <div className="flex items-center space-x-2 text-gray-600">
-                            {isPDF ? '💼' : <Briefcase className="w-4 h-4" />}
-                            <span>{profileData.personalInfo.experience} Experience</span>
+                            {isPDF ? "💼" : <Briefcase className="w-4 h-4" />}
+                            <span>
+                              {profileData.personalInfo.experience} Experience
+                            </span>
                           </div>
                           <div className="flex items-center space-x-2 text-gray-600">
-                            {isPDF ? ' $ ' : <DollarSign className="w-4 h-4" />}
-                            <span>Current: {profileData.personalInfo.currentSalary}</span>
+                            {isPDF ? " $ " : <DollarSign className="w-4 h-4" />}
+                            <span>
+                              Current: {profileData.personalInfo.currentSalary}
+                            </span>
                           </div>
                           <div className="flex items-center space-x-2 text-gray-600">
-                            {isPDF ? ' $ ' : <DollarSign className="w-4 h-4" />}
-                            <span>Expected: {profileData.personalInfo.expectedSalary}</span>
+                            {isPDF ? " $ " : <DollarSign className="w-4 h-4" />}
+                            <span>
+                              Expected:{" "}
+                              {profileData.personalInfo.expectedSalary}
+                            </span>
                           </div>
                           <div className="flex items-center space-x-2 text-gray-600">
-                            {isPDF ? '🕒' : <Clock className="w-4 h-4" />}
-                            <span>Notice Period: {profileData.personalInfo.noticePeriod}</span>
+                            {isPDF ? "🕒" : <Clock className="w-4 h-4" />}
+                            <span>
+                              Notice Period:{" "}
+                              {profileData.personalInfo.noticePeriod}
+                            </span>
                           </div>
                         </div>
                       </div>
                     </div>
                     <div className="flex items-center space-x-2 text-gray-600">
-                      {isPDF ? ' ' : <Phone className="w-4 h-4" />}
+                      {isPDF ? " " : <Phone className="w-4 h-4" />}
                       <span>
                         {[
-                           profileData.personalInfo.phoneCode
+                          profileData.personalInfo.phoneCode
                             ? `+${profileData.personalInfo.phoneCode}`
                             : null,
                           profileData.personalInfo.phone,
                         ]
                           .filter(Boolean)
                           .join(" ")}
-                       </span>
-
+                      </span>
                     </div>
                     <div className="flex items-center space-x-2 text-gray-600">
-                      {isPDF ? '📍' : <MapPin className="w-4 h-4" />}
+                      {isPDF ? "📍" : <MapPin className="w-4 h-4" />}
                       <span>{profileData.personalInfo.location}</span>
                     </div>
                     <div className="flex items-center space-x-2 text-gray-600">
-                      {isPDF ? '💼' : <Briefcase className="w-4 h-4" />}
-                      <span>{profileData.personalInfo.experience} Experience</span>
+                      {isPDF ? "💼" : <Briefcase className="w-4 h-4" />}
+                      <span>
+                        {profileData.personalInfo.experience} Experience
+                      </span>
                     </div>
                     <div className="flex items-center space-x-2 text-gray-600">
-                       {isPDF ? (
-                         <span>{profileData.personalInfo.currentCurrency}</span>
-                       ) : (
-                         <span className="text-sm font-medium">
-                           {profileData.personalInfo.currentCurrency}
-                         </span>
-                       )}
-                       <span>
-                         Current: {profileData.personalInfo.currentSalary}
-                       </span>
+                      {isPDF ? (
+                        <span>{profileData.personalInfo.currentCurrency}</span>
+                      ) : (
+                        <span className="text-sm font-medium">
+                          {profileData.personalInfo.currentCurrency}
+                        </span>
+                      )}
+                      <span>
+                        Current: {profileData.personalInfo.currentSalary}
+                      </span>
                     </div>
                     <div className="flex items-center space-x-2 text-gray-600">
-                       {isPDF ? (
-                         <span>{profileData.personalInfo.expectedCurrency}</span>
-                       ) : (
-                         <span className="text-sm font-medium">
-                           {profileData.personalInfo.expectedCurrency}
-                         </span>
-                       )}
-                       <span>
-                         Expected: {profileData.personalInfo.expectedSalary}
-                       </span>
+                      {isPDF ? (
+                        <span>{profileData.personalInfo.expectedCurrency}</span>
+                      ) : (
+                        <span className="text-sm font-medium">
+                          {profileData.personalInfo.expectedCurrency}
+                        </span>
+                      )}
+                      <span>
+                        Expected: {profileData.personalInfo.expectedSalary}
+                      </span>
                     </div>
                     <div className="flex items-center space-x-2 text-gray-600">
-                      {isPDF ? '🕒' : <Clock className="w-4 h-4" />}
-                      <span>Notice Period: {profileData.personalInfo.noticePeriod}</span>
+                      {isPDF ? "🕒" : <Clock className="w-4 h-4" />}
+                      <span>
+                        Notice Period: {profileData.personalInfo.noticePeriod}
+                      </span>
                     </div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+                  </CardContent>
+                </Card>
 
                 {/* <Card>
             <CardHeader className="pb-4">
@@ -424,7 +397,11 @@ interface Certification {
                 <Card>
                   <CardHeader className="pb-4">
                     <CardTitle className="flex items-center space-x-2">
-                      {isPDF ? '💼' : <Briefcase className="w-4 h-4 text-purple-600" />}
+                      {isPDF ? (
+                        "💼"
+                      ) : (
+                        <Briefcase className="w-4 h-4 text-purple-600" />
+                      )}
                       <span>Work Experience</span>
                     </CardTitle>
                   </CardHeader>
@@ -440,16 +417,28 @@ interface Certification {
                               <Building2 className="w-6 h-6 text-purple-600" />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <h3 className="font-semibold text-lg text-gray-900">{getJobTitleName(exp.position)}</h3>
-                              <p className="text-purple-600 font-medium">{exp.company}</p>
-                              <h2 className='text-gray-400 font-semibold'>{getCategoryName(exp.category)}</h2>
+                              <h3 className="font-semibold text-lg text-gray-900">
+                                {getJobTitleName(exp.positionId ?? "") ||
+                                  exp.position}
+                              </h3>
+                              <p className="text-purple-600 font-medium">
+                                {exp.company}
+                              </p>
+                              <h2 className="text-gray-400 font-semibold">
+                                {getCategoryName(exp.categoryId ?? "") ||
+                                  exp.categoryName}
+                              </h2>
                               <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 text-sm text-gray-600 mt-1 gap-1 sm:gap-0">
                                 <div className="flex items-center">
-                                  {isPDF ? '🕒' : <Clock className="w-4 h-4" />}
+                                  {isPDF ? "🕒" : <Clock className="w-4 h-4" />}
                                   <span>{exp.duration}</span>
                                 </div>
                                 <div className="flex items-center">
-                                  {isPDF ? '📍' : <MapPin className="w-4 h-4" />}
+                                  {isPDF ? (
+                                    "📍"
+                                  ) : (
+                                    <MapPin className="w-4 h-4" />
+                                  )}
                                   <span>{exp.location}</span>
                                 </div>
                               </div>
@@ -468,7 +457,11 @@ interface Certification {
                 <Card>
                   <CardHeader className="pb-4">
                     <CardTitle className="flex items-center space-x-2">
-                      {isPDF ? '🎓' : <GraduationCap className="w-5 h-5 text-purple-600" />}
+                      {isPDF ? (
+                        "🎓"
+                      ) : (
+                        <GraduationCap className="w-5 h-5 text-purple-600" />
+                      )}
                       <span>Education</span>
                     </CardTitle>
                   </CardHeader>
@@ -484,16 +477,28 @@ interface Certification {
                               <GraduationCap className="w-6 h-6 text-green-600" />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <h3 className="font-semibold text-lg text-gray-900">{edu.degree}</h3>
-                              <p className="text-green-600 font-medium">{edu.field}</p>
+                              <h3 className="font-semibold text-lg text-gray-900">
+                                {edu.degree}
+                              </h3>
+                              <p className="text-green-600 font-medium">
+                                {edu.field}
+                              </p>
                               <p className="text-gray-600">{edu.institution}</p>
                               <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 text-sm text-gray-600 mt-1 gap-1 sm:gap-0">
                                 <div className="flex items-center">
-                                  {isPDF ? '📅' : <Calendar className="w-4 h-4 mr-1" />}
+                                  {isPDF ? (
+                                    "📅"
+                                  ) : (
+                                    <Calendar className="w-4 h-4 mr-1" />
+                                  )}
                                   <span>Graduated: {edu.year}</span>
                                 </div>
                                 <div className="flex items-center">
-                                  {isPDF ? '🎖  ' : <Award className="w-5 h-5 text-purple-600" />}
+                                  {isPDF ? (
+                                    "🎖  "
+                                  ) : (
+                                    <Award className="w-5 h-5 text-purple-600" />
+                                  )}
                                   <span>Score: {edu.percentage}</span>
                                 </div>
                               </div>
@@ -509,7 +514,11 @@ interface Certification {
                 <Card>
                   <CardHeader className="pb-4">
                     <CardTitle className="flex items-center space-x-2">
-                      {isPDF ? '🎖  ' : <Award className="w-5 h-5 text-purple-600" />}
+                      {isPDF ? (
+                        "🎖  "
+                      ) : (
+                        <Award className="w-5 h-5 text-purple-600" />
+                      )}
                       <span>Skills</span>
                     </CardTitle>
                   </CardHeader>
@@ -528,27 +537,41 @@ interface Certification {
                   </CardContent>
                 </Card>
 
-
                 {/* Certifications */}
                 <Card>
                   <CardHeader className="pb-4">
                     <CardTitle className="flex items-center space-x-2">
-                      {isPDF ? '🎖  ' : <Award className="w-5 h-5 text-purple-600" />}
+                      {isPDF ? (
+                        "🎖  "
+                      ) : (
+                        <Award className="w-5 h-5 text-purple-600" />
+                      )}
                       <span>Certifications</span>
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
                       {profileData.certifications.map((cert) => (
-                        <div key={cert.id} className="flex items-start space-x-4 p-4 bg-gray-50 rounded-lg">
+                        <div
+                          key={cert.id}
+                          className="flex items-start space-x-4 p-4 bg-gray-50 rounded-lg"
+                        >
                           <div className="w-12 h-12 bg-gradient-to-br from-yellow-100 to-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
                             <Award className="w-5 h-5 text-purple-600" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h3 className="font-semibold text-lg text-gray-900">{cert.name}</h3>
-                            <p className="text-yellow-600 font-medium">{cert.issuer}</p>
+                            <h3 className="font-semibold text-lg text-gray-900">
+                              {cert.name}
+                            </h3>
+                            <p className="text-yellow-600 font-medium">
+                              {cert.issuer}
+                            </p>
                             <div className="flex items-center text-sm text-gray-600 mt-1">
-                              {isPDF ? '📅' : <Calendar className="w-4 h-4 mr-1" />}
+                              {isPDF ? (
+                                "📅"
+                              ) : (
+                                <Calendar className="w-4 h-4 mr-1" />
+                              )}
                               <span>Issued: {cert.year}</span>
                             </div>
                           </div>
@@ -557,7 +580,6 @@ interface Certification {
                     </div>
                   </CardContent>
                 </Card>
-
               </div>
             </div>
             {/* Action Buttons */}
@@ -574,7 +596,6 @@ interface Certification {
                 </Button>
               </Link>
             </div>
-
           </div>
         </div>
       </div>
