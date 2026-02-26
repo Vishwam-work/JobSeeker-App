@@ -150,21 +150,21 @@ export default function CandidatesPage({ isSubscribed = false }: { isSubscribed?
         matches(c.city?.name) ||
         matches(c.state?.name) ||
         matches(c.country?.name) ||
-        c.skills?.some((s) => matches(s.name)) ||
-        c.certifications?.some(
+        (c.skills?.some((s) => matches(s.name)) ?? false) ||
+        (c.certifications?.some(
           (cert) =>
             matches(cert.name) || matches(cert.issuer) || matches(cert.year)
-        ) ||
-        c.educations?.some(
+        ) ?? false) ||
+        (c.educations?.some(
           (e) =>
             matches(e.degree) ||
             matches(e.field) ||
             matches(e.institution) ||
             matches(e.year)
-        ) ||
-        c.experiences?.some(
+        ) ?? false) ||
+        (c.experiences?.some(
           (ex) => matches(ex.designation) || matches(ex.company)
-        );
+        ) ?? false);
     }
 
     // 2. Specific Filters
@@ -198,7 +198,7 @@ export default function CandidatesPage({ isSubscribed = false }: { isSubscribed?
       const company = filters.currentCompany.toLowerCase();
       const hasCompany =
         c.current_company?.toLowerCase().includes(company) ||
-        c.experiences?.some(ex => ex.company?.toLowerCase().includes(company) && (!ex.end_date || ex.end_date.toLowerCase() === 'present'));
+        c.experiences?.some(ex => ex.company?.toLowerCase().includes(company) && (!ex.end_date || String(ex.end_date).toLowerCase() === 'present'));
       if (!hasCompany) return false;
     }
 
@@ -232,7 +232,7 @@ export default function CandidatesPage({ isSubscribed = false }: { isSubscribed?
     if (filters.designation) {
       const des = filters.designation.toLowerCase();
       const matchesDes = c.current_role?.toLowerCase().includes(des) ||
-        c.experiences?.some(ex => ex.designation.toLowerCase().includes(des));
+        c.experiences?.some(ex => ex.designation?.toLowerCase().includes(des));
       if (!matchesDes) return false;
     }
 

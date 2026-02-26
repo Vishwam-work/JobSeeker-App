@@ -10,7 +10,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import Pricing from "@/app/pricing/page";
 import CandidatesPage from "@/app/employer/dashboard/candidate_listing/page";
 import QuotaUsagePage from "@/app/employer/dashboard/quota-usage/page";
 import EmployerHeader from "@/components/Employerheader";
@@ -99,11 +98,11 @@ import {
 
 export default function EmployerDashboard() {
   const [activeTab, setActiveTab] = useState("post-job");
-  const [jobCategories, setJobCategories] = useState([]);
-  const [jobTitles, setJobTitles] = useState([]);
-  const [cities, setCities] = useState([]);
+  const [jobCategories, setJobCategories] = useState<JobCategory[]>([]);
+  const [jobTitles, setJobTitles] = useState<JobTitle[]>([]);
+  const [cities, setCities] = useState<City[]>([]);
   const [selectedCategory, setSelectedCategory] = useState("");
-  const [selectedCandidate, setSelectedCandidate] = useState(null);
+  const [selectedCandidate, setSelectedCandidate] =useState<Candidate | null>(null);
   const [isCandidateModalOpen, setIsCandidateModalOpen] = useState(false);
   const [jobFilter, setJobFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
@@ -112,7 +111,7 @@ export default function EmployerDashboard() {
   const [newQuestion, setNewQuestion] = useState("");
   // The Dialog box
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedJob, setSelectedJob] = useState(null);
+  const [selectedJob, setSelectedJob] = useState<PostedJob | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   const [CompanyName, setCompanyName] = useState("");
   const [filter, setFilter] = useState("All");
@@ -142,6 +141,236 @@ export default function EmployerDashboard() {
   const [time, setTime] = useState("");
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [showResume, setShowResume] = useState(false);
+
+  interface DecodedToken {
+  user_id: number | string;
+  exp?: number;
+  iat?: number;
+}
+interface City {
+  id: number;
+  name: string;
+}
+
+interface ApplicationUpdateResponse {
+  id: number;
+  application_status: string;
+  detail?: string;
+}
+
+interface JobCategory {
+  id: number;
+  name: string;
+}
+
+interface JobTitle {
+  id: number;
+  title: string;
+}
+
+interface Currency{
+  id: number;
+  symbol: string;
+}
+
+interface Candidate {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  location: string;
+  experience: string;
+  currentRole: string;
+  currentCompany: string;
+  skills: string[];
+  education: string;
+  appliedFor: string;
+  job_title?: string;
+  appliedDate: string;
+  status: string;
+  expectedSalary?: string;
+  resumeUrl?: string;
+  profileImage?: string | null;
+  summary?: string;
+  workExperience: {
+    company: string;
+    role: string;
+    duration: string;
+    description?: string;
+  }[];
+
+  educationDetails: {
+    degree: string;
+    field: string;
+    institution: string;
+    year: string;
+    grade?: string;
+  }[];
+
+  certifications: {
+    name: string;
+    issuer?: string;
+    year?: string;
+  }[];
+  phoneCode?: string;
+  qa?: CandidateQA[];
+}
+
+interface JobForm {
+  title: string;
+  category: string;
+  jobTitle: string;
+  company: string;
+  location: string;
+  experience: string;
+  salary: string;
+  currency: string;
+  job_type: string;
+  workMode: string;
+  description: string;
+  requirements: string;
+  benefits: string;
+  skills: string[];
+  applicationDeadline: string;
+  vacancies: string;
+  isUrgent: boolean;
+  isRemote: boolean;
+  questions: string[];
+}
+interface ApiCandidate {
+  id: number;
+  full_name?: string;
+  email?: string;
+  phone?: string;
+  city?: string;
+  experience?: string;
+  job_title?: string;
+  application_status?: string;
+  applied_at?: string;
+
+  profile?: {
+    full_name?: string;
+    phone?: string;
+    experience?: string;
+    resume?: string;
+    skills?: { name: string }[];
+    educations?: any[];
+    experiences?: any[];
+    certifications?: any[];
+  };
+
+  answers?: {
+    question_index: number;
+    question_text: string;
+    answer: string;
+  }[];
+}
+
+interface CandidateQA {
+  question_index?: number;
+  question_text?: string;
+  answer_text?: string;
+}
+
+const mapApiCandidateToUI = (item: ApiCandidate): Candidate => {
+  const experiences = item.profile?.experiences ?? [];
+  const educations = item.profile?.educations ?? [];
+
+  return {
+    id: item.id,
+    name: item.profile?.full_name || item.full_name || "",
+    email: item.email || "",
+    phone: item.profile?.phone || "",
+    location: item.city || "",
+    experience: item.profile?.experience || item.experience || "",
+
+    currentRole:
+      experiences[0]?.designation ||
+      item.job_title ||
+      "",
+
+    currentCompany:
+      experiences[0]?.company || "",
+
+    skills:
+      item.profile?.skills?.map((s) => s.name) || [],
+
+    education:
+      educations[0]?.degree || "",
+
+    appliedFor:
+      item.job_title || "",
+
+    job_title: item.job_title,
+
+    appliedDate:
+      item.applied_at || "",
+
+    status:
+      item.application_status || "Under Review",
+
+    resumeUrl:
+      item.profile?.resume,
+
+    profileImage: null,
+    summary: "",
+
+    workExperience:
+      experiences.map((ex: any) => ({
+        company: ex.company || "",
+        role: ex.designation || "",
+        duration: `${String(ex.start_date ?? "")} - ${String(
+          ex.end_date ?? "Present"
+        )}`,
+        description: ex.description,
+      })),
+
+    educationDetails:
+      educations.map((e: any) => ({
+        degree: e.degree || "",
+        field: e.field || "",
+        institution: e.institution || "",
+        year: String(e.year ?? ""),
+        grade: e.grade,
+      })),
+
+    certifications:
+      item.profile?.certifications?.map((c: any) => ({
+        name: c.name || "",
+        issuer: c.issuer,
+        year: c.year ? String(c.year) : undefined,
+      })) || [],
+  };
+};
+
+interface PostedJob {
+  id: number;
+  title: string;
+  job_title: number;
+  company: string;
+  location_id: number;
+  experience: string;
+  salary: string;
+  job_type: string;
+  work_mode: string;
+  vacancies: number;
+  application_deadline: string;
+  description: string;
+  requirements: string;
+  benefits: string;
+  skills: string[];
+  is_urgent: boolean;
+  is_remote: boolean;
+  status: string;
+  location?: {
+    id?: number;
+    name: string;
+  };
+  created_at?: string;
+  applicants?: number;
+  apply_clicks?: number;
+  questions?: string[];
+}
 
 
 
@@ -187,10 +416,11 @@ export default function EmployerDashboard() {
   //     views: 156,
   //   },
   // ]);
-  const [postedJobs, setPostedJobs] = useState([]);
+const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
+
 
   // Sample data for candidates
-  const [candidates, setCandidates] = useState([
+  const [candidates, setCandidates] =useState<Candidate[]>([
     {
       id: 1,
       name: "Rahul Sharma",
@@ -319,7 +549,7 @@ export default function EmployerDashboard() {
     },
   ]);
 
-  const [jobForm, setJobForm] = useState({
+  const [jobForm, setJobForm] = useState<JobForm>({
     title: "",
     category: "",
     jobTitle: "",
@@ -342,7 +572,7 @@ export default function EmployerDashboard() {
   });
 
   const [newSkill, setNewSkill] = useState("");
-  const [currency, setCurrency] = useState([]);
+  const [currency, setCurrency] = useState<Currency[]>([]);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
@@ -356,32 +586,32 @@ export default function EmployerDashboard() {
       try {
         const token = localStorage.getItem("auth_token");
         if (!token) return;
-  
-        const decoded = jwtDecode(token);
+
+        const decoded = jwtDecode<DecodedToken>(token);
         console.log("DECODED:", decoded);
         console.log("Employer ID:", decoded.user_id);
-  
+
         const res = await fetch(
           `https://jobseeker-backend-jy1y.onrender.com/employeer/api/companies/${decoded.user_id}/`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
-  
+
         if (!res.ok) {
           console.error("FETCH FAILED:", res.status);
           return;
         }
-     
+
         const data = await res.json();
-        console.log("Applications:", data);
+        // console.log("Applications:", data);
         setCompanyName(data.company_name)
-        console.log(data.company_name)
+        // console.log(data.company_name)
       } catch (err) {
         console.error("Error:", err);
       }
     };
-  
+
     run();
   }, []);
 
@@ -499,8 +729,8 @@ export default function EmployerDashboard() {
         return;
       }
       const data = await response.json();
-      console.log("Here is the Job-list-view-data:",data)
-      console.log(data.category)
+      // console.log("Here is the Job-list-view-data:",data)
+      // console.log(data.category)
       setPostedJobs(data); // Set jobs into stateq
     } catch (error) {
       console.error("Error fetching jobs:", error);
@@ -517,7 +747,7 @@ export default function EmployerDashboard() {
     fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/currencies/")
       .then((res) => res.json())
       .then((data) => {
-        console.log("Currency data:", data);
+        // console.log("Currency data:", data);
         setCurrency(data);
       });
   }, []);
@@ -586,7 +816,7 @@ export default function EmployerDashboard() {
     }
   };
 
-  const handleApplicationsClick = async (jobId) => {
+  const handleApplicationsClick = async (jobId: number) => {
     try {
       const token = localStorage.getItem("auth_token");
 
@@ -601,7 +831,7 @@ export default function EmployerDashboard() {
       );
 
       const data = await response.json();
-      console.log("API RAW DATA:", data);
+      // console.log("API RAW DATA:", data);
 
       if (!Array.isArray(data)) {
         console.error("API did not return list:", data);
@@ -611,30 +841,38 @@ export default function EmployerDashboard() {
         return;
       }
 
-      const mappedCandidates = data.map((item) => ({
-        id: item.id,
-        name: item.profile?.full_name || item.full_name,
-        email: item.email || item.user_email, 
-        phone: item.profile?.phone || item.phone,
-        phoneCode: item.profile?.phone_code || item.phone_code,
-        location: item.profile?.city || item.city,
-        experience: item.profile?.experience || item.experience,
-        job_title: item.job_title,
-        resumeUrl: item.profile?.resume || item.resume,
-        skills: item.profile?.skills || item.skills,
-        certifications: item.profile?.certifications || item.certifications,
-        educationDetails: item.profile?.educations || item.educations,
-        workExperience: item.profile?.experiences || item.experiences,
-        status: item.application_status || "Under Review",
-        appliedDate: item.applied_at,
-        qa: item.answers?.map((ans) => ({
-          question_index: ans.question_index,
-          question_text: ans.question_text,
-          answer_text: ans.answer,
-        })),
-      }));
+    //   const mappedCandidates = data.map((item) => ({
+    //     id: item.id,
+    //     name: item.profile?.full_name || item.full_name,
+    //     email: item.email || item.user_email, 
+    //     phone: item.profile?.phone || item.phone,
+    //     phoneCode: item.profile?.phone_code || item.phone_code,
+    //     location: item.profile?.city || item.city,
+    //     experience: item.profile?.experience || item.experience,
+    //     job_title: item.job_title,
+    //     resumeUrl: item.profile?.resume || item.resume,
+    //     skills: item.profile?.skills || item.skills,
+    //     certifications: item.profile?.certifications || item.certifications,
+    //     educationDetails: item.profile?.educations || item.educations,
+    //     workExperience: item.profile?.experiences || item.experiences,
+    //     status: item.application_status || "Under Review",
+    //     appliedDate: item.applied_at,
+    //     qa: item.answers?.map((ans: any) => ({
+    //       question_index: ans.question_index,
+    //       question_text: ans.question_text,
+    //       answer_text: ans.answer,
+    //     })),
+    //   }));
 
-      console.log("MAPPED CANDIDATES:", mappedCandidates);
+    //   console.log("MAPPED CANDIDATES:", mappedCandidates);
+
+    //   setCandidates(mappedCandidates);
+    //   setActiveTab("candidates");
+    // } catch (error) {
+    //   console.error(error);
+    // }
+    const mappedCandidates: Candidate[] =
+      data.map(mapApiCandidateToUI);
 
       setCandidates(mappedCandidates);
       setActiveTab("candidates");
@@ -652,7 +890,7 @@ export default function EmployerDashboard() {
     }
   };
 
-  const handleRemoveQuestion = (indexToRemove) => {
+  const handleRemoveQuestion = (indexToRemove: number) => {
     const updated = jobForm.questions.filter(
       (_, index) => index !== indexToRemove
     );
@@ -660,14 +898,14 @@ export default function EmployerDashboard() {
     setQuestions(updated);
   };
 
-  const handleRemoveSkill = (skillToRemove) => {
+  const handleRemoveSkill = (skillToRemove: string) => {
     setJobForm((prev) => ({
       ...prev,
       skills: prev.skills.filter((skill) => skill !== skillToRemove),
     }));
   };
 
-  const handleSubmitJob = async (e) => {
+  const handleSubmitJob = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
       const token = localStorage.getItem("auth_token");
@@ -699,7 +937,7 @@ export default function EmployerDashboard() {
         status: "active",
         questions: Array.isArray(jobForm.questions) ? jobForm.questions : [],
       };
-      console.log("Payload:", payload);
+      // console.log("Payload:", payload);
       const response = await fetch(
         "https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-postings/",
         {
@@ -723,7 +961,7 @@ export default function EmployerDashboard() {
       }
 
   const data = await response.json();
-  console.log("Job posted successfully:", data);
+  // console.log("Job posted successfully:", data);
   setPostedJobs((prev) => [...prev, data]);
   toast.success("Job posted successfully!");
   await fetchPostedJobs();
@@ -759,11 +997,11 @@ export default function EmployerDashboard() {
         console.error("Error submitting job:", error);
         toast.error("An error occurred while posting the job.", {
         description: "Please try again or check your internet connection."
-        });    
+        });
        }
     };
 
-    const getStatusColor = (status) => {
+    const getStatusColor = (status: string) => {
       switch (status) {
         case "active":
           return "bg-green-100 text-green-800";
@@ -829,7 +1067,7 @@ export default function EmployerDashboard() {
       jobTitleFilter === "All" ||
       c.appliedFor?.toLowerCase() === jobTitleFilter.toLowerCase();
 
-    const salary = parseInt(c.expectedSalary) || 0;
+    const salary = parseInt(c.expectedSalary ?? "0", 10);
     const salaryMatch =
       salaryFilter === "All" ||
       (salaryFilter === "Below 20000" && salary < 20000) ||
@@ -867,7 +1105,7 @@ export default function EmployerDashboard() {
     city.name.toLowerCase().startsWith(searchTerm.toLowerCase())
   );
 
-    const handleViewJob = async (job) => {
+    const handleViewJob = async (job: any) => {
       try {
         const token = localStorage.getItem("auth_token");
         const response = await fetch(
@@ -881,7 +1119,7 @@ export default function EmployerDashboard() {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
         const data = await response.json();
-        console.log("Job details:", data);
+        // console.log("Job details:", data);
         setSelectedJob(data);
         setIsEditMode(false);
         setIsModalOpen(true);
@@ -890,7 +1128,7 @@ export default function EmployerDashboard() {
       }
     };
   //https://jobseeker-backend-jy1y.onrender.com
-    const handleEditJob = async (job) => {
+    const handleEditJob = async (job: any) => {
       try {
         const token = localStorage.getItem("auth_token");
         const response = await fetch(
@@ -901,7 +1139,7 @@ export default function EmployerDashboard() {
         );
       
         const data = await response.json();
-        console.log("Data is prefill", data);
+        // console.log("Data is prefill", data);
         // Prefill the form
     setJobForm({
         title: data.title || "",
@@ -934,13 +1172,13 @@ export default function EmployerDashboard() {
     }
   };
 
-  const handleDeleteJob = async (job) => {
+  const handleDeleteJob = async (job: any) => {
     const token = localStorage.getItem("auth_token");
     try {
       if (
         window.confirm(`Are you sure you want to delete the job: ${job.title}?`)
       ) {
-        console.log("Deleting job:", job);
+        // console.log("Deleting job:", job);
 
         toast.success("Job deleted", {
         description: `The job "${job.title}" has been successfully removed.`
@@ -980,7 +1218,7 @@ export default function EmployerDashboard() {
   //   alert(`Job status changed to: ${newStatus}`);
   // };
 
-  const handleToggleJobStatus = async (job) => {
+  const handleToggleJobStatus = async (job: any) => {
     const token = localStorage.getItem("auth_token");
 
     if (!token) {
@@ -1015,7 +1253,7 @@ export default function EmployerDashboard() {
         toast.success(`Job status changed to: ${newStatus}`);
       } else {
         console.error("Failed to update job status:", result);
-        
+
         toast.error(result.detail || "Failed to update job status", {
        description: "Please check and try again.",
        });
@@ -1103,7 +1341,7 @@ export default function EmployerDashboard() {
       );
 
       setIsEditMode(false); // Close the dialog
-      
+
       toast.success("Job updated successfully!");
     } catch (err) {
       console.error("Update job error:", err);
@@ -1114,7 +1352,7 @@ export default function EmployerDashboard() {
   };
 
   // SHORTLIST
-  const handleShortlistCandidate = async (candidate) => {
+  const handleShortlistCandidate = async ( candidate: any) => {
     try {
       const token = localStorage.getItem("auth_token");
       if (!token) {
@@ -1139,7 +1377,7 @@ export default function EmployerDashboard() {
       );
 
       const updated = await response.json();
-      console.log("Updated Response:", updated);
+      // console.log("Updated Response:", updated);
 
       if (!response.ok) {
          toast.error(updated.error || "Update failed", {
@@ -1165,7 +1403,7 @@ export default function EmployerDashboard() {
       //     ? { ...prev, status: updated.application_status }
       //     : prev
       // );
-      console.log("Now>>>>>>>", selectedCandidate);
+      // console.log("Now>>>>>>>", selectedCandidate);
 
       toast.success("Candidate Shortlisted!");
     } catch (err) {
@@ -1175,9 +1413,9 @@ export default function EmployerDashboard() {
   };
 
   /* REJECT */
-  const handleRejectCandidate = async (candidate) => {
+  const handleRejectCandidate = async (candidate: Pick<Candidate, "id">) => {
     try {
-      console.log("Rejecting candidate: ", candidate);
+      // console.log("Rejecting candidate: ", candidate);
 
       if (!candidate?.id) {
         toast.error("Candidate ID missing", {
@@ -1209,11 +1447,11 @@ export default function EmployerDashboard() {
       );
 
       const text = await response.text();
-      console.log("Raw Response → ", text);
+      // console.log("Raw Response → ", text);
 
-      let data = null;
+      let data: ApplicationUpdateResponse | null = null;
       try {
-        data = JSON.parse(text);
+        data = JSON.parse(text) as ApplicationUpdateResponse
       } catch {
         console.log("HTML Error Response Received");
       }
@@ -1225,15 +1463,33 @@ export default function EmployerDashboard() {
         return;
       }
 
+      if (!data) {
+      toast.error("Invalid server response", {
+        description: "Please try again later."
+      });
+      return;
+      }
+      const { id, application_status } = data;
+      // setCandidates((prev) =>
+      //   prev.map((c) =>
+      //     c.id === data.id ? { ...c, status: data.application_status } : c
+      //   )
+      // );
+
+      // setSelectedCandidate((prev) =>
+      //   prev && prev.id === data.id
+      //     ? { ...prev, status: data.application_status }
+      //     : prev
+      // );
       setCandidates((prev) =>
         prev.map((c) =>
-          c.id === data.id ? { ...c, status: data.application_status } : c
+          c.id === id ? { ...c, status: application_status } : c
         )
       );
 
       setSelectedCandidate((prev) =>
-        prev && prev.id === data.id
-          ? { ...prev, status: data.application_status }
+        prev && prev.id === id
+          ? { ...prev, status: application_status }
           : prev
       );
 
@@ -1251,25 +1507,30 @@ export default function EmployerDashboard() {
   };
 
   // INTERVIEW SCHEDULE
-  const handleScheduleInterview = (candidate) => {
+  const handleScheduleInterview = (candidate: any) => {
     setSelectedCandidate(candidate);
     setOpenSchedule(true);
   };
 
   const handleScheduleSubmit = async () => {
-
+    if (!selectedCandidate) {
+    toast.error("No candidate selected", {
+      description: "Please select a candidate and try again."
+    });
+    return;
+  }
      if (!interviewDate) {
     toast.warning("Please select interview date");
     return;
   }
 
-                    
+
     try {
       const token = localStorage.getItem("auth_token");
       if (!token) return toast.error("Token missing", {
                          description: "Please log in again to continue."
                          });
-  
+
       const res = await fetch(
         `https://jobseeker-backend-jy1y.onrender.com/employeer/api/employer/applications/${selectedCandidate.id}/schedule-interview/`,
         {
@@ -1295,21 +1556,21 @@ export default function EmployerDashboard() {
          });
 
       }
-  
+
       const data = await res.json();
-  
+
       setCandidates((prev) =>
         prev.map((c) =>
           c.id === data.id ? { ...c, status: data.application_status } : c
         )
       );
-  
+
       setSelectedCandidate((prev) =>
         prev && prev.id === data.id
           ? { ...prev, status: data.application_status }
           : prev
       );
-  
+
       toast.success("Interview Scheduled!");
       setOpenSchedule(false);
     } catch (err) {
@@ -1340,7 +1601,7 @@ export default function EmployerDashboard() {
   },
   ];
 
-  const getWorkModeColor = (workMode) => {
+  const getWorkModeColor = (workMode: string) => {
     switch (workMode) {
       case "Remote":
         return "bg-green-100 text-green-800";
@@ -1353,9 +1614,9 @@ export default function EmployerDashboard() {
     }
   };
 
-  const getTimeSincePosted = (postedDate) => {
-    const now = new Date();
-    const posted = new Date(postedDate);
+  const getTimeSincePosted = (postedDate: string) => {
+    const now = new Date().getTime();
+    const posted = new Date(postedDate).getTime();
     const diffTime = Math.abs(now - posted);
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
@@ -1387,7 +1648,7 @@ export default function EmployerDashboard() {
         );
 
         const data = await res.json();
-        console.log("Company API → ", data);
+        // console.log("Company API → ", data);
 
         if (data?.company_name) {
           setJobForm((prev) => ({
@@ -1823,6 +2084,7 @@ export default function EmployerDashboard() {
                     <Input
                       id="deadline"
                       type="date"
+                       min={new Date().toISOString().split("T")[0]}
                       value={jobForm.applicationDeadline}
                       onChange={(e) =>
                         setJobForm((prev) => ({
@@ -1948,7 +2210,7 @@ export default function EmployerDashboard() {
                       id="urgent"
                       checked={jobForm.isUrgent}
                       onCheckedChange={(checked) =>
-                        setJobForm((prev) => ({ ...prev, isUrgent: checked }))
+                        setJobForm((prev) => ({ ...prev, isUrgent: checked === true }))
                       }
                     />
                     <Label htmlFor="urgent" className="text-sm">
@@ -1960,7 +2222,7 @@ export default function EmployerDashboard() {
                       id="remote"
                       checked={jobForm.isRemote}
                       onCheckedChange={(checked) =>
-                        setJobForm((prev) => ({ ...prev, isRemote: checked }))
+                        setJobForm((prev) => ({ ...prev, isRemote: checked === true }))
                       }
                     />
                     <Label htmlFor="remote" className="text-sm">
@@ -2041,12 +2303,14 @@ export default function EmployerDashboard() {
         {activeTab === "manage-jobs" && (
           <Card>
             <CardHeader>
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <CardTitle>Manage Your Jobs</CardTitle>
-                <div className="flex items-center space-x-2">
-                  {/*  Date Filter */}
+
+                <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
+    
+                  {/* Date Filter */}
                   <Select value={dateFilter} onValueChange={setDateFilter}>
-                    <SelectTrigger className="w-32">
+                    <SelectTrigger className="w-full sm:w-32">
                       <SelectValue placeholder="Filter by Date" />
                     </SelectTrigger>
                     <SelectContent>
@@ -2058,8 +2322,9 @@ export default function EmployerDashboard() {
                     </SelectContent>
                   </Select>
 
+                  {/* Job Filter */}
                   <Select value={jobFilter} onValueChange={setJobFilter}>
-                    <SelectTrigger className="w-32">
+                    <SelectTrigger className="w-full sm:w-32">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -2068,25 +2333,21 @@ export default function EmployerDashboard() {
                       <SelectItem value="closed">Closed</SelectItem>
                     </SelectContent>
                   </Select>
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+
+                  {/* Search */}
+                  <div className="relative w-full sm:w-56 md:w-64">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <Input
                       placeholder="Search jobs..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10 w-48"
+                      className="pl-10 w-full"
                     />
                   </div>
-                  {/* <Button variant="outline" size="sm">
-                    <Filter className="w-4 h-4 mr-2" />
-                    Filter
-                  </Button>
-                  <Button variant="outline" size="sm">
-                    <Download className="w-4 h-4 mr-2" />
-                    Export
-                  </Button> */}
+
                 </div>
               </div>
+
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -2136,10 +2397,16 @@ export default function EmployerDashboard() {
                             </div>
                             <div className="flex items-center">
                               <Calendar className="w-4 h-4 mr-1" />
-                              <span>
+                              {/* <span>
                                 Posted:{" "}
                                 {new Date(job.created_at).toLocaleDateString()}
-                              </span>
+                              </span> */}
+                              <span>
+                            Posted:{" "}
+                            {job.created_at
+                              ? new Date(job.created_at).toLocaleDateString()
+                              : "N/A"}
+                          </span>
                             </div>
                           </div>
                           <div className="flex items-center space-x-6 text-sm">
@@ -2148,12 +2415,12 @@ export default function EmployerDashboard() {
                               onClick={() => handleApplicationsClick(job.id)}
                             >
                               <Users className="w-4 h-4 mr-1" />
-                              <span>{job.applicants} Applications</span>
+                              <span>{job.applicants || 0} Applications</span>
                             </div>
 
                             <div className="flex items-center text-green-600">
                               <Eye className="w-4 h-4 mr-1" />
-                              <span>{job.apply_clicks} Views</span>
+                              <span>{job.apply_clicks || 0} Views</span>
                             </div>
                           </div>
                         </div>
@@ -2299,7 +2566,7 @@ export default function EmployerDashboard() {
                     <div className="flex items-center text-gray-600">
                       <Calendar className="w-4 h-4 mr-2" />
                       <span>
-                        Posted {getTimeSincePosted(selectedJob.created_at)}
+                        Posted {selectedJob.created_at ? getTimeSincePosted(selectedJob.created_at) : "N/A"}
                       </span>
                     </div>
                   </div>
@@ -2323,19 +2590,6 @@ export default function EmployerDashboard() {
                   <ul className="space-y-2">{selectedJob.requirements}</ul>
                 </div>
 
-                {/* Responsibilities */}
-                {/* <div>
-                            <h4 className="text-lg font-semibold text-gray-900 mb-3">Responsibilities</h4>
-                            <ul className="space-y-2">
-                              {selectedJob.responsibilities.map((resp, index) => (
-                                <li key={index} className="flex items-start">
-                                  <Star className="w-4 h-4 text-purple-500 mr-2 mt-0.5 flex-shrink-0" />
-                                  <span className="text-gray-700">{resp}</span>
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                          */}
                 {/* Benefits */}
                 <div>
                   <h4 className="text-lg font-semibold text-gray-900 mb-3">
@@ -2932,7 +3186,7 @@ export default function EmployerDashboard() {
               {selectedCandidate ? (
                 <Card className="h-full">
                   <CardHeader>
-                    <div className="flex items-start justify-between">
+                    <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                       <div className="flex items-start space-x-4">
                         <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-blue-100 rounded-full flex items-center justify-center">
                           <Users className="w-8 h-8 text-purple-600" />
@@ -2959,16 +3213,12 @@ export default function EmployerDashboard() {
                           </div>
                         </div>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <Button variant="outline" size="sm">
+                      <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                        <Button variant="outline" size="sm" className="w-full sm:w-auto">
                           <Mail className="w-4 h-4 mr-2" />
                           Email
                         </Button>
-                        <Button variant="outline" size="sm">
-                          <Phone className="w-4 h-4 mr-2" />
-                          Call
-                        </Button>
-
+                                             
                         <Button variant="outline" size="sm">
                           {selectedCandidate.resumeUrl ? (
                             <a
@@ -3001,7 +3251,6 @@ export default function EmployerDashboard() {
                         </div>
                         <div className="flex items-center">
                           <Phone className="w-4 h-4 mr-2 text-gray-400" />
-                           
                           <span>
                            +{selectedCandidate.phoneCode}
                             {selectedCandidate.phone}
@@ -3226,19 +3475,8 @@ export default function EmployerDashboard() {
                               Shortlist Candidate
                             </Button>
 
-                            {/* <Button
-                              variant="outline"
-                              className="border-red-600 text-red-600 hover:bg-red-50 flex-1"
-                              onClick={() =>
-                                handleRejectCandidate(selectedCandidate)
-                              }
-                            >
-                              <XCircle className="w-4 h-4 mr-2" />
-                              Reject Application
-                            </Button> */}
-                            
                          <AlertDialog>
-                           <AlertDialogTrigger asChild>                         
+                           <AlertDialogTrigger asChild>
                              <Button
                                variant="outline"
                                className="border-red-600 text-red-600 hover:bg-red-50 flex-1"
@@ -3247,7 +3485,7 @@ export default function EmployerDashboard() {
                                Reject Application
                              </Button>
                            </AlertDialogTrigger>
-                         
+
                            <AlertDialogContent>
                             <AlertDialogHeader>
                               <AlertDialogTitle>Reject this application?</AlertDialogTitle>
@@ -3255,7 +3493,7 @@ export default function EmployerDashboard() {
                                 This action cannot be undone. The candidate will be marked as rejected.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
-                        
+
                             <AlertDialogFooter>
                               <AlertDialogCancel>Cancel</AlertDialogCancel>
                               <AlertDialogAction
@@ -3340,25 +3578,7 @@ export default function EmployerDashboard() {
         <div className="flex space-x-2 items-center">
           <label className="text-sm font-medium">Interview Time</label>
 
-          {/* <input
-            type="number"
-            min="1"
-            max="12"
-            className="w-16 border rounded-lg p-2"
-            value={hour}
-            onChange={(e) => setHour(e.target.value)}
-          />
-
-          <span>:</span>
-
-          <input
-            type="number"
-            min="0"
-            max="59"
-            className="w-16 border rounded-lg p-2"
-            value={minute}
-            onChange={(e) => setMinute(e.target.value)}
-          /> */}
+          
 
                 <input
                  type="text"
@@ -3424,17 +3644,6 @@ export default function EmployerDashboard() {
             <option>Phone Call</option>
           </select>
         </div>
-
-        {/* Meet Link */}
-        {/* <div>
-          <label className="text-sm text-gray-700">Google Meet link</label>
-          <input
-            className="w-full border rounded-md p-2 text-sm focus:ring-2 focus:ring-blue-500"
-            placeholder="Enter meet link..."
-            value={meetLink}
-            onChange={(e) => setMeetLink(e.target.value)}
-          />
-        </div> */}
 
         {/* Notes */}
         <div>
@@ -3617,5 +3826,6 @@ export default function EmployerDashboard() {
       )}
       <EmployerFooter />
     </div>
+    
   );
 }
