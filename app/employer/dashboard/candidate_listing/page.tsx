@@ -50,7 +50,8 @@ interface Candidate {
 }
 
 
-export default function CandidatesPage({ isSubscribed = false }: { isSubscribed?: boolean }) {
+export default function CandidatesPage() {
+  const isSubscribed = false;
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
