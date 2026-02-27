@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -81,6 +83,7 @@ export default function Profile() {
   // Form states, data, and functions, etc.
   // const { savedJobs, removeSavedJob } = useSavedJobs();
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
   const [profileData, setProfileData] = useState<ProfileData>({
     personalInfo: {
       fullName: "",
@@ -394,6 +397,7 @@ interface SavedJob {
     };
   };
 }
+
 
 
 useEffect(() => {
@@ -792,6 +796,11 @@ const handleRemoveSkill = (skillToRemove: Skill) => {
         if (res.ok) {
           const data = await res.json();
           console.log("Fetched profile:", data);
+
+
+           if (data && data.id) {
+           setIsProfileSubmitted(true);
+           }
 
           setProfileData({
             personalInfo: {
@@ -1404,78 +1413,6 @@ const removeAppliedJob = async (applicationId: number) => {
                     </div>
                   </div>
 
-                  {/* <div className="space-y-2">
-                    <Dialog
-                      open={isDialogOpen.resume}
-                      onOpenChange={(open) =>
-                        setIsDialogOpen((prev) => ({ ...prev, resume: open }))
-                      }
-                    >
-                      <DialogTrigger asChild>
-                        <Button className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-sm lg:text-base h-10 lg:h-11">
-                          <Upload className="w-4 h-4 mr-2" />
-                          Upload Resume
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="sm:max-w-md">
-                        <DialogHeader>
-                          <DialogTitle>Upload Resume</DialogTitle>
-                        </DialogHeader>
-                        <div className="space-y-4">
-                          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                            <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                            <p className="text-sm text-gray-600 mb-4">
-                              Choose a file or drag and drop it here
-                            </p>
-                            <input
-                              type="file"
-                              accept=".pdf,.doc,.docx"
-                              onChange={handleResumeUpload}
-                              ref={fileInputRef}
-                              className="hidden"
-                              id="resume-upload"
-                            />
-                            <label htmlFor="resume-upload">
-                              <Button
-                                variant="outline"
-                                className="cursor-pointer"
-                                onClick={openFileDialog}
-                              >
-                                Select File
-                              </Button>
-                            </label>
-                            <p className="text-xs text-gray-500 mt-2">
-                              PDF, DOC, DOCX up to 5MB
-                            </p>
-                          </div>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
-
-                     <Button
-                      variant="outline"
-                      className="w-full text-sm lg:text-base h-10 lg:h-11"
-                      onClick={() => {
-                        if (profileData?.personalInfo?.resume) {
-                          window.open(`https://jobseeker-backend-jy1y.onrender.com${profileData.personalInfo.resume}`, "_blank");
-                        } else {
-                          
-                        }
-                      }}
-                    >
-                      <Download className="w-4 h-4 mr-2" />
-                      Download Resume
-                    </Button>
-                    <Link href="/review">
-                      <Button
-                        variant="outline"
-                        className="w-full text-sm lg:text-base h-10 lg:h-11"
-                      >
-                        <Eye className="w-4 h-4 mr-2" />
-                        Preview Profile
-                      </Button>
-                    </Link>
-                  </div> */}
                   <div className="space-y-2">
                     <Dialog
                       open={isDialogOpen.resume}
@@ -1570,17 +1507,19 @@ const removeAppliedJob = async (applicationId: number) => {
                    )}
                    
                     {/* PREVIEW BUTTON */}
-                   {isProfileSubmitted && (
-                      <Link href="/review">
-                        <Button
-                          variant="outline"
-                          className="w-full text-sm lg:text-base h-10 lg:h-11"
+                      {isProfileSubmitted && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            console.log("clicked");
+                            window.location.assign("/review");
+                          }}
+                          className="w-full text-sm lg:text-base h-10 lg:h-11 border rounded-md flex items-center justify-center"
                         >
-                         <Eye className="w-4 h-4 mr-2" />
+                          <Eye className="w-4 h-4 mr-2" />
                           Preview Profile
-                        </Button>
-                      </Link>
-                   )}
+                        </button>
+                      )}
                   </div>
                 </CardContent>
               </Card>
@@ -1822,21 +1761,36 @@ const removeAppliedJob = async (applicationId: number) => {
 
                           </Select>
                           <Input
-                            id="phone"
-                            value={profileData.personalInfo.phone}
-                            onChange={(e) =>
-                              setProfileData((prev) => ({
-                                ...prev,
-                                personalInfo: {
-                                  ...prev.personalInfo,
-                                  phone: e.target.value,
-                                },
-                              }))
-                            }
-                            className="flex-1 h-10 lg:h-11"
-                            placeholder="Enter phone number"
-                            required={true}
-                          />
+  id="phone"
+  type="tel"
+  value={profileData.personalInfo.phone}
+  maxLength={10}
+  inputMode="numeric"
+  pattern="[0-9]{10}"
+  onChange={(e) => {
+    const value = e.target.value;
+
+    // Sirf digits allow kare
+    if (/^\d{0,10}$/.test(value)) {
+      setProfileData((prev) => ({
+        ...prev,
+        personalInfo: {
+          ...prev.personalInfo,
+          phone: value,
+        },
+      }));
+    }
+  }}
+  onKeyDown={(e) => {
+    if (e.key === "e" || e.key === "E" || e.key === "+" || e.key === "-") {
+      e.preventDefault();
+    }
+  }}
+  className="flex-1 h-10 lg:h-11"
+  placeholder="Enter 10-digit phone number"
+  required
+/>
+
                         </div>
                       </div>
                       <div>
@@ -2892,51 +2846,49 @@ const removeAppliedJob = async (applicationId: number) => {
                               </Select>
 
                                 <Input
-  id="score"
-  className="h-10 flex-1"
-  placeholder={
-    educationForm.score_type === "cgpa"
-      ? "e.g. 8.5"
-      : educationForm.score_type === "percentage"
-      ? "e.g. 85%"
-      : "e.g. A+"
-  }
-  value={educationForm.percentage}
-  onChange={(e) => {
-    let value = e.target.value;
+                                   id="score"
+                                   className="h-10 flex-1"
+                                   placeholder={
+                                     educationForm.score_type === "cgpa"
+                                       ? "e.g. 8.5"
+                                       : educationForm.score_type === "percentage"
+                                       ? "e.g. 85%"
+                                       : "e.g. A+"
+                                   }
+                                   value={educationForm.percentage}
+                                   onChange={(e) => {
+                                     let value = e.target.value;
 
-    // 🔤 GRADE → alphabets only (+ / - allowed)
-    if (educationForm.score_type === "grade") {
-      if (!/^[a-zA-Z+-]*$/.test(value)) return;
-      setScoreError(null);
-    }
+                                     //  GRADE 
+                                    if (educationForm.score_type === "grade") {
+                                      const upperValue = value.toUpperCase();
+                                      if (!/^[A-Z][+-]?$/.test(upperValue) && upperValue !== "") return;
+                                      setScoreError(null);
+                                    }
 
-    // 📊 PERCENTAGE
-    if (educationForm.score_type === "percentage") {
-      if (!/^\d*\.?\d*$/.test(value)) return;
-      const num = Number(value);
-      if (num > 100) return;
-      setScoreError(null);
-    }
 
-    // 🎯 CGPA
-    if (educationForm.score_type === "cgpa") {
-      if (!/^\d*\.?\d*$/.test(value)) return;
+                                     //  PERCENTAGE
+                                     if (educationForm.score_type === "percentage") {
+                                       if (!/^\d*\.?\d*$/.test(value)) return;
+                                       const num = Number(value);
+                                       if (num > 100) return;
+                                       setScoreError(null);
+                                     }
 
-      const num = Number(value);
-      if (num < 0 || num > 10) {
-        setScoreError("CGPA must be between 0 and 10");
-      } else {
-        setScoreError(null);
-      }
-    }
-
-    setEducationForm((prev) => ({
-      ...prev,
-      percentage: value,
-    }));
-  }}
-/>
+                                    //  CGPA
+                                 if (educationForm.score_type === "cgpa") {
+                                   if (!/^\d*\.?\d*$/.test(value)) return;
+                                   const num = Number(value);
+                                   if (num > 10) return;
+                                   if (num < 0) return;
+                                   setScoreError(null);
+                                 }
+                                     setEducationForm((prev) => ({
+                                       ...prev,
+                                       percentage: value,
+                                     }));
+                                   }}
+                                 />
 
                                 </div>
                               </div>
@@ -3334,12 +3286,6 @@ const removeAppliedJob = async (applicationId: number) => {
                               </div>
                   
                              <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => removeAppliedJob(appliedJob.id)}
-                            className="text-red-600 text-xs font-medium bg-red-50 px-3 py-1 rounded-full hover:bg-red-100 transition"
-                          >
-                            Remove
-                          </button>
                         </div>
                   
                             </div>
@@ -3350,72 +3296,7 @@ const removeAppliedJob = async (applicationId: number) => {
               )}
 
 
-              {/* {activeSection === "save" && (
-  <Card>
-    <CardHeader>
-      <CardTitle className="flex items-center gap-2 text-lg lg:text-xl">
-        <Bookmark className="w-5 h-5" />
-        <span>Saved Jobs</span>
-      </CardTitle>
-    </CardHeader>
-
-    <CardContent>
-      {savedJobsData.length > 0 ? (
-        savedJobsData.map((savedJob) => (
-          <div
-            key={savedJob.id}
-            className="border rounded-lg p-4 mb-4 hover:shadow-md transition-shadow"
-          >
-            <div className="flex justify-between items-start">
-              <div>
-                <h3 className="font-semibold text-base lg:text-lg text-gray-900">
-                  {savedJob.job_title || "No title"}
-                </h3>
-                <p className="text-purple-600 font-medium text-sm">
-                  {savedJob.job?.company || "Unknown Company"}
-                </p>
-                <p className="text-gray-600 text-xs">
-                  {savedJob.job?.location?.name || "Location not available"}
-                </p>
-              </div>
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={async () => {
-                  const token = localStorage.getItem("auth_token");
-                  if (!token) return;
-                  try {
-                    const res = await fetch(
-                      `https://jobseeker-backend-jy1y.onrender.com/api/saved-jobs/${savedJob.id}/`,
-                      {
-                        method: "DELETE",
-                        headers: { Authorization: `Bearer ${token}` },
-                      }
-                    );
-                    if (res.ok) {
-                      setSavedJobsData((prev) =>
-                        prev.filter((j) => j.id !== savedJob.id)
-                      );
-                    }
-                  } catch (err) {
-                    console.error("Error deleting saved job:", err);
-                  }
-                }}
-                className="text-red-500 border-red-200 hover:bg-red-50"
-              >
-                <BookmarkX className="w-4 h-4 mr-2" />
-                Remove
-              </Button>
-            </div>
-          </div>
-        ))
-      ) : (
-        <p className="text-gray-500 text-sm">No saved jobs yet.</p>
-      )}
-    </CardContent>
-  </Card>
-)} */}
+           
             </div>
           </div>
         </div>

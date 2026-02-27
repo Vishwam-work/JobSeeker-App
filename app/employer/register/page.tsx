@@ -944,33 +944,41 @@ export default function EmployerRegister() {
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                          <Label
-                            htmlFor="email"
-                            className="text-sm font-medium text-gray-700"
-                          >
-                            Email Address *
-                          </Label>
+                        <Label
+                          htmlFor="email"
+                          className="text-sm font-medium text-gray-700"
+                        >
+                          Email Address *
+                        </Label>
+
+                        <div className="relative mt-1">
                           <Input
                             id="email"
                             type="email"
                             value={email}
-                            onChange={(e) =>
-                              handleEmailChange(e.target.value)
-                            }
+                            onChange={(e) => handleEmailChange(e.target.value)}
                             placeholder="Enter email address"
-                            className="mt-1 h-12"
-                            required
-                          />
+                            className={`h-12 pr-10 ${
+                              IsOtpVerified ? "border-green-500 focus:ring-green-500" : ""
+                            }`}
+                             required
+                           />
 
-                          <Button
-                            type="button"
-                            className="mt-2"
-                            disabled={!email.includes("@")}
-                            onClick={handlesendotp}
-                          >
-                            Verify Email OTP
-                          </Button>
+                          {IsOtpVerified && (
+                            <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 text-green-600 w-5 h-5" />
+                          )}
                         </div>
+
+                        <Button
+                          type="button"
+                           className="mt-2"
+                           disabled={!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || IsOtpVerified}
+                           onClick={handlesendotp}
+                         >
+                           {IsOtpVerified ? "Email Verified" : "Verify Email OTP"}
+                         </Button>
+                       </div>
+
                         <div>
                           <div>
                             <Label
@@ -995,14 +1003,25 @@ export default function EmployerRegister() {
 
                               <Input
                                 id="phone"
+                                type="tel"
+                                inputMode="numeric"
+                                pattern="[0-9]*"
                                 value={formData.phone}
-                                onChange={(e) =>
-                                  handleInputChange("phone", e.target.value)
-                                }
+                                onChange={(e) => {
+                                  const value = e.target.value;
+
+                                  if (!/^\d*$/.test(value)) return;
+
+                                  if (value.length > 10) return;
+
+                                  handleInputChange("phone", value);
+                                }}
                                 className="flex-1 h-10 lg:h-11"
                                 placeholder="Enter phone number"
+                                maxLength={10}
                                 required
                               />
+
                             </div>
                           </div>
                         </div>
