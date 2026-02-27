@@ -1968,20 +1968,6 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
                     <Label htmlFor="salary" className="text-sm font-medium">
                       Salary Range (Annual)
                     </Label>
-                    {/* <div className="flex gap-2 mt-1">
-                      <Select defaultValue="INR">
-                        <SelectTrigger className="w-20">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="INR">₹</SelectItem>
-                          <SelectItem value="USD">$</SelectItem>
-                          <SelectItem value="EUR">€</SelectItem>
-                          <SelectItem value="GBP">£</SelectItem>
-                        </SelectContent>
-                      </Select>
-
-                    </div> */}
                     <div className="flex gap-2 mt-1">
                       <Select
                         value={jobForm.currency || ""}
@@ -2004,16 +1990,22 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
                           ))}
                         </SelectContent>
                       </Select>
-                      <Input
+                        <Input
+                        type="number"
                         id="salary"
                         value={jobForm.salary}
+                        onKeyDown={(e) => {
+                          if (e.key === "e" || e.key === "E" || e.key === "+" || e.key === "-") {
+                            e.preventDefault();
+                          }
+                        }}
                         onChange={(e) =>
                           setJobForm((prev) => ({
                             ...prev,
                             salary: e.target.value,
                           }))
                         }
-                        placeholder="e.g., 5-8 Annual"
+                        placeholder="Enter Annual Salary"
                         className="flex-1"
                       />
                     </div>
@@ -3442,17 +3434,17 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
                        <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => setShowResume(!showResume)}
+                        onClick={() => setShowResume(prev => !prev)}
                       >
                         View Resume
                       </Button>
 
-                      {showResume && selectedCandidate.resumeUrl && (
+                      {showResume && selectedCandidate?.resumeUrl && (
                         <div className="mt-4 h-[500px] border rounded">
                           <iframe
                             src={`https://docs.google.com/gview?url=${encodeURIComponent(
                               selectedCandidate.resumeUrl
-                            )}&embedded=true`}
+                            )}&embedded=true&timestamp=${Date.now()}`}
                             className="w-full h-full"
                             title="Resume Preview"
                           />

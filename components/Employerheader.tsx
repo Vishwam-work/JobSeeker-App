@@ -45,40 +45,6 @@ export default function EmployerHeader() {
 
           {/* Right Side */}
           <div className="flex items-center gap-4">
-            <div className="relative">
-              <button
-                onClick={() => setOpenAccountMenu(!openAccountMenu)}
-                className="text-gray-700 hover:text-purple-600 font-medium"
-              >
-                Account
-              </button>
-
-              {openAccountMenu && (
-                <div className="absolute right-0 mt-3 w-44 bg-white shadow-lg rounded-lg border z-50">
-                  <button
-                    onClick={() => router.push("/employer/account")}
-                    className="block w-full text-left px-4 py-2 hover:bg-gray-100"
-                  >
-                    View Account
-                  </button>
-
-                  <button
-                    onClick={() => router.push("/employer/edit-account")}
-                    className="block w-full text-left px-4 py-2 hover:bg-gray-100"
-                  >
-                    Edit Account
-                  </button>
-
-                  <button
-                    onClick={() => router.push("/employer/settings")}
-                    className="block w-full text-left px-4 py-2 hover:bg-gray-100"
-                  >
-                    Settings
-                  </button>
-                </div>
-              )}
-            </div>
-
             <Link
               href="/employer/dashboard"
               className="text-gray-700 hover:text-purple-600 font-medium"
@@ -119,15 +85,42 @@ export default function EmployerHeader() {
                 </>
               )}
             </div>
-            <Link href="/employer/account">
+            <div className="relative">
               <Image
                 src={companyLogo}
                 alt="Company Logo"
                 width={40}
                 height={40}
+                onClick={() => setOpenAccountMenu((prev) => !prev)}
                 className="rounded-full border-2 border-purple-600 cursor-pointer"
               />
-            </Link>
+
+              {openAccountMenu && (
+                <div className="absolute right-0 mt-3 w-44 bg-white shadow-lg rounded-lg border z-50">
+                  <button
+                    onClick={() => router.push("/employer/account")}
+                    className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                  >
+                    View Account
+                  </button>
+
+                  <button
+                    onClick={() => router.push("/employer/account")}
+                    className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                  >
+                    Edit Account
+                  </button>
+
+                  <button
+                    onClick={() => router.push("/employer/settings")}
+                    className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                  >
+                    Settings
+                  </button>
+                </div>
+              )}
+            </div>
+
             <Button
               variant="outline"
               className="border-red-600 text-red-600 hover:bg-red-50"

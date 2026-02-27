@@ -12,6 +12,8 @@ import {
   User,
   Search,
   ChevronDown,
+  Eye,
+  EyeOff ,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -49,6 +51,7 @@ export default function Register() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [receivePromotions, setReceivePromotions] = useState(false);
 
   // Country / Phone
@@ -259,37 +262,66 @@ export default function Register() {
             </div>
 
             {/* Email */}
-            <div>
-              <Label>Email *</Label>
-              <Input
-                className="mt-1 h-12"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
-                type="email"
-              />
+              <div>
+               <Label>Email *</Label>
+
+              <div className="relative mt-1">
+                <Input
+                   className={`h-12 pr-10 ${
+                     isOtpVerified ? "border-green-500 focus:ring-green-500" : ""
+                   }`}
+                   value={email}
+                   onChange={(e) => {
+                     setEmail(e.target.value);
+                     setIsOtpVerified(false); 
+                   }}
+                   placeholder="Enter your email"
+                   type="email"
+                 />
+
+                 {isOtpVerified && (
+                  <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 text-green-600 w-5 h-5" />
+                 )}
+               </div>
 
               <Button
                 type="button"
-                className="mt-2"
-                disabled={!email.includes("@")}
-                onClick={handlesendotp}
+                 className="mt-2"
+                 disabled={!email.includes("@") || isOtpVerified}
+                 onClick={handlesendotp}
               >
-                Verify Email OTP
-              </Button>
-            </div>
+                {isOtpVerified ? "Email Verified" : "Verify Email OTP"}
+               </Button>
+             </div>
 
-            {/* Password */}
-            <div>
-              <Label>Password *</Label>
+
+       {/* Password */}
+         <div>
+            <Label>Password *</Label>
+
+            <div className="relative mt-1">
               <Input
-                className="mt-1 h-12"
-                type="password"
+                className="h-12 pr-10"
+                type={showPassword ? "text" : "password"}
                 placeholder="Minimum 6 characters"
-                value={password}
+               value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
-            </div>
+
+                  <button
+                   type="button"
+                   className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                   onClick={() => setShowPassword(!showPassword)}
+                 >
+                   {showPassword ? (
+                     <EyeOff className="h-4 w-4 text-gray-400" />
+                   ) : (
+                     <Eye className="h-4 w-4 text-gray-400" />
+                   )}
+                 </button>
+                </div>
+                 </div>
+
 
             {/* Country */}
             <div>
@@ -364,19 +396,26 @@ export default function Register() {
                 // readOnly
                 />
                 <Input
-                  className="h-12"
-                  placeholder="Enter mobile number"
-                  value={profileData.personalInfo.phone}
-                  onChange={(e) =>
+                   className="h-12"
+                   placeholder="Enter mobile number"
+                   value={profileData.personalInfo.phone}
+                   maxLength={10}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (!/^\d*$/.test(value)) return;
+
+                    if (value.length > 10) return;
+
                     setProfileData((prev) => ({
                       ...prev,
                       personalInfo: {
                         ...prev.personalInfo,
-                        phone: e.target.value,
+                        phone: value,
                       },
-                    }))
-                  }
+                    }));
+                  }}
                 />
+
               </div>
             </div>
 
