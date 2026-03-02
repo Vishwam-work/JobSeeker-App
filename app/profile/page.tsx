@@ -108,6 +108,7 @@ export default function Profile() {
   });
   const [profileImage, setProfileImage] = useState(null);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [imageError, setImageError] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState("personal");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState({
@@ -193,6 +194,22 @@ export default function Profile() {
     "60-90 days",
     "90+ days",
   ]);
+
+const formatCurrency = (amount: number, currencyCode?: string) => {
+  if (!currencyCode) {
+    return amount.toLocaleString(); // fallback if currency missing
+  }
+
+  try {
+    return new Intl.NumberFormat(undefined, {
+      style: "currency",
+      currency: currencyCode,
+    }).format(amount);
+  } catch (error) {
+    return amount.toLocaleString(); // fallback if invalid code
+  }
+};
+
 
 const uniquePhoneCodes = Array.from(
   new Map(
@@ -1371,18 +1388,42 @@ const removeAppliedJob = async (applicationId: number) => {
                   <label className="absolute bottom-0 right-0 w-6 h-6 lg:w-8 lg:h-8 bg-purple-600 rounded-full flex items-center justify-center text-white hover:bg-purple-700 transition-colors cursor-pointer">
                    <Camera className="w-3 h-3 lg:w-4 lg:h-4" />
                    <input
-                   type="file"
-                   accept="image/*"
-                   className="hidden"
-                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                    type="file"
+                    accept="image/jpeg,image/jpg,image/png,image/webp"
+                    className="hidden"
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                       const file = e.target.files?.[0];
-                      if (file) {
+                      if (!file) return;
+
+                      const allowedTypes = [
+                        "image/jpeg",
+                        "image/jpg",
+                        "image/png",
+                        "image/webp",
+                      ];
+
+                      if (!allowedTypes.includes(file.type)) {
+                        setImageError("Only JPG, JPEG, PNG, WEBP formats are allowed.");
+                        return;
+                      }
+
+                      if (file.size > 1024 * 1024) {
+                        setImageError("Image size must be less than 1MB.");
+                        return;
+                      }
+
+                      setImageError(null);
                       setSelectedImage(file);
-                     }
-                   }}
-                    />
+                    }}
+                  />
+
                   </label>
              </div>
+                 {imageError && (
+                    <p className="text-red-500 text-xs mt-2 text-center">
+                      {imageError}
+                    </p>
+                  )}
 
 
 
@@ -1402,7 +1443,13 @@ const removeAppliedJob = async (applicationId: number) => {
                     <div className="flex items-center justify-between text-xs lg:text-sm">
                       <span className="text-gray-600">Current Salary</span>
                       <span className="font-medium">
-                        {profileData.personalInfo.currentSalary}
+                        {profileData.personalInfo.currentSalary
+                     ? formatCurrency(
+                         Number(profileData.personalInfo.currentSalary),
+                         profileData.personalInfo?.currentcurrency
+                       )
+                      : "—"}
+
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-xs lg:text-sm">
@@ -2832,6 +2879,7 @@ const removeAppliedJob = async (applicationId: number) => {
                                   setEducationForm((prev) => ({
                                     ...prev,
                                     score_type: value,
+                                     percentage: "",
                                   }))
                                 }
                               >

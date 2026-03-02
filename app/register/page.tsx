@@ -13,7 +13,7 @@ import {
   Search,
   ChevronDown,
   Eye,
-  EyeOff ,
+  EyeOff,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -38,10 +38,7 @@ import {
   InputOTPSlot,
 } from "@/components/ui/input-otp";
 
-import {
-  Dialog,
-  DialogContent,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 export default function Register() {
   const router = useRouter();
@@ -67,10 +64,65 @@ export default function Register() {
     },
   });
 
+  // Resume Upload
+  const [resume, setResume] = useState<File | null>(null);
+  const [resumeError, setResumeError] = useState("");
+  const [agreeTerms, setAgreeTerms] = useState(false);
+
   // OTP Modal
   const [isOtpOpen, setIsOtpOpen] = useState(false);
   const [otp, setOtp] = useState("");
   const [isOtpVerified, setIsOtpVerified] = useState(false);
+  const [errors, setErrors] = useState({
+    email: "",
+    password: "",
+    phone: "",
+  });
+  const validateEmail = (value: string) => {
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!value) return "Email is required";
+    if (!regex.test(value)) return "Enter valid email";
+    return "";
+  };
+
+  const validatePassword = (value: string) => {
+    if (!value) return "Password is required";
+    if (value.length < 6) return "Minimum 6 characters required";
+    return "";
+  };
+
+  const validatePhone = (value: string) => {
+    if (!value) return "Mobile number is required";
+    if (!/^[6-9]\d{9}$/.test(value))
+      return "Enter valid 10 digit mobile number";
+    return "";
+  };
+
+  const validateResume = (file: File) => {
+    const allowedTypes = [
+      "application/pdf",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "application/rtf",
+    ];
+
+    if (!allowedTypes.includes(file.type)) {
+      return "Only DOC, DOCX, PDF, RTF allowed";
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      return "File size must be less than 2MB";
+    }
+
+    return "";
+  };
+  const formatFileSize = (size: number) => {
+    return size < 1024
+      ? `${size} B`
+      : size < 1024 * 1024
+        ? `${(size / 1024).toFixed(0)} KB`
+        : `${(size / (1024 * 1024)).toFixed(1)} MB`;
+  };
 
   // ----------------------------
   // SEND OTP
@@ -84,7 +136,7 @@ export default function Register() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email }),
-        }
+        },
       );
 
       const data = await res.json();
@@ -112,7 +164,7 @@ export default function Register() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email, otp }),
-        }
+        },
       );
 
       const data = await res.json();
@@ -135,13 +187,13 @@ export default function Register() {
   // ----------------------------
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-     const phone = profileData.personalInfo.phone;
 
-       if (!/^[0-9]{10}$/.test(phone)) {
-       toast.error("Mobile number must be exactly 10 digits");
-        return;
-       }
+    const phone = profileData.personalInfo.phone;
+
+    if (!/^[0-9]{10}$/.test(phone)) {
+      toast.error("Mobile number must be exactly 10 digits");
+      return;
+    }
 
     const data = {
       full_name: fullName,
@@ -160,7 +212,7 @@ export default function Register() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(data),
-        }
+        },
       );
       if (!res.ok) throw new Error("Registration failed");
 
@@ -169,7 +221,9 @@ export default function Register() {
 
       router.push("/login");
     } catch (error) {
-      toast.error("This password is too common or too weak. Please choose a stronger password.");
+      toast.error(
+        "This password is too common or too weak. Please choose a stronger password.",
+      );
       console.error("Registration error:", error);
     }
   };
@@ -181,7 +235,7 @@ export default function Register() {
     const fetchCountries = async () => {
       try {
         const res = await fetch(
-          "https://jobseeker-backend-jy1y.onrender.com/master/api/countries/"
+          "https://jobseeker-backend-jy1y.onrender.com/master/api/countries/",
         );
         const data = await res.json();
         setCountries(data);
@@ -245,6 +299,16 @@ export default function Register() {
               <p>Find a job and grow your career</p>
             </div>
           </div>
+          <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4 text-sm mb-4">
+            <h3 className="font-semibold text-indigo-800 mb-2">
+              Quick Tips to Register
+            </h3>
+            <ul className="list-disc pl-5 text-indigo-700 space-y-1">
+              <li>Verify your email before clicking Register.</li>
+              <li>Upload resume to get noticed faster.</li>
+              <li>Use a strong password.</li>
+            </ul>
+          </div>
         </div>
 
         {/* RIGHT FORM */}
@@ -262,66 +326,90 @@ export default function Register() {
             </div>
 
             {/* Email */}
-              <div>
-               <Label>Email *</Label>
+            <div>
+              <Label>Email *</Label>
 
               <div className="relative mt-1">
                 <Input
-                   className={`h-12 pr-10 ${
-                     isOtpVerified ? "border-green-500 focus:ring-green-500" : ""
-                   }`}
-                   value={email}
-                   onChange={(e) => {
-                     setEmail(e.target.value);
-                     setIsOtpVerified(false); 
-                   }}
-                   placeholder="Enter your email"
-                   type="email"
-                 />
+                  className={`h-12 pr-10 ${
+                    errors.email
+                      ? "border-red-500 focus:ring-red-500"
+                      : isOtpVerified
+                        ? "border-green-500 focus:ring-green-500"
+                        : ""
+                  }`}
+                  value={email}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setEmail(value);
+                    setIsOtpVerified(false);
 
-                 {isOtpVerified && (
+                    setErrors((prev) => ({
+                      ...prev,
+                      email: validateEmail(value),
+                    }));
+                  }}
+                  placeholder="Enter your email"
+                  type="email"
+                />
+                {errors.email && (
+                  <p className="text-sm text-red-500 mt-1">{errors.email}</p>
+                )}
+
+                {isOtpVerified && (
                   <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 text-green-600 w-5 h-5" />
-                 )}
-               </div>
+                )}
+              </div>
 
               <Button
                 type="button"
-                 className="mt-2"
-                 disabled={!email.includes("@") || isOtpVerified}
-                 onClick={handlesendotp}
+                className="mt-2"
+                disabled={!!errors.email || isOtpVerified}
+                onClick={handlesendotp}
               >
                 {isOtpVerified ? "Email Verified" : "Verify Email OTP"}
-               </Button>
-             </div>
+              </Button>
+            </div>
 
+            {/* Password */}
+            <div>
+              <Label>Password *</Label>
 
-       {/* Password */}
-         <div>
-            <Label>Password *</Label>
+              <div className="relative mt-1">
+                <Input
+                  className={`h-12 pr-10 ${
+                    errors.password ? "border-red-500 focus:ring-red-500" : ""
+                  }`}
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Minimum 6 characters"
+                  value={password}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setPassword(value);
 
-            <div className="relative mt-1">
-              <Input
-                className="h-12 pr-10"
-                type={showPassword ? "text" : "password"}
-                placeholder="Minimum 6 characters"
-               value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
+                    setErrors((prev) => ({
+                      ...prev,
+                      password: validatePassword(value),
+                    }));
+                  }}
+                />
+                {errors.password && (
+                  <p className="text-sm text-red-500 mt-1">{errors.password}</p>
+                )}
 
-                  <button
-                   type="button"
-                   className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                   onClick={() => setShowPassword(!showPassword)}
-                 >
-                   {showPassword ? (
-                     <EyeOff className="h-4 w-4 text-gray-400" />
-                   ) : (
-                     <Eye className="h-4 w-4 text-gray-400" />
-                   )}
-                 </button>
-                </div>
-                 </div>
-
+                <button
+                  type="button"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4 text-gray-400" />
+                  ) : (
+                    <Eye className="h-4 w-4 text-gray-400" />
+                  )}
+                </button>
+              </div>
+            </div>
 
             {/* Country */}
             <div>
@@ -329,13 +417,15 @@ export default function Register() {
 
               <Popover open={countryOpen} onOpenChange={setCountryOpen}>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-full mt-1 h-10 lg:h-11 border rounded px-3 flex items-center justify-between">
+                  <Button
+                    variant="outline"
+                    className="w-full mt-1 h-10 lg:h-11 border rounded px-3 flex items-center justify-between"
+                  >
                     <span>
                       {profileData.personalInfo.countryId
                         ? countries.find(
-                          (c) =>
-                            c.id == profileData.personalInfo.countryId
-                        )?.name
+                            (c) => c.id == profileData.personalInfo.countryId,
+                          )?.name
                         : "Select Country"}
                     </span>
                     <ChevronDown className="h-4 w-4 opacity-60" />
@@ -358,7 +448,7 @@ export default function Register() {
                           .filter((c) =>
                             c.name
                               .toLowerCase()
-                              .startsWith(countrySearch.toLowerCase())
+                              .startsWith(countrySearch.toLowerCase()),
                           )
                           .map((country) => (
                             <CommandItem
@@ -393,17 +483,18 @@ export default function Register() {
                 <Input
                   className="w-24 h-12 bg-gray-100"
                   value={`+${phoneCode}`}
-                // readOnly
+                  // readOnly
                 />
                 <Input
-                   className="h-12"
-                   placeholder="Enter mobile number"
-                   value={profileData.personalInfo.phone}
-                   maxLength={10}
+                  className={`h-12 ${
+                    errors.phone ? "border-red-500 focus:ring-red-500" : ""
+                  }`}
+                  placeholder="Enter mobile number"
+                  value={profileData.personalInfo.phone}
+                  maxLength={10}
                   onChange={(e) => {
                     const value = e.target.value;
                     if (!/^\d*$/.test(value)) return;
-
                     if (value.length > 10) return;
 
                     setProfileData((prev) => ({
@@ -413,10 +504,17 @@ export default function Register() {
                         phone: value,
                       },
                     }));
+
+                    setErrors((prev) => ({
+                      ...prev,
+                      phone: validatePhone(value),
+                    }));
                   }}
                 />
-
               </div>
+              {errors.phone && (
+                <p className="text-sm text-red-500 mt-1">{errors.phone}</p>
+              )}
             </div>
 
             {/* Work Status */}
@@ -425,40 +523,153 @@ export default function Register() {
 
               <div className="grid grid-cols-2 gap-4 mt-2">
                 <Card
-                  className={`cursor-pointer ${workStatus === "experienced"
+                  className={`cursor-pointer ${
+                    workStatus === "experienced"
                       ? "ring-2 ring-purple-500 bg-purple-50"
                       : ""
-                    }`}
+                  }`}
                   onClick={() => setWorkStatus("experienced")}
                 >
                   <CardContent className="p-4">
                     <div className="text-2xl">💼</div>
                     <p className="font-medium">I'm experienced</p>
+                    <p>I have work experience (excluding internships)</p>
                   </CardContent>
                 </Card>
 
                 <Card
-                  className={`cursor-pointer ${workStatus === "fresher"
+                  className={`cursor-pointer ${
+                    workStatus === "fresher"
                       ? "ring-2 ring-purple-500 bg-purple-50"
                       : ""
-                    }`}
+                  }`}
                   onClick={() => setWorkStatus("fresher")}
                 >
                   <CardContent className="p-4">
                     <div className="text-2xl">🎓</div>
                     <p className="font-medium">I'm a fresher</p>
+                    <p>I am a student / Haven't worked after graduation</p>
                   </CardContent>
                 </Card>
               </div>
+            </div>
+
+            {/* Resume Upload */}
+            <div>
+              <Label>Resume</Label>
+
+              {!resume ? (
+                // 🔽 Upload Button (initial state)
+                <div className="mt-2 flex items-center gap-4">
+                  <label className="cursor-pointer bg-orange-500 text-white px-5 py-2 rounded-full hover:bg-orange-600 transition">
+                    {" "}
+                    Upload Resume
+                    <input
+                      type="file"
+                      className="hidden"
+                      accept=".doc,.docx,.pdf,.rtf"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+
+                        const error = validateResume(file);
+                        if (error) {
+                          setResumeError(error);
+                          setResume(null);
+                        } else {
+                          setResume(file);
+                          setResumeError("");
+                        }
+                      }}
+                    />
+                  </label>
+
+                  <span className="text-sm text-gray-500">
+                    DOC, DOCx, PDF, RTF | Max: 2 MB
+                  </span>
+                </div>
+              ) : (
+                // 🔽 Uploaded UI
+                <div className="mt-3">
+                  <div className="flex items-center justify-between border rounded-full px-4 py-3 bg-gray-50">
+                    {/* File Name */}
+                    <div className="flex items-center gap-2 truncate">
+                      📎
+                      <span className="text-sm truncate max-w-xs">
+                        {resume.name}
+                      </span>
+                    </div>
+
+                    {/* Replace + Delete */}
+                    <div className="flex items-center gap-4">
+                      {/* Replace */}
+                      <label className="text-blue-600 text-sm font-medium cursor-pointer">
+                        Replace
+                        <input
+                          type="file"
+                          className="hidden"
+                          accept=".doc,.docx,.pdf,.rtf"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+
+                            const error = validateResume(file);
+                            if (error) {
+                              setResumeError(error);
+                            } else {
+                              setResume(file);
+                              setResumeError("");
+                            }
+                          }}
+                        />
+                      </label>
+
+                      {/* Delete */}
+                      <button
+                        type="button"
+                        onClick={() => setResume(null)}
+                        className="text-gray-400 hover:text-red-500"
+                      >
+                        🗑
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* File Info */}
+                  <p className="text-xs text-gray-500 mt-2">
+                    Size: {formatFileSize(resume.size)} | Last Updated:{" "}
+                    {new Date().toLocaleDateString()}
+                  </p>
+                </div>
+              )}
+
+              {resumeError && (
+                <p className="text-sm text-red-500 mt-2">{resumeError}</p>
+              )}
+            </div>
+
+            <div className="flex items-start gap-2 mt-4">
+              <Checkbox
+                checked={agreeTerms}
+                onCheckedChange={(val) => setAgreeTerms(val === true)}
+              />
+              <p className="text-sm text-gray-600">
+                By clicking Register, you agree to the{" "}
+                <Link href="/terms" className="text-blue-600 font-medium">
+                  Terms and Conditions
+                </Link>{" "}
+                &{" "}
+                <Link href="/privacy" className="text-blue-600 font-medium">
+                  Privacy Policy
+                </Link>
+              </p>
             </div>
 
             {/* Promotions */}
             <div className="flex items-start gap-2 mt-2">
               <Checkbox
                 checked={receivePromotions}
-                onCheckedChange={(val) =>
-                  setReceivePromotions(val === true)
-                }
+                onCheckedChange={(val) => setReceivePromotions(val === true)}
               />
               <p className="text-sm text-gray-600">
                 Send me important updates via Email, SMS, and WhatsApp.
@@ -468,7 +679,16 @@ export default function Register() {
             {/* Register Button */}
             <Button
               type="submit"
-              disabled={!isOtpVerified}
+              disabled={
+                !isOtpVerified ||
+                !agreeTerms ||
+                !!errors.email ||
+                !!errors.password ||
+                !!errors.phone ||
+                !email ||
+                !password ||
+                !profileData.personalInfo.phone
+              }
               className="w-full h-12 text-lg bg-purple-600 text-white"
             >
               Register Now
