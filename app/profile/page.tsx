@@ -68,6 +68,7 @@ import {
 } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { useMemo } from "react";
 
 import Link from "next/link";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -77,6 +78,7 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { TextField } from "@mui/material";
 import dayjs, { Dayjs } from "dayjs";
 import exp from "node:constants";
+import { profile } from "node:console";
 
 
 export default function Profile() {
@@ -99,6 +101,7 @@ export default function Profile() {
       currentSalary: null,
       expectedSalary: null,
       noticePeriod: "",
+      professional_summary: "",
     },
     experience: [],
     education: [],
@@ -179,7 +182,7 @@ export default function Profile() {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [jobTitles, setJobTitles] = useState<JobTitle[]>([]);
   const [jobCategories, setJobCategories] = useState<JobCategory[]>([]);
-  const [currency, setCurrency] = useState([]);
+  const [currency, setCurrency] = useState<Currency[]>([]);
   const [savedJobsData, setSavedJobsData] = useState<SavedJob[]>([]);
   const [activeSaveTab, setActiveSaveTab] = useState("SavedJobs");
   const [isProfileSubmitted, setIsProfileSubmitted] = useState(false);
@@ -211,11 +214,13 @@ const formatCurrency = (amount: number, currencyCode?: string) => {
 };
 
 
-const uniquePhoneCodes = Array.from(
-  new Map(
-    countries.map((c) => [c.phonecode, c])
-  ).values()
-);
+const uniquePhoneCodes = useMemo(() => {
+  return Array.from(
+    new Map(
+      countries.map((c) => [c.phonecode, c])
+    ).values()
+  );
+}, [countries]);
 useEffect(() => {
   if (
     profileData?.personalInfo?.countryId &&
@@ -239,7 +244,11 @@ useEffect(() => {
   }
 }, [profileData.personalInfo.countryId, uniquePhoneCodes]);
 
-
+type Currency = {
+  id: string | number;
+  name: string;
+  symbol: string;
+}
 type JobCategory = {
   id: string;
   name: string;
@@ -342,6 +351,7 @@ type ProfileData = {
     noticePeriod: string;
     resume?: string | null;
     profile_image?: string | null;
+    professional_summary?: string;
   };
   experience: ProfileExperience[]; 
   education: Education[];
@@ -853,6 +863,7 @@ const handleRemoveSkill = (skillToRemove: Skill) => {
               noticePeriod: data?.notice_period || "",
               resume: data.resume,
               profile_image: data.profile_image || profileData.personalInfo.profile_image,
+              professional_summary: data.professional_summary || "",
 
             },
             experience: (data.experiences || []).map((exp: ProfileExperience) => ({
@@ -931,18 +942,6 @@ const handleRemoveSkill = (skillToRemove: Skill) => {
       .catch((err) => console.error(err));
   }, []);
 
- const uniqueCurrencies = Array.from(
-  new Map(
-    countries.map((c) => [
-      c.currency,
-      {
-        id: c.id, 
-        currency: c.currency,
-        currency_name: c.currency_name,
-      },
-    ])
-  ).values()
-);
 
 
 
@@ -1004,7 +1003,9 @@ const handleRemoveSkill = (skillToRemove: Skill) => {
   }, [experienceForm.category_id]);
 
   const uploadResume = async () => {
-    if (!resumeFile) return true;
+    if (!resumeFile) {
+    return true;
+    }
 
     const formData = new FormData();
     formData.append("resume", resumeFile);
@@ -1115,8 +1116,12 @@ useEffect(() => {
   if (!profileData.personalInfo.cityId) {
     return toast.error("City is required");
   }
+  if (!profileData.personalInfo.professional_summary?.trim()) {
+    return toast.error("Please Fill Profile Summary.");
+  }
 
     const resumeUploaded = await uploadResume();
+    console.log("Resume upload result:", resumeUploaded);
     if (!resumeUploaded) {
       toast.error("Resume upload failed. Please try again.");
       return;
@@ -1159,6 +1164,7 @@ useEffect(() => {
       city_id: profileData.personalInfo.cityId
         ? Number(profileData.personalInfo.cityId)
         : null,
+      professional_summary: profileData.personalInfo.professional_summary || "",
       experiences: profileData.experience.map(exp => ({
         id: exp.id,
         company: exp.company,
@@ -1213,6 +1219,7 @@ useEffect(() => {
             noticePeriod: data.notice_period || "",
             resume: data.resume || profileData.personalInfo.resume,
             profile_image: data.profile_image || profileData.personalInfo.profile_image,
+            professional_summary: data.professional_summary || "",
           },
           experience: data.experiences || [],
           education: data.educations || [],
@@ -1457,7 +1464,7 @@ const removeAppliedJob = async (applicationId: number) => {
                         {profileData.personalInfo.experience}
                       </span>
                     </div>
-                    <div className="flex items-center justify-between text-xs lg:text-sm">
+                    {/* <div className="flex items-center justify-between text-xs lg:text-sm">
                       <span className="text-gray-600">Current Salary</span>
                       <span className="font-medium">
                         {profileData.personalInfo.currentSalary
@@ -1468,7 +1475,8 @@ const removeAppliedJob = async (applicationId: number) => {
                       : "—"}
 
                       </span>
-                    </div>
+                    </div> */}
+
                     <div className="flex items-center justify-between text-xs lg:text-sm">
                       <span className="text-gray-600">Notice Period</span>
                       <span className="font-medium">
@@ -2204,7 +2212,7 @@ const removeAppliedJob = async (applicationId: number) => {
                         >
                           Current Salary (Annual)
                         </Label>
-                        <div className="flex gap-2 mt-1">           
+                        <div className="flex gap-2 mt-1">
                           <Select
                             value={profileData.personalInfo.currentcurrency || ""}
                             onValueChange={(value) =>
@@ -2218,18 +2226,13 @@ const removeAppliedJob = async (applicationId: number) => {
                             }
                           >
                             <SelectTrigger className="w-28 h-10 lg:h-11">
-                              <span>
-                                {profileData.personalInfo.currentcurrency
-                                  ? uniqueCurrencies.find(
-                                      (c) => String(c.id) === profileData.personalInfo.currentcurrency
-                                    )?.currency
-                                  : "Select currency"}
-                              </span>
+                              <SelectValue placeholder="Currency" />
                             </SelectTrigger>
+
                             <SelectContent>
-                              {uniqueCurrencies.map((curr) => (
-                                <SelectItem key={curr.currency} value={String(curr.id)}>
-                                  {curr.currency} - {curr.currency_name}
+                              {currency.map((curr) => (
+                                <SelectItem key={curr.id} value={String(curr.id)}>
+                                  {curr.symbol} - {curr.name}
                                 </SelectItem>
                               ))}
                             </SelectContent>
@@ -2267,37 +2270,31 @@ const removeAppliedJob = async (applicationId: number) => {
                         >
                           Expected Salary (Annual)
                         </Label>
-                        <div className="flex gap-2 mt-1">          
+                        <div className="flex gap-2 mt-1">
                          <Select
-                           value={profileData.personalInfo.currentcurrency || ""}
-                           onValueChange={(value) =>
-                             setProfileData((prev) => ({
-                               ...prev,
-                               personalInfo: {
-                                 ...prev.personalInfo,
-                                 currentcurrency: value, 
-                               },
-                             }))
-                           }                         
-                         >
-                           <SelectTrigger className="w-28 h-10 lg:h-11">
-                             <span>
-                               {profileData.personalInfo.currentcurrency
-                                 ? uniqueCurrencies.find(
-                                     (c) => String(c.id) === profileData.personalInfo.currentcurrency
-                                   )?.currency
-                                 : "Select currency"}
-                             </span>
-                           </SelectTrigger>
+                            value={profileData.personalInfo.expectedCurrency || ""}
+                            onValueChange={(value) =>
+                              setProfileData((prev) => ({
+                                ...prev,
+                                personalInfo: {
+                                  ...prev.personalInfo,
+                                  expectedCurrency: value,
+                                },
+                              }))
+                            }
+                          >
+                            <SelectTrigger className="w-28 h-10 lg:h-11">
+                              <SelectValue placeholder="Currency" />
+                            </SelectTrigger>
 
-                           <SelectContent>
-                             {uniqueCurrencies.map((curr) => (
-                               <SelectItem key={curr.currency} value={String(curr.id)}>
-                                 {curr.currency} - {curr.currency_name}
-                               </SelectItem>
-                             ))}
-                           </SelectContent>
-                         </Select>
+                            <SelectContent>
+                              {currency.map((curr) => (
+                                <SelectItem key={curr.id} value={String(curr.id)}>
+                                  {curr.symbol} - {curr.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                           <Input
                             id="expectedSalary"
                             type="number"
@@ -2326,6 +2323,43 @@ const removeAppliedJob = async (applicationId: number) => {
                         </div>
                       </div>
                     </div>
+                    <div className="bg-white border rounded-lg p-5 shadow-sm">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-lg font-semibold text-gray-800">
+                        Profile Summary
+                      </h3>
+
+                    </div>
+                    <p className="text-sm text-gray-500 mb-4">
+                      It is the first thing recruiters notice in your profile. Write a concise headline introducing yourself to employers.
+                    </p>
+                    <textarea
+                      value={profileData.personalInfo.professional_summary || ""}
+                      onChange={(e) =>
+                        setProfileData((prev) => ({
+                          ...prev,
+                          personalInfo: {
+                            ...prev.personalInfo,
+                            professional_summary: e.target.value,
+                          },
+                        }))
+                      }
+                      maxLength={250}
+                      minLength={5}
+                      rows={4}
+                      placeholder="Example: Full Stack Developer with 2+ years experience in React, Next.js and Django"
+                      className="w-full border rounded-md p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                    />
+
+                    {/* Footer */}
+                    <div className="flex justify-between items-center mt-2 text-xs text-gray-400">
+                      <span>Minimum 5 words required</span>
+                      <span>
+                        {(profileData.personalInfo.professional_summary || "").length}/250
+                      </span>
+                    </div>
+
+                  </div>
                     <div className="flex justify-between mt-6">
                     <Button
                       onClick={handleSaveProfile}
@@ -2639,7 +2673,8 @@ const removeAppliedJob = async (applicationId: number) => {
                                     setDateError(validateDates(date, experienceForm.endDate));
                                   }}
                                   maxDate={dayjs()}   
-                                  views={["year", "month", "day"]}
+                                  views={["day", "month", "year"]}
+                                  format="DD/MM/YYYY"
                                   slotProps={{
                                     textField: {
                                       error: !!dateError,
@@ -2661,7 +2696,9 @@ const removeAppliedJob = async (applicationId: number) => {
                                 <div className="space-y-2">
                                   {!experienceForm.isCurrentJob && (
                                     <DatePicker
+                                      views={["day", "month", "year"]}
                                       label="End Date"
+                                      format="DD/MM/YYYY"
                                       value={experienceForm.endDate}
                                       onChange={(date) => {
                                         setExperienceForm((prev) => ({
