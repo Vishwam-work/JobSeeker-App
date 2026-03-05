@@ -108,6 +108,7 @@ export default function Profile() {
   });
   const [profileImage, setProfileImage] = useState(null);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [imageError, setImageError] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState("personal");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState({
@@ -193,6 +194,22 @@ export default function Profile() {
     "60-90 days",
     "90+ days",
   ]);
+
+const formatCurrency = (amount: number, currencyCode?: string) => {
+  if (!currencyCode) {
+    return amount.toLocaleString(); // fallback if currency missing
+  }
+
+  try {
+    return new Intl.NumberFormat(undefined, {
+      style: "currency",
+      currency: currencyCode,
+    }).format(amount);
+  } catch (error) {
+    return amount.toLocaleString(); // fallback if invalid code
+  }
+};
+
 
 const uniquePhoneCodes = Array.from(
   new Map(
@@ -801,6 +818,23 @@ const handleRemoveSkill = (skillToRemove: Skill) => {
            if (data && data.id) {
            setIsProfileSubmitted(true);
            }
+           if (data.resume) {
+            try {
+              const fileResponse = await fetch(data.resume);
+              const blob = await fileResponse.blob();
+
+              const fileName = data.resume.split("/").pop() || "resume.pdf";
+
+              const file = new File([blob], fileName, {
+                type: blob.type,
+              });
+              console.log("Converted resume file:", file);
+
+              setResumeFile(file);
+            } catch (error) {
+              console.error("Error converting resume URL to File:", error);
+            }
+          }
 
           setProfileData({
             personalInfo: {
@@ -1371,18 +1405,42 @@ const removeAppliedJob = async (applicationId: number) => {
                   <label className="absolute bottom-0 right-0 w-6 h-6 lg:w-8 lg:h-8 bg-purple-600 rounded-full flex items-center justify-center text-white hover:bg-purple-700 transition-colors cursor-pointer">
                    <Camera className="w-3 h-3 lg:w-4 lg:h-4" />
                    <input
-                   type="file"
-                   accept="image/*"
-                   className="hidden"
-                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                    type="file"
+                    accept="image/jpeg,image/jpg,image/png,image/webp"
+                    className="hidden"
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                       const file = e.target.files?.[0];
-                      if (file) {
+                      if (!file) return;
+
+                      const allowedTypes = [
+                        "image/jpeg",
+                        "image/jpg",
+                        "image/png",
+                        "image/webp",
+                      ];
+
+                      if (!allowedTypes.includes(file.type)) {
+                        setImageError("Only JPG, JPEG, PNG, WEBP formats are allowed.");
+                        return;
+                      }
+
+                      if (file.size > 1024 * 1024) {
+                        setImageError("Image size must be less than 1MB.");
+                        return;
+                      }
+
+                      setImageError(null);
                       setSelectedImage(file);
-                     }
-                   }}
-                    />
+                    }}
+                  />
+
                   </label>
              </div>
+                 {imageError && (
+                    <p className="text-red-500 text-xs mt-2 text-center">
+                      {imageError}
+                    </p>
+                  )}
 
 
 
@@ -1402,7 +1460,13 @@ const removeAppliedJob = async (applicationId: number) => {
                     <div className="flex items-center justify-between text-xs lg:text-sm">
                       <span className="text-gray-600">Current Salary</span>
                       <span className="font-medium">
-                        {profileData.personalInfo.currentSalary}
+                        {profileData.personalInfo.currentSalary
+                     ? formatCurrency(
+                         Number(profileData.personalInfo.currentSalary),
+                         profileData.personalInfo?.currentcurrency
+                       )
+                      : "—"}
+
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-xs lg:text-sm">
@@ -1427,7 +1491,7 @@ const removeAppliedJob = async (applicationId: number) => {
                         </Button>
                       </DialogTrigger>
 
-                      <DialogContent className="sm:max-w-md">
+                      {/* <DialogContent className="sm:max-w-md">
                         <DialogHeader>
                           <DialogTitle>Upload Resume</DialogTitle>
                         </DialogHeader>
@@ -1486,7 +1550,88 @@ const removeAppliedJob = async (applicationId: number) => {
                             SUBMIT
                           </Button>
                         </div>
-                      </DialogContent>
+                      </DialogContent> */}
+                    <DialogContent className="sm:max-w-md rounded-2xl p-6">
+                    <DialogHeader>
+                      <DialogTitle className="text-xl font-semibold">
+                        Upload Resume
+                      </DialogTitle>
+                      <p className="text-sm text-gray-500 mt-1">
+                        Supported formats: PDF, DOCX — Max size 5MB
+                      </p>
+                    </DialogHeader>
+
+                    <div className="mt-6 space-y-4">
+
+                      {/* ✅ Uploaded Preview Card */}
+                      {resumeFile && (
+                        <div className="border rounded-xl p-4 bg-gray-50 shadow-sm">
+                          <div className="flex items-center gap-4">
+                            
+                            {/* File Icon */}
+                            <div className="w-12 h-12 flex items-center justify-center bg-blue-100 rounded-lg">
+                              <span className="text-blue-600 font-semibold text-sm">
+                                {resumeFile.name.split(".").pop()?.toUpperCase()}
+                              </span>
+                            </div>
+
+                            {/* File Info */}
+                            <div className="flex-1">
+                              <p className="text-sm font-medium text-gray-800 truncate">
+                                {resumeFile.name}
+                              </p>
+                              {/* <p className="text-xs text-green-600 mt-1">
+                                { (resumeFile.size / (1024 * 1024)).toFixed(1) } MB uploaded successfully
+                              </p> */}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* ✅ Replace Section */}
+                      <div className="border rounded-xl p-3 flex items-center justify-between bg-white shadow-sm">
+                        <div className="flex items-center gap-3 overflow-hidden">
+                          <div className="w-8 h-8 flex items-center justify-center bg-blue-100 rounded-md">
+                            <span className="text-blue-600 text-xs font-bold">
+                              {resumeFile?.name.split(".").pop()?.toUpperCase() || "PDF"}
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-700 truncate">
+                            {resumeFile?.name || "No file selected"}
+                          </p>
+                        </div>
+
+                        <button
+                          onClick={() => fileInputRef.current?.click()}
+                          className="text-blue-600 text-sm font-medium hover:underline"
+                        >
+                          Replace
+                        </button>
+                      </div>
+
+                      {/* Hidden File Input */}
+                      <input
+                        type="file"
+                        accept=".pdf,.doc,.docx"
+                        onChange={handleResumeUpload}
+                        ref={fileInputRef}
+                        className="hidden"
+                      />
+
+                      {/* ✅ Continue Button */}
+                      <button
+                        onClick={uploadResume}
+                        disabled={!resumeFile}
+                        className={`w-full mt-4 h-11 rounded-xl text-white font-medium transition
+                        bg-gradient-to-r from-indigo-500 to-blue-600
+                        hover:from-indigo-600 hover:to-blue-700
+                        ${!resumeFile ? "opacity-50 cursor-not-allowed" : ""}`}
+                      >
+                        Continue →
+                      </button>
+
+                    </div>
+                  </DialogContent>
                     </Dialog>
 
                     {/* DOWNLOAD BUTTON */}
@@ -2002,7 +2147,22 @@ const removeAppliedJob = async (applicationId: number) => {
                             <SelectItem value="2 years">2 years</SelectItem>
                             <SelectItem value="3 years">3 years</SelectItem>
                             <SelectItem value="4 years">4 years</SelectItem>
-                            <SelectItem value="5+ years">5+ years</SelectItem>
+                            <SelectItem value="5 years">5 years</SelectItem>
+                            <SelectItem value="6 years">6 years</SelectItem>
+                            <SelectItem value="7 years">7 years</SelectItem>
+                            <SelectItem value="8 years">8 years</SelectItem>
+                            <SelectItem value="9 years">9 years</SelectItem>
+                            <SelectItem value="10 years">10 years</SelectItem>
+                            <SelectItem value="11 years">11 years</SelectItem>
+                            <SelectItem value="12 years">12 years</SelectItem>
+                            <SelectItem value="13 years">13 years</SelectItem>
+                            <SelectItem value="14 years">14 years</SelectItem>
+                            <SelectItem value="15 years">15 years</SelectItem>
+                            <SelectItem value="16 years">16 years</SelectItem>
+                            <SelectItem value="17 years">17 years</SelectItem>
+                            <SelectItem value="18 years">18 years</SelectItem>
+                            <SelectItem value="19 years">19 years</SelectItem>
+                            <SelectItem value="20+ years">20+ years</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -2832,6 +2992,7 @@ const removeAppliedJob = async (applicationId: number) => {
                                   setEducationForm((prev) => ({
                                     ...prev,
                                     score_type: value,
+                                     percentage: "",
                                   }))
                                 }
                               >
