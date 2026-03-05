@@ -415,6 +415,28 @@ interface SavedJob {
   };
 }
 
+const handleDownload = async () => {
+  const url = profileData?.personalInfo?.resume;
+
+  if (!url) return;
+
+  try {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    const blobUrl = window.URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = blobUrl;
+    link.download = "resume.pdf"; // file name
+    document.body.appendChild(link);
+    link.click();
+
+    link.remove();
+    window.URL.revokeObjectURL(blobUrl);
+  } catch (error) {
+    console.error("Download failed:", error);
+  }
+};
 
 
 useEffect(() => {
@@ -1637,19 +1659,21 @@ const removeAppliedJob = async (applicationId: number) => {
                     {/* DOWNLOAD BUTTON */}
                     {profileData?.personalInfo?.resume && (
                      <a
-                      href={profileData.personalInfo.resume}
-                      download
-                      className="block"
-                    >
-                      <Button
-                        variant="outline"
-                        className="w-full text-sm lg:text-base h-10 lg:h-11"
-                      >
-                        <Download className="w-4 h-4 mr-2" />
-                        Download Resume
-                      </Button>
-                    </a>
+                       href={profileData.personalInfo.resume}
+                       download
+                       target="_blank"
+                       rel="noopener noreferrer"
+                     >
+                       <Button
+                         variant="outline"
+                         className="w-full text-sm lg:text-base h-10 lg:h-11"
+                       >
+                         <Download className="w-4 h-4 mr-2" />
+                         Download Resume
+                       </Button>
+                     </a>
                    )}
+
                    
                     {/* PREVIEW BUTTON */}
                       {isProfileSubmitted && (
