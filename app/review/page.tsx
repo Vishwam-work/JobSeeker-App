@@ -305,9 +305,10 @@ interface Certification {
                     </div>
                     <div className="flex items-center space-x-2 text-gray-600">
                       {isPDF ? '💼' : <Briefcase className="w-4 h-4" />}
-                      <span>{profileData.personalInfo.experience} Experience</span>
+                      <span>Experience: {profileData.personalInfo.experience}</span>
                     </div>
                     <div className="flex items-center space-x-2 text-gray-600">
+                      Current: <br></br>
                        {isPDF ? (
                          <span>{profileData.personalInfo.currentCurrency}</span>
                        ) : (
@@ -316,10 +317,11 @@ interface Certification {
                          </span>
                        )}
                        <span>
-                         Current: {profileData.personalInfo.currentSalary}
+                        {profileData.personalInfo.currentSalary}
                        </span>
                     </div>
                     <div className="flex items-center space-x-2 text-gray-600">
+                       Expected: <br></br>
                        {isPDF ? (
                          <span>{profileData.personalInfo.expectedCurrency}</span>
                        ) : (
@@ -328,7 +330,7 @@ interface Certification {
                          </span>
                        )}
                        <span>
-                         Expected: {profileData.personalInfo.expectedSalary}
+                        {profileData.personalInfo.expectedSalary}
                        </span>
                     </div>
                     <div className="flex items-center space-x-2 text-gray-600">
