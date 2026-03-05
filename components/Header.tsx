@@ -15,6 +15,7 @@ import {
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
+import { Input } from "@/components/ui/input";
 // import { useSession, signOut } from "next-auth/react"; 
 import Loader from "./Loader";
 
@@ -24,9 +25,8 @@ export default function Header() {
   const [isEmployerDropdownOpen, setIsEmployerDropdownOpen] = useState(false);
   const [pageLoading, setPageLoading] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [keyword, setKeyword] = useState("");
-  const [location, setLocation] = useState("");
+  const [search, setSearch] = useState("");
 
 
   const router = useRouter();
@@ -34,13 +34,11 @@ export default function Header() {
 
   // const { data: session } = useSession(); 
 const handleSearch = () => {
-  router.push(`/jobs?keyword=${keyword}&location=${location}`);
-};
-const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-  if (e.key === "Enter") {
-    handleSearch();
+  if (search.trim() !== "") {
+    router.push(`/jobListings?search=${encodeURIComponent(search)}`);
   }
 };
+
 
   useEffect(() => {
     const checkAuth = () => {
@@ -148,19 +146,32 @@ useEffect(() => {
            <div
               onClick={(e) => {
                 e.stopPropagation();
-                setIsSearchOpen(true);
+               
               }}
               className="hidden md:flex items-center bg-gray-100 rounded-full px-4 py-2 w-64 cursor-pointer"
             >
 
-              <input
-                type="text"
-                placeholder="Search jobs here"
-                className="bg-transparent outline-none text-sm w-full cursor-pointer"
-                readOnly
-              />
+              <Input
+               placeholder="Search jobs..."
+               value={search}
+               onChange={(e) => setSearch(e.target.value)}
+               onKeyDown={(e) => {
+                 if (e.key === "Enter") {
+                   handleSearch();
+                 }
+               }}
+             />
 
-              <Search className="w-4 h-4 text-white bg-blue-600 rounded-full p-1 ml-2" />
+             <Search
+               onClick={() => {
+                 if (keyword.trim()) {
+                  router.push(`/jobListings?search=${encodeURIComponent(keyword)}`);
+                 }
+               }}
+               className="w-4 h-4 text-white bg-blue-600 rounded-full p-1 ml-2 cursor-pointer"
+             />
+
+
             </div>
           {/* Desktop Auth Buttons */}
           <div className="hidden md:flex items-center space-x-4">
@@ -238,7 +249,7 @@ useEffect(() => {
             </div>
 
            {/* Notification Bell  */}
-           <div className="relative">
+           {/* <div className="relative">
            <div
              onClick={() => setIsNotificationOpen(!isNotificationOpen)}
              className="cursor-pointer relative"
@@ -277,7 +288,7 @@ useEffect(() => {
                </div>
               </>
             )}
-          </div>
+          </div> */}
 
 
           </div>
@@ -298,6 +309,29 @@ useEffect(() => {
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
           <div className="md:hidden border-t bg-white py-4">
+            {/* Mobile Search */}
+            <div className="px-2 mb-4">
+              <div className="relative flex items-center">
+                <input
+                  type="text"
+                  placeholder="Search jobs..."
+                  value={keyword}
+                  onChange={(e) => setKeyword(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      router.push(`/jobListings?search=${keyword}`);
+                    }
+                  }}
+                  className="w-full border rounded-full px-4 py-2 text-sm outline-none"
+                />
+
+                <Search
+                  onClick={() => router.push(`/jobListings?search=${keyword}`)}
+                  className="absolute right-2 w-5 h-5 text-white bg-blue-600 rounded-full p-1 cursor-pointer"
+                />
+              </div>
+            </div>
+
             <nav className="flex flex-col space-y-4">
               <Link href="/">
                 <div className="flex items-center space-x-2 text-gray-700 hover:text-purple-600 cursor-pointer transition-colors px-2 py-1">
@@ -337,7 +371,7 @@ useEffect(() => {
               </div>
 
              {/*  Notification Section */}
-              <div className="border-t pt-4">
+              {/* <div className="border-t pt-4">
                <button
                  onClick={() => setIsNotificationOpen(!isNotificationOpen)}
                  className="flex items-center gap-2 w-full px-2 py-2 text-gray-700 hover:text-purple-600"
@@ -362,7 +396,7 @@ useEffect(() => {
                    </div>
                  </div>
                )}
-              </div>
+              </div> */}
 
 
               <div className="flex flex-col space-y-2 pt-4 border-t px-2">
@@ -405,59 +439,6 @@ useEffect(() => {
         )}
       </div>
     </header>
-    {isSearchOpen && (
-  <div
-  onClick={(e) => e.stopPropagation()}
-  className="bg-gray-100 py-6 border-b"
->
-
-    <div className="max-w-5xl mx-auto">
-
-      <div className="flex items-center bg-white rounded-full shadow-md overflow-hidden">
-
-        <input
-          type="text"
-          placeholder="Enter keyword / designation / companies"
-          className="flex-1 px-6 py-4 outline-none"
-        />
-
-        <div className="border-l px-6 py-4">
-          <select className="outline-none text-gray-500">
-            <option>Select experience</option>
-            <option>Fresher</option>
-            <option>1 Year</option>
-            <option>2 Years</option>
-          </select>
-        </div>
-
-        <input
-          type="text"
-          placeholder="Enter keyword / designation / companies"
-          className="flex-1 px-6 py-4 outline-none"
-          value={keyword}
-          onChange={(e) => setKeyword(e.target.value)}
-           onKeyDown={handleKeyPress}
-        />
-
-        <input
-          type="text"
-          placeholder="Enter location"
-          className="border-l px-6 py-4 outline-none"
-          value={location}
-          onChange={(e) => setLocation(e.target.value)}
-           onKeyDown={handleKeyPress}
-        />
-        <button
-          onClick={handleSearch}
-          className="bg-blue-600 text-white px-8 py-4"
-         >
-          Search
-        </button>
-      </div>
-    </div>
-  </div>
-)}
-
     </>
   );
 }

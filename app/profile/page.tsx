@@ -90,6 +90,8 @@ export default function Profile() {
     personalInfo: {
       fullName: "",
       email: "",
+      gender: "",
+      birthday: "",
       phone: "",
       phoneCode: "",
       countryId: "",
@@ -352,6 +354,8 @@ type ProfileData = {
     resume?: string | null;
     profile_image?: string | null;
     professional_summary?: string;
+    gender?: string;
+    birthday?: string;
   };
   experience: ProfileExperience[]; 
   education: Education[];
@@ -872,6 +876,8 @@ const handleRemoveSkill = (skillToRemove: Skill) => {
             personalInfo: {
               fullName: data.full_name || "",
               email: data.email || "",
+              gender: data.gender ? data.gender.toLowerCase() : "",        
+              birthday: data.birthday || "", 
               phone: data.phone || "",
               phoneCode: data.phone_code || "",
               countryId: data?.country?.id?.toString() ?? "",
@@ -1163,6 +1169,8 @@ useEffect(() => {
     const payload = {
       full_name: profileData.personalInfo.fullName,
       email: profileData.personalInfo.email,
+      gender: profileData.personalInfo.gender,
+      birthday: profileData.personalInfo.birthday,
       phone: profileData.personalInfo.phone,
       phone_code: profileData.personalInfo.phoneCode,
       experience: profileData.personalInfo.experience,
@@ -1902,7 +1910,61 @@ const removeAppliedJob = async (applicationId: number) => {
                           required
                         />
                       </div>
-                     
+                     {/* Gender */}
+<div>
+  <Label htmlFor="gender" className="text-sm font-medium">
+    Gender
+  </Label>
+
+  <Select
+    value={profileData.personalInfo.gender || ""}
+    onValueChange={(value) =>
+      setProfileData((prev) => ({
+        ...prev,
+        personalInfo: {
+          ...prev.personalInfo,
+          gender: value,
+        },
+      }))
+    }
+  >
+    <SelectTrigger className="mt-1 h-10 lg:h-11">
+      <SelectValue placeholder="Select gender" />
+    </SelectTrigger>
+
+    <SelectContent>
+      <SelectItem value="male">Male</SelectItem>
+      <SelectItem value="female">Female</SelectItem>
+      <SelectItem value="trans">Trans</SelectItem>
+    </SelectContent>
+  </Select>
+</div>
+
+{/* Birthday */}
+<div>
+  <Label htmlFor="birthday" className="text-sm font-medium">
+    Birthday
+  </Label>
+
+  <Input
+    id="birthday"
+    type="date"
+    value={profileData.personalInfo.birthday || ""}
+    max={new Date().toISOString().split("T")[0]}
+    onChange={(e) =>
+      setProfileData((prev) => ({
+        ...prev,
+        personalInfo: {
+          ...prev.personalInfo,
+          birthday: e.target.value,
+        },
+      }))
+    }
+    className="mt-1 h-10 lg:h-11"
+  />
+</div>
+
+
                       <div>
                         <Label htmlFor="phone" className="text-sm font-medium">
                           Phone Number *
