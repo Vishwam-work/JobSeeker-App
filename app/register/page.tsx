@@ -195,35 +195,43 @@ export default function Register() {
       return;
     }
 
-    const data = {
-      full_name: fullName,
-      email: email,
-      password: password,
-      mobile_number: profileData.personalInfo.phone,
-      work_status: workStatus,
-      receive_promotions: receivePromotions,
-      country_id: profileData.personalInfo.countryId,
-    };
+    const formData = new FormData();
+
+    formData.append("full_name", fullName);
+    formData.append("email", email);
+    formData.append("password", password);
+    formData.append("mobile_number", profileData.personalInfo.phone);
+    formData.append("work_status", workStatus);
+    formData.append("receive_promotions", String(receivePromotions));
+    formData.append("country_id", String(profileData.personalInfo.countryId));
+
+    if (resume) {
+      formData.append("resume", resume);
+    }
 
     try {
       const res = await fetch(
         "https://jobseeker-backend-jy1y.onrender.com/api/register/",
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data),
+          body: formData,
         },
       );
-      if (!res.ok) throw new Error("Registration failed");
-
-      const result = await res.json();
+      const result = await res.json() as Record<string, any>;
+       if (!res.ok) {
+        throw new Error(
+          result?.error ||
+          result?.message ||
+          (Object.values(result)[0] as any)?.[0] ||
+          "Registration failed"
+        );
+      }
       console.log("Registration Successful");
-
+      toast.success("Registration Successful 🎉");
       router.push("/login");
+
     } catch (error) {
-      toast.error(
-        "This password is too common or too weak. Please choose a stronger password.",
-      );
+      toast.error((error as Error).message);
       console.error("Registration error:", error);
     }
   };

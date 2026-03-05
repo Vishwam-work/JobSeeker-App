@@ -503,7 +503,7 @@ interface Certification {
                 Edit Profile
               </Button>
             </Link>
-            <Link href={profileData.resume}>
+            <Link href={profileData.resume} target="_blank">
             <Button className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-12">
              Preview Resume
             </Button>
