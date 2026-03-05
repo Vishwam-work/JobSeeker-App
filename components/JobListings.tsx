@@ -75,25 +75,23 @@ export default function JobListings() {
   const searchFromUrl = searchParams.get("search");
   const router = useRouter();
 
-
   // Filter states
   const [filters, setFilters] = useState({
     search: "",
     location: "",
-    experience: "",
-    jobType: "",
-    workMode: "",
+    experience: [] as string[],
+    jobType: [] as string[],
+    workMode: [] as string[],
     salaryRange: [0, 50],
     companies: [] as string[],
     skills: [] as string[],
-    postedWithin: "",
+    postedWithin: [] as string[],
   });
 
   // Sample job data - in real app, this would come from API
   const [companies, setCompanies] = useState<string[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
   const [skillsList, setSkillsList] = useState<string[]>([]);
-
 
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
   const [searchLocation, setSearchLocation] = useState("");
@@ -103,15 +101,91 @@ export default function JobListings() {
   const [searchSkill, setSearchSkill] = useState("");
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [showLoginPopup, setShowLoginPopup] = useState(false);
+  const [showMoreExperience, setShowMoreExperience] = useState(false);
+  const [showMoreJobType, setShowMoreJobType] = useState(false);
+  const [showMoreWorkMode, setShowMoreWorkMode] = useState(false);
+  const [showMorePosted, setShowMorePosted] = useState(false);
+  const [showMoreCompanies, setShowMoreCompanies] = useState(false);
+  const [sortBy, setSortBy] = useState("relevance");
+
+  const experienceList = ["0-1", "2-4", "3-5", "5-8", "8+"];
+
+  const jobTypes = ["Full Time", "Part Time", "Contract", "Internship"];
+  const workModes = ["Remote", "Hybrid", "Office"];
+  const postedOptions = [
+    { label: "Last 24 hours", value: "1" },
+    { label: "Last 3 days", value: "3" },
+    { label: "Last week", value: "7" },
+    { label: "Last month", value: "30" },
+  ];
+
+  const sortedExperience = [
+    ...experienceList.filter((e) => filters.experience.includes(e)),
+    ...experienceList.filter((e) => !filters.experience.includes(e)),
+  ];
+
+  const visibleExperience = showMoreExperience
+    ? sortedExperience
+    : sortedExperience.slice(0, 4);
+
+  const handleExperienceFilter = (exp: string, checked: boolean) => {
+    setFilters((prev) => ({
+      ...prev,
+      experience: checked
+        ? [...prev.experience, exp]
+        : prev.experience.filter((e) => e !== exp),
+    }));
+  };
+  const handleJobTypeFilter = (type: string, checked: boolean) => {
+    setFilters((prev) => ({
+      ...prev,
+      jobType: checked
+        ? [...prev.jobType, type]
+        : prev.jobType.filter((t) => t !== type),
+    }));
+  };
+  const handleWorkModeFilter = (mode: string, checked: boolean) => {
+    setFilters((prev) => ({
+      ...prev,
+      workMode: checked
+        ? [...prev.workMode, mode]
+        : prev.workMode.filter((m) => m !== mode),
+    }));
+  };
+  const handlePostedFilter = (value: string, checked: boolean) => {
+    setFilters((prev) => ({
+      ...prev,
+      postedWithin: checked
+        ? [...prev.postedWithin, value]
+        : prev.postedWithin.filter((p) => p !== value),
+    }));
+  };
+  const handleCompanyFilter = (company: string, checked: boolean) => {
+    setFilters((prev) => ({
+      ...prev,
+      companies: checked
+        ? [...prev.companies, company]
+        : prev.companies.filter((c) => c !== company),
+    }));
+  };
+  const sortedJobs = [...filteredJobs].sort((a, b) => {
+    if (sortBy === "date") {
+      const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+      const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+
+      return dateB - dateA;
+    }
+    return 0;
+  });
 
   interface Location {
     id: string | number;
     name: string;
-  };
+  }
   interface JobLocation {
     id?: number | string;
     name: string;
-  };
+  }
 
   interface Job {
     id: number | string;
@@ -130,20 +204,18 @@ export default function JobListings() {
     requirements?: string[];
     benefits?: string[];
     questions?: string[];
-  };
+  }
   interface Filters {
     skills: string[];
     companies: string[];
     experience?: string;
     workMode?: string;
-
   }
   interface Application {
     id: number | string;
     user_email: string;
     job: number | string;
   }
-
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -167,13 +239,12 @@ export default function JobListings() {
     }
   }, [searchFromUrl]);
 
-
   // Fetch companies from API
   useEffect(() => {
     const fetchCompanies = async () => {
       try {
         const res = await fetch(
-          "https://jobseeker-backend-jy1y.onrender.com/employeer/api/all-jobs/"
+          "https://jobseeker-backend-jy1y.onrender.com/employeer/api/all-jobs/",
         );
         const data = await res.json();
         if (!res.ok) {
@@ -183,15 +254,15 @@ export default function JobListings() {
         const jobResults = Array.isArray(data.results)
           ? data.results
           : Array.isArray(data)
-          ? data
-          : [];
+            ? data
+            : [];
 
         const companyNames: string[] = Array.from(
           new Set(
             jobResults
               .map((item: { company?: string }) => item.company)
-              .filter((c: string | undefined): c is string => Boolean(c))
-          )
+              .filter((c: string | undefined): c is string => Boolean(c)),
+          ),
         );
 
         setCompanies(companyNames);
@@ -206,10 +277,12 @@ export default function JobListings() {
         const token = localStorage.getItem("auth_token");
         if (!token) return;
 
-
-        const res = await fetch("https://jobseeker-backend-jy1y.onrender.com/api/saved-jobs/", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await fetch(
+          "https://jobseeker-backend-jy1y.onrender.com/api/saved-jobs/",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        );
 
         if (!res.ok) return;
         const data = await res.json();
@@ -224,7 +297,6 @@ export default function JobListings() {
 
     fetchCompanies();
     fetchSavedJobs();
-
   }, []);
 
   // Fetch skills from API
@@ -232,7 +304,7 @@ export default function JobListings() {
     const fetchSkills = async () => {
       try {
         const response = await fetch(
-          "https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_category/"
+          "https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_category/",
         );
         const data = await response.json();
 
@@ -256,7 +328,7 @@ export default function JobListings() {
       setLoading(true);
 
       const response = await fetch(
-        `https://jobseeker-backend-jy1y.onrender.com/employeer/api/all-jobs/?page=${pageNumber}`
+        `https://jobseeker-backend-jy1y.onrender.com/employeer/api/all-jobs/?page=${pageNumber}`,
       );
 
       const data = await response.json();
@@ -267,8 +339,8 @@ export default function JobListings() {
       const results = Array.isArray(data.results)
         ? data.results
         : Array.isArray(data)
-        ? data
-        : [];
+          ? data
+          : [];
 
       const locationNames: string[] = results
         .map((job: any): string | undefined => job?.location?.name)
@@ -277,7 +349,7 @@ export default function JobListings() {
         });
 
       const uniqueLocations: Location[] = Array.from<string>(
-        new Set<string>(locationNames)
+        new Set<string>(locationNames),
       ).map((name: string) => ({
         id: name,
         name: name,
@@ -290,7 +362,6 @@ export default function JobListings() {
       setNextPage(data.next);
       setPreviousPage(data.previous);
       setTotalCount(data.count || 0);
-
     } catch (error) {
       console.error("Error fetching jobs:", error);
       setJobs([]);
@@ -299,7 +370,6 @@ export default function JobListings() {
       setLoading(false);
     }
   };
-
 
   // Load applied jobs per user
   useEffect(() => {
@@ -327,7 +397,6 @@ export default function JobListings() {
     setPage(1);
   }, [filters]);
 
-
   useEffect(() => {
     let filtered = jobs;
 
@@ -338,8 +407,8 @@ export default function JobListings() {
           job.title.toLowerCase().includes(filters.search.toLowerCase()) ||
           job.company.toLowerCase().includes(filters.search.toLowerCase()) ||
           job.skills.some((skill) =>
-            skill.toLowerCase().includes(filters.search.toLowerCase())
-          )
+            skill.toLowerCase().includes(filters.search.toLowerCase()),
+          ),
       );
     }
 
@@ -351,56 +420,64 @@ export default function JobListings() {
           job.location.name &&
           job.location.name
             .toLowerCase()
-            .includes(filters.location.toLowerCase())
+            .includes(filters.location.toLowerCase()),
       );
     }
 
-
     // Experience filter
-    if (filters.experience && filters.experience !== "All") {
+    if (filters.experience && filters.experience.length > 0) {
       filtered = filtered.filter((job) => {
         if (!job.experience) return false;
         const [minJobExp, maxJobExp] = job.experience.split("-").map(Number);
-        let [minFilterExp, maxFilterExp] = [0, 100]; // default
 
-        switch (filters.experience) {
-          case "0-1":
-            [minFilterExp, maxFilterExp] = [0, 1];
-            break;
-          case "2-4":
-            [minFilterExp, maxFilterExp] = [2, 4];
-            break;
-          case "3-5":
-            [minFilterExp, maxFilterExp] = [3, 5];
-            break;
-          case "5-8":
-            [minFilterExp, maxFilterExp] = [5, 8];
-            break;
-          case "8+":
-            [minFilterExp, maxFilterExp] = [8, 100];
-            break;
-        }
+        return filters.experience.some((expFilter) => {
+          let minFilterExp = 0;
+          let maxFilterExp = 100;
 
-        return maxJobExp >= minFilterExp && minJobExp <= maxFilterExp;
+          switch (expFilter) {
+            case "0-1":
+              [minFilterExp, maxFilterExp] = [0, 1];
+              break;
+            case "2-4":
+              [minFilterExp, maxFilterExp] = [2, 4];
+              break;
+            case "3-5":
+              [minFilterExp, maxFilterExp] = [3, 5];
+              break;
+            case "5-8":
+              [minFilterExp, maxFilterExp] = [5, 8];
+              break;
+            case "8+":
+              [minFilterExp, maxFilterExp] = [8, 100];
+              break;
+          }
+
+          return maxJobExp >= minFilterExp && minJobExp <= maxFilterExp;
+        });
       });
     }
 
-
     // Work Mode filter
-    if (filters.workMode && filters.workMode !== "All") {
+    if (filters.workMode && filters.workMode.length > 0) {
       filtered = filtered.filter(
         (job) =>
           job.work_mode &&
-          job.work_mode.toLowerCase().includes(filters.workMode.toLowerCase())
+          filters.workMode.some((mode) =>
+            (job.work_mode as string)
+              .toLowerCase()
+              .includes(mode.toLowerCase()),
+          ),
       );
     }
 
     // Job Type filter
-    if (filters.jobType && filters.jobType !== "All") {
+    if (filters.jobType && filters.jobType.length > 0) {
       filtered = filtered.filter(
         (job) =>
           job.job_type &&
-          job.job_type.toLowerCase().includes(filters.jobType.toLowerCase())
+          filters.jobType.some((type) =>
+            (job.job_type as string).toLowerCase().includes(type.toLowerCase()),
+          ),
       );
     }
 
@@ -411,9 +488,9 @@ export default function JobListings() {
           Array.isArray(job.skills) &&
           filters.skills.every((skill) =>
             job.skills.some((jobSkill) =>
-              jobSkill.toLowerCase().includes(skill.toLowerCase())
-            )
-          )
+              jobSkill.toLowerCase().includes(skill.toLowerCase()),
+            ),
+          ),
       );
     }
 
@@ -422,7 +499,7 @@ export default function JobListings() {
       filtered = filtered.filter((job) => {
         const companyName = job.company?.toLowerCase().trim();
         return filters.companies.some(
-          (selected) => selected.toLowerCase().trim() === companyName
+          (selected) => selected.toLowerCase().trim() === companyName,
         );
       });
     }
@@ -441,25 +518,27 @@ export default function JobListings() {
     });
 
     // Posted within filter
-    if (filters.postedWithin && filters.postedWithin !== "All") {
+    if (filters.postedWithin && filters.postedWithin.length > 0) {
       const now = new Date();
       filtered = filtered.filter((job) => {
         const postedDate = new Date(job.created_at ?? "");
         const diffTime = Math.abs(now.getTime() - postedDate.getTime());
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-        switch (filters.postedWithin) {
-          case "1":
-            return diffDays <= 1;
-          case "3":
-            return diffDays <= 3;
-          case "7":
-            return diffDays <= 7;
-          case "30":
-            return diffDays <= 30;
-          default:
-            return true;
-        }
+        return filters.postedWithin.some((timeValue) => {
+          switch (timeValue) {
+            case "1":
+              return diffDays <= 1;
+            case "3":
+              return diffDays <= 3;
+            case "7":
+              return diffDays <= 7;
+            case "30":
+              return diffDays <= 30;
+            default:
+              return true;
+          }
+        });
       });
     }
 
@@ -473,14 +552,14 @@ export default function JobListings() {
     }));
   };
 
-  const handleCompanyFilter = (company: string, checked: boolean) => {
-    setFilters((prev) => ({
-      ...prev,
-      companies: checked
-        ? [...prev.companies, company]
-        : prev.companies.filter((c) => c !== company),
-    }));
-  };
+  // const handleCompanyFilter = (company: string, checked: boolean) => {
+  //   setFilters((prev) => ({
+  //     ...prev,
+  //     companies: checked
+  //       ? [...prev.companies, company]
+  //       : prev.companies.filter((c) => c !== company),
+  //   }));
+  // };
 
   const handleSkillFilter = (skill: string, checked: boolean) => {
     setFilters((prev) => ({
@@ -495,24 +574,15 @@ export default function JobListings() {
     setFilters({
       search: "",
       location: "",
-      experience: "",
-      jobType: "",
-      workMode: "",
+      experience: [] as string[],
+      jobType: [] as string[],
+      workMode: [] as string[],
       salaryRange: [0, 50],
       companies: [],
       skills: [],
-      postedWithin: "",
+      postedWithin: [] as string[],
     });
   };
-
-  //   const handleSaveJob = (job) => {
-  //   const isSaved = savedJobs.some((j) => j.id === job.id);
-  //   if (isSaved) {
-  //     removeJob(job.id);
-  //   } else {
-  //     addJob(job);
-  //   }
-  // };
 
   const saveJob = async (jobId: number) => {
     const token = localStorage.getItem("auth_token");
@@ -525,14 +595,17 @@ export default function JobListings() {
     }
 
     try {
-      const res = await fetch("https://jobseeker-backend-jy1y.onrender.com/api/saved-jobs/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+      const res = await fetch(
+        "https://jobseeker-backend-jy1y.onrender.com/api/saved-jobs/",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ job: jobId }),
         },
-        body: JSON.stringify({ job: jobId }),
-      });
+      );
 
       if (res.status === 400) {
         const data = await res.json();
@@ -554,18 +627,24 @@ export default function JobListings() {
 
     try {
       // We need to find the savedJobId (record ID) for this job
-      const res = await fetch("https://jobseeker-backend-jy1y.onrender.com/api/saved-jobs/", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await fetch(
+        "https://jobseeker-backend-jy1y.onrender.com/api/saved-jobs/",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
       const savedData = await res.json();
       const record = savedData.find((item: any) => item.job === jobId);
 
       if (!record) return;
 
-      const delRes = await fetch(`https://jobseeker-backend-jy1y.onrender.com/api/saved-jobs/${record.id}/`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const delRes = await fetch(
+        `https://jobseeker-backend-jy1y.onrender.com/api/saved-jobs/${record.id}/`,
+        {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
 
       if (!delRes.ok && delRes.status !== 204)
         throw new Error("Failed to unsave job");
@@ -594,7 +673,7 @@ export default function JobListings() {
     }
     if (!userData || !isProfileComplete(userData)) {
       toast.warning(
-        "Please complete your profile (Name, Phone, Resume, Skills, Experience) before applying."
+        "Please complete your profile (Name, Phone, Resume, Skills, Experience) before applying.",
       );
       router.push("/profile");
       return;
@@ -610,18 +689,20 @@ export default function JobListings() {
     setIsJobDetailOpen(true);
     try {
       const requestId = uuidv4();
-      const res = await fetch(`https://jobseeker-backend-jy1y.onrender.com/employeer/api/${job.id}/click/`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          // Authorization: `Bearer ${token}`,
+      const res = await fetch(
+        `https://jobseeker-backend-jy1y.onrender.com/employeer/api/${job.id}/click/`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            // Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ request_id: requestId }),
         },
-        body: JSON.stringify({ request_id: requestId }),
-      });
+      );
 
       const response = await res.json();
-      console.log(response)
-
+      console.log(response);
     } catch (err) {
       console.error("Error incrementing job views:", err);
     }
@@ -639,7 +720,6 @@ export default function JobListings() {
       toast("Link copied!", {
         description: "Job link is copied to clipboard",
       });
-
     }
   };
 
@@ -651,10 +731,8 @@ export default function JobListings() {
     "country",
     "state",
     "city",
-    "experiences"
+    "experiences",
   ];
-
-
 
   const isProfileComplete = (profile: Record<string, any>) => {
     return REQUIRED_PROFILE_FIELDS.every((field) => {
@@ -672,8 +750,6 @@ export default function JobListings() {
     });
   };
 
-
-
   const fetchUserProfile = async () => {
     setLoadingUserData(true);
     try {
@@ -685,7 +761,7 @@ export default function JobListings() {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       if (!response.ok) {
@@ -701,15 +777,12 @@ export default function JobListings() {
           ? `https://jobseeker-backend-jy1y.onrender.com${profile.resume}`
           : null,
       });
-
     } catch (error) {
       console.error("Profile fetch error:", error);
     } finally {
       setLoadingUserData(false);
     }
   };
-
-
 
   const fetchUserData = async () => {
     setLoadingUserData(true);
@@ -724,7 +797,7 @@ export default function JobListings() {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       if (!response.ok) {
@@ -732,22 +805,24 @@ export default function JobListings() {
         return;
       }
 
-
       const data = await response.json();
       console.log("ALL applications from backend:", data);
 
-      const myApplications = data.filter((app: Application) => app.user_email === email);
+      const myApplications = data.filter(
+        (app: Application) => app.user_email === email,
+      );
 
       console.log("MY Applications:", myApplications);
 
-      const appliedIDs = myApplications.map((app: Application) => Number(app.job));
+      const appliedIDs = myApplications.map((app: Application) =>
+        Number(app.job),
+      );
 
       localStorage.setItem(`applied_jobs_${email}`, JSON.stringify(appliedIDs));
 
       setAppliedJobs(appliedIDs);
 
       console.log("Saved my applied job IDs:", appliedIDs);
-
     } catch (error) {
       console.error("Fetch user data error:", error);
     } finally {
@@ -789,11 +864,12 @@ export default function JobListings() {
       // Validate answers if questions exist
       if (selectedJob.questions && selectedJob.questions.length > 0) {
         const unanswered = selectedJob.questions.some(
-          (_, index) => !answers[index]?.trim()
+          (_, index) => !answers[index]?.trim(),
         );
         if (unanswered) {
           toast("Incomplete Application", {
-            description: "Please answer all required questions before submitting.",
+            description:
+              "Please answer all required questions before submitting.",
           });
 
           return;
@@ -818,11 +894,11 @@ export default function JobListings() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify(applicationData),
-        }
+        },
       );
-      // console.log("Here is the data",response) 
+      // console.log("Here is the data",response)
       const result = await response.json();
-      console.log("Serialised data for error :", result)
+      console.log("Serialised data for error :", result);
 
       if (response.ok) {
         toast.success("Application Submitted", {
@@ -844,20 +920,17 @@ export default function JobListings() {
           localStorage.setItem(key, JSON.stringify(updated));
           return updated;
         });
-
-
       } else {
         toast.error("Application Failed", {
-          description: result?.error || "Something went wrong. Please try again.",
+          description:
+            result?.error || "Something went wrong. Please try again.",
         });
-
       }
     } catch (error) {
       console.error("Error submitting application:", error);
       toast("Network error", {
         description: "Please check your internet connection and try again",
       });
-
     }
   };
 
@@ -957,20 +1030,18 @@ export default function JobListings() {
                       Location
                     </Label>
 
-                   <Select
-                     value={filters.location || undefined}
-                     onValueChange={(location) =>
-                       setFilters((prev) => ({
-                         ...prev,
-                         location,
-                       }))
-                     }  
-                   >
-                     <SelectTrigger>
-                       <SelectValue placeholder="Select location" />
-                     </SelectTrigger>
-                 
-                      
+                    <Select
+                      value={filters.location || undefined}
+                      onValueChange={(location) =>
+                        setFilters((prev) => ({
+                          ...prev,
+                          location,
+                        }))
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select location" />
+                      </SelectTrigger>
 
                       <SelectContent className="max-h-60">
                         {/* Search input */}
@@ -987,27 +1058,34 @@ export default function JobListings() {
 
                         {/* Loading */}
                         {loading && (
-                          <p className="text-sm text-gray-500 p-2">Loading locations...</p>
+                          <p className="text-sm text-gray-500 p-2">
+                            Loading locations...
+                          </p>
                         )}
 
                         {/* Location list */}
                         {locations
-                          .filter((location) =>
-                            typeof location.name === "string" &&
-                            location.name.toLowerCase().startsWith(searchLocation.toLowerCase())
+                          .filter(
+                            (location) =>
+                              typeof location.name === "string" &&
+                              location.name
+                                .toLowerCase()
+                                .startsWith(searchLocation.toLowerCase()),
                           )
                           .map((location) => {
-                            const isSelected = filters.location === location.name;
+                            const isSelected =
+                              filters.location === location.name;
 
                             return (
                               <SelectItem
                                 key={location.id}
                                 value={location.name}
                                 className={`text-sm cursor-pointer
-                                 ${isSelected
-                                    ? "bg-blue-100 text-blue-700 font-medium"
-                                    : "text-gray-700 hover:bg-gray-100"
-                                  }`}
+                                 ${
+                                   isSelected
+                                     ? "bg-blue-100 text-blue-700 font-medium"
+                                     : "text-gray-700 hover:bg-gray-100"
+                                 }`}
                               >
                                 {location.name}
                               </SelectItem>
@@ -1022,24 +1100,35 @@ export default function JobListings() {
                     <Label className="text-sm font-medium text-gray-700 mb-2 block">
                       Experience
                     </Label>
-                    <Select
-                      value={filters.experience}
-                      onValueChange={(value) =>
-                        handleFilterChange("experience", value)
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select experience" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="All">All Experience</SelectItem>
-                        <SelectItem value="0-1">0-1 years</SelectItem>
-                        <SelectItem value="2-4">2-4 years</SelectItem>
-                        <SelectItem value="3-5">3-5 years</SelectItem>
-                        <SelectItem value="5-8">5-8 years</SelectItem>
-                        <SelectItem value="8+">8+ years</SelectItem>
-                      </SelectContent>
-                    </Select>
+
+                    {visibleExperience.map((exp) => (
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id={exp}
+                          checked={filters.experience.includes(exp)}
+                          onCheckedChange={(checked) =>
+                            handleExperienceFilter(exp, checked as boolean)
+                          }
+                        />
+                        <label
+                          htmlFor={exp}
+                          className="text-sm text-gray-600 cursor-pointer"
+                        >
+                          {exp}
+                        </label>
+                      </div>
+                    ))}
+
+                    {experienceList.length > 4 && (
+                      <button
+                        onClick={() =>
+                          setShowMoreExperience(!showMoreExperience)
+                        }
+                        className="text-purple-600 text-sm mt-2"
+                      >
+                        {showMoreExperience ? "View Less" : "View More"}
+                      </button>
+                    )}
                   </div>
 
                   {/* Job Type */}
@@ -1047,23 +1136,40 @@ export default function JobListings() {
                     <Label className="text-sm font-medium text-gray-700 mb-2 block">
                       Job Type
                     </Label>
-                    <Select
-                      value={filters.jobType}
-                      onValueChange={(value) =>
-                        handleFilterChange("jobType", value)
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select job type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="All">All Types</SelectItem>
-                        <SelectItem value="full-time">Full Time</SelectItem>
-                        <SelectItem value="part-time">Part Time</SelectItem>
-                        <SelectItem value="contract">Contract</SelectItem>
-                        <SelectItem value="internship">Internship</SelectItem>
-                      </SelectContent>
-                    </Select>
+
+                    {jobTypes
+                      .sort((a, b) => {
+                        const aSelected = filters.jobType.includes(a);
+                        const bSelected = filters.jobType.includes(b);
+                        return aSelected === bSelected ? 0 : aSelected ? -1 : 1;
+                      })
+                      .slice(0, showMoreJobType ? jobTypes.length : 4)
+                      .map((type) => (
+                        <div
+                          key={type}
+                          className="flex items-center space-x-2 mb-2"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={filters.jobType.includes(type)}
+                            onChange={(e) =>
+                              handleJobTypeFilter(type, e.target.checked)
+                            }
+                          />
+                          <label className="text-sm text-gray-600">
+                            {type}
+                          </label>
+                        </div>
+                      ))}
+
+                    {jobTypes.length > 4 && (
+                      <button
+                        onClick={() => setShowMoreJobType(!showMoreJobType)}
+                        className="text-blue-600 text-sm mt-1"
+                      >
+                        {showMoreJobType ? "Less" : "More"}
+                      </button>
+                    )}
                   </div>
 
                   {/* Work Mode */}
@@ -1071,22 +1177,40 @@ export default function JobListings() {
                     <Label className="text-sm font-medium text-gray-700 mb-2 block">
                       Work Mode
                     </Label>
-                    <Select
-                      value={filters.workMode}
-                      onValueChange={(value) =>
-                        handleFilterChange("workMode", value)
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select work mode" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="All">All Modes</SelectItem>
-                        <SelectItem value="Remote">Remote</SelectItem>
-                        <SelectItem value="Hybrid">Hybrid</SelectItem>
-                        <SelectItem value="Office">Office</SelectItem>
-                      </SelectContent>
-                    </Select>
+
+                    {workModes
+                      .sort((a, b) => {
+                        const aSelected = filters.workMode.includes(a);
+                        const bSelected = filters.workMode.includes(b);
+                        return aSelected === bSelected ? 0 : aSelected ? -1 : 1;
+                      })
+                      .slice(0, showMoreWorkMode ? workModes.length : 4)
+                      .map((mode) => (
+                        <div
+                          key={mode}
+                          className="flex items-center space-x-2 mb-2"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={filters.workMode.includes(mode)}
+                            onChange={(e) =>
+                              handleWorkModeFilter(mode, e.target.checked)
+                            }
+                          />
+                          <label className="text-sm text-gray-600">
+                            {mode}
+                          </label>
+                        </div>
+                      ))}
+
+                    {workModes.length > 4 && (
+                      <button
+                        onClick={() => setShowMoreWorkMode(!showMoreWorkMode)}
+                        className="text-blue-600 text-sm mt-1"
+                      >
+                        {showMoreWorkMode ? "Less" : "More"}
+                      </button>
+                    )}
                   </div>
 
                   {/* Salary Range */}
@@ -1117,23 +1241,46 @@ export default function JobListings() {
                     <Label className="text-sm font-medium text-gray-700 mb-2 block">
                       Posted Within
                     </Label>
-                    <Select
-                      value={filters.postedWithin}
-                      onValueChange={(value) =>
-                        handleFilterChange("postedWithin", value)
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Any time" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="All">Any time</SelectItem>
-                        <SelectItem value="1">Last 24 hours</SelectItem>
-                        <SelectItem value="3">Last 3 days</SelectItem>
-                        <SelectItem value="7">Last week</SelectItem>
-                        <SelectItem value="30">Last month</SelectItem>
-                      </SelectContent>
-                    </Select>
+
+                    {postedOptions
+                      .sort((a, b) => {
+                        const aSelected = filters.postedWithin.includes(
+                          a.value,
+                        );
+                        const bSelected = filters.postedWithin.includes(
+                          b.value,
+                        );
+                        return aSelected === bSelected ? 0 : aSelected ? -1 : 1;
+                      })
+                      .slice(0, showMorePosted ? postedOptions.length : 4)
+                      .map((option) => (
+                        <div
+                          key={option.value}
+                          className="flex items-center space-x-2 mb-2"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={filters.postedWithin.includes(
+                              option.value,
+                            )}
+                            onChange={(e) =>
+                              handlePostedFilter(option.value, e.target.checked)
+                            }
+                          />
+                          <label className="text-sm text-gray-600">
+                            {option.label}
+                          </label>
+                        </div>
+                      ))}
+
+                    {postedOptions.length > 4 && (
+                      <button
+                        onClick={() => setShowMorePosted(!showMorePosted)}
+                        className="text-blue-600 text-sm mt-1"
+                      >
+                        {showMorePosted ? "Less" : "More"}
+                      </button>
+                    )}
                   </div>
 
                   {/* Companies */}
@@ -1142,51 +1289,57 @@ export default function JobListings() {
                       Companies
                     </Label>
 
-                    <Select
-                      value={filters.companies?.[0] || ""}
-                      onValueChange={(company) =>
-                        setFilters((prev) => ({
-                          ...prev,
-                          companies: [company],
-                        }))
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select company" />
-                      </SelectTrigger>
+                    {/* Search */}
+                    <input
+                      type="text"
+                      placeholder="Search company..."
+                      value={searchCompany}
+                      onChange={(e) => setSearchCompany(e.target.value)}
+                      className="w-full h-9 text-sm border rounded px-2 mb-2"
+                    />
 
-                      <SelectContent className="max-h-60">
-
-
-                        <div className="sticky top-0 bg-white z-10 p-2 border-b">
+                    {companies
+                      .filter((company) =>
+                        company
+                          .toLowerCase()
+                          .includes(searchCompany.toLowerCase()),
+                      )
+                      .sort((a, b) => {
+                        const aSelected = filters.companies.includes(a);
+                        const bSelected = filters.companies.includes(b);
+                        return aSelected === bSelected ? 0 : aSelected ? -1 : 1;
+                      })
+                      .slice(0, showMoreCompanies ? companies.length : 4)
+                      .map((company) => (
+                        <div
+                          key={company}
+                          className="flex items-center space-x-2 mb-2"
+                        >
                           <input
-                            type="text"
-                            placeholder="Search company..."
-                            value={searchCompany}
-                            onChange={(e) => setSearchCompany(e.target.value)}
-                            onKeyDown={(e) => e.stopPropagation()}
-                            className="w-full h-8 text-sm border rounded px-2"
+                            type="checkbox"
+                            checked={filters.companies.includes(company)}
+                            onChange={(e) =>
+                              handleCompanyFilter(company, e.target.checked)
+                            }
                           />
+                          <label className="text-sm text-gray-600">
+                            {company}
+                          </label>
                         </div>
+                      ))}
 
-                        {/* Company list */}
-                        {companies
-                          .filter((company) =>
-                            company
-                              .toLowerCase()
-                              .startsWith(searchCompany.toLowerCase())
-                          )
-                          .map((company) => (
-                            <SelectItem key={company} value={company}>
-                              {company}
-                            </SelectItem>
-                          ))}
-                      </SelectContent>
-                    </Select>
+                    {companies.length > 4 && (
+                      <button
+                        onClick={() => setShowMoreCompanies(!showMoreCompanies)}
+                        className="text-blue-600 text-sm mt-1"
+                      >
+                        {showMoreCompanies ? "Less" : "More"}
+                      </button>
+                    )}
                   </div>
 
                   {/* Skills */}
-                  <div>
+                  {/* <div>
                     <Label className="text-sm font-medium text-gray-700 mb-2 block">
                       Skills
                     </Label>
@@ -1252,8 +1405,7 @@ export default function JobListings() {
                            })}
                       </SelectContent>
                     </Select>
-                  </div>
-
+                  </div> */}
                 </div>
               </div>
             </Card>
@@ -1265,16 +1417,39 @@ export default function JobListings() {
               <p className="text-gray-600">
                 Showing {filteredJobs.length} of {jobs.length} jobs
               </p>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2 text-sm">
                 <Filter className="w-4 h-4 text-gray-400" />
-                <span className="text-sm text-gray-600">
-                  Sort by: Relevance
-                </span>
+
+                <span className="text-gray-500">Sort by:</span>
+
+                <button
+                  onClick={() => setSortBy("relevance")}
+                  className={`px-2 py-1 rounded ${
+                    sortBy === "relevance"
+                      ? "text-blue-600 font-semibold"
+                      : "text-gray-600"
+                  }`}
+                >
+                  Relevance
+                </button>
+
+                <span className="text-gray-400">|</span>
+
+                <button
+                  onClick={() => setSortBy("date")}
+                  className={`px-2 py-1 rounded ${
+                    sortBy === "date"
+                      ? "text-blue-600 font-semibold"
+                      : "text-gray-600"
+                  }`}
+                >
+                  Date
+                </button>
               </div>
             </div>
 
             <div className="space-y-4 md:space-y-6">
-              {filteredJobs.length === 0 ? (
+              {sortedJobs.length === 0 ? (
                 <div className="text-center py-12">
                   <Briefcase className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                   <h3 className="text-xl font-semibold text-gray-900 mb-2">
@@ -1286,177 +1461,177 @@ export default function JobListings() {
                   </p>
                 </div>
               ) : (
-                filteredJobs
-
-                  .map((job) => (
-                    <Card
-                      key={job.id}
-                      className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-transparent hover:border-l-purple-500"
-                    >
-                      <CardContent className="p-4 md:p-6">
-                        <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
-                          {/* Job Info */}
-                          <div className="flex-1">
-                            <div className="flex items-start justify-between mb-3">
-                              <div className="flex items-start space-x-3">
-                                <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                  <Building2 className="w-6 h-6 text-purple-600" />
-                                </div>
-                                <div className="min-w-0 flex-1">
-                                  <div className="flex items-center gap-2 mb-1">
-                                    <h3 className="text-lg md:text-xl font-semibold text-gray-900 hover:text-purple-600 transition-colors">
-                                      <a
-                                        href={`/job-details?id=${job.id}`}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="hover:underline"
-                                      >
-                                        {job.title}
-                                      </a>
-                                    </h3>
-
-                                    {job.urgentHiring && (
-                                      <Badge className="bg-red-100 text-red-800 text-xs">
-                                        Urgent
-                                      </Badge>
-                                    )}
-                                  </div>
-                                  <p className="text-purple-600 font-medium text-base md:text-lg mb-2">
-                                    {job.company}
-                                  </p>
-                                  <div className="flex flex-wrap items-center gap-3 md:gap-4 text-sm text-gray-600 mb-3">
-                                    <div className="flex items-center">
-                                      <MapPin className="w-4 h-4 mr-1 flex-shrink-0" />
-                                      <span>{job.location?.name ?? "N/A"}</span>
-                                    </div>
-                                    <div className="flex items-center">
-                                      <Briefcase className="w-4 h-4 mr-1 flex-shrink-0" />
-                                      <span>{job.experience}</span>
-                                    </div>
-                                    <div className="flex items-center">
-                                      <DollarSign className="w-4 h-4 mr-1 flex-shrink-0" />
-                                      <span>{job.salary}</span>
-                                    </div>
-                                    <Badge
-                                      className={getWorkModeColor(job.work_mode ?? "")}
+                sortedJobs.map((job) => (
+                  <Card
+                    key={job.id}
+                    className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-transparent hover:border-l-purple-500"
+                  >
+                    <CardContent className="p-4 md:p-6">
+                      <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+                        {/* Job Info */}
+                        <div className="flex-1">
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="flex items-start space-x-3">
+                              <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <Building2 className="w-6 h-6 text-purple-600" />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <h3 className="text-lg md:text-xl font-semibold text-gray-900 hover:text-purple-600 transition-colors">
+                                    <a
+                                      href={`/job-details?id=${job.id}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="hover:underline"
                                     >
-                                      {job.work_mode}
+                                      {job.title}
+                                    </a>
+                                  </h3>
+
+                                  {job.urgentHiring && (
+                                    <Badge className="bg-red-100 text-red-800 text-xs">
+                                      Urgent
                                     </Badge>
+                                  )}
+                                </div>
+                                <p className="text-purple-600 font-medium text-base md:text-lg mb-2">
+                                  {job.company}
+                                </p>
+                                <div className="flex flex-wrap items-center gap-3 md:gap-4 text-sm text-gray-600 mb-3">
+                                  <div className="flex items-center">
+                                    <MapPin className="w-4 h-4 mr-1 flex-shrink-0" />
+                                    <span>{job.location?.name ?? "N/A"}</span>
                                   </div>
-                                </div>
-                              </div>
-                            </div>
-                            <div className="flex items-center space-x-2">
-
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() =>
-                                    savedJobIds.includes(Number(job.id))
-                                      ? unsaveJob(Number(job.id))
-                                      : saveJob(Number(job.id))
-                                  }
-                                  className={`${savedJobIds.includes(Number(job.id))
-                                    ? "text-green-600"
-                                    : "text-gray-400 hover:text-green-500"
-                                    }`}
-                                >
-                                  <Bookmark
-                                    className={`w-4 h-4 transition-all duration-300 ${savedJobIds.includes(Number(job.id))
-                                      ? "fill-green-500 drop-shadow-[0_0_6px_rgba(34,197,94,0.8)]"
-                                      : ""
-                                      }`}
-                                  />
-                                </Button>
-
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleShare(job)}
-                                  className="text-gray-400 hover:text-gray-600"
-                                >
-                                  <Share2 className="w-4 h-4" />
-                                </Button>
-                              </div>
-                            
-
-                            {/* Job Description */}
-                            <p className="text-gray-700 text-sm md:text-base leading-relaxed mb-4 line-clamp-2">
-                              {job.description}
-                            </p>
-
-                            {/* Skills */}
-                            <div className="flex flex-wrap gap-2 mb-4">
-                              {job.skills.slice(0, 5).map((skill, index) => (
-                                <Badge
-                                  key={index}
-                                  variant="secondary"
-                                  className="text-xs bg-gray-100 text-gray-700"
-                                >
-                                  {skill}
-                                </Badge>
-                              ))}
-                              {job.skills.length > 5 && (
-                                <Badge
-                                  variant="secondary"
-                                  className="text-xs bg-gray-100 text-gray-700"
-                                >
-                                  +{job.skills.length - 5} more
-                                </Badge>
-                              )}
-                            </div>
-
-                            {/* Footer Info */}
-                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-xs md:text-sm text-gray-500">
-                              <div className="flex items-center space-x-4">
-                                <div className="flex items-center">
-                                  <Clock className="w-4 h-4 mr-1" />
-                                  <span>
-                                    {getTimeSincePosted(job.created_at ?? "")}
-                                  </span>
-                                </div>
-                                <div className="flex items-center">
-                                  <Users className="w-4 h-4 mr-1" />
-                                  <span>{job.vacancies} Vacancies</span>
+                                  <div className="flex items-center">
+                                    <Briefcase className="w-4 h-4 mr-1 flex-shrink-0" />
+                                    <span>{job.experience}</span>
+                                  </div>
+                                  <div className="flex items-center">
+                                    <DollarSign className="w-4 h-4 mr-1 flex-shrink-0" />
+                                    <span>{job.salary}</span>
+                                  </div>
+                                  <Badge
+                                    className={getWorkModeColor(
+                                      job.work_mode ?? "",
+                                    )}
+                                  >
+                                    {job.work_mode}
+                                  </Badge>
                                 </div>
                               </div>
                             </div>
                           </div>
-
-                          {/* Action Buttons */}
-                          <div className="flex flex-col sm:flex-row lg:flex-col gap-2 lg:w-32">
-                            {(() => {
-                              const token = localStorage.getItem("auth_token");
-                              const jobIdNum = Number(job.id);
-                              const appliedList = appliedJobs.map(Number);
-
-                              if (token && appliedList.includes(jobIdNum)) {
-                                return null;
+                          <div className="flex items-center space-x-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() =>
+                                savedJobIds.includes(Number(job.id))
+                                  ? unsaveJob(Number(job.id))
+                                  : saveJob(Number(job.id))
                               }
-
-                              return (
-                                <Button
-                                  onClick={() => handleApply(job)}
-                                  className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
-                                >
-                                  Apply Now
-                                </Button>
-                              );
-                            })()}
+                              className={`${
+                                savedJobIds.includes(Number(job.id))
+                                  ? "text-green-600"
+                                  : "text-gray-400 hover:text-green-500"
+                              }`}
+                            >
+                              <Bookmark
+                                className={`w-4 h-4 transition-all duration-300 ${
+                                  savedJobIds.includes(Number(job.id))
+                                    ? "fill-green-500 drop-shadow-[0_0_6px_rgba(34,197,94,0.8)]"
+                                    : ""
+                                }`}
+                              />
+                            </Button>
 
                             <Button
-                              variant="outline"
-                              className="border-purple-200 text-purple-600 hover:bg-purple-50"
-                              onClick={() => handleViewDetails(job)}
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleShare(job)}
+                              className="text-gray-400 hover:text-gray-600"
                             >
-                              <Eye className="w-4 h-4 mr-2" />
-                              View Details
+                              <Share2 className="w-4 h-4" />
                             </Button>
                           </div>
+
+                          {/* Job Description */}
+                          <p className="text-gray-700 text-sm md:text-base leading-relaxed mb-4 line-clamp-2">
+                            {job.description}
+                          </p>
+
+                          {/* Skills */}
+                          <div className="flex flex-wrap gap-2 mb-4">
+                            {job.skills.slice(0, 5).map((skill, index) => (
+                              <Badge
+                                key={index}
+                                variant="secondary"
+                                className="text-xs bg-gray-100 text-gray-700"
+                              >
+                                {skill}
+                              </Badge>
+                            ))}
+                            {job.skills.length > 5 && (
+                              <Badge
+                                variant="secondary"
+                                className="text-xs bg-gray-100 text-gray-700"
+                              >
+                                +{job.skills.length - 5} more
+                              </Badge>
+                            )}
+                          </div>
+
+                          {/* Footer Info */}
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-xs md:text-sm text-gray-500">
+                            <div className="flex items-center space-x-4">
+                              <div className="flex items-center">
+                                <Clock className="w-4 h-4 mr-1" />
+                                <span>
+                                  {getTimeSincePosted(job.created_at ?? "")}
+                                </span>
+                              </div>
+                              <div className="flex items-center">
+                                <Users className="w-4 h-4 mr-1" />
+                                <span>{job.vacancies} Vacancies</span>
+                              </div>
+                            </div>
+                          </div>
                         </div>
-                      </CardContent>
-                    </Card>
-                  ))
+
+                        {/* Action Buttons */}
+                        <div className="flex flex-col sm:flex-row lg:flex-col gap-2 lg:w-32">
+                          {(() => {
+                            const token = localStorage.getItem("auth_token");
+                            const jobIdNum = Number(job.id);
+                            const appliedList = appliedJobs.map(Number);
+
+                            if (token && appliedList.includes(jobIdNum)) {
+                              return null;
+                            }
+
+                            return (
+                              <Button
+                                onClick={() => handleApply(job)}
+                                className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
+                              >
+                                Apply Now
+                              </Button>
+                            );
+                          })()}
+
+                          <Button
+                            variant="outline"
+                            className="border-purple-200 text-purple-600 hover:bg-purple-50"
+                            onClick={() => handleViewDetails(job)}
+                          >
+                            <Eye className="w-4 h-4 mr-2" />
+                            View Details
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
               )}
             </div>
 
@@ -1464,9 +1639,15 @@ export default function JobListings() {
             {totalCount > 0 && (
               <div className="flex flex-col sm:flex-row items-center justify-between mt-8 gap-4 border-t pt-6">
                 <div className="text-sm text-gray-500 order-2 sm:order-1">
-                  Showing <span className="font-medium">{Math.min((page - 1) * 5 + 1, totalCount)}</span> to{" "}
-                  <span className="font-medium">{Math.min(page * 5, totalCount)}</span> of{" "}
-                  <span className="font-medium">{totalCount}</span> results
+                  Showing{" "}
+                  <span className="font-medium">
+                    {Math.min((page - 1) * 5 + 1, totalCount)}
+                  </span>{" "}
+                  to{" "}
+                  <span className="font-medium">
+                    {Math.min(page * 5, totalCount)}
+                  </span>{" "}
+                  of <span className="font-medium">{totalCount}</span> results
                 </div>
 
                 <div className="flex items-center space-x-2 order-1 sm:order-2">
@@ -1509,7 +1690,6 @@ export default function JobListings() {
                 </div>
               </div>
             )}
-
           </div>
         </div>
 
@@ -1566,7 +1746,9 @@ export default function JobListings() {
                       <div className="flex items-center text-gray-600">
                         <Building2 className="w-4 h-4 mr-2" />
                         <Badge
-                          className={getWorkModeColor(selectedJob.work_mode ?? "")}
+                          className={getWorkModeColor(
+                            selectedJob.work_mode ?? "",
+                          )}
                         >
                           {selectedJob.work_mode}
                         </Badge>
@@ -1574,7 +1756,8 @@ export default function JobListings() {
                       <div className="flex items-center text-gray-600">
                         <Calendar className="w-4 h-4 mr-2" />
                         <span>
-                          Posted {getTimeSincePosted(selectedJob.created_at ?? "")}
+                          Posted{" "}
+                          {getTimeSincePosted(selectedJob.created_at ?? "")}
                         </span>
                       </div>
                     </div>
@@ -1597,7 +1780,7 @@ export default function JobListings() {
                     </h4>
                     <ul className="space-y-2">
                       {Array.isArray(selectedJob?.requirements) &&
-                        selectedJob.requirements.length > 0 ? (
+                      selectedJob.requirements.length > 0 ? (
                         selectedJob.requirements.map((req, index) => (
                           <li key={index} className="flex items-start">
                             <CheckCircle className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
@@ -1619,7 +1802,7 @@ export default function JobListings() {
                     </h4>
                     <ul className="space-y-2">
                       {Array.isArray(selectedJob?.benefits) &&
-                        selectedJob.benefits.length > 0 ? (
+                      selectedJob.benefits.length > 0 ? (
                         selectedJob.benefits.map((req, index) => (
                           <li key={index} className="flex items-start">
                             <CheckCircle className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
@@ -1641,7 +1824,7 @@ export default function JobListings() {
                     </h4>
                     <div className="flex flex-wrap gap-2">
                       {Array.isArray(selectedJob?.skills) &&
-                        selectedJob.skills.length > 0 ? (
+                      selectedJob.skills.length > 0 ? (
                         selectedJob.skills.map((req, index) => (
                           <li key={index} className="flex items-start">
                             <CheckCircle className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
@@ -1658,8 +1841,6 @@ export default function JobListings() {
 
                   {/* Action Buttons */}
                   <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t">
-                    
-
                     <Button
                       variant="outline"
                       onClick={() =>
@@ -1667,19 +1848,23 @@ export default function JobListings() {
                           ? unsaveJob(Number(selectedJob.id))
                           : saveJob(Number(selectedJob.id))
                       }
-                      className={`flex-1 ${savedJobIds.includes(Number(selectedJob.id))
-                        ? "border-purple-600 text-purple-600"
-                        : ""
-                        }`}
+                      className={`flex-1 ${
+                        savedJobIds.includes(Number(selectedJob.id))
+                          ? "border-purple-600 text-purple-600"
+                          : ""
+                      }`}
                     >
                       <Bookmark
-                        className={`w-4 h-4 mr-2 ${savedJobIds.includes(Number(selectedJob.id)) ? "fill-current" : ""
-                          }`}
+                        className={`w-4 h-4 mr-2 ${
+                          savedJobIds.includes(Number(selectedJob.id))
+                            ? "fill-current"
+                            : ""
+                        }`}
                       />
-                      {savedJobIds.includes(Number(selectedJob.id)) ? "Saved" : "Save Job"}
+                      {savedJobIds.includes(Number(selectedJob.id))
+                        ? "Saved"
+                        : "Save Job"}
                     </Button>
-
-
 
                     <Button
                       variant="outline"
@@ -1818,7 +2003,6 @@ export default function JobListings() {
           </DialogContent>
         </Dialog>
 
-
         {/* Login Required Popup */}
         <Dialog open={showLoginPopup} onOpenChange={setShowLoginPopup}>
           <DialogContent className="max-w-md rounded-2xl p-0 overflow-hidden">
@@ -1837,8 +2021,8 @@ export default function JobListings() {
                   <Eye className="w-5 h-5 text-purple-600" />
                 </div>
                 <p className="text-sm text-gray-700 leading-relaxed">
-                  Login to apply for jobs, track your applications, and get personalized
-                  job recommendations.
+                  Login to apply for jobs, track your applications, and get
+                  personalized job recommendations.
                 </p>
               </div>
 

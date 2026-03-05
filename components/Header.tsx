@@ -24,12 +24,23 @@ export default function Header() {
   const [isEmployerDropdownOpen, setIsEmployerDropdownOpen] = useState(false);
   const [pageLoading, setPageLoading] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [keyword, setKeyword] = useState("");
+  const [location, setLocation] = useState("");
 
 
   const router = useRouter();
   const pathname = usePathname();
 
   // const { data: session } = useSession(); 
+const handleSearch = () => {
+  router.push(`/jobs?keyword=${keyword}&location=${location}`);
+};
+const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  if (e.key === "Enter") {
+    handleSearch();
+  }
+};
 
   useEffect(() => {
     const checkAuth = () => {
@@ -134,7 +145,23 @@ useEffect(() => {
               </div>
             </Link>
           </nav>
+           <div
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsSearchOpen(true);
+              }}
+              className="hidden md:flex items-center bg-gray-100 rounded-full px-4 py-2 w-64 cursor-pointer"
+            >
 
+              <input
+                type="text"
+                placeholder="Search jobs here"
+                className="bg-transparent outline-none text-sm w-full cursor-pointer"
+                readOnly
+              />
+
+              <Search className="w-4 h-4 text-white bg-blue-600 rounded-full p-1 ml-2" />
+            </div>
           {/* Desktop Auth Buttons */}
           <div className="hidden md:flex items-center space-x-4">
             {isAuthenticated ? (
@@ -378,6 +405,59 @@ useEffect(() => {
         )}
       </div>
     </header>
+    {isSearchOpen && (
+  <div
+  onClick={(e) => e.stopPropagation()}
+  className="bg-gray-100 py-6 border-b"
+>
+
+    <div className="max-w-5xl mx-auto">
+
+      <div className="flex items-center bg-white rounded-full shadow-md overflow-hidden">
+
+        <input
+          type="text"
+          placeholder="Enter keyword / designation / companies"
+          className="flex-1 px-6 py-4 outline-none"
+        />
+
+        <div className="border-l px-6 py-4">
+          <select className="outline-none text-gray-500">
+            <option>Select experience</option>
+            <option>Fresher</option>
+            <option>1 Year</option>
+            <option>2 Years</option>
+          </select>
+        </div>
+
+        <input
+          type="text"
+          placeholder="Enter keyword / designation / companies"
+          className="flex-1 px-6 py-4 outline-none"
+          value={keyword}
+          onChange={(e) => setKeyword(e.target.value)}
+           onKeyDown={handleKeyPress}
+        />
+
+        <input
+          type="text"
+          placeholder="Enter location"
+          className="border-l px-6 py-4 outline-none"
+          value={location}
+          onChange={(e) => setLocation(e.target.value)}
+           onKeyDown={handleKeyPress}
+        />
+        <button
+          onClick={handleSearch}
+          className="bg-blue-600 text-white px-8 py-4"
+         >
+          Search
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
     </>
   );
 }
