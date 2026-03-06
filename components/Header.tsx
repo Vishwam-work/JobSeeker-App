@@ -11,6 +11,7 @@ import {
   Menu,
   X,
   Bell,
+  User,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
@@ -27,6 +28,8 @@ export default function Header() {
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [keyword, setKeyword] = useState("");
   const [search, setSearch] = useState("");
+  const [isAboutOpen, setIsAboutOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
 
   const router = useRouter();
@@ -130,25 +133,39 @@ useEffect(() => {
                 <span>Companies</span>
               </div>
             </Link>
-            <Link href="/service">
-              <div className="flex items-center space-x-1 text-gray-700 hover:text-purple-600 cursor-pointer transition-colors">
-                <Users className="w-4 h-4" />
-                <span>Services</span>
-              </div>
-            </Link>
-            <Link href="/contact">
-              <div className="flex items-center space-x-1 text-gray-700 hover:text-purple-600 cursor-pointer transition-colors">
-                <Phone className="w-4 h-4" />
-                <span>Contact</span>
-              </div>
-            </Link>
+           <div className="relative">
+  <div
+    onClick={() => setIsAboutOpen(!isAboutOpen)}
+    className="flex items-center space-x-1 text-gray-700 hover:text-purple-600 cursor-pointer transition-colors"
+  >
+    <Users className="w-4 h-4" />
+    <span>About</span>
+  </div>
+
+  {isAboutOpen && (
+    <div className="absolute top-8 left-0 bg-white shadow-lg border rounded-lg py-2 w-40 z-50">
+      <Link href="/service">
+        <div className="px-4 py-2 hover:bg-gray-100 cursor-pointer">
+          Services
+        </div>
+      </Link>
+
+      <Link href="/contact">
+        <div className="px-4 py-2 hover:bg-gray-100 cursor-pointer">
+          Contact
+        </div>
+      </Link>
+    </div>
+  )}
+</div>
+
           </nav>
            <div
               onClick={(e) => {
                 e.stopPropagation();
                
               }}
-              className="hidden md:flex items-center bg-gray-100 rounded-full px-4 py-2 w-64 cursor-pointer"
+              className="hidden md:flex items-center rounded-full px-4 py-2 w-64 cursor-pointer"
             >
 
               <Input
@@ -168,7 +185,7 @@ useEffect(() => {
                   router.push(`/jobListings?search=${encodeURIComponent(keyword)}`);
                  }
                }}
-               className="w-4 h-4 text-white bg-blue-600 rounded-full p-1 ml-2 cursor-pointer"
+               className="w-5 h-5 text-white bg-blue-600 rounded-full p-1 ml-2 cursor-pointer"
              />
 
 
@@ -246,6 +263,7 @@ useEffect(() => {
                   </Link>
                 </div>
               )}
+              
             </div>
 
            {/* Notification Bell  */}
@@ -290,6 +308,45 @@ useEffect(() => {
             )}
           </div> */}
 
+{/* User Menu */}
+{isAuthenticated && (
+  <div className="relative">
+    <div
+      onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+      className="cursor-pointer"
+    >
+      <User className="w-6 h-6 text-gray-700 hover:text-purple-600" />
+    </div>
+
+    {isUserMenuOpen && (
+      <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border py-2 z-50">
+<div className="px-4 py-2 text-sm text-gray-500 border-b">
+ {localStorage.getItem("full_name")}
+</div>
+
+       <Link href="/applied-jobs">
+  <div className="px-4 py-2 hover:bg-gray-100 cursor-pointer">
+    Applied Jobs
+  </div>
+</Link>
+
+        <Link href="/saved-jobs">
+          <div className="px-4 py-2 hover:bg-gray-100 cursor-pointer">
+            Saved Jobs
+          </div>
+        </Link>
+
+        <div
+          onClick={handleLogout}
+          className="px-4 py-2 hover:bg-red-50 text-red-600 cursor-pointer"
+        >
+          Logout
+        </div>
+
+      </div>
+    )}
+  </div>
+)}
 
           </div>
 
