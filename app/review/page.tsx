@@ -52,11 +52,12 @@ interface ProfileExperience {
 
 interface Education {
   id: string | number;
-  degree: string;
-  field: string;
+  education: string;
+  course: string;
   institution: string;
   year: string | number;
   percentage: string;
+  courseType?: string;
 }
 
 interface Certification {
@@ -133,7 +134,7 @@ interface Certification {
 
       if (res.ok) {
         const data = await res.json();
-        // console.log("Profile Data: before", data);
+        console.log("Profile Data: before", data);
 
  
 
@@ -162,13 +163,16 @@ interface Certification {
             location: exp.location?.name || "N/A",
             description: exp.description,
           })),
-          education: data.educations.map((edu: any) => ({
-            id: edu.id,
-            degree: edu.degree,
-            field: edu.field_of_study,
-            institution: edu.institution,
-            year: edu.year,
-            percentage: edu.percentage,
+          education: data.educations.map((e: any) => ({
+            id: e.id,
+            education: e.education,
+            course: e.course_name || "",   // display name
+            course_id: e.course,           // FK id
+            institution: e.institution,
+            year: e.year,
+            percentage: e.percentage,
+            score_type: e.score_type?.toLowerCase() || "cgpa",
+            course_type: e.course_type?.toLowerCase() || "full_time",
           })),
           certifications: data.certifications.map((cert: any) => ({
             name : cert.name,
@@ -421,13 +425,13 @@ interface Certification {
                         <GraduationCap className="w-6 h-6 text-green-600" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-lg text-gray-900">{edu.degree}</h3>
-                        <p className="text-green-600 font-medium">{edu.field}</p>
+                        <h3 className="font-semibold text-lg text-gray-900">{edu.education}</h3>
+                        <p className="text-green-600 font-medium">{edu.course}</p>
                         <p className="text-gray-600">{edu.institution}</p>
                         <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 text-sm text-gray-600 mt-1 gap-1 sm:gap-0">
                           <div className="flex items-center">
                             {isPDF ? '📅' : <Calendar className="w-4 h-4 mr-1" />}
-                            <span>Graduated: {edu.year}</span>
+                            <span>Year: {edu.year}</span>
                           </div>
                           <div className="flex items-center">
                             {isPDF ? '🎖  ' : <Award className="w-5 h-5 text-purple-600" />}

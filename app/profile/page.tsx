@@ -79,6 +79,8 @@ import { TextField } from "@mui/material";
 import dayjs, { Dayjs } from "dayjs";
 import exp from "node:constants";
 import { profile } from "node:console";
+import { RadioGroup, FormControlLabel, Radio, FormControl, FormLabel } from "@mui/material";
+
 
 
 export default function Profile() {
@@ -91,7 +93,7 @@ export default function Profile() {
       fullName: "",
       email: "",
       gender: "",
-      birthday: "",
+      date_of_birth: "",
       phone: "",
       phoneCode: "",
       countryId: "",
@@ -156,13 +158,17 @@ export default function Profile() {
   });
   
   const [educationForm, setEducationForm] = useState<EducationForm>({
-    degree: "",
-    field: "",
+    education: "",
+    course: "",
+    course_id: null,
     institution: "",
     year: null,
     percentage: "",
     score_type: "",
+    course_type: "",
   });
+  const [courseSuggestions, setCourseSuggestions] = useState<CourseSuggestion[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   const [certificationForm, setCertificationForm] = useState<CertificationForm>({
     name: "",
@@ -246,6 +252,10 @@ useEffect(() => {
   }
 }, [profileData.personalInfo.countryId, uniquePhoneCodes]);
 
+type CourseSuggestion ={
+  id: string | number;
+  name: string;
+}
 type Currency = {
   id: string | number;
   name: string;
@@ -355,7 +365,7 @@ type ProfileData = {
     profile_image?: string | null;
     professional_summary?: string;
     gender?: string;
-    birthday?: string;
+    date_of_birth?: string;
   };
   experience: ProfileExperience[]; 
   education: Education[];
@@ -365,21 +375,25 @@ type ProfileData = {
 };
 type Education = {
   id?: string | number;
-  degree: string;
-  field: string;
+  education: string;
+  course: string | number ;
+  course_id?: number | null;
   institution: string;
   year?: number | string | null; 
   percentage?: string;
   score_type?: string;
+  course_type?: string;
 };
 
 type EducationForm = {
-  degree: string;
-  field: string;
+  education: string;
+  course: string | number ;
+  course_id: string | number | null;
   institution: string;
   year: dayjs.Dayjs | null; 
   percentage: string;
   score_type: string;
+  course_type: string;
 };
 
 type Skill = {
@@ -520,12 +534,14 @@ const getUserKey = () => {
 
   const resetEducationForm = () => {
     setEducationForm({
-      degree: "",
-      field: "",
+      education: "",
+      course: "",
+      course_id: null,
       institution: "",
       year: null,
       percentage: "",
       score_type: "",
+      course_type: "",
     });
   };
 
@@ -624,12 +640,14 @@ const getUserKey = () => {
 
   const handleEditEducation = (edu: Education) => {
     setEducationForm({
-      degree: edu.degree,
-      field: edu.field,
+      education: edu.education,
+      course: edu.course,
+      course_id: edu.course_id ?? null,
       institution: edu.institution,
       year: edu.year ? dayjs(edu.year, "YYYY") : null,
      percentage: edu.percentage ?? "",
       score_type: edu.score_type ? edu.score_type.toLowerCase() : "",
+      course_type: edu.course_type ? edu.course_type.toLowerCase() : "",
     });
     setEditingEducation(edu);
     setShowAddEducation(true);
@@ -637,10 +655,11 @@ const getUserKey = () => {
 
   const handleSaveEducation = () => {
     if (
-      !educationForm.degree ||
-      !educationForm.field ||
+      !educationForm.education ||
+      !educationForm.course_id ||
       !educationForm.institution ||
-      !educationForm.score_type
+      !educationForm.score_type ||
+      !educationForm.course_type
     ) {
       
       toast("Incomplete form", {
@@ -652,12 +671,13 @@ const getUserKey = () => {
 
     const newEducation = {
       id: editingEducation ? editingEducation.id : Date.now(),
-      degree: educationForm.degree,
-      field: educationForm.field,
+      education: educationForm.education,
+      course: educationForm.course_id,
       institution: educationForm.institution,
       year: educationForm.year ? educationForm.year.format("YYYY") : "",
       percentage: educationForm.percentage,
       score_type : educationForm.score_type,
+      course_type : educationForm.course_type,
     };
 
     if (editingEducation) {
@@ -827,6 +847,15 @@ const handleRemoveSkill = (skillToRemove: Skill) => {
     fetchMajors();
   }, []);
 
+  const fetchCourses = async (value: string) => {
+    if (!value) return;
+
+    const res = await fetch(`https://jobseeker-backend-jy1y.onrender.com/master/api/courses/search?q=${value}`);
+    const data = await res.json();
+
+    setCourseSuggestions(data);
+  };
+
   // Fetch and send The Data From API
   // Fetch Profile Data
   useEffect(() => {
@@ -876,8 +905,8 @@ const handleRemoveSkill = (skillToRemove: Skill) => {
             personalInfo: {
               fullName: data.full_name || "",
               email: data.email || "",
-              gender: data.gender ? data.gender.toLowerCase() : "",        
-              birthday: data.birthday || "", 
+              gender: data.gender ? data.gender.toLowerCase() : "",
+              date_of_birth: data.date_of_birth || "", 
               phone: data.phone || "",
               phoneCode: data.phone_code || "",
               countryId: data?.country?.id?.toString() ?? "",
@@ -900,13 +929,20 @@ const handleRemoveSkill = (skillToRemove: Skill) => {
               job_title_id: exp.job_title?.id ?? "",
               location_id: exp.location?.id ?? "",
             })),
-            education: (data.educations || []).map((e: Education) => ({
-              ...e,
-              score_type: e.score_type?.toLowerCase() || "cgpa",
-            })),
+           education: (data.educations || []).map((e: any) => ({
+            id: e.id,
+            education: e.education,
+            course: e.course_name || "",   // display name
+            course_id: e.course,           // FK id
+            institution: e.institution,
+            year: e.year,
+            percentage: e.percentage,
+            score_type: e.score_type?.toLowerCase() || "cgpa",
+            course_type: e.course_type?.toLowerCase() || "full_time",
+          })),
             skills: (data.skills || []).map((skill: Skill) => ({id: skill.id,name: skill.name,})),
             certifications: data.certifications || [],
-            summary: "", // Optional: if you use a summary field
+            summary: "", // Optional: if you use a summary course
           });
         } else {
           console.error("Failed to fetch profile");
@@ -922,7 +958,7 @@ const handleRemoveSkill = (skillToRemove: Skill) => {
     fetchProfile();
   }, []);
 
-//  console.log("Profile Data ---->After Fetch", profileData);
+ console.log("Profile Data ---->After Fetch", profileData);
   useEffect(() => {
     const fetchSavedJobs = async () => {
       const token = localStorage.getItem("auth_token");
@@ -1170,7 +1206,7 @@ useEffect(() => {
       full_name: profileData.personalInfo.fullName,
       email: profileData.personalInfo.email,
       gender: profileData.personalInfo.gender,
-      birthday: profileData.personalInfo.birthday,
+      date_of_birth: profileData.personalInfo.date_of_birth,
       phone: profileData.personalInfo.phone,
       phone_code: profileData.personalInfo.phoneCode,
       experience: profileData.personalInfo.experience,
@@ -1492,6 +1528,24 @@ const removeAppliedJob = async (applicationId: number) => {
                       <span className="text-gray-600">Experience</span>
                       <span className="font-medium">
                         {profileData.personalInfo.experience}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs lg:text-sm">
+                      <span className="text-gray-600">Email</span>
+                      <span className="font-medium">
+                        {profileData.personalInfo.email}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs lg:text-sm">
+                      <span className="text-gray-600">Phone Number</span>
+                      <span className="font-medium">
+                        {profileData.personalInfo.phone}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs lg:text-sm">
+                      <span className="text-gray-600">Gender</span>
+                      <span className="font-medium">
+                        {profileData.personalInfo.gender}
                       </span>
                     </div>
                     {/* <div className="flex items-center justify-between text-xs lg:text-sm">
@@ -1911,58 +1965,90 @@ const removeAppliedJob = async (applicationId: number) => {
                         />
                       </div>
                      {/* Gender */}
-<div>
-  <Label htmlFor="gender" className="text-sm font-medium">
-    Gender
-  </Label>
+                      <div>
+                        <Label htmlFor="gender" className="text-sm font-medium">
+                          Gender
+                        </Label>
 
-  <Select
-    value={profileData.personalInfo.gender || ""}
-    onValueChange={(value) =>
-      setProfileData((prev) => ({
-        ...prev,
-        personalInfo: {
-          ...prev.personalInfo,
-          gender: value,
-        },
-      }))
-    }
-  >
-    <SelectTrigger className="mt-1 h-10 lg:h-11">
-      <SelectValue placeholder="Select gender" />
-    </SelectTrigger>
+                        <Select
+                          value={profileData.personalInfo.gender || ""}
+                          onValueChange={(value) =>
+                            setProfileData((prev) => ({
+                              ...prev,
+                              personalInfo: {
+                                ...prev.personalInfo,
+                                gender: value,
+                              },
+                            }))
+                          }
+                        >
+                          <SelectTrigger className="mt-1 h-10 lg:h-11">
+                            <SelectValue placeholder="Select gender" />
+                          </SelectTrigger>
 
-    <SelectContent>
-      <SelectItem value="male">Male</SelectItem>
-      <SelectItem value="female">Female</SelectItem>
-      <SelectItem value="trans">Trans</SelectItem>
-    </SelectContent>
-  </Select>
-</div>
+                          <SelectContent>
+                            <SelectItem value="male">Male</SelectItem>
+                            <SelectItem value="female">Female</SelectItem>
+                            <SelectItem value="other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
 
-{/* Birthday */}
-<div>
-  <Label htmlFor="birthday" className="text-sm font-medium">
-    Birthday
-  </Label>
+                      {/* date_of_birth */}
+                      <div>
+                        <Label htmlFor="date_of_birth" className="text-sm font-medium">
+                          Date Of Birth
+                        </Label>
 
-  <Input
-    id="birthday"
-    type="date"
-    value={profileData.personalInfo.birthday || ""}
-    max={new Date().toISOString().split("T")[0]}
-    onChange={(e) =>
-      setProfileData((prev) => ({
-        ...prev,
-        personalInfo: {
-          ...prev.personalInfo,
-          birthday: e.target.value,
-        },
-      }))
-    }
-    className="mt-1 h-10 lg:h-11"
-  />
-</div>
+                        {/* <Input
+                          id="date_of_birth"
+                          type="date"
+                          value={profileData.personalInfo.date_of_birth || ""}
+                          max={new Date().toISOString().split("T")[0]}
+                          onChange={(e) =>
+                            setProfileData((prev) => ({
+                              ...prev,
+                              personalInfo: {
+                                ...prev.personalInfo,
+                                date_of_birth: e.target.value,
+                              },
+                            }))
+                          }
+                          className="mt-1 h-10 lg:h-11"
+                        /> */}
+                        <DatePicker
+                          value={
+                            profileData.personalInfo.date_of_birth
+                              ? dayjs(profileData.personalInfo.date_of_birth)
+                              : null
+                          }
+                          onChange={(date) =>
+                            setProfileData((prev) => ({
+                              ...prev,
+                              personalInfo: {
+                                ...prev.personalInfo,
+                                date_of_birth: date ? date.format("YYYY-MM-DD") : "",
+                              },
+                            }))
+                          }
+                          maxDate={dayjs()}
+                          views={["year", "month", "day"]}
+                          format="DD/MM/YYYY"
+                          slotProps={{
+                            textField: {
+                              fullWidth: true,
+                              size: "small",
+                              sx: {
+                                mt: 1,
+                                "& .MuiOutlinedInput-root": {
+                                  height: "44px",
+                                  borderRadius: "6px",
+                                },
+                              },
+                            },
+                          }}
+                        />
+                      </div>
 
 
                       <div>
@@ -2917,10 +3003,10 @@ const removeAppliedJob = async (applicationId: number) => {
                               </div>
                               <div className="min-w-0 flex-1">
                                 <h3 className="font-semibold text-base lg:text-lg text-gray-900 break-words">
-                                  {edu.degree}
+                                  {edu.education}
                                 </h3>
                                 <p className="text-green-600 font-medium text-sm lg:text-base break-words">
-                                  {edu.field}
+                                  {edu.course}
                                 </p>
                                 <p className="text-gray-600 text-sm lg:text-base break-words">
                                   {edu.institution}
@@ -2936,7 +3022,7 @@ const removeAppliedJob = async (applicationId: number) => {
                                     : edu.score_type === "grade"
                                     ? "(Grade)"
                                     : ""}
-                                </span>
+                                  </span>
                                 </div>
                               </div>
                             </div>
@@ -2975,17 +3061,17 @@ const removeAppliedJob = async (applicationId: number) => {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <div>
                                 <Label className="text-sm font-medium text-gray-700">
-                                  Degree *
+                                  Education *
                                 </Label>
 
-                                <Popover open={open} onOpenChange={setOpen}>
+                                {/* <Popover open={open} onOpenChange={setOpen}>
                                   <PopoverTrigger asChild>
                                     <Button
                                       variant="outline"
                                       className="w-full mt-1 h-10 lg:h-11 border rounded px-3 flex items-center justify-between "
                                     >
                                       <span >
-                                      {educationForm.degree || "Select degree"}
+                                      {educationForm.education || "Select education"}
                                       </span>
                                       <ChevronDown className="h-4 w-4 opacity-60" />
                                     </Button>
@@ -2997,14 +3083,14 @@ const removeAppliedJob = async (applicationId: number) => {
                                   >
                                     <Command>
                                       <CommandInput
-                                        placeholder="Search degree..."
+                                        placeholder="Search education..."
                                         value={majorSearch}
                                         onValueChange={setMajorSearch}
                                       />
 
                                       <CommandList className="max-h-60 overflow-y-auto">
                                         <CommandEmpty>
-                                          No degree found.
+                                          No education found.
                                         </CommandEmpty>
 
                                         <CommandGroup>
@@ -3023,7 +3109,7 @@ const removeAppliedJob = async (applicationId: number) => {
                                                 onSelect={() => {
                                                   setEducationForm((prev) => ({
                                                     ...prev,
-                                                    degree: major.name,
+                                                    education: major.name,
                                                   }));
                                                   setOpen(false);
                                                 }}
@@ -3035,23 +3121,89 @@ const removeAppliedJob = async (applicationId: number) => {
                                       </CommandList>
                                     </Command>
                                   </PopoverContent>
-                                </Popover>
+                                </Popover> */}
+                               
+
+                            <Select
+                              value={educationForm.education || ""}
+                              onValueChange={(value) =>
+                                setEducationForm((prev) => ({
+                                   ...prev,
+                                      education: value,
+                                }))
+                              }
+                            >
+                              <SelectTrigger className="mt-1 h-10 lg:h-11">
+                                <SelectValue placeholder="Select education" />
+                              </SelectTrigger>
+
+                              <SelectContent>
+                                <SelectItem value="Doctorate/PhD">Doctorate/PhD</SelectItem>
+                                <SelectItem value="Masters/Post-Graduation">Masters/Post-Graduation</SelectItem>
+                                <SelectItem value="Graduation/Diploma">Graduation/Diploma</SelectItem>
+                              </SelectContent>
+                            </Select>
+                      
                               </div>
 
-                              <div>
-                                <Label htmlFor="field">Field of Study *</Label>
+                              {/* <div>
+                                <Label htmlFor="course">Course *</Label>
                                 <Input
-                                  id="field"
-                                  value={educationForm.field}
+                                  id="course"
+                                  value={educationForm.course}
                                   onChange={(e) =>
                                     setEducationForm((prev) => ({
                                       ...prev,
-                                      field: e.target.value,
+                                      course: e.target.value,
                                     }))
                                   }
                                   placeholder="e.g., Computer Science"
                                   className="mt-1"
                                 />
+                              </div> */}
+                              <div className="relative">
+                                <Label htmlFor="course">Course *</Label>
+
+                                <Input
+                                  id="course"
+                                  value={educationForm.course || ""}
+                                  onChange={(e) => {
+                                    const value = e.target.value;
+
+                                    setEducationForm((prev) => ({
+                                      ...prev,
+                                      course: value,
+                                      course_id: null,
+                                    }));
+
+                                    fetchCourses(value);
+                                    setShowSuggestions(true);
+                                  }}
+                                  placeholder="e.g., Computer Science"
+                                  className="mt-1"
+                                />
+
+                                {showSuggestions && courseSuggestions.length > 0 && (
+                                  <div className="absolute bg-white border w-full mt-1 rounded-md shadow-md z-10">
+                                    {courseSuggestions.map((course) => (
+                                      <div
+                                        key={course.id}
+                                        className="p-2 hover:bg-gray-100 cursor-pointer"
+                                        onClick={() => {
+                                          setEducationForm((prev) => ({
+                                            ...prev,
+                                            course: course.name,
+                                            course_id: course.id,
+                                          }));
+
+                                          setShowSuggestions(false);
+                                        }}
+                                      >
+                                        {course.name}
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
                               </div>
                               <div>
                                 <Label htmlFor="institution">
@@ -3104,6 +3256,7 @@ const removeAppliedJob = async (applicationId: number) => {
 
                                 </div>
                               </div>
+                              
                               <div>
                                 <Label className="text-sm font-medium text-gray-700">
                                   Score
@@ -3176,8 +3329,43 @@ const removeAppliedJob = async (applicationId: number) => {
 
                                 </div>
                               </div>
+                              <div>
+                                <FormControl>
+                                  <FormLabel className="text-sm font-medium">
+                                    Course Type
+                                  </FormLabel>
 
-                             
+                                  <RadioGroup
+                                    row
+                                    value={educationForm.course_type}
+                                    onChange={(e) =>
+                                      setEducationForm((prev) => ({
+                                        ...prev,
+                                        course_type: e.target.value,
+                                      }))
+                                    }
+                                  >
+                                    <FormControlLabel
+                                      value="full_time"
+                                      control={<Radio />}
+                                      label="Full Time"
+                                    />
+
+                                    <FormControlLabel
+                                      value="part_time"
+                                      control={<Radio />}
+                                      label="Part Time"
+                                    />
+
+                                    <FormControlLabel
+                                      value="distance"
+                                      control={<Radio />}
+                                      label="Correspondence / Distance Learning"
+                                    />
+                                  </RadioGroup>
+                                </FormControl>
+                              </div>
+
                             </div>
                             <div className="flex justify-end space-x-2">
                               <Button
