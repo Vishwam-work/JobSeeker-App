@@ -307,16 +307,7 @@ export default function Register() {
               <p>Find a job and grow your career</p>
             </div>
           </div>
-          <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4 text-sm mb-4">
-            <h3 className="font-semibold text-indigo-800 mb-2">
-              Quick Tips to Register
-            </h3>
-            <ul className="list-disc pl-5 text-indigo-700 space-y-1">
-              <li>Verify your email before clicking Register.</li>
-              <li>Upload resume to get noticed faster.</li>
-              <li>Use a strong password.</li>
-            </ul>
-          </div>
+          
         </div>
 
         {/* RIGHT FORM */}
@@ -363,7 +354,11 @@ export default function Register() {
                 {errors.email && (
                   <p className="text-sm text-red-500 mt-1">{errors.email}</p>
                 )}
-
+                {!errors.email && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Verify your email before clicking Register.
+                    </p>
+                  )}
                 {isOtpVerified && (
                   <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 text-green-600 w-5 h-5" />
                 )}
@@ -377,6 +372,7 @@ export default function Register() {
               >
                 {isOtpVerified ? "Email Verified" : "Verify Email OTP"}
               </Button>
+             
             </div>
 
             {/* Password */}
@@ -401,10 +397,13 @@ export default function Register() {
                     }));
                   }}
                 />
-                {errors.password && (
-                  <p className="text-sm text-red-500 mt-1">{errors.password}</p>
-                )}
-
+                {errors.password ? (
+               <p className="text-sm text-red-500 mt-1">{errors.password}</p>
+                 ) : (
+                   <p className="text-xs text-gray-500 mt-1">
+                    Use a strong password.
+                   </p>
+                 )}
                 <button
                   type="button"
                   className="absolute inset-y-0 right-0 pr-3 flex items-center"
@@ -520,9 +519,13 @@ export default function Register() {
                   }}
                 />
               </div>
-              {errors.phone && (
-                <p className="text-sm text-red-500 mt-1">{errors.phone}</p>
-              )}
+              {errors.phone ? (
+               <p className="text-sm text-red-500 mt-1">{errors.phone}</p>
+             ) : (
+               <p className="text-xs text-gray-500 mt-1">
+                 Enter a valid 10-digit mobile number.
+               </p>
+             )}             
             </div>
 
             {/* Work Status */}
@@ -651,9 +654,13 @@ export default function Register() {
                 </div>
               )}
 
-              {resumeError && (
-                <p className="text-sm text-red-500 mt-2">{resumeError}</p>
-              )}
+               {resumeError ? (
+               <p className="text-sm text-red-500 mt-2">{resumeError}</p>
+             ) : (
+               <p className="text-xs text-gray-500 mt-2">
+                 Upload your resume in PDF or DOC format.
+               </p>
+             )}
             </div>
 
             <div className="flex items-start gap-2 mt-4">

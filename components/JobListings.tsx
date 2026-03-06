@@ -107,7 +107,8 @@ export default function JobListings() {
   const [showMorePosted, setShowMorePosted] = useState(false);
   const [showMoreCompanies, setShowMoreCompanies] = useState(false);
   const [sortBy, setSortBy] = useState("relevance");
-
+const [dateFilter, setDateFilter] = useState("all");
+const [showDateDropdown, setShowDateDropdown] = useState(false);
   const experienceList = ["0-1", "2-4", "3-5", "5-8", "8+"];
 
   const jobTypes = ["Full Time", "Part Time", "Contract", "Internship"];
@@ -118,7 +119,32 @@ export default function JobListings() {
     { label: "Last week", value: "7" },
     { label: "Last month", value: "30" },
   ];
+const now = new Date();
 
+const sortedJobs = [...filteredJobs]
+  .filter((job) => {
+    if (!job.created_at || dateFilter === "all") return true;
+
+    const jobDate = new Date(job.created_at);
+    const diffDays =
+      (now.getTime() - jobDate.getTime()) / (1000 * 60 * 60 * 24);
+
+    if (dateFilter === "24h") return diffDays <= 1;
+    if (dateFilter === "7d") return diffDays <= 7;
+    if (dateFilter === "30d") return diffDays <= 30;
+    if (dateFilter === "year") return diffDays <= 365;
+
+    return true;
+  })
+  .sort((a, b) => {
+    if (sortBy === "date") {
+      const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+      const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+
+      return dateB - dateA;
+    }
+    return 0;
+  });
   const sortedExperience = [
     ...experienceList.filter((e) => filters.experience.includes(e)),
     ...experienceList.filter((e) => !filters.experience.includes(e)),
@@ -168,15 +194,15 @@ export default function JobListings() {
         : prev.companies.filter((c) => c !== company),
     }));
   };
-  const sortedJobs = [...filteredJobs].sort((a, b) => {
-    if (sortBy === "date") {
-      const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
-      const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+  // const sortedJobs = [...filteredJobs].sort((a, b) => {
+  //   if (sortBy === "date") {
+  //     const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+  //     const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
 
-      return dateB - dateA;
-    }
-    return 0;
-  });
+  //     return dateB - dateA;
+  //   }
+  //   return 0;
+  // });
 
   interface Location {
     id: string | number;
@@ -740,9 +766,16 @@ useEffect(() => {
     "country",
     "state",
     "city",
+    // "education",
     "experiences",
   ];
-
+  //  const REQUIRED_PROFILE_FIELDS = [
+  //    "personalInfo",
+  //   "experience",
+  //   "resume",
+  //   "education",
+  //   "skills",
+  // ];
   const isProfileComplete = (profile: Record<string, any>) => {
     return REQUIRED_PROFILE_FIELDS.every((field) => {
       const value = profile?.[field];
@@ -1426,7 +1459,8 @@ useEffect(() => {
               <p className="text-gray-600">
                 Showing {filteredJobs.length} of {jobs.length} jobs
               </p>
-              <div className="flex items-center space-x-2 text-sm">
+
+              <div className="flex items-center space-x-2 text-sm relative">
                 <Filter className="w-4 h-4 text-gray-400" />
 
                 <span className="text-gray-500">Sort by:</span>
@@ -1445,7 +1479,10 @@ useEffect(() => {
                 <span className="text-gray-400">|</span>
 
                 <button
-                  onClick={() => setSortBy("date")}
+                  onClick={() => {
+                    setSortBy("date");
+                    setShowDateDropdown(!showDateDropdown);
+                 }}
                   className={`px-2 py-1 rounded ${
                     sortBy === "date"
                       ? "text-blue-600 font-semibold"
@@ -1454,8 +1491,52 @@ useEffect(() => {
                 >
                   Date
                 </button>
-              </div>
-            </div>
+
+                 {showDateDropdown && (
+                   <div className="absolute top-8 right-0 bg-white border rounded-lg shadow-lg w-40 z-50">
+                     <button
+                       onClick={() => {
+                         setDateFilter("24h");
+                         setShowDateDropdown(false);
+                       }}
+                       className="block w-full text-left px-3 py-2 hover:bg-gray-100"
+                     >
+                       Last 24 hours
+                     </button>
+             
+                     <button
+                       onClick={() => {
+                         setDateFilter("7d");
+                         setShowDateDropdown(false);
+                       }}
+                       className="block w-full text-left px-3 py-2 hover:bg-gray-100"
+                     >
+                      Last 7 days
+                        </button>
+                
+                        <button
+                          onClick={() => {
+                            setDateFilter("30d");
+                            setShowDateDropdown(false);
+                          }}
+                          className="block w-full text-left px-3 py-2 hover:bg-gray-100"
+                        >
+                          Last 30 days
+                        </button>
+                
+                        <button
+                          onClick={() => {
+                            setDateFilter("year");
+                            setShowDateDropdown(false);
+                          }}
+                          className="block w-full text-left px-3 py-2 hover:bg-gray-100"
+                        >
+                          This Year
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
 
             <div className="space-y-4 md:space-y-6">
               {sortedJobs.length === 0 ? (
