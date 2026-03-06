@@ -545,6 +545,15 @@ export default function JobListings() {
     setFilteredJobs(filtered);
   }, [jobs, filters]);
 
+useEffect(() => {
+  if (searchFromUrl) {
+    setFilters((prev) => ({
+      ...prev,
+      search: searchFromUrl,
+    }));
+  }
+}, [searchFromUrl]);
+
   const handleFilterChange = (key: keyof typeof filters, value: any) => {
     setFilters((prev) => ({
       ...prev,
