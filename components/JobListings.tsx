@@ -1577,7 +1577,14 @@ useEffect(() => {
                                       {job.title}
                                     </a>
                                   </h3>
-
+                                    {appliedJobs.includes(Number(job.id)) && (
+                                     <Badge
+                                       onClick={() => window.location.assign("/applied-jobs")}
+                                       className="bg-green-100 text-green-700 text-xs cursor-pointer hover:bg-green-200"
+                                     >
+                                       Applied
+                                     </Badge>
+                                    )}
                                   {job.urgentHiring && (
                                     <Badge className="bg-red-100 text-red-800 text-xs">
                                       Urgent

@@ -73,6 +73,8 @@ export default function Register() {
   const [isOtpOpen, setIsOtpOpen] = useState(false);
   const [otp, setOtp] = useState("");
   const [isOtpVerified, setIsOtpVerified] = useState(false);
+  const [timer, setTimer] = useState(59);
+  const [canResend, setCanResend] = useState(false);
   const [errors, setErrors] = useState({
     email: "",
     password: "",
@@ -124,6 +126,22 @@ export default function Register() {
         : `${(size / (1024 * 1024)).toFixed(1)} MB`;
   };
 
+useEffect(() => {
+  let interval: NodeJS.Timeout;
+
+  if (isOtpOpen && timer > 0) {
+    interval = setInterval(() => {
+      setTimer((prev) => prev - 1);
+    }, 1000);
+  }
+
+  if (timer === 0) {
+    setCanResend(true);
+  }
+
+  return () => clearInterval(interval);
+}, [isOtpOpen, timer]);
+
   // ----------------------------
   // SEND OTP
   // ----------------------------
@@ -152,6 +170,40 @@ export default function Register() {
       toast.warning("Something went wrong");
     }
   };
+
+  //resend otp
+// const handleResendOTP = async () => {
+//    console.log("Resend OTP clicked");
+//   try {
+//     const res = await fetch(
+//       "https://jobseeker-backend-jy1y.onrender.com/api/send_otp/",
+//       {
+//         method: "POST",
+//         headers: { "Content-Type": "application/json" },
+//         body: JSON.stringify({ email }),
+//       }
+//     );
+
+//     console.log("API Status:", res.status);
+
+//     const data = await res.json();
+//     console.log("API Response:", data);
+
+//     if (!res.ok) {
+//       toast.error(data.error || "Failed to resend OTP");
+//       return;
+//     }
+
+//     toast.success("OTP Resent Successfully");
+
+//     setTimer(59);
+//     setCanResend(false);
+
+//   } catch (error) {
+//     console.error(error);
+//     toast.error("Something went wrong");
+//   }
+// };
 
   // ----------------------------
   // VERIFY OTP
@@ -360,7 +412,7 @@ export default function Register() {
                     </p>
                   )}
                 {isOtpVerified && (
-                  <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 text-green-600 w-5 h-5" />
+                  <CheckCircle className="absolute right-3 top-6 -translate-y-1/2 text-green-600 w-5 h-5" />
                 )}
               </div>
 
@@ -406,7 +458,7 @@ export default function Register() {
                  )}
                 <button
                   type="button"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  className="absolute right-3 top-6 -translate-y-1/2 text-gray-500"
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? (
@@ -668,16 +720,26 @@ export default function Register() {
                 checked={agreeTerms}
                 onCheckedChange={(val) => setAgreeTerms(val === true)}
               />
-              <p className="text-sm text-gray-600">
-                By clicking Register, you agree to the{" "}
-                <Link href="/terms" className="text-blue-600 font-medium">
-                  Terms and Conditions
-                </Link>{" "}
-                &{" "}
-                <Link href="/privacy" className="text-blue-600 font-medium">
-                  Privacy Policy
-                </Link>
-              </p>
+             <p className="text-sm text-gray-600">
+               By clicking Register, you agree to the{" "}
+               <Link
+                 href="/terms-and-conditions"
+                 target="_blank"
+                 rel="noopener noreferrer"
+                 className="text-blue-600 font-medium"
+               >
+                 Terms and Conditions
+               </Link>{" "}
+               &{" "}
+               <Link
+                 href="/privacy-policy"
+                 target="_blank"
+                 rel="noopener noreferrer"
+                 className="text-blue-600 font-medium"
+               >
+                 Privacy Policy
+               </Link>
+             </p>
             </div>
 
             {/* Promotions */}
@@ -713,25 +775,44 @@ export default function Register() {
       </div>
 
       {/* OTP Modal */}
-      <Dialog open={isOtpOpen} onOpenChange={setIsOtpOpen}>
-        <DialogContent>
+          <Dialog open={isOtpOpen} onOpenChange={setIsOtpOpen}>
+        <DialogContent className="max-w-md">
           <div className="text-center">
-            <h1 className="text-xl font-bold mb-4">Enter OTP</h1>
+
+            <h2 className="text-xl font-semibold mb-2">      
+        Verify email
+            </h2>
+
+            <div className="flex justify-center items-center gap-2 mb-6 text-sm text-gray-600">      
+        <span>We just sent a verification code to <b>{email}</b></span>
+       
+            </div>
 
             <InputOTP maxLength={6} value={otp} onChange={setOtp}>
-              <InputOTPGroup>
+              <InputOTPGroup className="gap-3 justify-center">
                 {[0, 1, 2, 3, 4, 5].map((i) => (
-                  <InputOTPSlot key={i} index={i} />
+                  <InputOTPSlot
+                    key={i}
+                    index={i}
+                    className="w-12 h-12 text-lg rounded-lg border border-blue-400"
+                  />
                 ))}
               </InputOTPGroup>
             </InputOTP>
 
+             <div className="mt-4 text-sm text-gray-600">
+              <p className="text-xs text-gray-500 mt-4">
+                Your OTP should arrive in {timer} seconds
+              </p>
+             </div>      
+
             <Button
-              className="w-full mt-4 bg-indigo-600 text-white"
+              className="w-full mt-5 bg-blue-600 hover:bg-blue-700 text-white h-11"
               onClick={handleVerifyOTP}
             >
               Verify
             </Button>
+
           </div>
         </DialogContent>
       </Dialog>

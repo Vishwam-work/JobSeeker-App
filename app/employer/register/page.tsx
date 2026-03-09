@@ -1268,46 +1268,43 @@ export default function EmployerRegister() {
 
 
       <Dialog open={isOtpOpen} onOpenChange={setIsOtpOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-md">
           <div className="text-center">
-            <h1 className="text-xl font-bold mb-4">Enter OTP</h1>
+       
+            <h2 className="text-xl font-semibold mb-2">
+               Verify email
+            </h2>
+
+            <div className="text-sm text-gray-600 mb-6">
+              We just sent a verification code to <b>{email}</b>
+            </div>
 
             <InputOTP maxLength={6} value={otp} onChange={setOtp}>
-              <InputOTPGroup>
-                {[0, 1, 2, 3, 4, 5].map((i) => (
-                  <InputOTPSlot key={i} index={i} />
+              <InputOTPGroup className="gap-3 justify-center">
+                {[0,1,2,3,4,5].map((i)=>(
+                   <InputOTPSlot
+                    key={i}
+                    index={i}
+                    className="w-12 h-12 text-lg rounded-lg border border-blue-400"
+                  />
                 ))}
               </InputOTPGroup>
             </InputOTP>
 
-            <Button
-              className="w-full mt-4 bg-indigo-600 text-white"
+            <p className="text-xs text-gray-500 mt-4">
+              Your OTP should arrive in {timeLeft} seconds
+            </p>
+
+             <Button
+              className="w-full mt-5 bg-blue-600 hover:bg-blue-700 text-white h-11"
               onClick={handleVerifyOTP}
             >
               Verify
             </Button>
 
-            {/* Footer */}
-            <div className="mt-4 text-sm text-gray-600">
-              {timeLeft > 0 ? (
-                <p>
-                  Resend OTP in{" "}
-                  <span className="font-semibold text-indigo-600">
-                    {timeLeft}s
-                  </span>
-                </p>
-              ) : (
-                <button
-                  onClick={handleResendOTP}
-                  className="text-indigo-600 font-semibold hover:underline"
-                >
-                  Resend OTP
-                </button>
-              )}
-            </div>
           </div>
-        </DialogContent>
-      </Dialog>
+         </DialogContent>
+       </Dialog>
 
     </div>
   );

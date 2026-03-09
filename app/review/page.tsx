@@ -54,9 +54,13 @@ interface Education {
   id: string | number;
   education: string;
   course: string;
+  // optional fields used during data mapping
+  course_id?: string | number;
   institution: string;
   year: string | number;
   percentage: string;
+  score_type?: string;
+  course_type?: string;
   courseType?: string;
 }
 
@@ -435,7 +439,15 @@ interface Certification {
                           </div>
                           <div className="flex items-center">
                             {isPDF ? '🎖  ' : <Award className="w-5 h-5 text-purple-600" />}
-                            <span>Score: {edu.percentage}</span>
+                            <span>Score: {edu.percentage}
+                              {edu.score_type === "percentage"
+                                    ? "(Percentage)"
+                                    : edu.score_type === "cgpa"
+                                    ? "(CGPA)"
+                                    : edu.score_type === "grade"
+                                    ? "(Grade)"
+                                    : ""}
+                            </span>
                           </div>
                         </div>
                       </div>
