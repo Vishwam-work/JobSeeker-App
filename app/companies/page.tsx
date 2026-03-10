@@ -6,13 +6,13 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Header from "@/components/Header";
-import SearchSection from "@/components/SearchSection";
 import HeroCarousel from "@/components/Carousel";
 import Footer from "@/components/Footer";
 
 export default function CompaniesPage() {
   const [allCompanies, setAllCompanies] = useState<CompanyListItem[]>([]);
-  const [visibleCount, setVisibleCount] = useState(9);
+  const [page, setPage] = useState(1);
+  const itemsPerPage = 8;
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
 
@@ -88,6 +88,15 @@ export default function CompaniesPage() {
     );
   });
 
+const startIndex = (page - 1) * itemsPerPage;
+
+const paginatedCompanies = filteredCompanies.slice(
+  startIndex,
+  startIndex + itemsPerPage
+);
+
+const totalPages = Math.ceil(filteredCompanies.length / itemsPerPage);
+
   if (loading)
     return (
       <div className="p-6 max-w-5xl mx-auto space-y-6 animate-pulse">
@@ -121,7 +130,7 @@ export default function CompaniesPage() {
 
       <main className="p-6 max-w-7xl mx-auto">
         {/* Search bar */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-center mb-6">
           <Input
             placeholder="Search companies or industries..."
             value={search}
@@ -138,51 +147,150 @@ export default function CompaniesPage() {
           <p className="text-gray-500">No companies found.</p>
         ) : (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-             {filteredCompanies.slice(0, visibleCount).map((company) => (
-              <Link
-               href={`/companies/${company.id}`}
-               target="_blank"
-               className="block"
-               >
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-                  <Card className="p-4 cursor-pointer hover:shadow-md transition">
-                    <CardContent className="flex items-center gap-4 p-0">
-                      {/* <Image
-                        src={company.logo}
-                        alt={company.name || "Company logo"}
-                        width={76}
-                        height={76}
-                        className="w-14 h-14 rounded object-contain bg-white p-1"
-                      /> */}
+  {/* Sidebar filters */}
+  <div className="lg:col-span-3 bg-white border rounded-lg p-4 h-fit">
+    <h3 className="font-semibold mb-4">All Filters</h3>
 
-                      <div className="flex-1">
-                        <h2 className="font-semibold text-base">
-                          {company.name}
-                        </h2>
-                        <p className="text-sm text-gray-600 mt-1">
-                          ⭐ {company.rating} ({company.reviews} reviews)
-                        </p>
-                        <p className="text-xs text-gray-500 mt-1">
-                          {company.industry}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {company.locations.join(", ")}
-                        </p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              ))}
-            </div>
+    <div className="mb-6">
+      <p className="text-sm font-medium mb-2">Company type</p>
 
-            {visibleCount < filteredCompanies.length && (
-              <div className="flex justify-center mt-6">
-                <Button onClick={() => setVisibleCount((prev) => prev + 9)}>
-                  Load More
-                </Button>
+      <div className="space-y-2 text-sm">
+        <label className="flex gap-2">
+          <input type="checkbox" /> Indian MNC
+        </label>
+
+        <label className="flex gap-2">
+          <input type="checkbox" /> Startup
+        </label>
+
+        <label className="flex gap-2">
+          <input type="checkbox" /> MNC
+        </label>
+      </div>
+    </div>
+
+    <div>
+      <p className="text-sm font-medium mb-2">Location</p>
+
+      <Input placeholder="Search Location" className="mb-2" />
+
+      <div className="space-y-2 text-sm">
+        <label className="flex gap-2">
+          <input type="checkbox" /> Bengaluru
+        </label>
+
+        <label className="flex gap-2">
+          <input type="checkbox" /> Delhi
+        </label>
+
+        <label className="flex gap-2">
+          <input type="checkbox" /> Mumbai
+        </label>
+      </div>
+    </div>
+  </div>
+
+  {/* Companies */}
+  <div className="lg:col-span-9">
+
+    <p className="text-sm text-gray-500 mb-4">
+      Showing {filteredCompanies.length} companies
+    </p>
+
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
+      {paginatedCompanies.map((company) => (
+
+        <Link
+          key={company.id}
+          href={`/companies/${company.id}`}
+          target="_blank"
+        >
+
+          <Card className="p-4 hover:shadow-md transition cursor-pointer">
+            <CardContent className="flex items-center gap-4 p-0">
+
+              <div className="w-12 h-12 bg-gray-100 rounded flex items-center justify-center font-bold">
+                {company.name.charAt(0)}
               </div>
-            )}
+
+              <div>
+                <h3 className="font-semibold">{company.name}</h3>
+
+                <p className="text-sm text-gray-500">
+                  ⭐ {company.rating} ({company.reviews} reviews)
+                </p>
+
+                <p className="text-xs text-gray-500">
+                  {company.industry}
+                </p>
+
+                <p className="text-xs text-gray-400">
+                  {company.locations.join(", ")}
+                </p>
+
+              </div>
+
+            </CardContent>
+          </Card>
+
+        </Link>
+
+      ))}
+    </div>
+
+  </div>
+</div>
+<div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-8 border-t pt-6">
+
+  <div className="text-sm text-gray-500">
+    Showing{" "}
+    <span className="font-medium">
+      {Math.min((page - 1) * itemsPerPage + 1, filteredCompanies.length)}
+    </span>{" "}
+    to{" "}
+    <span className="font-medium">
+      {Math.min(page * itemsPerPage, filteredCompanies.length)}
+    </span>{" "}
+    of{" "}
+    <span className="font-medium">{filteredCompanies.length}</span>
+  </div>
+
+  <div className="flex items-center gap-2">
+
+    <Button
+      variant="outline"
+      size="icon"
+      disabled={page === 1}
+      onClick={() => {
+        setPage(page - 1);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }}
+    >
+      ‹
+    </Button>
+
+    <span className="text-sm font-medium">
+      Page {page} of {totalPages}
+    </span>
+
+    <Button
+      variant="outline"
+      size="icon"
+      disabled={page === totalPages}
+      onClick={() => {
+        setPage(page + 1);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }}
+    >
+      ›
+    </Button>
+
+  </div>
+
+</div>
+            
           </>
         )}
       </main>

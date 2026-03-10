@@ -609,6 +609,41 @@ const getUserKey = () => {
 
       return;
     }
+    const today = dayjs();
+  const minDate = dayjs("1960-01-01");
+
+  // ✅ Start date validation
+  if (experienceForm.startDate.isAfter(today)) {
+    toast.error("Invalid date", {
+      description: "Start date cannot be in the future.",
+    });
+    return;
+  }
+
+  if (experienceForm.startDate.isBefore(minDate)) {
+    toast.error("Invalid date", {
+      description: "Start date cannot be before 1960.",
+    });
+    return;
+  }
+
+  // ✅ End date validation
+  if (!experienceForm.isCurrentJob && experienceForm.endDate) {
+    if (experienceForm.endDate.isBefore(experienceForm.startDate)) {
+      toast.error("Invalid date", {
+        description: "End date cannot be before start date.",
+      });
+      return;
+    }
+
+    if (experienceForm.endDate.isAfter(today)) {
+      toast.error ("Invalid date", {
+        description: "End date cannot be in the future.",
+      });
+      return;
+    }
+  }
+
 
     const formattedStart = experienceForm.startDate?.format("YYYY-MM-DD");
     const formattedEnd = experienceForm.isCurrentJob
@@ -687,6 +722,24 @@ const getUserKey = () => {
 
       return;
     }
+        if (educationForm.year) {
+    const selectedYear = educationForm.year.year();
+    const currentYear = dayjs().year();
+
+    if (selectedYear > currentYear) {
+      toast.error("Invalid year", {
+        description: "Year of graduation cannot be in the future.",
+      });
+      return;
+    }
+
+    if (selectedYear < 1960) {
+      toast.error("Invalid year", {
+        description: "Year of graduation cannot be before 1960.",
+      });
+      return;
+    }
+  }
 
     const newEducation = {
       id: editingEducation ? editingEducation.id : Date.now(),
@@ -749,6 +802,31 @@ const getUserKey = () => {
 
       return;
     }
+
+  // ✅ Year validation
+  if (!certificationForm.year) {
+    toast.error("Year required", {
+      description: "Please select the year obtained.",
+    });
+    return;
+  }
+
+  const selectedYear = certificationForm.year.year();
+  const currentYear = dayjs().year();
+
+  if (selectedYear > currentYear) {
+    toast.error("Invalid year", {
+      description: "Year obtained cannot be in the future.",
+    });
+    return;
+  }
+
+  if (selectedYear < 1960) {
+    toast.error("Invalid year", {
+      description: "Year obtained cannot be before 1960.",
+    });
+    return;
+  }
 
     const newCertification = {
       id: editingCertification ? editingCertification.id : Date.now(),
@@ -1656,28 +1734,94 @@ const removeAppliedJob = async (applicationId: number) => {
           </div>
         </div>
 
-{/* Action Buttons: Upload Resume, Download Resume, Preview Profile*/}
-        <div className="mt-3 space-y-3">
-        <Dialog open={isDialogOpen.resume} onOpenChange={(open) => setIsDialogOpen(prev => ({ ...prev, resume: open }))}>
-          <DialogTrigger asChild>
-            <Button className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-sm lg:text-base h-10 lg:h-11">
-              <Upload className="w-4 h-4 mr-2" />
-              Upload Resume
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-md rounded-2xl p-6">
-            {/* Dialog Content as in your existing code */}
-          </DialogContent>
-        </Dialog>
+            {/* Action Buttons: Upload Resume, Download Resume, Preview Profile*/}
+                    <div className="mt-3 space-y-3">
+                    <Dialog open={isDialogOpen.resume} onOpenChange={(open) => setIsDialogOpen(prev => ({ ...prev, resume: open }))}>
+                      <DialogTrigger asChild>
+                        <Button className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-sm lg:text-base h-10 lg:h-11">
+                          <Upload className="w-4 h-4 mr-2" />
+                          Upload Resume
+                        </Button>
+                      </DialogTrigger>
+                     
+                      <DialogContent className="sm:max-w-md rounded-2xl p-6">
+                        <div className="mt-6 space-y-4">
+                     <DialogHeader>
+                      
+                      <p className="text-sm text-gray-500 mt-1">
+                        Supported formats: PDF, DOCX — Max size 2MB
+                      </p>
+                    </DialogHeader>
+                      {/* ✅ Uploaded Preview Card */}
+                      {resumeFile && (
+                        <div className="border rounded-xl p-4 bg-gray-50 shadow-sm">
+                          <div className="flex items-center gap-4">
+                            
+                            {/* File Icon */}
+                            <div className="w-12 h-12 flex items-center justify-center bg-blue-100 rounded-lg">
+                              <span className="text-blue-600 font-semibold text-sm">
+                                {resumeFile?.name.split(".").pop()?.toUpperCase()}
+                              </span>
+                            </div>
 
-        {profileData?.personalInfo?.resume && (
-          <a href={profileData.personalInfo.resume} download target="_blank" rel="noopener noreferrer">
-            <Button variant="outline" className="w-full text-sm lg:text-base h-10 lg:h-11">
-              <Download className="w-4 h-4 mr-2" />
-              Download Resume
-            </Button>
-          </a>
-        )}
+                            {/* File Info */}
+                            <div className="flex-1">
+                              <p className="text-sm font-medium text-gray-800 truncate">
+                                {resumeFile.name}
+                              </p>
+                              {/* <p className="text-xs text-green-600 mt-1">
+                                { (resumeFile.size / (1024 * 1024)).toFixed(1) } MB uploaded successfully
+                              </p> */}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* ✅ Replace Section */}
+                      <div className="border rounded-xl p-3 flex items-center justify-between bg-white shadow-sm">
+                        <div className="flex items-center gap-3 overflow-hidden">
+                          <div className="w-8 h-8 flex items-center justify-center bg-blue-100 rounded-md">
+                            <span className="text-blue-600 text-xs font-bold">
+                              {resumeFile?.name.split(".").pop()?.toUpperCase() || "PDF"}
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-700 truncate">
+                            {resumeFile?.name || "No file selected"}
+                          </p>
+                        </div>
+
+                        <button
+                          onClick={() => fileInputRef.current?.click()}
+                          className="text-blue-600 text-sm font-medium hover:underline"
+                        >
+                          Replace
+                        </button>
+                      </div>
+
+                      {/* Hidden File Input */}
+                      <input
+                        type="file"
+                        accept=".pdf,.doc,.docx"
+                        onChange={handleResumeUpload}
+                        ref={fileInputRef}
+                        className="hidden"
+                      />
+
+                      {/* ✅ Continue Button */}
+                      <button
+                        onClick={uploadResume}
+                        disabled={!resumeFile}
+                        className={`w-full mt-4 h-11 rounded-xl text-white font-medium transition
+                        bg-gradient-to-r from-indigo-500 to-blue-600
+                        hover:from-indigo-600 hover:to-blue-700
+                        ${!resumeFile ? "opacity-50 cursor-not-allowed" : ""}`}
+                      >
+                        Continue →
+                      </button>
+
+                    </div>
+                </DialogContent>
+              </Dialog>
 
         {isProfileSubmitted && (
           <button
@@ -3099,32 +3243,49 @@ const removeAppliedJob = async (applicationId: number) => {
                                   Year of Graduation *
                                   </Label>
                                   <div className="mt-1">
-                                <DatePicker
-                                  value={educationForm.year ?? undefined} 
-                                  onChange={(date) =>
-                                    setEducationForm((prev) => ({
-                                      ...prev,
-                                      year: date,
-                                    }))
-                                  }
-                                  views={["year"]}
-                                  disableFuture
-                                  maxDate={dayjs()} 
-                                  slotProps={{
-                                    textField: {
-                                      fullWidth: true,
-                                      size: "small",
-                                      sx: {
-                                        mt: 1,
-                                        "& .MuiOutlinedInput-root": {
-                                          height: "44px",
-                                          borderRadius: "6px",
-                                          padding: "0 12px",
-                                        },
-                                      },
-                                    },
-                                  }}
-                                 />
+                               <DatePicker
+  views={["year"]}
+  value={educationForm.year ?? null}
+  disableFuture
+  maxDate={dayjs()}
+  onChange={(date) => {
+    if (!date) return;
+
+    const currentYear = dayjs().year();
+    const selectedYear = date.year();
+
+    if (selectedYear > currentYear) {
+      return; // future year block
+    }
+
+    setEducationForm((prev) => ({
+      ...prev,
+      year: date,
+    }));
+  }}
+  onError={(error, value) => {
+    if (error === "maxDate") {
+      setEducationForm((prev) => ({
+        ...prev,
+        year: dayjs(), // reset to current year
+      }));
+    }
+  }}
+  slotProps={{
+    textField: {
+      fullWidth: true,
+      size: "small",
+      sx: {
+        mt: 1,
+        "& .MuiOutlinedInput-root": {
+          height: "44px",
+          borderRadius: "6px",
+          padding: "0 12px",
+        },
+      },
+    },
+  }}
+/>
 
                                 </div>
                               </div>

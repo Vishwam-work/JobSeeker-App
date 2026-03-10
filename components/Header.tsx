@@ -353,29 +353,7 @@ useEffect(() => {
 
      
 
-      {/* Profile Performance */}
-      {/* <div className="p-4 border-b">
-        <div className="flex justify-between text-sm text-gray-500 mb-3">
-          <span>Your profile performance</span>
-          <span>Last 90 days</span>
-        </div>
-
-        <div className="grid grid-cols-2 bg-gray-50 rounded-lg">
-          <div className="text-center py-4">
-            <p className="text-xl font-semibold">1</p>
-            <p className="text-xs text-gray-500">
-              Search Appearances
-            </p>
-          </div>
-
-          <div className="text-center py-4 border-l">
-            <p className="text-xl font-semibold">0</p>
-            <p className="text-xs text-gray-500">
-              Recruiter Actions
-            </p>
-          </div>
-        </div>
-      </div> */}
+    
 
       {/* Menu */}
       <div className="flex-1">
@@ -391,13 +369,6 @@ useEffect(() => {
     <div className="px-6 py-3 hover:bg-gray-100 cursor-pointer flex items-center gap-3">
       <Bookmark size={18} />
       Saved Jobs
-    </div>
-  </Link>
-
-  <Link href="">
-    <div className="px-6 py-3 hover:bg-gray-100 cursor-pointer flex items-center gap-3">
-      <Compass size={18} />
-      Career guidance
     </div>
   </Link>
 

@@ -80,12 +80,20 @@ export default function Register() {
     password: "",
     phone: "",
   });
+  const [otpError, setOtpError] = useState("");
   const validateEmail = (value: string) => {
     const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!value) return "Email is required";
     if (!regex.test(value)) return "Enter valid email";
     return "";
   };
+
+  const validateOtp = (value: string) => {
+  if (!value) return "OTP is required";
+  if (value.length !== 6) return "Enter 6 digit OTP";
+  if (!/^\d+$/.test(value)) return "OTP must be numbers only";
+  return "";
+};
 
   const validatePassword = (value: string) => {
     if (!value) return "Password is required";
@@ -209,6 +217,11 @@ useEffect(() => {
   // VERIFY OTP
   // ----------------------------
   const handleVerifyOTP = async () => {
+     const error = validateOtp(otp);
+  if (error) {
+    setOtpError(error);
+    return;
+  }
     try {
       const res = await fetch(
         "https://jobseeker-backend-jy1y.onrender.com/api/verify-otp/",
@@ -225,7 +238,7 @@ useEffect(() => {
         toast.error(data.error || "Invalid OTP");
         return;
       }
-
+      setOtpError("");
       setIsOtpVerified(true);
       setIsOtpOpen(false);
       toast.success("OTP Verified Successfully!");
@@ -788,7 +801,13 @@ useEffect(() => {
        
             </div>
 
-            <InputOTP maxLength={6} value={otp} onChange={setOtp}>
+            <InputOTP 
+            maxLength={6} 
+            value={otp}  
+            onChange={(value) => {
+            setOtp(value);
+            setOtpError(""); 
+            }}>
               <InputOTPGroup className="gap-3 justify-center">
                 {[0, 1, 2, 3, 4, 5].map((i) => (
                   <InputOTPSlot
@@ -799,6 +818,10 @@ useEffect(() => {
                 ))}
               </InputOTPGroup>
             </InputOTP>
+
+            {otpError && (
+        <p className="text-sm text-red-500 mt-2">{otpError}</p>
+      )}
 
              <div className="mt-4 text-sm text-gray-600">
               <p className="text-xs text-gray-500 mt-4">

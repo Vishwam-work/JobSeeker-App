@@ -47,7 +47,8 @@ export default function JobDetailsPage() {
     fetch("https://jobseeker-backend-jy1y.onrender.com/employeer/api/all-jobs/")
       .then((res) => res.json())
       .then((data) => {
-        const job = data.find((j: any) => j.id === Number(jobId));
+        
+        const job = data.results.find((j: any) => String(j.id) === String(jobId));
         setSelectedJob(job);
       })
       .catch(console.error);
