@@ -161,8 +161,8 @@ interface Certification {
           experience: data.experiences.map((exp: any) => ({
             id: exp.id,
             company: exp.company,
-            position: exp.job_title?.title || "N/A",  
-            category: exp.category?.name || "N/A",
+            position: exp.job_title|| "N/A",  
+            category: exp.category|| "N/A",
             duration: `${exp.start_date} - ${exp.end_date || "Present"}`,
             location: exp.location?.name || "N/A",
             description: exp.description,
@@ -170,13 +170,13 @@ interface Certification {
           education: data.educations.map((e: any) => ({
             id: e.id,
             education: e.education,
-            course: e.course_name || "",   // display name
-            course_id: e.course,           // FK id
+            course: e.course || "", 
             institution: e.institution,
             year: e.year,
             percentage: e.percentage,
             score_type: e.score_type?.toLowerCase() || "cgpa",
             course_type: e.course_type?.toLowerCase() || "full_time",
+            
           })),
           certifications: data.certifications.map((cert: any) => ({
             name : cert.name,
@@ -385,9 +385,9 @@ interface Certification {
                         <Building2 className="w-6 h-6 text-purple-600" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-lg text-gray-900">{getJobTitleName(exp.position)}</h3>
+                        <h3 className="font-semibold text-lg text-gray-900">{exp.position}</h3>
                         <p className="text-purple-600 font-medium">{exp.company}</p>
-                        <h2 className='text-gray-400 font-semibold'>{getCategoryName(exp.category)}</h2>
+                        <h2 className='text-gray-400 font-semibold'>{exp.category}</h2>
                         <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 text-sm text-gray-600 mt-1 gap-1 sm:gap-0">
                           <div className="flex items-center">
                             {isPDF ? '🕒' : <Clock className="w-4 h-4" />}
@@ -431,7 +431,8 @@ interface Certification {
                       <div className="flex-1 min-w-0">
                         <h3 className="font-semibold text-lg text-gray-900">{edu.education}</h3>
                         <p className="text-green-600 font-medium">{edu.course}</p>
-                        <p className="text-gray-600">{edu.institution}</p>
+                        <p className="text-gray-600">University:{edu.institution}</p>
+                        <p className="text-gray-600">Course Type:{edu.course_type}</p>
                         <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 text-sm text-gray-600 mt-1 gap-1 sm:gap-0">
                           <div className="flex items-center">
                             {isPDF ? '📅' : <Calendar className="w-4 h-4 mr-1" />}
