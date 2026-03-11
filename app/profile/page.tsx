@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-// import { FaGraduationCap, FaAward } from "react-icons/fa";
+import { debounce } from "lodash";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -151,8 +152,8 @@ export default function Profile() {
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [experienceForm, setExperienceForm] = useState<ExperienceForm>({
     company: "",
-    category_id: "",
-    job_title_id: "",
+    job_title: "",
+    category: "",
     location_id: "",
     startDate: null,
     endDate: null,
@@ -163,7 +164,6 @@ export default function Profile() {
   const [educationForm, setEducationForm] = useState<EducationForm>({
     education: "",
     course: "",
-    course_id: null,
     institution: "",
     year: null,
     percentage: "",
@@ -172,6 +172,15 @@ export default function Profile() {
   });
   const [courseSuggestions, setCourseSuggestions] = useState<CourseSuggestion[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+
+  const [companySuggestions, setCompanySuggestions] = useState<any[]>([]);
+  const [showCompanySuggestions, setShowCompanySuggestions] = useState(false);
+
+  const [jobCategorySuggestions, setJobCategorySuggestions] = useState<any[]>([]);
+  const [showJobCategorySuggestions, setShowJobCategorySuggestions] = useState(false);
+
+  const [jobTitleSuggestions, setJobTitleSuggestions] = useState<any[]>([]);
+  const [showJobTitleSuggestions, setShowJobTitleSuggestions] = useState(false);
 
   const [certificationForm, setCertificationForm] = useState<CertificationForm>({
     name: "",
@@ -185,7 +194,7 @@ export default function Profile() {
     { id: "education", label: "Education", icon: GraduationCap },
     { id: "skills", label: "Skills", icon: Award },
     { id: "certifications", label: "Certifications", icon: Award },
-    { id: "save", label: "Jobs", icon: Briefcase },
+    // { id: "save", label: "Jobs", icon: Briefcase },
   ];
   const [countries, setCountries] = useState<Country[]>([]);
   const [states, setStates] = useState<StateItem[]>([]);
@@ -209,20 +218,8 @@ export default function Profile() {
     "90+ days",
   ]);
 
-const formatCurrency = (amount: number, currencyCode?: string) => {
-  if (!currencyCode) {
-    return amount.toLocaleString(); // fallback if currency missing
-  }
 
-  try {
-    return new Intl.NumberFormat(undefined, {
-      style: "currency",
-      currency: currencyCode,
-    }).format(amount);
-  } catch (error) {
-    return amount.toLocaleString(); // fallback if invalid code
-  }
-};
+
 const handleSummaryChange = (value: string) => {
   const words = value.trim().split(/\s+/).filter(Boolean);
 
@@ -292,8 +289,8 @@ type JobTitle = {
 
 type ExperienceForm = {
   company: string;
-  category_id: string;
-  job_title_id: string;
+  job_title: string;
+  category: string;
   location_id: string;
   startDate: dayjs.Dayjs | null;
   endDate: dayjs.Dayjs | null;
@@ -308,15 +305,9 @@ type ApiExperience = {
   end_date?: string | null;
   description?: string;
 
-  job_title?: {
-    id?: string | number;
-    title?: string;
-  };
+  job_title?: string;
 
-  category?: {
-    id?: string | number;
-    name?: string;
-  };
+  category?: string;
 
   location?: {
     id?: string | number;
@@ -327,24 +318,16 @@ type ProfileExperience = {
   id?: string | number;
   company: string;
 
-  category?: {
-    id: string | number;
-    name?: string;
-  };
+  category?: string;
 
-  job_title?: {
-    id: string | number;
-    title?: string;
-  };
-
+  job_title?: string;
   location?: {
     id: string | number;
     name?: string;
   };
 
   // form / payload fields
-  category_id?: string;
-  job_title_id?: string;
+
   location_id?: string;
 
   start_date?: string;
@@ -396,7 +379,6 @@ type Education = {
   id?: string | number;
   education: string;
   course: string | number ;
-  course_id?: number | null;
   institution: string;
   year?: number | string | null; 
   percentage?: string;
@@ -407,7 +389,6 @@ type Education = {
 type EducationForm = {
   education: string;
   course: string | number ;
-  course_id: string | number | null;
   institution: string;
   year: dayjs.Dayjs | null; 
   percentage: string;
@@ -462,28 +443,6 @@ interface SavedJob {
   };
 }
 
-const handleDownload = async () => {
-  const url = profileData?.personalInfo?.resume;
-
-  if (!url) return;
-
-  try {
-    const response = await fetch(url);
-    const blob = await response.blob();
-    const blobUrl = window.URL.createObjectURL(blob);
-
-    const link = document.createElement("a");
-    link.href = blobUrl;
-    link.download = "resume.pdf"; // file name
-    document.body.appendChild(link);
-    link.click();
-
-    link.remove();
-    window.URL.revokeObjectURL(blobUrl);
-  } catch (error) {
-    console.error("Download failed:", error);
-  }
-};
 
 
 useEffect(() => {
@@ -540,8 +499,8 @@ const getUserKey = () => {
   const resetExperienceForm = () => {
     setExperienceForm({
       company: "",
-      category_id: "",
-      job_title_id: "",
+      job_title: "",
+      category: "",
       location_id: "",
       startDate: null,
       endDate: null,
@@ -555,7 +514,6 @@ const getUserKey = () => {
     setEducationForm({
       education: "",
       course: "",
-      course_id: null,
       institution: "",
       year: null,
       percentage: "",
@@ -583,12 +541,12 @@ const getUserKey = () => {
 
     setExperienceForm({
       company: exp.company || "",
-      job_title_id: exp.job_title?.id?.toString() || "",
+      job_title: exp.job_title || "",
       startDate: startDate,
       endDate: endDate,
       isCurrentJob: !exp.end_date,
       location_id: exp.location?.id?.toString() || "",
-      category_id: exp.category?.id?.toString() || "",
+      category: exp.category || "",
       description: exp.description || "",
     });
     setEditingExperience(exp);
@@ -598,8 +556,8 @@ const getUserKey = () => {
   const handleSaveExperience = () => {
     if (
       !experienceForm.company ||
-      !experienceForm.category_id ||
-      !experienceForm.job_title_id ||
+      !experienceForm.job_title ||
+      !experienceForm.category ||
       !experienceForm.startDate
     ) {
       
@@ -653,8 +611,8 @@ const getUserKey = () => {
     const newExperience = {
       id: editingExperience ? editingExperience.id : Date.now(),
       company: experienceForm.company,
-      category_id: experienceForm.category_id,
-      job_title_id: experienceForm.job_title_id,
+      job_title: experienceForm.job_title,
+      category: experienceForm.category,
       start_date: formattedStart,
       end_date: formattedEnd,
       location_id: experienceForm.location_id,
@@ -696,7 +654,6 @@ const getUserKey = () => {
     setEducationForm({
       education: edu.education,
       course: edu.course,
-      course_id: edu.course_id ?? null,
       institution: edu.institution,
       year: edu.year ? dayjs(edu.year, "YYYY") : null,
      percentage: edu.percentage ?? "",
@@ -710,7 +667,7 @@ const getUserKey = () => {
   const handleSaveEducation = () => {
     if (
       !educationForm.education ||
-      !educationForm.course_id ||
+      !educationForm.course ||
       !educationForm.institution ||
       !educationForm.score_type ||
       !educationForm.course_type
@@ -744,7 +701,7 @@ const getUserKey = () => {
     const newEducation = {
       id: editingEducation ? editingEducation.id : Date.now(),
       education: educationForm.education,
-      course: educationForm.course_id,
+      course: educationForm.course,
       institution: educationForm.institution,
       year: educationForm.year ? educationForm.year.format("YYYY") : "",
       percentage: educationForm.percentage,
@@ -962,14 +919,48 @@ const handleRemoveSkill = (skillToRemove: Skill) => {
     fetchMajors();
   }, []);
 
-  const fetchCourses = async (value: string) => {
+  const fetchCourses = debounce(async (value: string) => {
     if (!value) return;
 
     const res = await fetch(`https://jobseeker-backend-jy1y.onrender.com/master/api/courses/search?q=${value}`);
     const data = await res.json();
 
     setCourseSuggestions(data);
-  };
+  }, 300);
+
+const fetchCompanies = debounce(async (value: string) => {
+  if (!value) return;
+
+  const res = await fetch(
+    `https://jobseeker-backend-jy1y.onrender.com/master/api/companies?q=${value}`
+  );
+
+  const data = await res.json();
+  setCompanySuggestions(data);
+}, 300);
+
+const fetchJobCategories = debounce(async (value: string) => {
+  if (!value) return;
+
+  const res = await fetch(
+    `https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_category/?q=${value}`
+  );
+
+  const data = await res.json();
+  setJobCategorySuggestions(data);
+},300);
+
+const fetchJobTitles = debounce(async (value: string) => {
+  if (!value) return;
+
+  const res = await fetch(
+    `https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_title/?q=${value}`
+  );
+
+  const data = await res.json();
+  console.log("Fetched job titles:", data);
+  setJobTitleSuggestions(data);
+},300);
 
   // Fetch and send The Data From API
   // Fetch Profile Data
@@ -1040,14 +1031,14 @@ const handleRemoveSkill = (skillToRemove: Skill) => {
             },
             experience: (data.experiences || []).map((exp: ProfileExperience) => ({
               ...exp,
-              category_id: exp.category?.id ?? "",
-              job_title_id: exp.job_title?.id ?? "",
+              job_title: exp.category,
+              category: exp.job_title,
               location_id: exp.location?.id ?? "",
             })),
            education: (data.educations || []).map((e: any) => ({
             id: e.id,
             education: e.education,
-            course: e.course_name || "",   // display name
+            course: e.course,   // display name
             course_id: e.course,           // FK id
             institution: e.institution,
             year: e.year,
@@ -1157,29 +1148,6 @@ const handleRemoveSkill = (skillToRemove: Skill) => {
       .catch((err) => console.error(err));
   }, []);
 
-  useEffect(() => {
-    fetch(
-      "https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_category/"
-    )
-      .then((res) => res.json())
-      .then((data) => {
-        setJobCategories(data);
-      })
-      .catch((err) => console.error(err));
-  }, []);
-
-  useEffect(() => {
-    if (experienceForm.category_id) {
-      fetch(
-        `https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_title/?category=${experienceForm.category_id}`
-      )
-        .then((res) => res.json())
-        .then((data) => {
-          setJobTitles(data);
-        })
-        .catch((err) => console.error(err));
-    }
-  }, [experienceForm.category_id]);
 
   const uploadResume = async () => {
     if (!resumeFile) {
@@ -1356,8 +1324,8 @@ if (wordCount < 5) {
       experiences: profileData.experience.map(exp => ({
         id: exp.id,
         company: exp.company,
-        category_id: exp.category_id ? Number(exp.category_id) : null,
-        job_title_id: exp.job_title_id ? Number(exp.job_title_id) : null,
+        job_title: exp.job_title,
+        category: exp.category,
         location_id: exp.location_id ? Number(exp.location_id) : null,
         start_date: exp.start_date,
         end_date: exp.end_date,
@@ -1408,6 +1376,8 @@ if (wordCount < 5) {
             resume: data.resume || profileData.personalInfo.resume,
             profile_image: data.profile_image || profileData.personalInfo.profile_image,
             professional_summary: data.professional_summary || "",
+            gender: data.gender || "",
+            date_of_birth: data.date_of_birth || "",
           },
           experience: data.experiences || [],
           education: data.educations || [],
@@ -2602,14 +2572,14 @@ const removeAppliedJob = async (applicationId: number) => {
                               </div>
                               <div className="min-w-0 flex-1">
                                 <h3 className="font-semibold text-base lg:text-lg text-gray-900 break-words">
-                                  {getJobTitleName(exp.job_title_id ?? "")}
+                                  {exp.job_title}
                                 </h3>
                                 <p className="text-purple-600 font-medium text-sm lg:text-base break-words">
                                   {exp.company}
                                 </p>
                                 {exp.category && (
                                   <p className="text-gray-600 text-sm break-words">
-                                    {getCategoryName(exp.category_id ?? "")}
+                                    {exp.category}
                                   </p>
                                 )}
                                 <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 text-xs lg:text-sm text-gray-600 mt-1 gap-1 sm:gap-0">
@@ -2670,53 +2640,48 @@ const removeAppliedJob = async (applicationId: number) => {
                           </CardHeader>
                           <CardContent className="space-y-4">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">                           
-                              <div>
-                               <Label className="text-sm font-medium">Company *</Label>
-                             
-                               <Popover open={companyOpen} onOpenChange={setCompanyOpen}>
-                                 <PopoverTrigger asChild>
-                                   <button className="w-full mt-1 h-10 lg:h-11 border rounded px-3 flex items-center justify-between ">
-                                     <span >
-                                     {experienceForm.company || "Select company"}
-                                      </span>
-                                      <ChevronDown className="h-4 w-4 opacity-60" />
-                                   </button>
-                                 </PopoverTrigger>
-                             
-                                 <PopoverContent className="p-0 w-[300px]">
-                                   <Command
-                                     filter={(value, search) =>
-                                       value.toLowerCase().startsWith(search.toLowerCase()) ? 1 : 0
-                                     }
-                                   >
-                                     <CommandInput placeholder="Search company..." />
-                             
-                                     <CommandList>
-                                       {companies.length === 0 && (
-                                         <CommandItem disabled>No companies found</CommandItem>
-                                       )}
-                             
-                                       {companies.map((company: Company) => (
-                                         <CommandItem
-                                           key={company.id}
-                                           value={company.name}
-                                           onSelect={() =>
-                                             setExperienceForm((prev) => ({
-                                               ...prev,
-                                               company: company.name,
-                                             }))
+                              <div className="relative">
+                                <Label className="text-sm font-medium">Company *</Label>
 
-                                           }
-                                           onPointerDown={() => setCompanyOpen(false)}
-                                         >
-                                           {company.name}
-                                         </CommandItem>
-                                       ))}
-                                     </CommandList>
-                                   </Command>
-                                 </PopoverContent>
-                               </Popover>
-                              </div>                           
+                                <Input
+                                  id="company"
+                                  value={experienceForm.company || ""}
+                                  onChange={(e) => {
+                                    const value = e.target.value;
+
+                                    setExperienceForm((prev) => ({
+                                      ...prev,
+                                      company: value,
+                                    }));
+
+                                    fetchCompanies(value);
+                                    setShowCompanySuggestions(true);
+                                  }}
+                                  placeholder="e.g., Infosys"
+                                  className="mt-1"
+                                />
+
+                                {showCompanySuggestions && companySuggestions.length > 0 && (
+                                  <div className="absolute bg-white border w-full mt-1 rounded-md shadow-md z-10">
+                                    {companySuggestions.map((company) => (
+                                      <div
+                                        key={company.id}
+                                        className="p-2 hover:bg-gray-100 cursor-pointer"
+                                        onClick={() => {
+                                          setExperienceForm((prev) => ({
+                                            ...prev,
+                                            company: company.name,
+                                          }));
+
+                                          setShowCompanySuggestions(false);
+                                        }}
+                                      >
+                                        {company.name}
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
                               <div>
                                 <Label className="text-sm font-medium">Location *</Label>
 
@@ -2768,85 +2733,93 @@ const removeAppliedJob = async (applicationId: number) => {
                                 </Popover>
                               </div>
                               <div>
-                                <Label className="text-sm font-medium">
-                                  Job Category *
-                                </Label>
-                                <Select
-                                  value={
-                                    experienceForm.category_id.toString() || ""
-                                  }
-                                  onValueChange={(value) => {
+                              
+                                <div className="relative">
+                                <Label className="text-sm font-medium">Job Category *</Label>
+
+                                <Input
+                                  value={experienceForm.category || ""}
+                                  onChange={(e) => {
+                                    const value = e.target.value;
+
                                     setExperienceForm((prev) => ({
                                       ...prev,
-                                      category_id: value,
-                                      jobTitle: "", // Reset job title when category changes
+                                      category: value,
                                     }));
-                                    setJobTitles([]); // Clear job titles
+
+                                    fetchJobCategories(value);
+                                    setShowJobCategorySuggestions(true);
                                   }}
-                                >
-                                  <SelectTrigger className="mt-1 h-10 lg:h-11">
-                                    <SelectValue placeholder="Select job category" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {jobCategories.length === 0 && (
-                                      <SelectItem value="loading" disabled>
-                                        Loading categories...
-                                      </SelectItem>
-                                    )}
-                                    {jobCategories.map((category) => (
-                                      <SelectItem
+                                  placeholder="e.g., Web Development"
+                                  className="mt-1"
+                                />
+
+                                {showJobCategorySuggestions && jobCategorySuggestions.length > 0 && (
+                                  <div className="absolute bg-white border w-full mt-1 rounded-md shadow-md z-10">
+                                    {jobCategorySuggestions.map((category) => (
+                                      <div
                                         key={category.id}
-                                        value={category.id.toString()}
+                                        className="p-2 hover:bg-gray-100 cursor-pointer"
+                                        onClick={() => {
+                                          setExperienceForm((prev) => ({
+                                            ...prev,
+                                            category: category.name,
+                                          }));
+
+                                          setShowJobCategorySuggestions(false);
+                                        }}
                                       >
                                         {category.name}
-                                      </SelectItem>
+                                      </div>
                                     ))}
-                                  </SelectContent>
-                                </Select>
+                                  </div>
+                                )}
+                              </div>
                               </div>
 
                               <div>
-                                <Label className="text-sm font-medium">
-                                  Job Title *
-                                </Label>
-                                <Select
-                                  value={
-                                    experienceForm.job_title_id.toString() || ""
-                                  }
-                                  onValueChange={(value) =>
+                                <div className="relative">
+                                <Label className="text-sm font-medium">Job Title *</Label>
+
+                                <Input
+                                  value={experienceForm.job_title || ""}
+                                  onChange={(e) => {
+                                    const value = e.target.value;
+
                                     setExperienceForm((prev) => ({
                                       ...prev,
-                                      job_title_id: value,
-                                    }))
-                                  }
-                                  disabled={!experienceForm.category_id}
-                                >
-                                  <SelectTrigger className="mt-1 h-10 lg:h-11">
-                                    <SelectValue
-                                      placeholder={
-                                        experienceForm.category_id
-                                          ? "Select job title"
-                                          : "Select category first"
-                                      }
-                                    />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {jobTitles.length === 0 &&
-                                      experienceForm.category_id && (
-                                        <SelectItem value="loading" disabled>
-                                          Loading job titles...
-                                        </SelectItem>
-                                      )}
-                                    {jobTitles.map((title) => (
-                                      <SelectItem
-                                        key={title.id}
-                                        value={title.id.toString()}
+                                      job_title: value,
+                                    }));
+
+                                    fetchJobTitles(value);
+                                    setShowJobTitleSuggestions(true);
+                                  }}
+                                  placeholder="e.g., Software Engineer"
+                                  className="mt-1"
+                                />
+
+                                {showJobTitleSuggestions && jobTitleSuggestions.length > 0 && (
+                                  <div className="absolute bg-white border w-full mt-1 rounded-md shadow-md z-10">
+                                    {jobTitleSuggestions.map((job) => (
+                                      <div
+                                        key={job.id}
+                                        className="p-2 hover:bg-gray-100 cursor-pointer"
+                                        onClick={() => {
+                                          setExperienceForm((prev) => ({
+                                            ...prev,
+                                            job_title: job.title,
+                                          }));
+
+                                          setShowJobTitleSuggestions(false);
+                                        }}
                                       >
-                                        {title.title}
-                                      </SelectItem>
+                                        {job.title}
+                                      </div>
                                     ))}
-                                  </SelectContent>
-                                </Select>
+                                  </div>
+                                )}
+                              </div>
+                                
                               </div>
 
                               <div>
@@ -2860,7 +2833,7 @@ const removeAppliedJob = async (applicationId: number) => {
                                     }));
                                     setDateError(validateDates(date, experienceForm.endDate));
                                   }}
-                                  maxDate={dayjs()}   
+                                  maxDate={dayjs()}
                                   views={["day", "month", "year"]}
                                   format="DD/MM/YYYY"
                                   slotProps={{
@@ -2920,7 +2893,7 @@ const removeAppliedJob = async (applicationId: number) => {
                                          isCurrentJob: isChecked,
                                          endDate: isChecked ? null : prev.endDate,
                                        }));
-                                     }}                                  
+                                     }}
                                   />
                                   <Label
                                     htmlFor="currentJob"
@@ -3209,7 +3182,6 @@ const removeAppliedJob = async (applicationId: number) => {
                                           setEducationForm((prev) => ({
                                             ...prev,
                                             course: course.name,
-                                            course_id: course.id,
                                           }));
 
                                           setShowSuggestions(false);
