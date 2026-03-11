@@ -85,6 +85,13 @@ export default function EmployerRegister() {
   const router = useRouter();
   const [email, setemail] = useState("");
   const [showText, setShowText] = useState(false)
+
+  // Error states
+  const [websiteError, setWebsiteError] = useState<string>("");
+  const [descriptionError, setDescriptionError] = useState<string>("");
+  const [phoneError, setPhoneError] = useState<string>("");
+
+
   const [formData, setFormData] = useState<FormData>({
     // Company Information
     companyName: "",
@@ -227,7 +234,14 @@ export default function EmployerRegister() {
     id: string; // or number, depending on your API
     name: string;
   }
+const validateWebsite = (url?: string): boolean => {
+  if (!url) return true;
 
+  const pattern =
+    /^(https?:\/\/)?([\w\-])+\.{1}([a-zA-Z]{2,})([\w\-._~:/?#[\]@!$&'()*+,;=.]+)?$/;
+
+  return pattern.test(url);
+};
   const handleResendOTP = async () => {
     const response = await handlesendotp()
     setTimeLeft(OTP_EXPIRY_SECONDS);
@@ -651,15 +665,28 @@ export default function EmployerRegister() {
                           >
                             Website
                           </Label>
+
                           <Input
                             id="website"
-                            value={formData.website}
-                            onChange={(e) =>
-                              handleInputChange("website", e.target.value)
-                            }
+                            value={formData.website || ""}
+                            onChange={(e) => {
+                              const value = e.target.value;
+
+                              handleInputChange("website", value);
+
+                              if (value && !validateWebsite(value)) {
+                                setWebsiteError("Enter a valid website URL");
+                              } else {
+                                setWebsiteError("");
+                              }
+                            }}
                             placeholder="https://www.company.com"
                             className="mt-1 h-12"
                           />
+
+                          {websiteError && (
+                            <p className="text-red-500 text-xs mt-1">{websiteError}</p>
+                          )}
                         </div>
                       </div>
 
@@ -668,18 +695,31 @@ export default function EmployerRegister() {
                           htmlFor="description"
                           className="text-sm font-medium text-gray-700"
                         >
-                          Company Description
+                          Company Description <span className="text-red-500">*</span>
                         </Label>
+
                         <Textarea
                           id="description"
-                          value={formData.description}
-                          onChange={(e) =>
-                            handleInputChange("description", e.target.value)
-                          }
+                          value={formData.description || ""}
+                          onChange={(e) => {
+                            const value = e.target.value;
+
+                            handleInputChange("description", value);
+
+                            if (!value.trim()) {
+                              setDescriptionError("Company description is required");
+                            } else {
+                              setDescriptionError("");
+                            }
+                          }}
                           rows={4}
                           placeholder="Tell us about your company..."
                           className="mt-1"
                         />
+
+                        {descriptionError && (
+                          <p className="text-red-500 text-xs mt-1">{descriptionError}</p>
+                        )}
                       </div>
                     </div>
                   )}
@@ -734,7 +774,124 @@ export default function EmployerRegister() {
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                        <Label
+                          htmlFor="email"
+                          className="text-sm font-medium text-gray-700"
+                        >
+                          Email Address *
+                        </Label>
+
+                        <div className="relative mt-1">
+                          <Input
+                            id="email"
+                            type="email"
+                            value={email}
+                            onChange={(e) => handleEmailChange(e.target.value)}
+                            placeholder="Enter email address"
+                            className={`h-12 pr-10 ${
+                              IsOtpVerified ? "border-green-500 focus:ring-green-500" : ""
+                            }`}
+                             required
+                           />
+
+                          {IsOtpVerified && (
+                            <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 text-green-600 w-5 h-5" />
+                          )}
+                        </div>
+
+                        <Button
+                          type="button"
+                           className="mt-2"
+                           disabled={!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || IsOtpVerified}
+                           onClick={handlesendotp}
+                         >
+                           {IsOtpVerified ? "Email Verified" : "Verify Email OTP"}
+                         </Button>
+                       </div>
+
+                        <div>
+                          <div>
+                            <Label
+                              htmlFor="phone"
+                              className="text-sm font-medium text-gray-700"
+                            >
+                              Phone Number *
+                            </Label>
+
+                            <div className="flex gap-2 mt-1">
+
+                              <input
+                                className="w-20 h-10 lg:h-11 border rounded px-3 bg-gray-100 text-gray-700"
+                                value={
+                                  formData.phoneCode
+                                    ? `+${formData.phoneCode}`
+                                    : ""
+                                }
+                                readOnly
+
+                              />
+
+                              <Input
+                                id="phone"
+                                type="tel"
+                                inputMode="numeric"
+                                pattern="[0-9]*"
+                                value={formData.phone}
+                                onChange={(e) => {
+                                  const value = e.target.value;
+
+                                  if (!/^\d*$/.test(value)) return;
+
+                                  if (value.length > 10) return;
+
+                                  handleInputChange("phone", value);
+                                  if (value.length > 0 && value.length < 10) {
+                                    setPhoneError("Phone number must be 10 digits");
+                                  } else {
+                                    setPhoneError("");
+                                  }
+                                }}
+                                className="flex-1 h-10 lg:h-11"
+                                placeholder="Enter phone number"
+                                maxLength={10}
+                                required
+                              />
+
+                            </div>
+                            {phoneError ? (
+                              <p className="text-red-500 text-xs mt-1">{phoneError}</p>
+                            ):(
+                              <p className="text-xs text-gray-500 mt-1">
+                                Enter a valid 10-digit mobile number.
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div>
+                        <Label
+                          htmlFor="address"
+                          className="text-sm font-medium text-gray-700"
+                        >
+                          Company Address *
+                        </Label>
+                        <Textarea
+                          id="address"
+                          value={formData.address}
+                          onChange={(e) =>
+                            handleInputChange("address", e.target.value)
+                          }
+                          rows={3}
+                          placeholder="Enter complete address"
+                          className="mt-1"
+                          required
+                        />
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         {/* Country Dropdown */}
                         <div>
                           <Label className="text-sm font-medium text-gray-700">
@@ -941,110 +1098,6 @@ export default function EmployerRegister() {
                           </Popover>
                         </div>
                       </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                        <Label
-                          htmlFor="email"
-                          className="text-sm font-medium text-gray-700"
-                        >
-                          Email Address *
-                        </Label>
-
-                        <div className="relative mt-1">
-                          <Input
-                            id="email"
-                            type="email"
-                            value={email}
-                            onChange={(e) => handleEmailChange(e.target.value)}
-                            placeholder="Enter email address"
-                            className={`h-12 pr-10 ${
-                              IsOtpVerified ? "border-green-500 focus:ring-green-500" : ""
-                            }`}
-                             required
-                           />
-
-                          {IsOtpVerified && (
-                            <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 text-green-600 w-5 h-5" />
-                          )}
-                        </div>
-
-                        <Button
-                          type="button"
-                           className="mt-2"
-                           disabled={!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || IsOtpVerified}
-                           onClick={handlesendotp}
-                         >
-                           {IsOtpVerified ? "Email Verified" : "Verify Email OTP"}
-                         </Button>
-                       </div>
-
-                        <div>
-                          <div>
-                            <Label
-                              htmlFor="phone"
-                              className="text-sm font-medium text-gray-700"
-                            >
-                              Phone Number *
-                            </Label>
-
-                            <div className="flex gap-2 mt-1">
-
-                              <input
-                                className="w-20 h-10 lg:h-11 border rounded px-3 bg-gray-100 text-gray-700"
-                                value={
-                                  formData.phoneCode
-                                    ? `+${formData.phoneCode}`
-                                    : ""
-                                }
-                                readOnly
-
-                              />
-
-                              <Input
-                                id="phone"
-                                type="tel"
-                                inputMode="numeric"
-                                pattern="[0-9]*"
-                                value={formData.phone}
-                                onChange={(e) => {
-                                  const value = e.target.value;
-
-                                  if (!/^\d*$/.test(value)) return;
-
-                                  if (value.length > 10) return;
-
-                                  handleInputChange("phone", value);
-                                }}
-                                className="flex-1 h-10 lg:h-11"
-                                placeholder="Enter phone number"
-                                maxLength={10}
-                                required
-                              />
-
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div>
-                        <Label
-                          htmlFor="address"
-                          className="text-sm font-medium text-gray-700"
-                        >
-                          Company Address *
-                        </Label>
-                        <Textarea
-                          id="address"
-                          value={formData.address}
-                          onChange={(e) =>
-                            handleInputChange("address", e.target.value)
-                          }
-                          rows={3}
-                          placeholder="Enter complete address"
-                          className="mt-1"
-                          required
-                        />
                         <div>
                           <Label
                             htmlFor="pincode"
@@ -1064,27 +1117,7 @@ export default function EmployerRegister() {
                           />
                         </div>
                       </div>
-                      {/*
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <Label
-                            htmlFor="city"
-                            className="text-sm font-medium text-gray-700"
-                          >
-                            City *
-                          </Label>
-                          <Input
-                            id="city"
-                            value={formData.city}
-                            onChange={(e) =>
-                              handleInputChange("city", e.target.value)
-                            }
-                            placeholder="Enter city"
-                            className="mt-1 h-12"
-                            required
-                          />
-                        </div>
-                      </div> */}
+                      
                     </div>
                   )}
 

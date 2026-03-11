@@ -108,6 +108,7 @@ export default function Profile() {
       expectedSalary: null,
       noticePeriod: "",
       professional_summary: "",
+      profile_image: "",
     },
     experience: [],
     education: [],
@@ -1617,7 +1618,8 @@ const removeAppliedJob = async (applicationId: number) => {
       <div className="flex flex-col lg:flex-row items-center lg:items-start gap-6">
         
         {/* Profile Photo + Circular Progress */}
-        <div className="relative w-28 h-28">
+        <div className="flex flex-col items-center w-28">
+          <div className="relative w-28 h-28">
           <div className="absolute inset-0 flex items-center justify-center rounded-full border-4 border-gray-200">
             <button className="w-24 h-24 rounded-full bg-gray-300 flex items-center justify-center text-white text-sm">
               {selectedImage || profileData.personalInfo.profile_image ? "" : "Add photo"}
@@ -1670,47 +1672,67 @@ const removeAppliedJob = async (applicationId: number) => {
               }}
             />
           </label>
-
-          
+          </div>
+                {imageError && (
+             <p className="text-red-500 text-xs mt-2 text-center break-words">
+               {imageError}
+             </p>
+           )}
         
-        </div>
+          </div>
 
         {/* Profile Info */}
         <div className="flex-1">
-          <h2 className="text-xl font-semibold">{profileData.personalInfo.fullName || ""}</h2>
-       
+  <h2 className="text-xl font-semibold text-gray-800">
+    {profileData.personalInfo.fullName || "Your Name"}
+  </h2>
 
-          {/* Location & Contact */}
-          <div className="mt-3 flex flex-col sm:flex-row gap-16 text-gray-600 text-sm">
-          
-            <span>Phone Number: <b>{profileData.personalInfo.phone}</b> </span>
-           
-            
-              
-          </div>
-          <div className="mt-3 flex flex-col sm:flex-row gap-16 text-gray-600 text-sm">
-          
-              <span> Email: <b>{profileData.personalInfo.email}</b> </span>
-               
-          </div>
-           <div className="mt-3 flex flex-col sm:flex-row gap-16 text-gray-600 text-sm">
-          
-           <span>Experience : <b>{profileData.personalInfo.experience}</b> </span>
-            
-              
-          </div>
-          <div className="mt-3 flex flex-col sm:flex-row gap-16 text-gray-600 text-sm">
-          
-              
-               <span>Notice Period : <b>{profileData.personalInfo.noticePeriod}</b> </span>
-               
-          </div>
+  <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-y-3 gap-x-8 text-sm text-gray-600">
 
-          {/* Optional Fields */}
-          <div className="mt-2 flex gap-4 text-blue-500 text-sm">
-           
-          </div>
-        </div>
+    <div>
+      <span className="font-medium text-gray-500">Phone Number:</span>
+      <span className="ml-2 font-semibold text-gray-800">
+        {profileData.personalInfo.phone || "-"}
+      </span>
+    </div>
+
+    <div>
+      <span className="font-medium text-gray-500">Email:</span>
+      <span className="ml-2 font-semibold text-gray-800">
+        {profileData.personalInfo.email || "-"}
+      </span>
+    </div>
+
+    <div>
+      <span className="font-medium text-gray-500">Experience:</span>
+      <span className="ml-2 font-semibold text-gray-800">
+        {profileData.personalInfo.experience || "-"}
+      </span>
+    </div>
+
+    <div>
+      <span className="font-medium text-gray-500">Notice Period:</span>
+      <span className="ml-2 font-semibold text-gray-800">
+        {profileData.personalInfo.noticePeriod || "-"}
+      </span>
+    </div>
+    <div>
+      <span className="font-medium text-gray-500">Gender:</span>
+      <span className="ml-2 font-semibold text-gray-800">
+        {profileData.personalInfo.gender || "-"}
+      </span>
+    </div>
+    <div>
+  <span className="font-medium text-gray-500">Date of Birth:</span>
+  <span className="ml-2 font-semibold text-gray-800">
+    {profileData.personalInfo.date_of_birth
+      ? new Date(profileData.personalInfo.date_of_birth)
+          .toLocaleDateString("en-GB")
+      : "-"}
+  </span>
+</div>
+  </div>
+</div>
 
             {/* Action Buttons: Upload Resume, Download Resume, Preview Profile*/}
                     <div className="mt-3 space-y-3">
@@ -1722,7 +1744,7 @@ const removeAppliedJob = async (applicationId: number) => {
                         </Button>
                       </DialogTrigger>
                      
-                      <DialogContent className="sm:max-w-md rounded-2xl p-6">
+                     <DialogContent className="sm:max-w-md rounded-2xl p-6 overflow-hidden">
                         <DialogHeader>
                           <h2 className="text-lg font-semibold text-gray-900">
                             Upload Resume
@@ -1748,7 +1770,7 @@ const removeAppliedJob = async (applicationId: number) => {
                             </div>
                             {/* File Info */}
                             <div className="flex-1">
-                              <p className="text-sm font-medium text-gray-800 truncate">
+                              <p className="text-sm text-gray-700 truncate max-w-[220px]">
                                 {resumeFile?.name || uploadedResumeName}
                               </p>
                             </div>
@@ -1758,7 +1780,7 @@ const removeAppliedJob = async (applicationId: number) => {
 
                       {/* ✅ Replace Section */}
                      <div className="border rounded-xl p-3 flex items-center justify-between bg-white shadow-sm">
-                      <div className="flex items-center gap-3 overflow-hidden">
+                      <div className="flex items-center gap-3 overflow-hidden min-w-0">
     
                         <div className="w-8 h-8 flex items-center justify-center bg-blue-100 rounded-md">
                           <span className="text-blue-600 text-xs font-bold">
@@ -1768,7 +1790,7 @@ const removeAppliedJob = async (applicationId: number) => {
                               ?.toUpperCase() || "PDF"}
                           </span>
                         </div>
-                      <p className="text-sm text-gray-700 truncate">
+                      <p className="text-sm text-gray-700 truncate max-w-[220px]">
                         {resumeFile?.name || uploadedResumeName || "No file selected"}
                       </p>
                        </div>
