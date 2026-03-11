@@ -11,8 +11,14 @@ import {
   Menu,
   X,
   Bell,
-  User,
+  User, 
+  Bookmark, 
+  Compass, 
+  Settings, 
+  HelpCircle, 
+  LogOut,
 } from "lucide-react";
+
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
@@ -134,30 +140,30 @@ useEffect(() => {
               </div>
             </Link>
            <div className="relative">
-  <div
-    onClick={() => setIsAboutOpen(!isAboutOpen)}
-    className="flex items-center space-x-1 text-gray-700 hover:text-purple-600 cursor-pointer transition-colors"
-  >
-    <Users className="w-4 h-4" />
-    <span>About</span>
-  </div>
+                <div
+                  onClick={() => setIsAboutOpen(!isAboutOpen)}
+                  className="flex items-center space-x-1 text-gray-700 hover:text-purple-600 cursor-pointer transition-colors"
+                >
+                  <Users className="w-4 h-4" />
+                  <span>About</span>
+                </div>
 
-  {isAboutOpen && (
-    <div className="absolute top-8 left-0 bg-white shadow-lg border rounded-lg py-2 w-40 z-50">
-      <Link href="/service">
-        <div className="px-4 py-2 hover:bg-gray-100 cursor-pointer">
-          Services
-        </div>
-      </Link>
+                {isAboutOpen && (
+                  <div className="absolute top-8 left-0 bg-white shadow-lg border rounded-lg py-2 w-40 z-50">
+                    <Link href="/service">
+                      <div className="px-4 py-2 hover:bg-gray-100 cursor-pointer">
+                        Services
+                      </div>
+                    </Link>
 
-      <Link href="/contact">
-        <div className="px-4 py-2 hover:bg-gray-100 cursor-pointer">
-          Contact
-        </div>
-      </Link>
-    </div>
-  )}
-</div>
+                    <Link href="/contact">
+                      <div className="px-4 py-2 hover:bg-gray-100 cursor-pointer">
+                        Contact
+                      </div>
+                    </Link>
+                  </div>
+                )}
+              </div>
 
           </nav>
            <div
@@ -181,8 +187,8 @@ useEffect(() => {
 
              <Search
                onClick={() => {
-                 if (keyword.trim()) {
-                  router.push(`/jobListings?search=${encodeURIComponent(keyword)}`);
+                 if (search.trim() !== "") {
+                   router.push(`/jobListings?search=${encodeURIComponent(search)}`);
                  }
                }}
                className="w-5 h-5 text-white bg-blue-600 rounded-full p-1 ml-2 cursor-pointer"
@@ -198,14 +204,7 @@ useEffect(() => {
                   <span className="text-gray-700 font-medium">
                     {localStorage.getItem("full_name") || "User"}
                   </span>
-                </div>
-
-                <Button
-                  variant="outline"
-                  className="border-red-600 text-red-600 hover:bg-red-50"
-                  onClick={handleLogout}  >
-                  Logout
-                </Button>
+                </div>        
 
                    <Button
                   onClick={handleProfileNavigate}
@@ -318,33 +317,91 @@ useEffect(() => {
       <User className="w-6 h-6 text-gray-700 hover:text-purple-600" />
     </div>
 
-    {isUserMenuOpen && (
-      <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border py-2 z-50">
-<div className="px-4 py-2 text-sm text-gray-500 border-b">
- {localStorage.getItem("full_name")}
-</div>
+  {isUserMenuOpen && (
+  <>
+    {/* Overlay */}
+    <div
+      className="fixed inset-0 bg-black/40 z-40"
+      onClick={() => setIsUserMenuOpen(false)}
+    />
 
-       <Link href="/applied-jobs">
-  <div className="px-4 py-2 hover:bg-gray-100 cursor-pointer">
-    Applied Jobs
-  </div>
-</Link>
+    {/* Side Panel */}
+    <div className="fixed right-0 top-0 h-screen w-[30%] min-w-[320px] bg-white shadow-2xl z-50 flex flex-col">
 
-        <Link href="/saved-jobs">
-          <div className="px-4 py-2 hover:bg-gray-100 cursor-pointer">
-            Saved Jobs
-          </div>
-        </Link>
+      {/* Header */}
+      <div className="p-6 border-b flex justify-between items-center">
+        <div>
 
-        <div
-          onClick={handleLogout}
-          className="px-4 py-2 hover:bg-red-50 text-red-600 cursor-pointer"
-        >
-          Logout
+          <h2 className="text-lg font-semibold">{localStorage.getItem("full_name") || "User"}</h2>
+          {/* <p className="text-sm text-gray-500">Not Mentioned</p> */}
+
+          <Link
+            href="/profile"
+            className="text-blue-600 text-sm font-medium"
+          >
+            View & Update Profile
+          </Link>
         </div>
 
+        <button
+          onClick={() => setIsUserMenuOpen(false)}
+          className="text-gray-400 hover:text-gray-600 text-xl"
+        >
+          ✕
+        </button>
       </div>
-    )}
+
+     
+
+    
+
+      {/* Menu */}
+      <div className="flex-1">
+
+  <Link href="/applied-jobs">
+    <div className="px-6 py-3 hover:bg-gray-100 cursor-pointer flex items-center gap-3">
+      <Briefcase size={18} />
+      Applied Jobs
+    </div>
+  </Link>
+
+  <Link href="/saved-jobs">
+    <div className="px-6 py-3 hover:bg-gray-100 cursor-pointer flex items-center gap-3">
+      <Bookmark size={18} />
+      Saved Jobs
+    </div>
+  </Link>
+
+  <Link href="">
+    <div className="px-6 py-3 hover:bg-gray-100 cursor-pointer flex items-center gap-3">
+      <Settings size={18} />
+      Settings
+    </div>
+  </Link>
+
+  <Link href="">
+    <div className="px-6 py-3 hover:bg-gray-100 cursor-pointer flex items-center gap-3">
+      <HelpCircle size={18} />
+      FAQs
+    </div>
+  </Link>
+
+  <div
+    onClick={handleLogout}
+    className="px-6 py-3 hover:bg-gray-100 cursor-pointer flex items-center gap-3"
+  >
+    <LogOut size={18} />
+    Logout
+  </div>
+
+</div>
+
+      {/* Logout */}
+     
+
+    </div>
+  </>
+)}
   </div>
 )}
 

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-
+// import { FaGraduationCap, FaAward } from "react-icons/fa";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -65,6 +65,7 @@ import {
   Save,
   Bookmark,
   Ambulance as Cancel,
+  
 } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -133,8 +134,10 @@ export default function Profile() {
   
  const [dateError, setDateError] = useState<string | null>(null);
  const [scoreError, setScoreError] = useState<string | null>(null);
-
+ const [summaryError, setSummaryError] = useState("");
+ const [resumeError, setResumeError] = useState("");
  
+  const [profileCompletion, setProfileCompletion] = useState(40);
 
   // States for inline forms
   const [showAddExperience, setShowAddExperience] = useState(false);
@@ -220,7 +223,23 @@ const formatCurrency = (amount: number, currencyCode?: string) => {
     return amount.toLocaleString(); // fallback if invalid code
   }
 };
+const handleSummaryChange = (value: string) => {
+  const words = value.trim().split(/\s+/).filter(Boolean);
 
+  if (words.length > 0 && words.length < 5) {
+    setSummaryError("Profile summary must contain at least 5 words");
+  } else {
+    setSummaryError("");
+  }
+
+  setProfileData((prev) => ({
+    ...prev,
+    personalInfo: {
+      ...prev.personalInfo,
+      professional_summary: value,
+    },
+  }));
+};
 
 const uniquePhoneCodes = useMemo(() => {
   return Array.from(
@@ -590,6 +609,41 @@ const getUserKey = () => {
 
       return;
     }
+    const today = dayjs();
+  const minDate = dayjs("1960-01-01");
+
+  // ✅ Start date validation
+  if (experienceForm.startDate.isAfter(today)) {
+    toast.error("Invalid date", {
+      description: "Start date cannot be in the future.",
+    });
+    return;
+  }
+
+  if (experienceForm.startDate.isBefore(minDate)) {
+    toast.error("Invalid date", {
+      description: "Start date cannot be before 1960.",
+    });
+    return;
+  }
+
+  // ✅ End date validation
+  if (!experienceForm.isCurrentJob && experienceForm.endDate) {
+    if (experienceForm.endDate.isBefore(experienceForm.startDate)) {
+      toast.error("Invalid date", {
+        description: "End date cannot be before start date.",
+      });
+      return;
+    }
+
+    if (experienceForm.endDate.isAfter(today)) {
+      toast.error ("Invalid date", {
+        description: "End date cannot be in the future.",
+      });
+      return;
+    }
+  }
+
 
     const formattedStart = experienceForm.startDate?.format("YYYY-MM-DD");
     const formattedEnd = experienceForm.isCurrentJob
@@ -668,6 +722,24 @@ const getUserKey = () => {
 
       return;
     }
+        if (educationForm.year) {
+    const selectedYear = educationForm.year.year();
+    const currentYear = dayjs().year();
+
+    if (selectedYear > currentYear) {
+      toast.error("Invalid year", {
+        description: "Year of graduation cannot be in the future.",
+      });
+      return;
+    }
+
+    if (selectedYear < 1960) {
+      toast.error("Invalid year", {
+        description: "Year of graduation cannot be before 1960.",
+      });
+      return;
+    }
+  }
 
     const newEducation = {
       id: editingEducation ? editingEducation.id : Date.now(),
@@ -730,6 +802,31 @@ const getUserKey = () => {
 
       return;
     }
+
+  // ✅ Year validation
+  if (!certificationForm.year) {
+    toast.error("Year required", {
+      description: "Please select the year obtained.",
+    });
+    return;
+  }
+
+  const selectedYear = certificationForm.year.year();
+  const currentYear = dayjs().year();
+
+  if (selectedYear > currentYear) {
+    toast.error("Invalid year", {
+      description: "Year obtained cannot be in the future.",
+    });
+    return;
+  }
+
+  if (selectedYear < 1960) {
+    toast.error("Invalid year", {
+      description: "Year obtained cannot be before 1960.",
+    });
+    return;
+  }
 
     const newCertification = {
       id: editingCertification ? editingCertification.id : Date.now(),
@@ -807,13 +904,31 @@ const handleRemoveSkill = (skillToRemove: Skill) => {
 };
 
 
-  const handleResumeUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      setResumeFile(file);
-      toast.info(`Selected file: ${file.name}`);
-    }
-  };
+ const handleResumeUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const file = event.target.files?.[0];
+  if (!file) return;
+
+  const allowedTypes = [
+    "application/pdf",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  ];
+
+  // File type validation
+  if (!allowedTypes.includes(file.type)) {
+    toast.error("Only PDF or DOC/DOCX files are allowed");
+    return;
+  }
+
+  // 2MB size validation
+  if (file.size > 2 * 1024 * 1024) {
+    toast.error("Resume must be less than 2MB");
+    return;
+  }
+
+  setResumeFile(file);
+  toast.info(`Selected file: ${file.name}`);
+};
 
   useEffect(() => {
     const fetchMajors = async () => {
@@ -1183,7 +1298,14 @@ useEffect(() => {
   if (!profileData.personalInfo.professional_summary?.trim()) {
     return toast.error("Please Fill Profile Summary.");
   }
+  const wordCount = profileData.personalInfo.professional_summary
+  .trim()
+  .split(/\s+/)
+  .filter(word => word.length > 0).length;
 
+if (wordCount < 5) {
+  return toast.error("Profile Summary must contain at least 5 words.");
+}
     const resumeUploaded = await uploadResume();
     console.log("Resume upload result:", resumeUploaded);
     if (!resumeUploaded) {
@@ -1447,322 +1569,10 @@ const removeAppliedJob = async (applicationId: number) => {
       <div className="min-h-screen bg-gray-50">
         <Header />
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-6">
-          <div className="grid lg:grid-cols-4 gap-4 lg:gap-6">
+        <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-6">
+          <div className="grid lg:grid-cols-3 gap-4 lg:gap-6">
             {/* Left Sidebar - Profile Summary */}
-            <div className="lg:col-span-1 order-2 lg:order-1">
-              <Card className="lg:sticky lg:top-24">
-                <CardContent className="p-4 lg:p-6">
-                  <div className="text-center mb-4 lg:mb-6">
-            
-                  <div className="relative inline-block">
-                <div className="w-20 h-20 lg:w-24 lg:h-24 bg-gray-100 rounded-full overflow-hidden flex items-center justify-center mx-auto mb-3 lg:mb-4">
-    
-                   {selectedImage ? (
-                    <img
-                    src={URL.createObjectURL(selectedImage)}
-                    className="w-full h-full object-cover"
-                    alt="Profile Preview"
-                    />
-                  ) : profileData.personalInfo.profile_image ? (
-                  <img
-                   src={profileData.personalInfo.profile_image}
-                   className="w-full h-full object-cover"
-                   alt="Profile"
-                  />
-                  ) : (
-                  <User className="w-10 h-10 lg:w-12 lg:h-12 text-purple-600" />
-                  )}
-                </div>
-
-                  <label className="absolute bottom-0 right-0 w-6 h-6 lg:w-8 lg:h-8 bg-purple-600 rounded-full flex items-center justify-center text-white hover:bg-purple-700 transition-colors cursor-pointer">
-                   <Camera className="w-3 h-3 lg:w-4 lg:h-4" />
-                   <input
-                    type="file"
-                    accept="image/jpeg,image/jpg,image/png,image/webp"
-                    className="hidden"
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                      const file = e.target.files?.[0];
-                      if (!file) return;
-
-                      const allowedTypes = [
-                        "image/jpeg",
-                        "image/jpg",
-                        "image/png",
-                        "image/webp",
-                      ];
-
-                      if (!allowedTypes.includes(file.type)) {
-                        setImageError("Only JPG, JPEG, PNG, WEBP formats are allowed.");
-                        return;
-                      }
-
-                      if (file.size > 1024 * 1024) {
-                        setImageError("Image size must be less than 1MB.");
-                        return;
-                      }
-
-                      setImageError(null);
-                      setSelectedImage(file);
-                    }}
-                  />
-
-                  </label>
-             </div>
-                 {imageError && (
-                    <p className="text-red-500 text-xs mt-2 text-center">
-                      {imageError}
-                    </p>
-                  )}
-
-
-
-
-                    <h2 className="text-lg lg:text-xl font-bold text-gray-900 mb-1">
-                      {profileData.personalInfo.fullName}
-                    </h2>
-                  </div>
-
-                  <div className="space-y-3 lg:space-y-4 mb-4 lg:mb-6">
-                    <div className="flex items-center justify-between text-xs lg:text-sm">
-                      <span className="text-gray-600">Experience</span>
-                      <span className="font-medium">
-                        {profileData.personalInfo.experience}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between text-xs lg:text-sm">
-                      <span className="text-gray-600">Email</span>
-                      <span className="font-medium">
-                        {profileData.personalInfo.email}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between text-xs lg:text-sm">
-                      <span className="text-gray-600">Phone Number</span>
-                      <span className="font-medium">
-                        {profileData.personalInfo.phone}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between text-xs lg:text-sm">
-                      <span className="text-gray-600">Gender</span>
-                      <span className="font-medium">
-                        {profileData.personalInfo.gender}
-                      </span>
-                    </div>
-                    {/* <div className="flex items-center justify-between text-xs lg:text-sm">
-                      <span className="text-gray-600">Current Salary</span>
-                      <span className="font-medium">
-                        {profileData.personalInfo.currentSalary
-                     ? formatCurrency(
-                         Number(profileData.personalInfo.currentSalary),
-                         profileData.personalInfo?.currentcurrency
-                       )
-                      : "—"}
-
-                      </span>
-                    </div> */}
-
-                    <div className="flex items-center justify-between text-xs lg:text-sm">
-                      <span className="text-gray-600">Notice Period</span>
-                      <span className="font-medium">
-                        {profileData.personalInfo.noticePeriod}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Dialog
-                      open={isDialogOpen.resume}
-                      onOpenChange={(open) =>
-                        setIsDialogOpen((prev) => ({ ...prev, resume: open }))
-                      }
-                    >
-                      <DialogTrigger asChild>
-                        <Button className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-sm lg:text-base h-10 lg:h-11">
-                          <Upload className="w-4 h-4 mr-2" />
-                          Upload Resume
-                        </Button>
-                      </DialogTrigger>
-
-                      {/* <DialogContent className="sm:max-w-md">
-                        <DialogHeader>
-                          <DialogTitle>Upload Resume</DialogTitle>
-                        </DialogHeader>
-
-                        <div className="space-y-4">
-                          {profileData?.personalInfo?.resume && (
-                            <p className="text-sm font-medium text-green-600 truncate">
-                              Current Resume:{" "}
-                              <span className="text-gray-700">
-                                {profileData?.personalInfo?.resume
-                                  .split("/")
-                                  .pop()}
-                              </span>
-                            </p>
-                          )}
-
-                          {resumeFile && (
-                              <p className="text-sm font-medium text-blue-600 truncate">
-                                Selected File: <span className="text-gray-700">{resumeFile.name}</span>
-                              </p>
-                            )}
-
-                          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                            <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                            <p className="text-sm text-gray-600 mb-4">
-                              Choose a file or drag and drop it here
-                            </p>
-                            <input
-                              type="file"
-                              accept=".pdf,.doc,.docx"
-                              onChange={handleResumeUpload}
-                              ref={fileInputRef}
-                              className="hidden"
-                              id="resume-upload"
-                            />
-                            <label htmlFor="resume-upload">
-                              <Button
-                                variant="outline"
-                                className="cursor-pointer"
-                                onClick={openFileDialog}
-                              >
-                                Select File
-                              </Button>
-                            </label>
-                            <p className="text-xs text-gray-500 mt-2">
-                              PDF, DOC, DOCX up to 5MB
-                            </p>
-                          </div>
-                          <Button
-                            onClick={uploadResume}
-                            disabled={!resumeFile}
-                            className={`w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600
-                            hover:from-purple-700 hover:to-blue-700 h-10 lg:h-11 mt-6
-                            ${!resumeFile ? "opacity-50 cursor-not-allowed" : ""}`}
-                          >
-                            SUBMIT
-                          </Button>
-                        </div>
-                      </DialogContent> */}
-                    <DialogContent className="sm:max-w-md rounded-2xl p-6">
-                    <DialogHeader>
-                      <DialogTitle className="text-xl font-semibold">
-                        Upload Resume
-                      </DialogTitle>
-                      <p className="text-sm text-gray-500 mt-1">
-                        Supported formats: PDF, DOCX — Max size 5MB
-                      </p>
-                    </DialogHeader>
-
-                    <div className="mt-6 space-y-4">
-
-                      {/* ✅ Uploaded Preview Card */}
-                      {resumeFile && (
-                        <div className="border rounded-xl p-4 bg-gray-50 shadow-sm">
-                          <div className="flex items-center gap-4">
-                            
-                            {/* File Icon */}
-                            <div className="w-12 h-12 flex items-center justify-center bg-blue-100 rounded-lg">
-                              <span className="text-blue-600 font-semibold text-sm">
-                                {resumeFile.name.split(".").pop()?.toUpperCase()}
-                              </span>
-                            </div>
-
-                            {/* File Info */}
-                            <div className="flex-1">
-                              <p className="text-sm font-medium text-gray-800 truncate">
-                                {resumeFile.name}
-                              </p>
-                              {/* <p className="text-xs text-green-600 mt-1">
-                                { (resumeFile.size / (1024 * 1024)).toFixed(1) } MB uploaded successfully
-                              </p> */}
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* ✅ Replace Section */}
-                      <div className="border rounded-xl p-3 flex items-center justify-between bg-white shadow-sm">
-                        <div className="flex items-center gap-3 overflow-hidden">
-                          <div className="w-8 h-8 flex items-center justify-center bg-blue-100 rounded-md">
-                            <span className="text-blue-600 text-xs font-bold">
-                              {resumeFile?.name.split(".").pop()?.toUpperCase() || "PDF"}
-                            </span>
-                          </div>
-                          <p className="text-sm text-gray-700 truncate">
-                            {resumeFile?.name || "No file selected"}
-                          </p>
-                        </div>
-
-                        <button
-                          onClick={() => fileInputRef.current?.click()}
-                          className="text-blue-600 text-sm font-medium hover:underline"
-                        >
-                          Replace
-                        </button>
-                      </div>
-
-                      {/* Hidden File Input */}
-                      <input
-                        type="file"
-                        accept=".pdf,.doc,.docx"
-                        onChange={handleResumeUpload}
-                        ref={fileInputRef}
-                        className="hidden"
-                      />
-
-                      {/* ✅ Continue Button */}
-                      <button
-                        onClick={uploadResume}
-                        disabled={!resumeFile}
-                        className={`w-full mt-4 h-11 rounded-xl text-white font-medium transition
-                        bg-gradient-to-r from-indigo-500 to-blue-600
-                        hover:from-indigo-600 hover:to-blue-700
-                        ${!resumeFile ? "opacity-50 cursor-not-allowed" : ""}`}
-                      >
-                        Continue →
-                      </button>
-
-                    </div>
-                  </DialogContent>
-                    </Dialog>
-
-                    {/* DOWNLOAD BUTTON */}
-                    {profileData?.personalInfo?.resume && (
-                     <a
-                       href={profileData.personalInfo.resume}
-                       download
-                       target="_blank"
-                       rel="noopener noreferrer"
-                     >
-                       <Button
-                         variant="outline"
-                         className="w-full text-sm lg:text-base h-10 lg:h-11"
-                       >
-                         <Download className="w-4 h-4 mr-2" />
-                         Download Resume
-                       </Button>
-                     </a>
-                   )}
-
-                   
-                    {/* PREVIEW BUTTON */}
-                      {isProfileSubmitted && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            console.log("clicked");
-                            window.location.assign("/review");
-                          }}
-                          className="w-full text-sm lg:text-base h-10 lg:h-11 border rounded-md flex items-center justify-center"
-                        >
-                          <Eye className="w-4 h-4 mr-2" />
-                          Preview Profile
-                        </button>
-                      )}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+         
 
             {/* Main Content */}
             <div className="lg:col-span-3 order-1 lg:order-2">
@@ -1822,7 +1632,214 @@ const removeAppliedJob = async (applicationId: number) => {
                   </Card>
                 )}
               </div>
+<div className="w-full order-2 lg:order-1">
+  <Card className="lg:sticky lg:top-24 bg-white rounded-lg shadow-sm overflow-x-auto">
+    <CardContent className="p-4 lg:p-6">
+      {/* Top Section: Profile Photo + Progress + Info */}
+      <div className="flex flex-col lg:flex-row items-center lg:items-start gap-6">
+        
+        {/* Profile Photo + Circular Progress */}
+        <div className="relative w-28 h-28">
+          <div className="absolute inset-0 flex items-center justify-center rounded-full border-4 border-gray-200">
+            <button className="w-24 h-24 rounded-full bg-gray-300 flex items-center justify-center text-white text-sm">
+              {selectedImage || profileData.personalInfo.profile_image ? "" : "Add photo"}
+            </button>
+          </div>
 
+          
+
+          {/* Profile Image */}
+          <div className="absolute inset-0 flex items-center justify-center rounded-full overflow-hidden">
+            {selectedImage ? (
+              <img
+                src={URL.createObjectURL(selectedImage)}
+                className="w-24 h-24 rounded-full object-cover"
+                alt="Profile Preview"
+              />
+            ) : profileData.personalInfo.profile_image ? (
+              <img
+                src={profileData.personalInfo.profile_image}
+                className="w-24 h-24 rounded-full object-cover"
+                alt="Profile"
+              />
+            ) : (
+              <User className="w-10 h-10 text-purple-600" />
+            )}
+          </div>
+
+          {/* Upload Button */}
+          <label className="absolute bottom-0 right-0 w-6 h-6 bg-purple-600 rounded-full flex items-center justify-center text-white hover:bg-purple-700 cursor-pointer">
+            <Camera className="w-3 h-3" />
+            <input
+              type="file"
+              accept="image/jpeg,image/jpg,image/png,image/webp"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+
+                const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+                if (!allowedTypes.includes(file.type)) {
+                  setImageError("Only JPG, JPEG, PNG, WEBP formats are allowed.");
+                  return;
+                }
+                if (file.size > 1024 * 1024) {
+                  setImageError("Image size must be less than 1MB.");
+                  return;
+                }
+                setImageError(null);
+                setSelectedImage(file);
+              }}
+            />
+          </label>
+
+          
+        
+        </div>
+
+        {/* Profile Info */}
+        <div className="flex-1">
+          <h2 className="text-xl font-semibold">{profileData.personalInfo.fullName || ""}</h2>
+       
+
+          {/* Location & Contact */}
+          <div className="mt-3 flex flex-col sm:flex-row gap-16 text-gray-600 text-sm">
+          
+            <span>Phone Number: <b>{profileData.personalInfo.phone}</b> </span>
+           
+            
+              
+          </div>
+          <div className="mt-3 flex flex-col sm:flex-row gap-16 text-gray-600 text-sm">
+          
+              <span> Email: <b>{profileData.personalInfo.email}</b> </span>
+               
+          </div>
+           <div className="mt-3 flex flex-col sm:flex-row gap-16 text-gray-600 text-sm">
+          
+           <span>Experience : <b>{profileData.personalInfo.experience}</b> </span>
+            
+              
+          </div>
+          <div className="mt-3 flex flex-col sm:flex-row gap-16 text-gray-600 text-sm">
+          
+              
+               <span>Notice Period : <b>{profileData.personalInfo.noticePeriod}</b> </span>
+               
+          </div>
+
+          {/* Optional Fields */}
+          <div className="mt-2 flex gap-4 text-blue-500 text-sm">
+           
+          </div>
+        </div>
+
+            {/* Action Buttons: Upload Resume, Download Resume, Preview Profile*/}
+                    <div className="mt-3 space-y-3">
+                    <Dialog open={isDialogOpen.resume} onOpenChange={(open) => setIsDialogOpen(prev => ({ ...prev, resume: open }))}>
+                      <DialogTrigger asChild>
+                        <Button className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-sm lg:text-base h-10 lg:h-11">
+                          <Upload className="w-4 h-4 mr-2" />
+                          Upload Resume
+                        </Button>
+                      </DialogTrigger>
+                     
+                      <DialogContent className="sm:max-w-md rounded-2xl p-6">
+                        <div className="mt-6 space-y-4">
+                     <DialogHeader>
+                      
+                      <p className="text-sm text-gray-500 mt-1">
+                        Supported formats: PDF, DOCX — Max size 2MB
+                      </p>
+                    </DialogHeader>
+                      {/* ✅ Uploaded Preview Card */}
+                      {resumeFile && (
+                        <div className="border rounded-xl p-4 bg-gray-50 shadow-sm">
+                          <div className="flex items-center gap-4">
+                            
+                            {/* File Icon */}
+                            <div className="w-12 h-12 flex items-center justify-center bg-blue-100 rounded-lg">
+                              <span className="text-blue-600 font-semibold text-sm">
+                                {resumeFile?.name.split(".").pop()?.toUpperCase()}
+                              </span>
+                            </div>
+
+                            {/* File Info */}
+                            <div className="flex-1">
+                              <p className="text-sm font-medium text-gray-800 truncate">
+                                {resumeFile.name}
+                              </p>
+                              {/* <p className="text-xs text-green-600 mt-1">
+                                { (resumeFile.size / (1024 * 1024)).toFixed(1) } MB uploaded successfully
+                              </p> */}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* ✅ Replace Section */}
+                      <div className="border rounded-xl p-3 flex items-center justify-between bg-white shadow-sm">
+                        <div className="flex items-center gap-3 overflow-hidden">
+                          <div className="w-8 h-8 flex items-center justify-center bg-blue-100 rounded-md">
+                            <span className="text-blue-600 text-xs font-bold">
+                              {resumeFile?.name.split(".").pop()?.toUpperCase() || "PDF"}
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-700 truncate">
+                            {resumeFile?.name || "No file selected"}
+                          </p>
+                        </div>
+
+                        <button
+                          onClick={() => fileInputRef.current?.click()}
+                          className="text-blue-600 text-sm font-medium hover:underline"
+                        >
+                          Replace
+                        </button>
+                      </div>
+
+                      {/* Hidden File Input */}
+                      <input
+                        type="file"
+                        accept=".pdf,.doc,.docx"
+                        onChange={handleResumeUpload}
+                        ref={fileInputRef}
+                        className="hidden"
+                      />
+
+                      {/* ✅ Continue Button */}
+                      <button
+                        onClick={uploadResume}
+                        disabled={!resumeFile}
+                        className={`w-full mt-4 h-11 rounded-xl text-white font-medium transition
+                        bg-gradient-to-r from-indigo-500 to-blue-600
+                        hover:from-indigo-600 hover:to-blue-700
+                        ${!resumeFile ? "opacity-50 cursor-not-allowed" : ""}`}
+                      >
+                        Continue →
+                      </button>
+
+                    </div>
+                </DialogContent>
+              </Dialog>
+
+        {isProfileSubmitted && (
+          <button
+            type="button"
+            onClick={() => window.location.assign("/review")}
+            className="w-full text-sm lg:text-base h-10 lg:h-11 border rounded-md flex items-center justify-center"
+          >
+            <Eye className="w-4 h-4 mr-2" />
+            Preview Profile
+          </button>
+        )}
+      </div>
+      </div>
+
+     
+    </CardContent>
+  </Card>
+</div>
               {/* Desktop Navigation Tabs */}
               <div className="hidden lg:block bg-white rounded-lg shadow-sm mb-6 overflow-x-auto">
                 <div className="flex border-b">
@@ -1900,6 +1917,7 @@ const removeAppliedJob = async (applicationId: number) => {
                   </div>
                 </div>
               </div>
+              
              {loading ? (
               <div className="p-6 max-w-5xl mx-auto space-y-6 animate-pulse">
                 <div className="h-8 bg-gray-200 rounded w-1/3"></div>
@@ -2506,26 +2524,24 @@ const removeAppliedJob = async (applicationId: number) => {
                       It is the first thing recruiters notice in your profile. Write a concise headline introducing yourself to employers.
                     </p>
                     <textarea
-                      value={profileData.personalInfo.professional_summary || ""}
-                      onChange={(e) =>
-                        setProfileData((prev) => ({
-                          ...prev,
-                          personalInfo: {
-                            ...prev.personalInfo,
-                            professional_summary: e.target.value,
-                          },
-                        }))
-                      }
-                      maxLength={250}
-                      minLength={5}
-                      rows={4}
-                      placeholder="Example: Full Stack Developer with 2+ years experience in React, Next.js and Django"
-                      className="w-full border rounded-md p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                    />
-
+                       value={profileData.personalInfo.professional_summary || ""}
+                       onChange={(e) => handleSummaryChange(e.target.value)}
+                       maxLength={250}
+                       rows={4}
+                       placeholder="Example: Full Stack Developer with 2+ years experience in React, Next.js and Django"
+                       className="w-full border rounded-md p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                     />
                     {/* Footer */}
                     <div className="flex justify-between items-center mt-2 text-xs text-gray-400">
-                      <span>Minimum 5 words required</span>
+                      <span >
+                       {summaryError ? (
+                         <p className="text-sm text-red-500 mt-1">{summaryError}</p>
+                       ): (
+                       <p className="text-xs text-gray-500 mt-2">
+                         Minimum 5 words required
+                       </p>
+                       )}
+                      </span>
                       <span>
                         {(profileData.personalInfo.professional_summary || "").length}/250
                       </span>
@@ -3227,32 +3243,49 @@ const removeAppliedJob = async (applicationId: number) => {
                                   Year of Graduation *
                                   </Label>
                                   <div className="mt-1">
-                                <DatePicker
-                                  value={educationForm.year ?? undefined} 
-                                  onChange={(date) =>
-                                    setEducationForm((prev) => ({
-                                      ...prev,
-                                      year: date,
-                                    }))
-                                  }
-                                  views={["year"]}
-                                  disableFuture
-                                  maxDate={dayjs()} 
-                                  slotProps={{
-                                    textField: {
-                                      fullWidth: true,
-                                      size: "small",
-                                      sx: {
-                                        mt: 1,
-                                        "& .MuiOutlinedInput-root": {
-                                          height: "44px",
-                                          borderRadius: "6px",
-                                          padding: "0 12px",
-                                        },
-                                      },
-                                    },
-                                  }}
-                                 />
+                               <DatePicker
+  views={["year"]}
+  value={educationForm.year ?? null}
+  disableFuture
+  maxDate={dayjs()}
+  onChange={(date) => {
+    if (!date) return;
+
+    const currentYear = dayjs().year();
+    const selectedYear = date.year();
+
+    if (selectedYear > currentYear) {
+      return; // future year block
+    }
+
+    setEducationForm((prev) => ({
+      ...prev,
+      year: date,
+    }));
+  }}
+  onError={(error, value) => {
+    if (error === "maxDate") {
+      setEducationForm((prev) => ({
+        ...prev,
+        year: dayjs(), // reset to current year
+      }));
+    }
+  }}
+  slotProps={{
+    textField: {
+      fullWidth: true,
+      size: "small",
+      sx: {
+        mt: 1,
+        "& .MuiOutlinedInput-root": {
+          height: "44px",
+          borderRadius: "6px",
+          padding: "0 12px",
+        },
+      },
+    },
+  }}
+/>
 
                                 </div>
                               </div>
@@ -3306,18 +3339,22 @@ const removeAppliedJob = async (applicationId: number) => {
 
                                      //  PERCENTAGE
                                      if (educationForm.score_type === "percentage") {
-                                       if (!/^\d*\.?\d*$/.test(value)) return;
+                                       if (!/^\d{0,3}(\.\d{0,2})?$/.test(value)) return;
+
                                        const num = Number(value);
                                        if (num > 100) return;
+
                                        setScoreError(null);
                                      }
 
                                     //  CGPA
-                                 if (educationForm.score_type === "cgpa") {
-                                   if (!/^\d*\.?\d*$/.test(value)) return;
+                                if (educationForm.score_type === "cgpa") {
+                                   if (!/^\d{0,2}(\.\d{0,2})?$/.test(value)) return;
+
                                    const num = Number(value);
                                    if (num > 10) return;
                                    if (num < 0) return;
+
                                    setScoreError(null);
                                  }
                                      setEducationForm((prev) => ({
