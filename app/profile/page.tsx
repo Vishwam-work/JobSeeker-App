@@ -1112,7 +1112,14 @@ const fetchJobTitles = debounce(async (value: string) => {
       .catch((err) => console.error(err));
   }, []);
 
+const formatNumber = (value: number | string) => {
+  if (!value) return "";
+  return new Intl.NumberFormat("en-US").format(Number(value));
+};
 
+const parseNumber = (value: string) => {
+  return value.replace(/,/g, "");
+};
 
 
   useEffect(() => {
@@ -1172,13 +1179,13 @@ const fetchJobTitles = debounce(async (value: string) => {
         const data = await res.json();
         // console.log("Resume uploaded:", data.resume_url);
         // console.log("Resume Data uploaded:", data);
-        setProfileData((prev) => ({
-          ...prev,
-          personalInfo: {
-            ...prev.personalInfo,
-            resume: data.resume_url || data.resume,
-          },
-        }));
+       setProfileData((prev) => ({
+  ...prev,
+  personalInfo: {
+    ...prev.personalInfo,
+    resume: data.resume_url || data.resume,
+  },
+}));
         setIsDialogOpen(prev => ({ ...prev, resume: false }));
         setResumeFile(null);
         return true;
@@ -1198,7 +1205,8 @@ const fetchJobTitles = debounce(async (value: string) => {
       return false;
     }
   };
-
+const uploadedResumeName =
+  profileData?.personalInfo?.resume?.split("/").pop();
  const uploadProfileImage = async () => {
   if (!selectedImage) return true;
 
@@ -1715,58 +1723,62 @@ const removeAppliedJob = async (applicationId: number) => {
                       </DialogTrigger>
                      
                       <DialogContent className="sm:max-w-md rounded-2xl p-6">
-                        <div className="mt-6 space-y-4">
-                     <DialogHeader>
-                      
-                      <p className="text-sm text-gray-500 mt-1">
-                        Supported formats: PDF, DOCX — Max size 2MB
-                      </p>
-                    </DialogHeader>
-                      {/* ✅ Uploaded Preview Card */}
-                      {resumeFile && (
+                        <DialogHeader>
+                          <h2 className="text-lg font-semibold text-gray-900">
+                            Upload Resume
+                          </h2>
+
+                          <p className="text-sm text-gray-500 mt-1">
+                            Supported formats: PDF, DOCX — Max size 2MB
+                          </p>
+                        </DialogHeader>
+                        <div className="mt-6 space-y-4">      
+                      {(resumeFile || uploadedResumeName) && (
                         <div className="border rounded-xl p-4 bg-gray-50 shadow-sm">
                           <div className="flex items-center gap-4">
-                            
-                            {/* File Icon */}
-                            <div className="w-12 h-12 flex items-center justify-center bg-blue-100 rounded-lg">
+
+                           {/* File Icon */}
+                           <div className="w-12 h-12 flex items-center justify-center bg-blue-100 rounded-lg">
                               <span className="text-blue-600 font-semibold text-sm">
-                                {resumeFile?.name.split(".").pop()?.toUpperCase()}
+                                {(resumeFile?.name || uploadedResumeName)
+                                 ?.split(".")
+                                 .pop()
+                                  ?.toUpperCase()}
                               </span>
                             </div>
-
                             {/* File Info */}
                             <div className="flex-1">
                               <p className="text-sm font-medium text-gray-800 truncate">
-                                {resumeFile.name}
+                                {resumeFile?.name || uploadedResumeName}
                               </p>
-                              {/* <p className="text-xs text-green-600 mt-1">
-                                { (resumeFile.size / (1024 * 1024)).toFixed(1) } MB uploaded successfully
-                              </p> */}
                             </div>
                           </div>
                         </div>
                       )}
 
                       {/* ✅ Replace Section */}
-                      <div className="border rounded-xl p-3 flex items-center justify-between bg-white shadow-sm">
-                        <div className="flex items-center gap-3 overflow-hidden">
-                          <div className="w-8 h-8 flex items-center justify-center bg-blue-100 rounded-md">
-                            <span className="text-blue-600 text-xs font-bold">
-                              {resumeFile?.name.split(".").pop()?.toUpperCase() || "PDF"}
-                            </span>
-                          </div>
-                          <p className="text-sm text-gray-700 truncate">
-                            {resumeFile?.name || "No file selected"}
-                          </p>
+                     <div className="border rounded-xl p-3 flex items-center justify-between bg-white shadow-sm">
+                      <div className="flex items-center gap-3 overflow-hidden">
+    
+                        <div className="w-8 h-8 flex items-center justify-center bg-blue-100 rounded-md">
+                          <span className="text-blue-600 text-xs font-bold">
+                            {(resumeFile?.name || uploadedResumeName)
+                              ?.split(".")
+                              .pop()
+                              ?.toUpperCase() || "PDF"}
+                          </span>
                         </div>
-
-                        <button
-                          onClick={() => fileInputRef.current?.click()}
-                          className="text-blue-600 text-sm font-medium hover:underline"
-                        >
-                          Replace
-                        </button>
-                      </div>
+                      <p className="text-sm text-gray-700 truncate">
+                        {resumeFile?.name || uploadedResumeName || "No file selected"}
+                      </p>
+                       </div>
+                       <button
+                         onClick={() => fileInputRef.current?.click()}
+                         className="text-blue-600 text-sm font-medium hover:underline"
+                       >
+                         {(resumeFile || uploadedResumeName) ? "Replace" : "Upload Resume"}
+                       </button>
+                     </div>
 
                       {/* Hidden File Input */}
                       <input
@@ -2398,31 +2410,28 @@ const removeAppliedJob = async (applicationId: number) => {
                             </SelectContent>
                           </Select>
                           <Input
-                            id="currentSalary"
-                            type="number"
-                            value={profileData.personalInfo.currentSalary ?? ""}
-                            onKeyDown={(e) => {
-                              if (["e", "E", "+", "-"].includes(e.key)) {
-                                e.preventDefault();
-                              }
-                            }}
-                            onChange={(e) =>
+                             id="currentSalary"
+                             type="text"
+                            value={formatNumber(profileData.personalInfo.currentSalary ?? 0)}
+                            onChange={(e) => {
+                               const rawValue = parseNumber(e.target.value);
+
+                               if (!/^\d*$/.test(rawValue)) return;
+                          
                               setProfileData((prev) => ({
                                 ...prev,
                                 personalInfo: {
                                   ...prev.personalInfo,
-                                  currentSalary:
-                                    e.target.value === "" ? null : Number(e.target.value),
+                                  currentSalary: rawValue === "" ? null : Number(rawValue),
                                 },
-                              }))
-                            }
-                            className="flex-1 h-10 lg:h-11"
+                              }));
+                             }}
+                             className="flex-1 h-10 lg:h-11"
                             placeholder="Enter amount"
                           />
 
                         </div>
                       </div>
-                      
                       <div>
                         <Label
                           htmlFor="expectedSalary"
@@ -2456,29 +2465,25 @@ const removeAppliedJob = async (applicationId: number) => {
                             </SelectContent>
                           </Select>
                           <Input
-                            id="expectedSalary"
-                            type="number"
-                            value={profileData.personalInfo.expectedSalary ?? ""}
-                            onKeyDown={(e) => {
-                              if (["e", "E", "+", "-"].includes(e.key)) {
-                                e.preventDefault(); 
-                              }
-                            }}
-                             onChange={(e) => {
-                              const value = e.target.value;
-                          
-                              setProfileData((prev) => ({
-                                ...prev,
-                                personalInfo: {
-                                  ...prev.personalInfo,
-                                  expectedSalary: value === "" ? null : Number(value), 
-                                },
-                               }));
-                             }}
-                            className="flex-1 h-10 lg:h-11"
-                            placeholder="Enter amount"
-                            min={0}  
-                          />
+                           id="expectedSalary"
+                           type="text"
+                           value={formatNumber(profileData.personalInfo.expectedSalary ?? "")}
+                           onChange={(e) => {
+                             const rawValue = parseNumber(e.target.value);
+
+                             if (!/^\d*$/.test(rawValue)) return;
+
+                             setProfileData((prev) => ({
+                               ...prev,
+                               personalInfo: {
+                                 ...prev.personalInfo,
+                                 expectedSalary: rawValue === "" ? null : Number(rawValue),
+                               },
+                             }));
+                           }}
+                           className="flex-1 h-10 lg:h-11"
+                           placeholder="Enter amount"
+                         />
 
                         </div>
                       </div>
