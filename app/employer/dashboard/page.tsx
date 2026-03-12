@@ -70,6 +70,7 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogFooter,
+  DialogClose,
 } from "@/components/ui/dialog";
 import {
   Popover,
@@ -197,6 +198,7 @@ interface Candidate {
     role: string;
     duration: string;
     description?: string;
+    category?: string;
   }[];
 
   educationDetails: {
@@ -341,6 +343,14 @@ const mapApiCandidateToUI = (item: ApiCandidate): Candidate => {
         year: c.year ? String(c.year) : undefined,
       })) || [],
   };
+};
+const formatNumber = (value: string | number): string => {
+  if (!value) return "";
+  return new Intl.NumberFormat("en-IN").format(Number(value));
+};
+
+const parseNumber = (value: string): string => {
+  return value.replace(/,/g, "");
 };
 
 interface PostedJob {
@@ -873,8 +883,9 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
     // }
     const mappedCandidates: Candidate[] =
       data.map(mapApiCandidateToUI);
-
+      
       setCandidates(mappedCandidates);
+      console.log("Mapped Candidates:", mappedCandidates);
       setActiveTab("candidates");
     } catch (error) {
       console.error(error);
@@ -1589,7 +1600,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
     // { id: 'analytics', label: 'Analytics', icon: TrendingUp }
     {
     id: "profiles",
-    label: "profiles",
+    label: "Profiles",
     icon: UserCircle,
     component: <CandidatesPage />,
   },
@@ -1990,21 +2001,33 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
                           ))}
                         </SelectContent>
                       </Select>
-                        <Input
-                        type="number"
+                       <Input
+                        type="text"
                         id="salary"
-                        value={jobForm.salary}
-                        onKeyDown={(e) => {
-                          if (e.key === "e" || e.key === "E" || e.key === "+" || e.key === "-") {
+                        value={formatNumber(jobForm.salary)}
+                        onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                          const allowedKeys = [
+                            "Backspace",
+                            "Delete",
+                            "ArrowLeft",
+                            "ArrowRight",
+                            "Tab",
+                          ];
+
+                          if (!/[0-9]/.test(e.key) && !allowedKeys.includes(e.key)) {
                             e.preventDefault();
                           }
                         }}
-                        onChange={(e) =>
-                          setJobForm((prev) => ({
-                            ...prev,
-                            salary: e.target.value,
-                          }))
-                        }
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                          const rawValue = parseNumber(e.target.value);
+
+                          if (!isNaN(Number(rawValue))) {
+                            setJobForm((prev) => ({
+                              ...prev,
+                              salary: rawValue,
+                            }));
+                          }
+                        }}
                         placeholder="Enter Annual Salary"
                         className="flex-1"
                       />
@@ -2385,7 +2408,11 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
                             </div>
                             <div className="flex items-center">
                               <DollarSign className="w-4 h-4 mr-1" />
-                              <span>{job.salary}</span>
+                              <span>
+                                {job.salary
+                                  ? new Intl.NumberFormat("en-IN").format(Number(job.salary))
+                                  : "-"}
+                              </span>
                             </div>
                             <div className="flex items-center">
                               <Calendar className="w-4 h-4 mr-1" />
@@ -2539,7 +2566,11 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
                     </div>
                     <div className="flex items-center text-gray-600">
                       <DollarSign className="w-4 h-4 mr-2" />
-                      <span>{selectedJob.salary}</span>
+                     <span>
+                      {selectedJob.salary
+                        ? new Intl.NumberFormat("en-IN").format(Number(selectedJob.salary))
+                        : "-"}
+                    </span>
                     </div>
                   </div>
                   <div className="space-y-2">
@@ -2761,15 +2792,32 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
                 <div>
                   <Label>Salary</Label>
                   <Input
-                    name="salary"
-                    value={jobForm.salary || ""}
-                    onChange={(e) =>
+                    type="text"
+                     name="salary"
+                    value={formatNumber(jobForm.salary || "")}
+                    onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                       const allowedKeys = [
+                         "Backspace",
+                        "Delete",
+                         "ArrowLeft",
+                       "ArrowRight",
+                        "Tab",
+                     ];
+                
+                       if (!/[0-9]/.test(e.key) && !allowedKeys.includes(e.key)) {
+                        e.preventDefault();
+                      }
+                     }}
+                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                       const rawValue = parseNumber(e.target.value);
+
                       setJobForm({
                         ...jobForm,
-                        [e.target.name]: e.target.value,
-                      })
-                    }
-                  />
+                        salary: rawValue,
+                       });
+                    }}
+                    placeholder="Enter Salary"
+                   />
                 </div>
                 <div>
                   <Label>Currency</Label>
@@ -2925,7 +2973,9 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
 
             {/* Footer */}
             <div className="flex justify-end gap-2 mt-4">
+              <DialogClose asChild>
               <Button variant="ghost">Cancel</Button>
+            </DialogClose>
               {/* FIX : Put the Onclick handle update method */}
               <Button onClick={handleUpdateJob}>Save Changes</Button>
             </div>
@@ -3330,6 +3380,9 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
                             <h4 className="font-medium text-gray-900">
                               {exp.role}
                             </h4>
+                            <p className="text-purple-600 font-medium">
+                              {exp.category}
+                            </p>
                             <p className="text-purple-600 font-medium">
                               {exp.company}
                             </p>
