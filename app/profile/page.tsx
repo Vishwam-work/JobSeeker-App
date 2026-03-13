@@ -133,12 +133,12 @@ export default function Profile() {
   const [citySearch, setCitySearch] = useState("");
   const [newSkill, setNewSkill] = useState("");
 
-  
+
  const [dateError, setDateError] = useState<string | null>(null);
  const [scoreError, setScoreError] = useState<string | null>(null);
  const [summaryError, setSummaryError] = useState("");
  const [resumeError, setResumeError] = useState("");
- 
+ const [yearError, setYearError] = useState("");
   const [profileCompletion, setProfileCompletion] = useState(40);
 
   // States for inline forms
@@ -225,11 +225,11 @@ export default function Profile() {
 const handleSummaryChange = (value: string) => {
   const words = value.trim().split(/\s+/).filter(Boolean);
 
-  if (words.length > 0 && words.length < 5) {
-    setSummaryError("Profile summary must contain at least 5 words");
-  } else {
-    setSummaryError("");
-  }
+  // if (words.length > 0 && words.length < 5) {
+  //   setSummaryError("Profile summary must contain at least 5 words");
+  // } else {
+  //   setSummaryError("");
+  // }
 
   setProfileData((prev) => ({
     ...prev,
@@ -1292,22 +1292,17 @@ useEffect(() => {
   if (!profileData.personalInfo.professional_summary?.trim()) {
     return toast.error("Please Fill Profile Summary.");
   }
-  const wordCount = profileData.personalInfo.professional_summary
-  .trim()
-  .split(/\s+/)
-  .filter(word => word.length > 0).length;
+//   const wordCount = profileData.personalInfo.professional_summary
+//   .trim()
+//   .split(/\s+/)
+//   .filter(word => word.length > 0).length;
 
-if (wordCount < 5) {
-  return toast.error("Profile Summary must contain at least 5 words.");
-}
-    // const resumeUploaded = await uploadResume();
-    // console.log("Resume upload result:", resumeUploaded);
-    // if (!resumeUploaded) {
-    //   toast.error("Resume upload failed. Please try again.");
-    //   return;
-    // }
+// if (wordCount < 5) {
+//   return toast.error("Profile Summary must contain at least 5 words.");
+// }
+
     if (selectedImage) {
- 
+
   const imageUploaded = await uploadProfileImage();
   if (!imageUploaded) {
     toast.error("Image upload failed", {
@@ -1633,69 +1628,66 @@ const removeAppliedJob = async (applicationId: number) => {
     <CardContent className="p-4 lg:p-6">
       {/* Top Section: Profile Photo + Progress + Info */}
       <div className="flex flex-col lg:flex-row items-center lg:items-start gap-6">
-        
-        {/* Profile Photo + Circular Progress */}
-        <div className="flex flex-col items-center w-28">
-          <div className="relative w-28 h-28">
-          <div className="absolute inset-0 flex items-center justify-center rounded-full border-4 border-gray-200">
-            <button className="w-24 h-24 rounded-full bg-gray-300 flex items-center justify-center text-white text-sm">
-              {selectedImage || profileData.personalInfo.profile_image ? "" : "Add photo"}
-            </button>
-          </div>
+        {/* Profile Photo*/}
+                  <div className="flex flex-col items-center w-28">
+            <label className="relative w-28 h-28 cursor-pointer">
+             {/* Border */}
+              <div className="absolute inset-0 flex items-center justify-center rounded-full border-4 border-gray-200">
+                <div className="w-24 h-24 rounded-full bg-gray-300 flex items-center justify-center text-white text-sm">
+                  {selectedImage || profileData.personalInfo.profile_image ? "" : "Add photo"}
+                </div>
+              </div>
 
-          
+              {/* Profile Image */}
+              <div className="absolute inset-0 flex items-center justify-center rounded-full overflow-hidden">
+                {selectedImage ? (
+                  <img
+                    src={URL.createObjectURL(selectedImage)}
+                    className="w-24 h-24 rounded-full object-cover"
+                    alt="Profile Preview"
+                  />
+                ) : profileData.personalInfo.profile_image ? (
+                  <img
+                    src={profileData.personalInfo.profile_image}
+                    className="w-24 h-24 rounded-full object-cover"
+                    alt="Profile"
+                  />
+                ) : (
+                  <User className="w-10 h-10 text-purple-600" />
+                )}
+              </div>
 
-          {/* Profile Image */}
-          <div className="absolute inset-0 flex items-center justify-center rounded-full overflow-hidden">
-            {selectedImage ? (
-              <img
-                src={URL.createObjectURL(selectedImage)}
-                className="w-24 h-24 rounded-full object-cover"
-                alt="Profile Preview"
+              {/* Hidden File Input */}
+              <input
+                type="file"
+                accept="image/jpeg,image/jpg,image/png,image/webp"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+
+                  const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+                  if (!allowedTypes.includes(file.type)) {
+                    setImageError("Only JPG, JPEG, PNG, WEBP formats are allowed.");
+                    return;
+                  }
+
+                  if (file.size > 1024 * 1024) {
+                    setImageError("Image size must be less than 1MB.");
+                    return;
+                  }
+
+                  setImageError(null);
+                  setSelectedImage(file);
+                }}
               />
-            ) : profileData.personalInfo.profile_image ? (
-              <img
-                src={profileData.personalInfo.profile_image}
-                className="w-24 h-24 rounded-full object-cover"
-                alt="Profile"
-              />
-            ) : (
-              <User className="w-10 h-10 text-purple-600" />
+            </label>
+
+            {imageError && (
+              <p className="text-red-500 text-xs mt-2 text-center break-words">
+                {imageError}
+              </p>
             )}
-          </div>
-
-          {/* Upload Button */}
-          <label className="absolute bottom-0 right-0 w-6 h-6 bg-purple-600 rounded-full flex items-center justify-center text-white hover:bg-purple-700 cursor-pointer">
-            <Camera className="w-3 h-3" />
-            <input
-              type="file"
-              accept="image/jpeg,image/jpg,image/png,image/webp"
-              className="hidden"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (!file) return;
-
-                const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
-                if (!allowedTypes.includes(file.type)) {
-                  setImageError("Only JPG, JPEG, PNG, WEBP formats are allowed.");
-                  return;
-                }
-                if (file.size > 1024 * 1024) {
-                  setImageError("Image size must be less than 1MB.");
-                  return;
-                }
-                setImageError(null);
-                setSelectedImage(file);
-              }}
-            />
-          </label>
-          </div>
-                {imageError && (
-             <p className="text-red-500 text-xs mt-2 text-center break-words">
-               {imageError}
-             </p>
-           )}
-        
           </div>
 
         {/* Profile Info */}
@@ -1712,7 +1704,7 @@ const removeAppliedJob = async (applicationId: number) => {
         +{profileData.personalInfo.phoneCode || "+"}
         <span className="ml-1">{profileData.personalInfo.phone || "-"}</span>
       </span>
-    </div>      
+    </div>
 
     <div>
       <span className="font-medium text-gray-500">Email:</span>
@@ -1724,7 +1716,10 @@ const removeAppliedJob = async (applicationId: number) => {
     <div>
       <span className="font-medium text-gray-500">Experience:</span>
       <span className="ml-2 font-semibold text-gray-800">
-        {profileData.personalInfo.experience || "-"}
+        {profileData.personalInfo.experience
+          ? profileData.personalInfo.experience.charAt(0).toUpperCase() +
+            profileData.personalInfo.experience.slice(1).toLowerCase()
+          : "-"}
       </span>
     </div>
 
@@ -1737,7 +1732,10 @@ const removeAppliedJob = async (applicationId: number) => {
     <div>
       <span className="font-medium text-gray-500">Gender:</span>
       <span className="ml-2 font-semibold text-gray-800">
-        {profileData.personalInfo.gender?.toUpperCase() || "-"}
+        {profileData.personalInfo.gender
+         ? profileData.personalInfo.gender.charAt(0).toUpperCase() +
+         profileData.personalInfo.gender.slice(1).toLowerCase()
+         : ""}
       </span>
     </div>
     <div>
@@ -1754,13 +1752,13 @@ const removeAppliedJob = async (applicationId: number) => {
 
                  {/* Action Buttons*/}
                     <div className="mt-3 space-y-3">
-                    <Dialog 
-                    open={isDialogOpen.resume} 
+                    <Dialog
+                    open={isDialogOpen.resume}
                     onOpenChange={(open) => {
                      setIsDialogOpen((prev) => ({ ...prev, resume: open }));
 
                      if (!open) {
-                       setResumeFile(null); 
+                       setResumeFile(null);
                      }
                    }}
                     >
@@ -1770,7 +1768,7 @@ const removeAppliedJob = async (applicationId: number) => {
                           Upload Resume
                         </Button>
                       </DialogTrigger>
-                     
+
                      <DialogContent className="sm:max-w-md rounded-2xl p-6 overflow-hidden">
                         <DialogHeader>
                           <h2 className="text-lg font-semibold text-gray-900">
@@ -1781,7 +1779,7 @@ const removeAppliedJob = async (applicationId: number) => {
                             Supported formats: PDF, DOCX — Max size 2MB
                           </p>
                         </DialogHeader>
-                        <div className="mt-6 space-y-4">      
+                        <div className="mt-6 space-y-4">
                       {(resumeFile || uploadedResumeName) && (
                         <div className="border rounded-xl p-4 bg-gray-50 shadow-sm">
                           <div className="flex items-center gap-4">
@@ -1808,7 +1806,6 @@ const removeAppliedJob = async (applicationId: number) => {
                       {/* ✅ Replace Section */}
                      <div className="border rounded-xl p-3 flex items-center justify-between bg-white shadow-sm">
                       <div className="flex items-center gap-3 overflow-hidden min-w-0">
-    
                         <div className="w-8 h-8 flex items-center justify-center bg-blue-100 rounded-md">
                           <span className="text-blue-600 text-xs font-bold">
                             {(resumeFile?.name || uploadedResumeName)
@@ -1823,7 +1820,7 @@ const removeAppliedJob = async (applicationId: number) => {
                        </div>
                       <button
                        onClick={() => {
-                         setResumeFile(null); 
+                         setResumeFile(null);
                          fileInputRef.current?.click();
                        }}
                        className="text-blue-600 text-sm font-medium hover:underline"
@@ -2560,7 +2557,7 @@ const removeAppliedJob = async (applicationId: number) => {
                      />
                     {/* Footer */}
                     <div className="flex justify-between items-center mt-2 text-xs text-gray-400">
-                      <span >
+                      {/* <span >
                        {summaryError ? (
                          <p className="text-sm text-red-500 mt-1">{summaryError}</p>
                        ): (
@@ -2568,7 +2565,7 @@ const removeAppliedJob = async (applicationId: number) => {
                          Minimum 5 words required
                        </p>
                        )}
-                      </span>
+                      </span> */}
                       <span>
                         {(profileData.personalInfo.professional_summary || "").length}/250
                       </span>
@@ -3287,6 +3284,7 @@ const removeAppliedJob = async (applicationId: number) => {
                                       ...prev,
                                       start_year: date,
                                     }));
+                                      setYearError("");
                                   }}
                                   slotProps={{
                                     textField: {
@@ -3299,14 +3297,14 @@ const removeAppliedJob = async (applicationId: number) => {
                                   views={["year"]}
                                   label="Graduation Year"
                                   value={educationForm.end_year ?? null}
-                                  disableFuture
-                                  maxDate={dayjs()}
+                                  maxDate={dayjs().add(101, "year")}
                                   onChange={(date) => {
                                     if (!date) return;
                                     if (
                                       educationForm.start_year &&
                                       date.isBefore(educationForm.start_year, "year")
                                     ) {
+                                       setYearError("End year must be greater than or equal to Start year");
                                       return;
                                     }
 
@@ -3314,6 +3312,7 @@ const removeAppliedJob = async (applicationId: number) => {
                                       ...prev,
                                       end_year: date,
                                     }));
+                                    setYearError("");
                                   }}
                                   slotProps={{
                                     textField: {
@@ -3324,6 +3323,9 @@ const removeAppliedJob = async (applicationId: number) => {
                                 />
 
                                   </div>
+                                  {yearError && (
+  <p className="text-red-500 text-xs mt-1">{yearError}</p>
+)}
                               </div>
 
                               <div>

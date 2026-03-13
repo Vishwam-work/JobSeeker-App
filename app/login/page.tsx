@@ -21,7 +21,8 @@ export default function Login() {
   const [alertOpen, setAlertOpen] = useState(false);
   const [alertType, setAlertType] = useState<"success" | "error">("success");
   const [isEmployerDropdownOpen, setIsEmployerDropdownOpen] = useState(false);
-
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
   const router = useRouter();
 
   const REQUIRED_PROFILE_FIELDS = [
@@ -90,21 +91,33 @@ export default function Login() {
         setAlertType("success");
         setAlertMessage("Login Successful!");
         setAlertOpen(true);
-        // setTimeout(() => {
-        //   router.push("/profile");
-        // }, 2000);
       } else {
         setAlertType("error");
-        setAlertMessage(
-          data.error === "User not found"
-          ? " kindly register first to access"
-          : data.error || "Login Failed"
-           );
+        setEmailError("");
+        setPasswordError("");
+
+
+          if (data.error === "User not found") {
+    setEmailError("Email not registered.");
+    setAlertMessage("Email not registered. Please register first.");
+  } 
+  else if (data.error === "Invalid email") {
+    setEmailError("Please enter a valid email.");
+    setAlertMessage("Please enter a valid email address.");
+  } 
+  else if (data.error === "Invalid credentials") {
+    setPasswordError("Incorrect password.");
+    setAlertMessage("Incorrect password.");
+  } 
+  else {
+    setPasswordError(data.error || "Login Failed");
+    setAlertMessage(data.error || "Login Failed");
+  }
         setAlertOpen(true);
       }
     } catch (error) {
       setAlertType("error");
-      setAlertMessage("Network Error!");
+      setAlertMessage("Please enter a valid email address.");
       setAlertOpen(true);
     }
   };
@@ -314,8 +327,14 @@ export default function Login() {
                       type="email"
                       className="mt-1 bg-gray-50 h-12 border-gray-200 focus:border-purple-500 focus:ring-purple-500"
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      onChange={(e) => {
+                      setEmail(e.target.value);
+                      setEmailError("");
+                      }}
                     />
+                    {emailError && (
+                    <p className="text-red-500 text-xs mt-1">{emailError}</p>
+                     )}
                   </div>
 
                   {/* Password */}
@@ -332,8 +351,14 @@ export default function Login() {
                         type={showPassword ? "text" : "password"}
                         className="pr-10 bg-gray-50 h-12 border-gray-200 focus:border-purple-500 focus:ring-purple-500"
                         value={password}
-                        onChange={(e) => setPassword(e.target.value)}
+                        onChange={(e) => {
+  setPassword(e.target.value);
+  setPasswordError("");
+}}
                       />
+                      {passwordError && (
+  <p className="text-red-500 text-xs mt-1">{passwordError}</p>
+)}
                       <button
                         type="button"
                         className="absolute inset-y-0 right-0 pr-3 flex items-center"
