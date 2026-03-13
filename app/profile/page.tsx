@@ -652,37 +652,37 @@ const getUserKey = () => {
   };
 
   const handleEditEducation = (edu: Education) => {
-    setEducationForm({
-      education: edu.education,
-      course: edu.course,
-      institution: edu.institution,
+  setEducationForm({
+    education: edu.education,
+    course: edu.course,
+    institution: edu.institution,
       year: edu.year ? dayjs(edu.year, "YYYY") : null,
-     percentage: edu.percentage ?? "",
-      score_type: edu.score_type ? edu.score_type.toLowerCase() : "",
-      course_type: edu.course_type ? edu.course_type.toLowerCase() : "",
-    });
-    setEditingEducation(edu);
-    setShowAddEducation(true);
-  };
+    percentage: edu.percentage ?? "",
+    score_type: edu.score_type ? edu.score_type.toLowerCase() : "",
+    course_type: edu.course_type ? edu.course_type.toLowerCase() : "",
+  });
+  setEditingEducation(edu);
+  setShowAddEducation(true);
+};
 
-  const handleSaveEducation = () => {
-    if (
-      !educationForm.education ||
-      !educationForm.course ||
-      !educationForm.institution ||
-      !educationForm.score_type ||
-      !educationForm.course_type
-    ) {
+const handleSaveEducation = () => {
+  if (
+    !educationForm.education ||
+    !educationForm.course ||
+    !educationForm.institution ||
+    !educationForm.score_type ||
+    !educationForm.course_type
+  ) {
       
-      toast("Incomplete form", {
-       description: "Please fill in all required fields before continuing.",
-      });
+    toast("Incomplete form", {
+      description: "Please fill in all required fields before continuing.",
+    });
 
-      return;
-    }
+    return;
+  }
         if (educationForm.year) {
     const selectedYear = educationForm.year.year();
-    const currentYear = dayjs().year();
+  const currentYear = dayjs().year();
 
     if (selectedYear > currentYear) {
       toast.error("Invalid year", {
@@ -699,35 +699,35 @@ const getUserKey = () => {
     }
   }
 
-    const newEducation = {
-      id: editingEducation ? editingEducation.id : Date.now(),
-      education: educationForm.education,
-      course: educationForm.course,
-      institution: educationForm.institution,
+  const newEducation = {
+    id: editingEducation ? editingEducation.id : Date.now(),
+    education: educationForm.education,
+    course: educationForm.course,
+    institution: educationForm.institution,
       year: educationForm.year ? educationForm.year.format("YYYY") : "",
-      percentage: educationForm.percentage,
+    percentage: educationForm.percentage,
       score_type : educationForm.score_type,
       course_type : educationForm.course_type,
-    };
-
-    if (editingEducation) {
-      setProfileData((prev) => ({
-        ...prev,
-        education: prev.education.map((edu) =>
-          edu.id === editingEducation.id ? newEducation : edu
-        ),
-      }));
-    } else {
-      setProfileData((prev) => ({
-        ...prev,
-        education: [...prev.education, newEducation],
-      }));
-    }
-
-    setShowAddEducation(false);
-    setEditingEducation(null);
-    resetEducationForm();
   };
+
+  if (editingEducation) {
+    setProfileData((prev) => ({
+      ...prev,
+      education: prev.education.map((edu) =>
+        edu.id === editingEducation.id ? newEducation : edu
+      ),
+    }));
+  } else {
+    setProfileData((prev) => ({
+      ...prev,
+      education: [...prev.education, newEducation],
+    }));
+  }
+
+  setShowAddEducation(false);
+  setEditingEducation(null);
+  resetEducationForm();
+};
 
   const handleCancelEducation = () => {
     setShowAddEducation(false);
@@ -875,16 +875,19 @@ const handleRemoveSkill = (skillToRemove: Skill) => {
   // File type validation
   if (!allowedTypes.includes(file.type)) {
     toast.error("Only PDF or DOC/DOCX files are allowed");
+    event.target.value = ""; // reset
     return;
   }
 
   // 2MB size validation
   if (file.size > 2 * 1024 * 1024) {
     toast.error("Resume must be less than 2MB");
+    event.target.value = ""; // reset
     return;
   }
 
   setResumeFile(file);
+  event.target.value = ""; // reset
   toast.info(`Selected file: ${file.name}`);
 };
 
@@ -1159,7 +1162,7 @@ const parseNumber = (value: string) => {
 
   const uploadResume = async () => {
     if (!resumeFile) {
-    return true;
+    return false;
     }
 
     const formData = new FormData();
@@ -1187,8 +1190,12 @@ const parseNumber = (value: string) => {
     resume: data.resume_url || data.resume,
   },
 }));
+
         setIsDialogOpen(prev => ({ ...prev, resume: false }));
         setResumeFile(null);
+        if (fileInputRef.current) {
+  fileInputRef.current.value = "";
+}
         return true;
       } else {
         const error = await res.json();
@@ -1283,12 +1290,12 @@ useEffect(() => {
 if (wordCount < 5) {
   return toast.error("Profile Summary must contain at least 5 words.");
 }
-    const resumeUploaded = await uploadResume();
-    console.log("Resume upload result:", resumeUploaded);
-    if (!resumeUploaded) {
-      toast.error("Resume upload failed. Please try again.");
-      return;
-    }
+    // const resumeUploaded = await uploadResume();
+    // console.log("Resume upload result:", resumeUploaded);
+    // if (!resumeUploaded) {
+    //   toast.error("Resume upload failed. Please try again.");
+    //   return;
+    // }
     if (selectedImage) {
  
   const imageUploaded = await uploadProfileImage();
@@ -1692,9 +1699,10 @@ const removeAppliedJob = async (applicationId: number) => {
     <div>
       <span className="font-medium text-gray-500">Phone Number:</span>
       <span className="ml-2 font-semibold text-gray-800">
-        {profileData.personalInfo.phone || "-"}
+        +{profileData.personalInfo.phoneCode || "+"}
+        <span className="ml-1">{profileData.personalInfo.phone || "-"}</span>
       </span>
-    </div>
+    </div>      
 
     <div>
       <span className="font-medium text-gray-500">Email:</span>
@@ -1719,7 +1727,7 @@ const removeAppliedJob = async (applicationId: number) => {
     <div>
       <span className="font-medium text-gray-500">Gender:</span>
       <span className="ml-2 font-semibold text-gray-800">
-        {profileData.personalInfo.gender || "-"}
+        {profileData.personalInfo.gender?.toUpperCase() || "-"}
       </span>
     </div>
     <div>
@@ -1734,9 +1742,18 @@ const removeAppliedJob = async (applicationId: number) => {
   </div>
 </div>
 
-            {/* Action Buttons: Upload Resume, Download Resume, Preview Profile*/}
+                 {/* Action Buttons*/}
                     <div className="mt-3 space-y-3">
-                    <Dialog open={isDialogOpen.resume} onOpenChange={(open) => setIsDialogOpen(prev => ({ ...prev, resume: open }))}>
+                    <Dialog 
+                    open={isDialogOpen.resume} 
+                    onOpenChange={(open) => {
+                     setIsDialogOpen((prev) => ({ ...prev, resume: open }));
+
+                     if (!open) {
+                       setResumeFile(null); 
+                     }
+                   }}
+                    >
                       <DialogTrigger asChild>
                         <Button className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-sm lg:text-base h-10 lg:h-11">
                           <Upload className="w-4 h-4 mr-2" />
@@ -1794,12 +1811,15 @@ const removeAppliedJob = async (applicationId: number) => {
                         {resumeFile?.name || uploadedResumeName || "No file selected"}
                       </p>
                        </div>
-                       <button
-                         onClick={() => fileInputRef.current?.click()}
-                         className="text-blue-600 text-sm font-medium hover:underline"
-                       >
-                         {(resumeFile || uploadedResumeName) ? "Replace" : "Upload Resume"}
-                       </button>
+                      <button
+                       onClick={() => {
+                         setResumeFile(null); 
+                         fileInputRef.current?.click();
+                       }}
+                       className="text-blue-600 text-sm font-medium hover:underline"
+                     >
+                       {(resumeFile || uploadedResumeName) ? "Replace Resume" : "Upload Resume"}
+                     </button>
                      </div>
 
                       {/* Hidden File Input */}
@@ -1812,16 +1832,16 @@ const removeAppliedJob = async (applicationId: number) => {
                       />
 
                       {/* ✅ Continue Button */}
-                      <button
-                        onClick={uploadResume}
-                        disabled={!resumeFile}
-                        className={`w-full mt-4 h-11 rounded-xl text-white font-medium transition
-                        bg-gradient-to-r from-indigo-500 to-blue-600
-                        hover:from-indigo-600 hover:to-blue-700
-                        ${!resumeFile ? "opacity-50 cursor-not-allowed" : ""}`}
-                      >
-                        Continue →
-                      </button>
+                           {resumeFile && resumeFile?.name !== uploadedResumeName && (
+                           <button
+                             onClick={uploadResume}
+                             className="w-full mt-4 h-11 rounded-xl text-white font-medium transition
+                             bg-gradient-to-r from-indigo-500 to-blue-600
+                             hover:from-indigo-600 hover:to-blue-700"
+                           >
+                             Continue →
+                           </button>
+                         )}
 
                     </div>
                 </DialogContent>
@@ -3237,18 +3257,18 @@ const removeAppliedJob = async (applicationId: number) => {
                                   className="mt-1"
                                 />
                               </div>
-                              <div>
+                             <div>
                                 <Label  className="text-sm font-medium text-gray-700">
                                   Year of Graduation *
-                                  </Label>
+  </Label>
                                   <div className="mt-1">
-                               <DatePicker
-  views={["year"]}
+    <DatePicker
+      views={["year"]}
   value={educationForm.year ?? null}
-  disableFuture
-  maxDate={dayjs()}
-  onChange={(date) => {
-    if (!date) return;
+      disableFuture
+      maxDate={dayjs()}
+      onChange={(date) => {
+        if (!date) return;
 
     const currentYear = dayjs().year();
     const selectedYear = date.year();
@@ -3257,23 +3277,23 @@ const removeAppliedJob = async (applicationId: number) => {
       return; // future year block
     }
 
-    setEducationForm((prev) => ({
-      ...prev,
+        setEducationForm((prev) => ({
+          ...prev,
       year: date,
-    }));
-  }}
+        }));
+      }}
   onError={(error, value) => {
     if (error === "maxDate") {
-      setEducationForm((prev) => ({
-        ...prev,
+        setEducationForm((prev) => ({
+          ...prev,
         year: dayjs(), // reset to current year
-      }));
+        }));
     }
-  }}
-  slotProps={{
-    textField: {
-      fullWidth: true,
-      size: "small",
+      }}
+      slotProps={{
+        textField: {
+          fullWidth: true,
+          size: "small",
       sx: {
         mt: 1,
         "& .MuiOutlinedInput-root": {
@@ -3282,12 +3302,12 @@ const removeAppliedJob = async (applicationId: number) => {
           padding: "0 12px",
         },
       },
-    },
-  }}
-/>
+        },
+      }}
+    />
 
-                                </div>
-                              </div>
+  </div>
+</div>
                               
                               <div>
                                 <Label className="text-sm font-medium text-gray-700">

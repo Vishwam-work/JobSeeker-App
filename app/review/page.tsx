@@ -98,6 +98,11 @@ interface Certification {
   year: string | number;
 }
 
+const formatNumber = (value:any) => {
+  if (!value) return "";
+  return new Intl.NumberFormat("en-US").format(value);
+};
+
     useEffect(() => {
       fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_title/")
         .then((res) => res.json())
@@ -325,7 +330,7 @@ interface Certification {
                          </span>
                        )}
                        <span>
-                        {profileData.personalInfo.currentSalary}
+                        {formatNumber(profileData.personalInfo.currentSalary) || "0"}
                        </span>
                     </div>
                     <div className="flex items-center space-x-2 text-gray-600">
@@ -338,7 +343,7 @@ interface Certification {
                          </span>
                        )}
                        <span>
-                        {profileData.personalInfo.expectedSalary}
+                       {formatNumber(profileData.personalInfo.expectedSalary) || "0"}
                        </span>
                     </div>
                     <div className="flex items-center space-x-2 text-gray-600">
