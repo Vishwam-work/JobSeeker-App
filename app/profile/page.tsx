@@ -166,7 +166,8 @@ export default function Profile() {
     education: "",
     course: "",
     institution: "",
-    year: null,
+    start_year: null,
+    end_year: null,
     percentage: "",
     score_type: "",
     course_type: "",
@@ -381,7 +382,8 @@ type Education = {
   education: string;
   course: string | number ;
   institution: string;
-  year?: number | string | null; 
+  start_year?: number | string | null;
+  end_year?: number | string | null;
   percentage?: string;
   score_type?: string;
   course_type?: string;
@@ -391,7 +393,8 @@ type EducationForm = {
   education: string;
   course: string | number ;
   institution: string;
-  year: dayjs.Dayjs | null; 
+  start_year: dayjs.Dayjs | null; 
+  end_year: dayjs.Dayjs | null; 
   percentage: string;
   score_type: string;
   course_type: string;
@@ -516,7 +519,8 @@ const getUserKey = () => {
       education: "",
       course: "",
       institution: "",
-      year: null,
+      start_year: null,
+      end_year: null,
       percentage: "",
       score_type: "",
       course_type: "",
@@ -656,7 +660,8 @@ const getUserKey = () => {
     education: edu.education,
     course: edu.course,
     institution: edu.institution,
-      year: edu.year ? dayjs(edu.year, "YYYY") : null,
+    start_year: edu.start_year ? dayjs(edu.start_year, "YYYY") : null,
+    end_year: edu.end_year ? dayjs(edu.end_year, "YYYY") : null,
     percentage: edu.percentage ?? "",
     score_type: edu.score_type ? edu.score_type.toLowerCase() : "",
     course_type: edu.course_type ? edu.course_type.toLowerCase() : "",
@@ -680,18 +685,19 @@ const handleSaveEducation = () => {
 
     return;
   }
-        if (educationForm.year) {
-    const selectedYear = educationForm.year.year();
-  const currentYear = dayjs().year();
+        if (educationForm.start_year && educationForm.end_year) {
+    const selectedStartYear = educationForm.start_year.year();
+    const selectedEndYear = educationForm.end_year.year();
+    const currentYear = dayjs().year();
 
-    if (selectedYear > currentYear) {
+    if (selectedStartYear > selectedEndYear) {
       toast.error("Invalid year", {
-        description: "Year of graduation cannot be in the future.",
+        description: "Year of graduation cannot be in the Past.",
       });
       return;
     }
 
-    if (selectedYear < 1960) {
+    if (selectedStartYear < 1960) {
       toast.error("Invalid year", {
         description: "Year of graduation cannot be before 1960.",
       });
@@ -704,7 +710,10 @@ const handleSaveEducation = () => {
     education: educationForm.education,
     course: educationForm.course,
     institution: educationForm.institution,
-      year: educationForm.year ? educationForm.year.format("YYYY") : "",
+      // year: educationForm.year ? educationForm.year.format("YYYY") : "",
+    start_year: educationForm.start_year ? educationForm.start_year.format("YYYY") : "",
+    end_year: educationForm.end_year ? educationForm.end_year.format("YYYY") : "",
+
     percentage: educationForm.percentage,
       score_type : educationForm.score_type,
       course_type : educationForm.course_type,
@@ -1045,7 +1054,8 @@ const fetchJobTitles = debounce(async (value: string) => {
             course: e.course,   // display name
             course_id: e.course,           // FK id
             institution: e.institution,
-            year: e.year,
+            start_year: e.start_year,
+            end_year: e.end_year,
             percentage: e.percentage,
             score_type: e.score_type?.toLowerCase() || "cgpa",
             course_type: e.course_type?.toLowerCase() || "full_time",
@@ -3048,7 +3058,9 @@ const removeAppliedJob = async (applicationId: number) => {
                                   {edu.institution}
                                 </p>
                                 <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 text-xs lg:text-sm text-gray-600 mt-1 gap-1 sm:gap-0">
-                                  <span>Year: {edu.year}</span>
+                                  <span>Start Year: {edu.start_year}</span>
+                                  <span>End Year: {edu.end_year}</span>
+
                                   <span>
                                   Score: {edu.percentage}{" "}
                                   {edu.score_type === "percentage"
@@ -3259,56 +3271,61 @@ const removeAppliedJob = async (applicationId: number) => {
                               </div>
                              <div>
                                 <Label  className="text-sm font-medium text-gray-700">
-                                  Year of Graduation *
-  </Label>
-                                  <div className="mt-1">
-    <DatePicker
-      views={["year"]}
-  value={educationForm.year ?? null}
-      disableFuture
-      maxDate={dayjs()}
-      onChange={(date) => {
-        if (!date) return;
+                                  Education Duration *
+                                 </Label>
+                                  <div className="mt-1 grid grid-cols-2 gap-3">
+                                <DatePicker
+                                  views={["year"]}
+                                  label="Start Year"
+                                  value={educationForm.start_year ?? null}
+                                  disableFuture
+                                  maxDate={dayjs()}
+                                  onChange={(date) => {
+                                    if (!date) return;
 
-    const currentYear = dayjs().year();
-    const selectedYear = date.year();
+                                    setEducationForm((prev) => ({
+                                      ...prev,
+                                      start_year: date,
+                                    }));
+                                  }}
+                                  slotProps={{
+                                    textField: {
+                                      fullWidth: true,
+                                      size: "small",
+                                    },
+                                  }}
+                                />
+                                  <DatePicker
+                                  views={["year"]}
+                                  label="Graduation Year"
+                                  value={educationForm.end_year ?? null}
+                                  disableFuture
+                                  maxDate={dayjs()}
+                                  onChange={(date) => {
+                                    if (!date) return;
+                                    if (
+                                      educationForm.start_year &&
+                                      date.isBefore(educationForm.start_year, "year")
+                                    ) {
+                                      return;
+                                    }
 
-    if (selectedYear > currentYear) {
-      return; // future year block
-    }
+                                    setEducationForm((prev) => ({
+                                      ...prev,
+                                      end_year: date,
+                                    }));
+                                  }}
+                                  slotProps={{
+                                    textField: {
+                                      fullWidth: true,
+                                      size: "small",
+                                    },
+                                  }}
+                                />
 
-        setEducationForm((prev) => ({
-          ...prev,
-      year: date,
-        }));
-      }}
-  onError={(error, value) => {
-    if (error === "maxDate") {
-        setEducationForm((prev) => ({
-          ...prev,
-        year: dayjs(), // reset to current year
-        }));
-    }
-      }}
-      slotProps={{
-        textField: {
-          fullWidth: true,
-          size: "small",
-      sx: {
-        mt: 1,
-        "& .MuiOutlinedInput-root": {
-          height: "44px",
-          borderRadius: "6px",
-          padding: "0 12px",
-        },
-      },
-        },
-      }}
-    />
+                                  </div>
+                              </div>
 
-  </div>
-</div>
-                              
                               <div>
                                 <Label className="text-sm font-medium text-gray-700">
                                   Score

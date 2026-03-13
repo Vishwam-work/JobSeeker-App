@@ -57,7 +57,8 @@ interface Education {
   // optional fields used during data mapping
   course_id?: string | number;
   institution: string;
-  year: string | number;
+  start_year: string | number;
+  end_year: string | number;
   percentage: string;
   score_type?: string;
   course_type?: string;
@@ -122,13 +123,6 @@ const formatNumber = (value:any) => {
     }, []);
 
 
-    const getCategoryName = (id: number | string) =>
-    jobCategories.find((c) => c.id === id)?.name || "";
-
-  const getJobTitleName = (id: number | string) => {
-    // console.log("jobTitles", jobTitles);
-    return jobTitles.find((t) => t.id === id)?.title || "";
-  };
   useEffect(() => {
     const loadProfile = async () => {
       const res = await fetch("https://jobseeker-backend-jy1y.onrender.com/api/profile/", {
@@ -138,14 +132,14 @@ const formatNumber = (value:any) => {
         },
       });
 
-    
+
 
 
       if (res.ok) {
         const data = await res.json();
         console.log("Profile Data: before", data);
 
- 
+
 
         setProfileData({
           personalInfo: {
@@ -166,7 +160,7 @@ const formatNumber = (value:any) => {
           experience: data.experiences.map((exp: any) => ({
             id: exp.id,
             company: exp.company,
-            position: exp.job_title|| "N/A",  
+            position: exp.job_title|| "N/A",
             category: exp.category|| "N/A",
             duration: `${exp.start_date} - ${exp.end_date || "Present"}`,
             location: exp.location?.name || "N/A",
@@ -175,13 +169,13 @@ const formatNumber = (value:any) => {
           education: data.educations.map((e: any) => ({
             id: e.id,
             education: e.education,
-            course: e.course || "", 
+            course: e.course || "",
             institution: e.institution,
-            year: e.year,
+            start_year: e.start_year,
+            end_year: e.end_year,
             percentage: e.percentage,
             score_type: e.score_type?.toLowerCase() || "cgpa",
             course_type: e.course_type?.toLowerCase() || "full_time",
-            
           })),
           certifications: data.certifications.map((cert: any) => ({
             name : cert.name,
@@ -245,7 +239,7 @@ const formatNumber = (value:any) => {
                 </Button>
               </Link>
             </div>
-            <div className="flex flex-col sm:flex-row gap-2">            
+            <div className="flex flex-col sm:flex-row gap-2">
              <DownloadProfilePDF
               onStart={() => setIsPDF(true)}
               onEnd={() => setIsPDF(false)}
@@ -254,7 +248,7 @@ const formatNumber = (value:any) => {
           </div>
         </div>
 
-        <div>    
+        <div>
           <div  className="space-y-6 bg-white px-6 pb-6 pt-10" >
             <div
               id="profile-review-ui"
@@ -439,9 +433,10 @@ const formatNumber = (value:any) => {
                         <p className="text-gray-600">University:{edu.institution}</p>
                         <p className="text-gray-600">Course Type:{edu.course_type}</p>
                         <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 text-sm text-gray-600 mt-1 gap-1 sm:gap-0">
-                          <div className="flex items-center">
+                          <div className="flex items-center gap-2">
                             {isPDF ? '📅' : <Calendar className="w-4 h-4 mr-1" />}
-                            <span>Year: {edu.year}</span>
+                            <span>Start Year: {edu.start_year}</span>
+                            <span className="flex items-center"><Calendar className="w-4 h-4 mr-1" />End Year: {edu.end_year}</span>
                           </div>
                           <div className="flex items-center">
                             {isPDF ? '🎖  ' : <Award className="w-5 h-5 text-purple-600" />}
