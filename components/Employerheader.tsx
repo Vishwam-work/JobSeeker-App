@@ -101,13 +101,6 @@ export default function EmployerHeader() {
                     onClick={() => router.push("/employer/account")}
                     className="block w-full text-left px-4 py-2 hover:bg-gray-100"
                   >
-                    View Account
-                  </button>
-
-                  <button
-                    onClick={() => router.push("/employer/account")}
-                    className="block w-full text-left px-4 py-2 hover:bg-gray-100"
-                  >
                     Edit Account
                   </button>
 

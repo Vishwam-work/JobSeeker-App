@@ -682,6 +682,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
           qa: app.answers || [],
         }));
         setCandidates(mapped);
+        console.log("MAPPED:", mapped);
       } catch (e) {
         console.error("Failed to fetch employer applications", e);
       }
@@ -1414,7 +1415,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
       //     ? { ...prev, status: updated.application_status }
       //     : prev
       // );
-      // console.log("Now>>>>>>>", selectedCandidate);
+      console.log("Now>>>>>>>", selectedCandidate);
 
       toast.success("Candidate Shortlisted!");
     } catch (err) {
@@ -3260,7 +3261,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
                           <Mail className="w-4 h-4 mr-2" />
                           Email
                         </Button>
-                                             
+
                         <Button variant="outline" size="sm">
                           {selectedCandidate.resumeUrl ? (
                             <a
