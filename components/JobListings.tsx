@@ -812,13 +812,17 @@ useEffect(() => {
       }
 
       const profile = await response.json();
+const resumePath = profile.resume;
+
+const resumeUrl = resumePath
+  ? resumePath.startsWith("http")
+    ? resumePath
+    : `https://jobseeker-backend-jy1y.onrender.com${resumePath}`
+  : null;
+
 setUserData({
   ...profile,
-  resume: profile.resume
-    ? profile.resume.startsWith("http")
-      ? profile.resume
-      : `https://jobseeker-backend-jy1y.onrender.com${profile.resume}`
-    : null,
+  resume: resumeUrl,
 });
     } catch (error) {
       console.error("Profile fetch error:", error);

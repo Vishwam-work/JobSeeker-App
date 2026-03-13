@@ -511,7 +511,7 @@ const formatNumber = (value:any) => {
               </div>
             </CardContent>
           </Card>
-       
+
           </div>
           </div>
           {/* Action Buttons */}
@@ -528,7 +528,7 @@ const formatNumber = (value:any) => {
             </Button>
            </Link>
           </div>
-          
+
         </div>
       </div>
     </div>

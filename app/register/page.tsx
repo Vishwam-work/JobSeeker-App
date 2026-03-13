@@ -97,7 +97,7 @@ export default function Register() {
 
   const validatePassword = (value: string) => {
     if (!value) return "Password is required";
-    if (value.length < 6) return "Minimum 6 characters required";
+    if (value.length < 8) return "Minimum 8 characters required";
     return "";
   };
 
@@ -292,7 +292,7 @@ useEffect(() => {
         );
       }
       console.log("Registration Successful");
-      toast.success("Registration Successful 🎉");
+      toast.success("Registration Successful ");
       router.push("/login");
 
     } catch (error) {
@@ -437,7 +437,6 @@ useEffect(() => {
               >
                 {isOtpVerified ? "Email Verified" : "Verify Email OTP"}
               </Button>
-             
             </div>
 
             {/* Password */}
@@ -450,7 +449,7 @@ useEffect(() => {
                     errors.password ? "border-red-500 focus:ring-red-500" : ""
                   }`}
                   type={showPassword ? "text" : "password"}
-                  placeholder="Minimum 6 characters"
+                  placeholder="Minimum 8 characters"
                   value={password}
                   onChange={(e) => {
                     const value = e.target.value;
