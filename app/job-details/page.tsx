@@ -44,7 +44,7 @@ export default function JobDetailsPage() {
   useEffect(() => {
     if (!jobId) return;
 
-    fetch("https://jobseeker-backend-jy1y.onrender.com/employeer/api/all-jobs/")
+    fetch(`${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/all-jobs/`)
       .then((res) => res.json())
       .then((data) => {
         

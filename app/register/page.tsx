@@ -157,7 +157,7 @@ useEffect(() => {
     e.preventDefault();
     try {
       const res = await fetch(
-        "https://jobseeker-backend-jy1y.onrender.com/api/send_otp/",
+        `${process.env.NEXT_PUBLIC_API_URL_APP}/send_otp/`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -184,7 +184,7 @@ useEffect(() => {
 //    console.log("Resend OTP clicked");
 //   try {
 //     const res = await fetch(
-//       "https://jobseeker-backend-jy1y.onrender.com/api/send_otp/",
+//       `${process.env.NEXT_PUBLIC_API_URL_APP}/send_otp/`,
 //       {
 //         method: "POST",
 //         headers: { "Content-Type": "application/json" },
@@ -224,7 +224,7 @@ useEffect(() => {
   }
     try {
       const res = await fetch(
-        "https://jobseeker-backend-jy1y.onrender.com/api/verify-otp/",
+        `${process.env.NEXT_PUBLIC_API_URL_APP}/verify-otp/`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -276,7 +276,7 @@ useEffect(() => {
 
     try {
       const res = await fetch(
-        "https://jobseeker-backend-jy1y.onrender.com/api/register/",
+        `${process.env.NEXT_PUBLIC_API_URL_APP}/register/`,
         {
           method: "POST",
           body: formData,
@@ -308,7 +308,7 @@ useEffect(() => {
     const fetchCountries = async () => {
       try {
         const res = await fetch(
-          "https://jobseeker-backend-jy1y.onrender.com/master/api/countries/",
+          `${process.env.NEXT_PUBLIC_API_URL}/countries/`,
         );
         const data = await res.json();
         setCountries(data);

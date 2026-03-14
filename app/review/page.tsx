@@ -105,7 +105,7 @@ const formatNumber = (value:any) => {
 };
 
     useEffect(() => {
-      fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_title/")
+      fetch(`${process.env.NEXT_PUBLIC_API_URL_MASTER}/jobs_title/`)
         .then((res) => res.json())
         .then((data) => {
           setJobTitles(data);
@@ -114,7 +114,7 @@ const formatNumber = (value:any) => {
     }, []);
 
     useEffect(() => {
-      fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_category/")
+      fetch(`${process.env.NEXT_PUBLIC_API_URL_MASTER}/jobs_category/`)
         .then((res) => res.json())
         .then((data) => {
           setJobCategories(data);
@@ -125,7 +125,7 @@ const formatNumber = (value:any) => {
 
   useEffect(() => {
     const loadProfile = async () => {
-      const res = await fetch("https://jobseeker-backend-jy1y.onrender.com/api/profile/", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL_APP}/profile/`, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
