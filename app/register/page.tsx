@@ -308,7 +308,7 @@ useEffect(() => {
     const fetchCountries = async () => {
       try {
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/countries/`,
+          `${process.env.NEXT_PUBLIC_API_URL_MASTER}/countries/`,
         );
         const data = await res.json();
         setCountries(data);
