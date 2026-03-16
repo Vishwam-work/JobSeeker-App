@@ -107,6 +107,11 @@ export default function CandidatesPage() {
     });
     setSearch("");
   };
+
+  const formatSalary = (value: string | number) => {
+  if (!value) return "-";
+  return `₹ ${new Intl.NumberFormat("en-IN").format(Number(value))}`;
+};
   const cleanSearch = search.trim().replace(/\s+/g, " ");
 
   useEffect(() => {
@@ -1273,12 +1278,13 @@ export default function CandidatesPage() {
                       <Highlight text={c.experience} />
                     </span>
                     <span>
-                      <Highlight text={c.current_salary} />
+                      <Highlight text={formatSalary(c.current_salary)} />
                     </span>
+
                     {c.expected_salary && (
                       <span>
                         Expected:
-                        <Highlight text={c.expected_salary} />
+                        <Highlight text={formatSalary(c.expected_salary)} />
                       </span>
                     )}
                     <span>
@@ -1296,9 +1302,9 @@ export default function CandidatesPage() {
                 </div>
 
                 {/* Blurred Content (Render next 3 as background) */}
-                <div className="space-y-4 blur-sm opacity-40 select-none pointer-events-none grayscale">
+                {/* <div className="space-y-4 blur-sm opacity-40 select-none pointer-events-none grayscale">
                   {filteredCandidates.slice(3, 6).map((c) => renderCandidateCard(c))}
-                </div>
+                </div> */}
 
                 {/* RIGHT ACTION PANEL */}
                 <div className="flex md:flex-col items-center md:items-center justify-between md:justify-center gap-2 md:gap-3 md:w-52 w-full border-t md:border-t-0 md:border-l pt-3 md:pt-0 md:pl-4">
@@ -1365,7 +1371,10 @@ function CandidateDetail({
   onSelect: (c: Candidate) => void;
 }) {
   const cleanSearch = search.trim().replace(/\s+/g, " ");
-
+  const formatSalary = (value?: string | number) => {
+    if (!value) return "-";
+    return `₹ ${new Intl.NumberFormat("en-IN").format(Number(value))}`;
+  };
   const HighlightText = ({ text = "" }: { text?: string }) => {
     if (!cleanSearch) return <>{text}</>;
 
@@ -1407,7 +1416,7 @@ function CandidateDetail({
             </h2>
             <p className="text-sm text-gray-600">
               <HighlightText text={candidate.experience} /> •{" "}
-              <HighlightText text={candidate.current_salary} />
+              <HighlightText text={formatSalary(candidate.current_salary)} />
             </p>
             <p className="text-sm text-gray-500">
               <HighlightText text={candidate.city?.name} />,{" "}
@@ -1421,10 +1430,13 @@ function CandidateDetail({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
           <p>
-            <b>Current:</b> <HighlightText text={candidate.current_salary} />
+            <b>Current:</b>{" "}
+            <HighlightText text={formatSalary(candidate.current_salary)} />
           </p>
+
           <p>
-            <b>Expected:</b> <HighlightText text={candidate.expected_salary} />
+            <b>Expected:</b>{" "}
+            <HighlightText text={formatSalary(candidate.expected_salary)} />
           </p>
           <p>
             <b>Notice Period:</b>{" "}
