@@ -602,7 +602,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
         console.log("Employer ID:", decoded.user_id);
 
         const res = await fetch(
-          `https://jobseeker-backend-jy1y.onrender.com/employeer/api/companies/${decoded.user_id}/`,
+          `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/companies/${decoded.user_id}/`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -631,7 +631,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
         const token = localStorage.getItem("auth_token");
         if (!token) return;
         const res = await fetch(
-          "https://jobseeker-backend-jy1y.onrender.com/employeer/api/employer/applications/",
+          `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/employer/applications/`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -672,7 +672,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
              : "Under Review",
 
           resumeUrl: app.profile?.resume
-            ? `https://jobseeker-backend-jy1y.onrender.com${app.profile.resume}`
+            ? `${process.env.NEXT_PUBLIC_URL}${app.profile.resume}`
             : "#",
           profileImage: null,
           summary: "",
@@ -716,7 +716,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
       const token = localStorage.getItem("auth_token");
       if (!token) return;
         const response = await fetch(
-          "https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-list-view/",
+          `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/job-list-view/`,
           {
             method: "GET",
             headers: {
@@ -725,15 +725,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
           }
         );
 
-      // const response = await fetch(
-      //   "https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-list-view/",
-      //   {
-      //     method: "GET",
-      //     headers: {
-      //       Authorization: `Bearer ${token}`,
-      //     },
-      //   }
-      // );
+
 
       if (!response.ok) {
         console.error("Failed to fetch jobs");
@@ -755,7 +747,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
   console.log("Posted Jobs:", postedJobs);
 
   useEffect(() => {
-    fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/currencies/")
+    fetch(`${process.env.NEXT_PUBLIC_API_URL_MASTER}/currencies/`)
       .then((res) => res.json())
       .then((data) => {
         // console.log("Currency data:", data);
@@ -766,7 +758,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
   useEffect(() => {
     // Fetch job categories
     fetch(
-      "https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_category/"
+      `${process.env.NEXT_PUBLIC_API_URL_MASTER}/jobs_category/`
     )
       .then((res) => {
         if (!res.ok) {
@@ -781,7 +773,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
       });
 
     // Fetch country
-    fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/countries/")
+    fetch(`${process.env.NEXT_PUBLIC_API_URL_MASTER}/countries/`)
       .then((res) => {
         if (!res.ok) {
           throw new Error(`HTTP error! status: ${res.status}`);
@@ -799,7 +791,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
   useEffect(() => {
     if (selectedCategory) {
       fetch(
-        `https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_title/?category=${selectedCategory}`
+        `${process.env.NEXT_PUBLIC_API_URL_MASTER}/jobs_title/?category=${selectedCategory}`
       )
         .then((res) => {
           if (!res.ok) {
@@ -832,7 +824,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
       const token = localStorage.getItem("auth_token");
 
       const response = await fetch(
-        `https://jobseeker-backend-jy1y.onrender.com/employeer/api/employer/applications/job/${jobId}`,
+        `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/employer/applications/job/${jobId}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -951,7 +943,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
       };
       // console.log("Payload:", payload);
       const response = await fetch(
-        "https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-postings/",
+        `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/job-postings/`,
         {
           method: "POST",
           headers: {
@@ -1121,7 +1113,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
       try {
         const token = localStorage.getItem("auth_token");
         const response = await fetch(
-          `https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-list-view/${job.id}/`,
+          `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/job-list-view/${job.id}/`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -1139,12 +1131,12 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
         console.error("Error fetching job details", err);
       }
     };
-  //https://jobseeker-backend-jy1y.onrender.com
+  //${process.env.NEXT_PUBLIC_URL}
     const handleEditJob = async (job: any) => {
       try {
         const token = localStorage.getItem("auth_token");
         const response = await fetch(
-          `https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-list-view/${job.id}/`,
+          `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/job-list-view/${job.id}/`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -1198,7 +1190,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
 
       }
       const response = await fetch(
-        `https://jobseeker-backend-jy1y.onrender.com/employeer/job-postings/${job.id}/delete/`,
+        `${process.env.NEXT_PUBLIC_URL}/employeer/job-postings/${job.id}/delete/`,
         {
           method: "DELETE",
           headers: {
@@ -1245,7 +1237,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
 
     try {
       const response = await fetch(
-        `https://jobseeker-backend-jy1y.onrender.com/employeer/job-postings/${job.id}/update/`,
+        `${process.env.NEXT_PUBLIC_URL}/employeer/job-postings/${job.id}/update/`,
         {
           method: "PATCH",
           headers: {
@@ -1276,35 +1268,6 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
     }
   };
 
-  // OLD handleUpdateJOB
-  // const handleUpdateJob = async () => {
-  //   try {
-  //     const token = localStorage.getItem("auth_token");
-  //     const response = await fetch(`https://jobseeker-backend-jy1y.onrender.com/employeer/api/job-postings/${selectedJob.id}/`, {
-  //       method: "PUT",
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //         Authorization: `Bearer ${token}`,
-  //       },
-  //       body: JSON.stringify(jobForm),
-  //     });
-
-  //     if (!response.ok) {
-  //       throw new Error("Failed to update job");
-  //     }
-
-  //     const updatedJob = await response.json();
-  //     setPostedJobs((prev) =>
-  //       prev.map((job) => (job.id === updatedJob.id ? updatedJob : job))
-  //     );
-
-  //     setIsModalOpen(false);
-  //     alert("Job updated successfully");
-  //   } catch (err) {
-  //     console.error(err);
-  //     alert("Failed to update job");
-  //   }
-  // };
 
   // Added the New Handle UpdateJob
   const handleUpdateJob = async () => {
@@ -1325,7 +1288,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
       }
 
       const response = await fetch(
-        `https://jobseeker-backend-jy1y.onrender.com/employeer/job-postings/${selectedJob.id}/update/`,
+        `${process.env.NEXT_PUBLIC_URL}/employeer/job-postings/${selectedJob.id}/update/`,
         {
           method: "PUT",
           headers: {
@@ -1375,7 +1338,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
       }
 
       const response = await fetch(
-        `https://jobseeker-backend-jy1y.onrender.com/employeer/api/employer/applications/${candidate.id}/update/`,
+        `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/employer/applications/${candidate.id}/update/`,
         {
           method: "PUT",
           headers: {
@@ -1445,7 +1408,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
       }
 
       const response = await fetch(
-        `https://jobseeker-backend-jy1y.onrender.com/employeer/api/employer/applications/${candidate.id}/update/`,
+        `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/employer/applications/${candidate.id}/update/`,
         {
           method: "PUT",
           headers: {
@@ -1544,7 +1507,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
                          });
 
       const res = await fetch(
-        `https://jobseeker-backend-jy1y.onrender.com/employeer/api/employer/applications/${selectedCandidate.id}/schedule-interview/`,
+        `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/employer/applications/${selectedCandidate.id}/schedule-interview/`,
         {
           method: "PATCH",
           headers: {
@@ -1651,7 +1614,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
         if (!token) return;
 
         const res = await fetch(
-          "https://jobseeker-backend-jy1y.onrender.com/employeer/api/employeer_register/",
+          `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/employeer_register/`,
           {
             headers: {
               Authorization: `Bearer ${token}`,

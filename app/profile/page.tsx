@@ -911,7 +911,7 @@ const handleRemoveSkill = (skillToRemove: Skill) => {
         }
 
         const res = await fetch(
-          "https://jobseeker-backend-jy1y.onrender.com/master/api/majors/",
+          `${process.env.NEXT_PUBLIC_API_URL_MASTER}/majors/`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -935,7 +935,7 @@ const handleRemoveSkill = (skillToRemove: Skill) => {
   const fetchCourses = debounce(async (value: string) => {
     if (!value) return;
 
-    const res = await fetch(`https://jobseeker-backend-jy1y.onrender.com/master/api/courses/search?q=${value}`);
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL_MASTER}/courses/search?q=${value}`);
     const data = await res.json();
 
     setCourseSuggestions(data);
@@ -945,7 +945,7 @@ const fetchCompanies = debounce(async (value: string) => {
   if (!value) return;
 
   const res = await fetch(
-    `https://jobseeker-backend-jy1y.onrender.com/master/api/companies?q=${value}`
+    `${process.env.NEXT_PUBLIC_API_URL_MASTER}/companies?q=${value}`
   );
 
   const data = await res.json();
@@ -956,7 +956,7 @@ const fetchJobCategories = debounce(async (value: string) => {
   if (!value) return;
 
   const res = await fetch(
-    `https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_category/?q=${value}`
+    `${process.env.NEXT_PUBLIC_API_URL_MASTER}/jobs_category/?q=${value}`
   );
 
   const data = await res.json();
@@ -967,7 +967,7 @@ const fetchJobTitles = debounce(async (value: string) => {
   if (!value) return;
 
   const res = await fetch(
-    `https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_title/?q=${value}`
+    `${process.env.NEXT_PUBLIC_API_URL_MASTER}/jobs_title/?q=${value}`
   );
 
   const data = await res.json();
@@ -984,7 +984,7 @@ const fetchJobTitles = debounce(async (value: string) => {
 
       try {
         const res = await fetch(
-          "https://jobseeker-backend-jy1y.onrender.com/api/profile/",
+          `${process.env.NEXT_PUBLIC_API_URL_APP}/profile/`,
           {
             method: "GET",
             headers: {
@@ -1086,7 +1086,7 @@ const fetchJobTitles = debounce(async (value: string) => {
 
       try {
         const res = await fetch(
-          "https://jobseeker-backend-jy1y.onrender.com/api/saved-jobs-all/",
+          `${process.env.NEXT_PUBLIC_API_URL_APP}/saved-jobs-all/`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -1108,7 +1108,7 @@ const fetchJobTitles = debounce(async (value: string) => {
   }, []);
 
   useEffect(() => {
-    fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/currencies/")
+    fetch(`${process.env.NEXT_PUBLIC_API_URL_MASTER}/currencies/`)
       .then((res) => res.json())
       .then((data) => {
         // console.log("Currency data:", data);
@@ -1117,7 +1117,7 @@ const fetchJobTitles = debounce(async (value: string) => {
   }, []);
   
   useEffect(() => {
-    fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/countries/")
+    fetch(`${process.env.NEXT_PUBLIC_API_URL_MASTER}/countries/`)
       .then((res) => res.json())
       .then((data) => {
         // console.log("Country data:", data);
@@ -1139,7 +1139,7 @@ const parseNumber = (value: string) => {
   useEffect(() => {
     if (profileData.personalInfo.countryId) {
       fetch(
-        `https://jobseeker-backend-jy1y.onrender.com/master/api/states/?country_id=${profileData.personalInfo.countryId}`
+        `${process.env.NEXT_PUBLIC_API_URL_MASTER}/states/?country_id=${profileData.personalInfo.countryId}`
       )
         .then((res) => res.json())
         .then((data) => {
@@ -1152,7 +1152,7 @@ const parseNumber = (value: string) => {
   useEffect(() => {
     if (profileData.personalInfo.stateId) {
       fetch(
-        `https://jobseeker-backend-jy1y.onrender.com/master/api/cities/?state=${profileData.personalInfo.stateId}`
+        `${process.env.NEXT_PUBLIC_API_URL_MASTER}/cities/?state=${profileData.personalInfo.stateId}`
       )
         .then((res) => res.json())
         .then(setCities)
@@ -1161,7 +1161,7 @@ const parseNumber = (value: string) => {
   }, [profileData.personalInfo.stateId]);
 
   useEffect(() => {
-    fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/companies/")
+    fetch(`${process.env.NEXT_PUBLIC_API_URL_MASTER}/companies/`)
       .then((res) => res.json())
       .then((data) => {
         setCompanies(data);
@@ -1179,7 +1179,7 @@ const parseNumber = (value: string) => {
     formData.append("resume", resumeFile);
     try {
       const res = await fetch(
-        "https://jobseeker-backend-jy1y.onrender.com/api/profile/upload-resume/",
+        `${process.env.NEXT_PUBLIC_API_URL_APP}/profile/upload-resume/`,
         {
           method: "PATCH",
           headers: {
@@ -1232,7 +1232,7 @@ const uploadedResumeName =
   formData.append("profile_image", selectedImage);
 
   const res = await fetch(
-    "https://jobseeker-backend-jy1y.onrender.com/api/profile/",
+    `${process.env.NEXT_PUBLIC_API_URL_APP}/profile/`,
     {
       method: "PATCH",
       headers: {
@@ -1364,7 +1364,7 @@ useEffect(() => {
     console.log("Payload:", payload);
     console.log("Token:", localStorage.getItem("auth_token"));
     const res = await fetch(
-      "https://jobseeker-backend-jy1y.onrender.com/api/profile/",
+      `${process.env.NEXT_PUBLIC_API_URL_APP}/profile/`,
       {
         method: "PUT",
         headers: {
@@ -1442,7 +1442,7 @@ useEffect(() => {
         }
 
         const res = await fetch(
-          "https://jobseeker-backend-jy1y.onrender.com/api/register/",
+          `${process.env.NEXT_PUBLIC_API_URL_APP}/register/`,
           {
             headers: {
               "Content-Type": "application/json",
@@ -1492,7 +1492,7 @@ useEffect(() => {
     }
 
     const response = await fetch(
-      "https://jobseeker-backend-jy1y.onrender.com/api/my-applied-jobs/",
+      `${process.env.NEXT_PUBLIC_API_URL_APP}/my-applied-jobs/`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -1531,7 +1531,7 @@ const removeAppliedJob = async (applicationId: number) => {
     }
 
     const response = await fetch(
-      `https://jobseeker-backend-jy1y.onrender.com/api/my-applied-jobs/${applicationId}/`,
+      `${process.env.NEXT_PUBLIC_API_URL_APP}/my-applied-jobs/${applicationId}/`,
       {
         method: "DELETE",
         headers: {
@@ -3757,7 +3757,7 @@ const removeAppliedJob = async (applicationId: number) => {
                                 if (!token) return;
                                 try {
                                   const res = await fetch(
-                                    `https://jobseeker-backend-jy1y.onrender.com/api/saved-jobs/${savedJob.id}/`,
+                                    `${process.env.NEXT_PUBLIC_API_URL_APP}/saved-jobs/${savedJob.id}/`,
                                     {
                                       method: "DELETE",
                                       headers: {

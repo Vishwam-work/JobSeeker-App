@@ -37,7 +37,7 @@ export default function CompaniesPage() {
              : null;
 
         const res = await fetch(
-          "https://jobseeker-backend-jy1y.onrender.com/employeer/api/companies/",
+          `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/companies/`,
           {
             headers: {
                "Content-Type": "application/json",

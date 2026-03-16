@@ -51,7 +51,7 @@ export default function Login() {
     e.preventDefault();
     try {
       const response = await fetch(
-        "https://jobseeker-backend-jy1y.onrender.com/api/login/",
+        `${process.env.NEXT_PUBLIC_API_URL_APP}/login/`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -69,7 +69,7 @@ export default function Login() {
         window.dispatchEvent(new Event("user-email-updated"));
         // 🔹 profile API call
         const profileRes = await fetch(
-          "https://jobseeker-backend-jy1y.onrender.com/api/profile/",
+          `${process.env.NEXT_PUBLIC_API_URL_APP}/profile/`,
           {
             headers: {
               Authorization: `Bearer ${data.access}`,
@@ -122,66 +122,7 @@ export default function Login() {
     }
   };
 
-  //  const handleLogin = async (e: React.FormEvent) => {
-  //   e.preventDefault();
 
-  //   try {
-
-  //     const response = await fetch(
-  //       "https://jobseeker-backend-jy1y.onrender.com/api/login/",
-  //       {
-  //         method: "POST",
-  //         headers: { "Content-Type": "application/json" },
-  //         body: JSON.stringify({ email, password }),
-  //       }
-  //     );
-
-  //     const data = await response.json();
-
-  //     if (response.ok && data.access) {
-
-  //       localStorage.setItem("auth_token", data.access);
-
-  //       const result = await signIn("credentials", {
-  //         redirect: false,
-  //         email,
-  //         password,
-  //       });
-
-  //       if (result?.error) {
-  //         console.error("NextAuth error:", result.error);
-  //       }
-
-  //       setAlertType("success");
-  //       setAlertMessage("Login Successful!");
-  //       setAlertOpen(true);
-
-  //       setTimeout(() => {
-  //         router.push("/");
-  //       }, 2000);
-  //     } else {
-
-  //       setAlertType("error");
-  //       setAlertMessage(data.error || "Invalid email or password");
-  //       setAlertOpen(true);
-  //     }
-  //   } catch (error) {
-
-  //     console.error("Login error:", error);
-  //     setAlertType("error");
-  //     setAlertMessage("Network Error!");
-  //     setAlertOpen(true);
-  //   }
-  // };
-
-  // Google Login
-  // const handleGoogleLogin = async () => {
-  //   await signIn("google", {
-  //     redirect: false,
-  //     callbackUrl: "/",
-  //     prompt: "select_account",
-  //   });
-  // };
 
   return (
     <>

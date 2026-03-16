@@ -29,7 +29,7 @@ export default function PricingPage() {
     const fetchCountries = async () => {
       try {
         const res = await fetch(
-          "https://jobseeker-backend-jy1y.onrender.com/master/api/countries/",
+          `${process.env.NEXT_PUBLIC_API_URL_MASTER}/countries/`,
         );
         const data = await res.json();
         setCountries(data);

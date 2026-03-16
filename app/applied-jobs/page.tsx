@@ -17,7 +17,7 @@ export default function AppliedJobsPage() {
       setLoading(true);
 
       const res = await fetch(
-        "https://jobseeker-backend-jy1y.onrender.com/api/my-applied-jobs/",
+        `${process.env.NEXT_PUBLIC_API_URL_APP}/my-applied-jobs/`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

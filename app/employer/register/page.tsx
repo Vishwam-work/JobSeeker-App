@@ -269,7 +269,7 @@ const validateWebsite = (url?: string): boolean => {
 
   // Fetch the Data from the MASTER DB
   useEffect(() => {
-    fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/countries/")
+    fetch(`${process.env.NEXT_PUBLIC_API_URL_MASTER}/countries/`)
       .then((res) => res.json())
       .then((data) => {
         setCountries(data);
@@ -280,7 +280,7 @@ const validateWebsite = (url?: string): boolean => {
   useEffect(() => {
     if (formData.countryId) {
       fetch(
-        `https://jobseeker-backend-jy1y.onrender.com/master/api/states/?country_id=${formData.countryId}`
+        `${process.env.NEXT_PUBLIC_API_URL_MASTER}/states/?country_id=${formData.countryId}`
       )
         .then((res) => res.json())
         .then(setStates)
@@ -291,7 +291,7 @@ const validateWebsite = (url?: string): boolean => {
   useEffect(() => {
     if (formData.stateId) {
       fetch(
-        `https://jobseeker-backend-jy1y.onrender.com/master/api/cities/?state=${formData.stateId}`
+        `${process.env.NEXT_PUBLIC_API_URL_MASTER}/cities/?state=${formData.stateId}`
       )
         .then((res) => res.json())
         .then(setCities)
@@ -363,7 +363,7 @@ const validateWebsite = (url?: string): boolean => {
    
     try {
       const response = await fetch(
-        "https://jobseeker-backend-jy1y.onrender.com/employeer/api/employeer_register/",
+        `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/employeer_register/`,
         {
           method: "POST",
           headers: {
@@ -411,7 +411,7 @@ const validateWebsite = (url?: string): boolean => {
   const handlesendotp = async () => {
     try {
       const res = await fetch(
-        "https://jobseeker-backend-jy1y.onrender.com/api/send_otp/",
+        `${process.env.NEXT_PUBLIC_API_URL_APP}/send_otp/`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -436,7 +436,7 @@ const validateWebsite = (url?: string): boolean => {
   const handleVerifyOTP = async () => {
     try {
       const res = await fetch(
-        "https://jobseeker-backend-jy1y.onrender.com/employeer/api/verify-otp/",
+        `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/verify-otp/`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

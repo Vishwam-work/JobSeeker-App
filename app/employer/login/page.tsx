@@ -38,7 +38,7 @@ export default function EmployerLogin() {
     e.preventDefault();
     try {
       const response = await fetch(
-        "https://jobseeker-backend-jy1y.onrender.com/employeer/api/employeer_login/",
+        `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/employeer_login/`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

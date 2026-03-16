@@ -55,11 +55,11 @@ export default function CompanyDetailPage({
 
         const [companyRes, jobsRes] = await Promise.all([
           fetch(
-            `https://jobseeker-backend-jy1y.onrender.com/employeer/api/companies/`,
+            `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/companies/`,
             { headers },
           ),
           fetch(
-            `https://jobseeker-backend-jy1y.onrender.com/employeer/api/companies/${id}/jobs/`,
+            `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/companies/${id}/jobs/`,
             { headers },
           ),
         ]);

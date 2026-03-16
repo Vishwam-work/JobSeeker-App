@@ -29,7 +29,7 @@ export default function SavedJobsPage() {
 
       try {
         const res = await fetch(
-          "https://jobseeker-backend-jy1y.onrender.com/api/saved-jobs-all/",
+          `${process.env.NEXT_PUBLIC_API_URL_APP}/saved-jobs-all/`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -56,7 +56,7 @@ export default function SavedJobsPage() {
 
     try {
       const res = await fetch(
-        `https://jobseeker-backend-jy1y.onrender.com/api/saved-jobs/${id}/`,
+        `${process.env.NEXT_PUBLIC_API_URL_APP}/saved-jobs/${id}/`,
         {
           method: "DELETE",
           headers: {

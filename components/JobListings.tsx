@@ -270,7 +270,7 @@ const sortedJobs = [...filteredJobs]
     const fetchCompanies = async () => {
       try {
         const res = await fetch(
-          "https://jobseeker-backend-jy1y.onrender.com/employeer/api/all-jobs/",
+          `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/all-jobs/`,
         );
         const data = await res.json();
         if (!res.ok) {
@@ -304,7 +304,7 @@ const sortedJobs = [...filteredJobs]
         if (!token) return;
 
         const res = await fetch(
-          "https://jobseeker-backend-jy1y.onrender.com/api/saved-jobs/",
+          `${process.env.NEXT_PUBLIC_API_URL_APP}/saved-jobs/`,
           {
             headers: { Authorization: `Bearer ${token}` },
           },
@@ -330,7 +330,7 @@ const sortedJobs = [...filteredJobs]
     const fetchSkills = async () => {
       try {
         const response = await fetch(
-          "https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_category/",
+          `${process.env.NEXT_PUBLIC_API_URL}/jobs_category/`,
         );
         const data = await response.json();
 
@@ -354,7 +354,7 @@ const sortedJobs = [...filteredJobs]
       setLoading(true);
 
       const response = await fetch(
-        `https://jobseeker-backend-jy1y.onrender.com/employeer/api/all-jobs/?page=${pageNumber}`,
+        `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/all-jobs/?page=${pageNumber}`,
       );
 
       const data = await response.json();
@@ -631,7 +631,7 @@ useEffect(() => {
 
     try {
       const res = await fetch(
-        "https://jobseeker-backend-jy1y.onrender.com/api/saved-jobs/",
+        `${process.env.NEXT_PUBLIC_API_URL_APP}/saved-jobs/`,
         {
           method: "POST",
           headers: {
@@ -663,7 +663,7 @@ useEffect(() => {
     try {
       // We need to find the savedJobId (record ID) for this job
       const res = await fetch(
-        "https://jobseeker-backend-jy1y.onrender.com/api/saved-jobs/",
+        `${process.env.NEXT_PUBLIC_API_URL_APP}/saved-jobs/`,
         {
           headers: { Authorization: `Bearer ${token}` },
         },
@@ -674,7 +674,7 @@ useEffect(() => {
       if (!record) return;
 
       const delRes = await fetch(
-        `https://jobseeker-backend-jy1y.onrender.com/api/saved-jobs/${record.id}/`,
+        `${process.env.NEXT_PUBLIC_API_URL_APP}/saved-jobs/${record.id}/`,
         {
           method: "DELETE",
           headers: { Authorization: `Bearer ${token}` },
@@ -725,7 +725,7 @@ useEffect(() => {
     try {
       const requestId = uuidv4();
       const res = await fetch(
-        `https://jobseeker-backend-jy1y.onrender.com/employeer/api/${job.id}/click/`,
+        `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/${job.id}/click/`,
         {
           method: "POST",
           headers: {
@@ -798,7 +798,7 @@ useEffect(() => {
       const token = localStorage.getItem("auth_token");
 
       const response = await fetch(
-        "https://jobseeker-backend-jy1y.onrender.com/api/profile/",
+        `${process.env.NEXT_PUBLIC_API_URL_APP}/profile/`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -817,7 +817,7 @@ const resumePath = profile.resume;
 const resumeUrl = resumePath
   ? resumePath.startsWith("http")
     ? resumePath
-    : `https://jobseeker-backend-jy1y.onrender.com${resumePath}`
+    : `${process.env.NEXT_PUBLIC_URL}${resumePath}`
   : null;
 
 setUserData({
@@ -838,7 +838,7 @@ setUserData({
       const email = localStorage.getItem("user_email");
 
       const response = await fetch(
-        "https://jobseeker-backend-jy1y.onrender.com/employeer/api/employer/applications/all/",
+        `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/employer/applications/all/`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -933,7 +933,7 @@ setUserData({
       };
 
       const response = await fetch(
-        "https://jobseeker-backend-jy1y.onrender.com//employeer/api/applications/submit/",
+        `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/applications/submit/`,
         {
           method: "POST",
           headers: {

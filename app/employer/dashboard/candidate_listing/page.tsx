@@ -119,7 +119,7 @@ export default function CandidatesPage() {
     if (!token) return;
 
     fetch(
-      "https://jobseeker-backend-jy1y.onrender.com/employeer/api/profile-all/",
+      `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/profile-all/`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -374,7 +374,7 @@ export default function CandidatesPage() {
         <img
           src={
             c.profile_image
-              ? `https://jobseeker-backend-jy1y.onrender.com${c.profile_image}`
+              ? `${process.env.NEXT_PUBLIC_URL}${c.profile_image}`
               : `https://ui-avatars.com/api/?name=${encodeURIComponent(
                 c.full_name
               )}`
@@ -389,7 +389,7 @@ export default function CandidatesPage() {
 
         {c.resume && (
           <a
-            href={`https://jobseeker-backend-jy1y.onrender.com${c.resume}`}
+            href={`${process.env.NEXT_PUBLIC_URL}${c.resume}`}
             target="_blank"
             rel="noopener noreferrer"
             className="text-xs text-gray-600 flex items-center gap-1 hover:underline"
@@ -1311,7 +1311,7 @@ export default function CandidatesPage() {
                   <img
                     src={
                       c.profile_image
-                        ? `https://jobseeker-backend-jy1y.onrender.com${c.profile_image}`
+                        ? `${process.env.NEXT_PUBLIC_URL}${c.profile_image}`
                         : `https://ui-avatars.com/api/?name=${encodeURIComponent(
                           c.full_name
                         )}`
@@ -1326,7 +1326,7 @@ export default function CandidatesPage() {
 
                   {c.resume && (
                     <a
-                      href={`https://jobseeker-backend-jy1y.onrender.com${c.resume}`}
+                      href={`${process.env.NEXT_PUBLIC_URL}${c.resume}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-xs text-gray-600 flex items-center gap-1 hover:underline"
@@ -1400,7 +1400,7 @@ function CandidateDetail({
           <img
             src={
               candidate.profile_image
-                ? `https://jobseeker-backend-jy1y.onrender.com${candidate.profile_image}`
+                ? `${process.env.NEXT_PUBLIC_URL}${candidate.profile_image}`
                 : `https://ui-avatars.com/api/?name=${encodeURIComponent(
                   candidate.full_name
                 )}`
@@ -1543,7 +1543,7 @@ function CandidateDetail({
 
         {candidate.resume && (
           <a
-            href={`https://jobseeker-backend-jy1y.onrender.com${candidate.resume}`}
+            href={`${process.env.NEXT_PUBLIC_URL}${candidate.resume}`}
             target="_blank"
             className="inline-flex items-center gap-1 mt-3 text-blue-600 underline text-sm"
           >
