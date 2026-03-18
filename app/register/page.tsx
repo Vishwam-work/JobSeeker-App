@@ -76,11 +76,40 @@ export default function Register() {
   const [timer, setTimer] = useState(59);
   const [canResend, setCanResend] = useState(false);
   const [errors, setErrors] = useState({
+    fullName: "",
     email: "",
     password: "",
     phone: "",
   });
   const [otpError, setOtpError] = useState("");
+
+  const emailDomains = [
+  "gmail.com",
+  "yahoo.com",
+  "outlook.com",
+  "hotmail.com",
+  "rediffmail.com",
+];
+
+const emailParts = email.split("@");
+
+const showSuggestions =
+  email.includes("@") &&
+  emailParts[1] !== undefined &&
+  !emailDomains.includes(emailParts[1]);
+
+const filteredDomains =
+  emailParts[1] === ""
+    ? emailDomains
+    : emailDomains.filter((domain) =>
+        domain.startsWith(emailParts[1])
+      );
+  const validateFullName = (value: string) => {
+  if (!value) return "Full name is required";
+  if (value.trim().length < 3) return "Enter at least 3 characters";
+  if (!/^[a-zA-Z\s]+$/.test(value)) return "Only letters allowed";
+  return "";
+};
   const validateEmail = (value: string) => {
     const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!value) return "Email is required";
@@ -180,38 +209,39 @@ useEffect(() => {
   };
 
   //resend otp
-// const handleResendOTP = async () => {
-//    console.log("Resend OTP clicked");
-//   try {
-//     const res = await fetch(
-//       `${process.env.NEXT_PUBLIC_API_URL_APP}/send_otp/`,
-//       {
-//         method: "POST",
-//         headers: { "Content-Type": "application/json" },
-//         body: JSON.stringify({ email }),
-//       }
-//     );
+const handleResendOTP = async () => {
+   console.log("Resend OTP clicked");
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL_APP}/send_otp/`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      }
+    );
 
-//     console.log("API Status:", res.status);
+    console.log("API Status:", res.status);
 
-//     const data = await res.json();
-//     console.log("API Response:", data);
+    const data = await res.json();
+    console.log("API Response:", data);
 
-//     if (!res.ok) {
-//       toast.error(data.error || "Failed to resend OTP");
-//       return;
-//     }
+    if (!res.ok) {
+      toast.error(data.error || "Failed to resend OTP");
+      return;
+    }
 
-//     toast.success("OTP Resent Successfully");
+    toast.success("OTP Resent Successfully");
+    setOtp("");
+    setOtpError("");
+    setTimer(59);
+    setCanResend(false);
 
-//     setTimer(59);
-//     setCanResend(false);
-
-//   } catch (error) {
-//     console.error(error);
-//     toast.error("Something went wrong");
-//   }
-// };
+  } catch (error) {
+    console.error(error);
+    toast.error("Something went wrong");
+  }
+};
 
   // ----------------------------
   // VERIFY OTP
@@ -372,7 +402,7 @@ useEffect(() => {
               <p>Find a job and grow your career</p>
             </div>
           </div>
-          
+
         </div>
 
         {/* RIGHT FORM */}
@@ -384,9 +414,20 @@ useEffect(() => {
               <Input
                 className="mt-1 h-12"
                 value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
+               onChange={(e) => {
+                const value = e.target.value;
+                setFullName(value);
+
+                setErrors((prev) => ({
+                  ...prev,
+                  fullName: validateFullName(value),
+                }));
+              }}
                 placeholder="Enter your full name"
               />
+              {errors.fullName && (
+                <p className="text-red-500 text-sm mt-1">{errors.fullName}</p>
+              )}
             </div>
 
             {/* Email */}
@@ -407,7 +448,7 @@ useEffect(() => {
                     const value = e.target.value;
                     setEmail(value);
                     setIsOtpVerified(false);
-
+                    setIsOtpOpen(false);
                     setErrors((prev) => ({
                       ...prev,
                       email: validateEmail(value),
@@ -416,12 +457,38 @@ useEffect(() => {
                   placeholder="Enter your email"
                   type="email"
                 />
+               {showSuggestions && filteredDomains.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 bg-white border rounded-md shadow-md z-10">
+                    {filteredDomains.map((domain) => (
+                      <div
+                        key={domain}
+                        className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+                        onClick={() => {
+                          const newEmail = `${emailParts[0]}@${domain}`;
+                          setEmail(newEmail);
+
+                          setErrors((prev) => ({
+                            ...prev,
+                            email: validateEmail(newEmail),
+                          }));
+                        }}
+                      >
+                        {domain}
+                      </div>
+                    ))}
+                  </div>
+                )}
                 {errors.email && (
                   <p className="text-sm text-red-500 mt-1">{errors.email}</p>
                 )}
-                {!errors.email && (
+                  {!errors.email && !email && (
                     <p className="text-xs text-gray-500 mt-1">
                       Verify your email before clicking Register.
+                    </p>
+                  )}
+                   {!errors.email && email &&(
+                    <p className="text-xs text-gray-500 mt-1">
+                      We'll send relevant jobs and updates to this email
                     </p>
                   )}
                 {isOtpVerified && (
@@ -429,14 +496,73 @@ useEffect(() => {
                 )}
               </div>
 
+              {!isOtpVerified && !isOtpOpen && (
               <Button
                 type="button"
                 className="mt-2"
-                disabled={!!errors.email || isOtpVerified}
+                disabled={!!errors.email}
                 onClick={handlesendotp}
               >
-                {isOtpVerified ? "Email Verified" : "Verify Email OTP"}
+                Verify Email OTP
               </Button>
+            )}
+                      {isOtpOpen && !isOtpVerified && (
+              <div className="mt-3">
+
+                <InputOTP
+                  maxLength={6}
+                  value={otp}
+                  onChange={(value) => {
+                    setOtp(value);
+                    setOtpError("");
+                  }}
+                >
+                  <InputOTPGroup className="gap-3">
+                    {[0, 1, 2, 3, 4, 5].map((i) => (
+                      <InputOTPSlot
+                        key={i}
+                        index={i}
+                        className="w-10 h-10 text-lg border"
+                      />
+                    ))}
+                  </InputOTPGroup>
+                </InputOTP>
+
+                {otpError && (
+                  <p className="text-sm text-red-500 mt-1">{otpError}</p>
+                )}
+
+                {/* Timer */}
+                <div className="flex items-center gap-2 mt-2 text-sm">
+              {!canResend ? (
+                <span className="text-gray-500">
+                  Expired OTP in <span className="font-medium">{timer}s</span>
+                </span>
+              ) : (
+                <>
+                  <span className="text-gray-500">Didn't receive OTP?</span>
+                  <button
+                    type="button"
+                    onClick={handleResendOTP}
+                    className="text-blue-600 font-medium hover:underline"
+                  >
+                    Resend
+                  </button>
+                </>
+              )}
+            </div>
+
+                {/* Verify Button */}
+                <Button
+                  type="button"
+                  className="mt-3 bg-blue-600 text-white w-full"
+                  onClick={handleVerifyOTP}
+                >
+                  Verify OTP
+                </Button>
+
+              </div>
+            )}
             </div>
 
             {/* Password */}
@@ -462,12 +588,16 @@ useEffect(() => {
                   }}
                 />
                 {errors.password ? (
-               <p className="text-sm text-red-500 mt-1">{errors.password}</p>
-                 ) : (
-                   <p className="text-xs text-gray-500 mt-1">
-                    Use a strong password.
-                   </p>
-                 )}
+                  <p className="text-sm text-red-500 mt-1">{errors.password}</p>
+                ) : password.length >= 8 ? (
+                  <p className="text-xs text-green-600 mt-1">
+                    This helps your account stay protected
+                  </p>
+                ) : (
+                  <p className="text-xs text-gray-500 mt-1">
+                    This helps your account stay protected
+                  </p>
+                )}
                 <button
                   type="button"
                   className="absolute right-3 top-6 -translate-y-1/2 text-gray-500"
@@ -554,10 +684,11 @@ useEffect(() => {
                 <Input
                   className="w-24 h-12 bg-gray-100"
                   value={`+${phoneCode}`}
-                  // readOnly
+                  readOnly
                 />
+                 <div className="relative w-full">
                 <Input
-                  className={`h-12 ${
+                  className={`h-12 pr-10${
                     errors.phone ? "border-red-500 focus:ring-red-500" : ""
                   }`}
                   placeholder="Enter mobile number"
@@ -582,14 +713,22 @@ useEffect(() => {
                     }));
                   }}
                 />
+                   {!errors.phone && profileData.personalInfo.phone.length === 10 && (
+                    <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 text-green-600 w-5 h-5" />
+                  )}
+                  </div>
               </div>
-              {errors.phone ? (
-               <p className="text-sm text-red-500 mt-1">{errors.phone}</p>
-             ) : (
-               <p className="text-xs text-gray-500 mt-1">
-                 Enter a valid 10-digit mobile number.
-               </p>
-             )}             
+             {errors.phone ? (
+                <p className="text-sm text-red-500 mt-1">{errors.phone}</p>
+              ) : profileData.personalInfo.phone.length === 10 ? (
+                <p className="text-xs text-green-600 mt-1">
+                  Employers will reach you on this mobile number.
+                </p>
+              ) : (
+                <p className="text-xs text-gray-500 mt-1">
+                 Recruiters will contact you on this number
+                </p>
+              )}
             </div>
 
             {/* Work Status */}
@@ -787,25 +926,25 @@ useEffect(() => {
       </div>
 
       {/* OTP Modal */}
-          <Dialog open={isOtpOpen} onOpenChange={setIsOtpOpen}>
+          {/* <Dialog open={isOtpOpen} onOpenChange={setIsOtpOpen}>
         <DialogContent className="max-w-md">
           <div className="text-center">
 
-            <h2 className="text-xl font-semibold mb-2">      
+            <h2 className="text-xl font-semibold mb-2">
         Verify email
             </h2>
 
-            <div className="flex justify-center items-center gap-2 mb-6 text-sm text-gray-600">      
+            <div className="flex justify-center items-center gap-2 mb-6 text-sm text-gray-600">
         <span>We just sent a verification code to <b>{email}</b></span>
-       
+
             </div>
 
-            <InputOTP 
-            maxLength={6} 
-            value={otp}  
+            <InputOTP
+            maxLength={6}
+            value={otp}
             onChange={(value) => {
             setOtp(value);
-            setOtpError(""); 
+            setOtpError("");
             }}>
               <InputOTPGroup className="gap-3 justify-center">
                 {[0, 1, 2, 3, 4, 5].map((i) => (
@@ -826,7 +965,15 @@ useEffect(() => {
               <p className="text-xs text-gray-500 mt-4">
                 Your OTP should arrive in {timer} seconds
               </p>
-             </div>      
+              <Button
+                variant="link"
+                disabled={!canResend}
+                onClick={handleResendOTP}
+                className="text-blue-600 mt-2"
+              >
+                Resend OTP
+              </Button>
+             </div>
 
             <Button
               className="w-full mt-5 bg-blue-600 hover:bg-blue-700 text-white h-11"
@@ -837,7 +984,7 @@ useEffect(() => {
 
           </div>
         </DialogContent>
-      </Dialog>
+      </Dialog> */}
     </div>
   );
 }

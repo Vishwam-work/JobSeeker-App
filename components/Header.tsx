@@ -36,8 +36,7 @@ export default function Header() {
   const [search, setSearch] = useState("");
   const [isAboutOpen, setIsAboutOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-
-
+  const [userName, setUserName] = useState("User");
   const router = useRouter();
   const pathname = usePathname();
 
@@ -48,7 +47,13 @@ const handleSearch = () => {
   }
 };
 
+ 
 
+  // Page load par localStorage se naam set karo
+  useEffect(() => {
+    const fullName = localStorage.getItem("full_name");
+    if (fullName) setUserName(fullName);
+  }, []);
   useEffect(() => {
     const checkAuth = () => {
       const token = localStorage.getItem("auth_token");
@@ -66,6 +71,8 @@ const handleSearch = () => {
     localStorage.removeItem("user_name");   
     localStorage.removeItem("user_email");
     localStorage.removeItem("user_id");
+    localStorage.removeItem("full_name");
+   localStorage.removeItem("token");
 
     setIsAuthenticated(false);
     router.push("/login");
@@ -169,7 +176,7 @@ useEffect(() => {
            <div
               onClick={(e) => {
                 e.stopPropagation();
-               
+
               }}
               className="hidden md:flex items-center rounded-full px-4 py-2 w-64 cursor-pointer"
             >
@@ -202,9 +209,9 @@ useEffect(() => {
               <div className="flex items-center space-x-3">
                 <div className="flex items-center space-x-2">
                   <span className="text-gray-700 font-medium">
-                    {localStorage.getItem("full_name") || "User"}
+                    {localStorage.getItem("full_name")}
                   </span>
-                </div>        
+                </div>
 
                    <Button
                   onClick={handleProfileNavigate}
@@ -212,7 +219,7 @@ useEffect(() => {
                 >
                   Make Profile
                 </Button>
-                
+
               </div>
             ) : (
               <>
@@ -262,7 +269,7 @@ useEffect(() => {
                   </Link>
                 </div>
               )}
-              
+
             </div>
 
            {/* Notification Bell  */}
@@ -350,11 +357,6 @@ useEffect(() => {
           ✕
         </button>
       </div>
-
-     
-
-    
-
       {/* Menu */}
       <div className="flex-1">
 
@@ -396,8 +398,7 @@ useEffect(() => {
 
 </div>
 
-      {/* Logout */}
-     
+
 
     </div>
   </>

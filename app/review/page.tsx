@@ -435,8 +435,7 @@ const formatNumber = (value:any) => {
                         <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 text-sm text-gray-600 mt-1 gap-1 sm:gap-0">
                           <div className="flex items-center gap-2">
                             {isPDF ? '📅' : <Calendar className="w-4 h-4 mr-1" />}
-                            <span>Start Year: {edu.start_year}</span>
-                            <span className="flex items-center"><Calendar className="w-4 h-4 mr-1" />End Year: {edu.end_year}</span>
+                            <span>Year: {edu.start_year}-{edu.end_year}</span>
                           </div>
                           <div className="flex items-center">
                             {isPDF ? '🎖  ' : <Award className="w-5 h-5 text-purple-600" />}

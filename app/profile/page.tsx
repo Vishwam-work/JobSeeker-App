@@ -826,7 +826,12 @@ const handleSaveEducation = () => {
     setEditingCertification(null);
     resetCertificationForm();
   };
-
+  const handleBack = () => {
+    const currentIndex = sections.findIndex((s) => s.id === activeSection);
+    if (currentIndex > 0) {
+      setActiveSection(sections[currentIndex - 1].id);
+    }
+  };
   const handleNext = () => {
     const currentIndex = sections.findIndex((s) => s.id === activeSection);
     if (currentIndex < sections.length - 1) {
@@ -1155,11 +1160,11 @@ const getSelectedJobTitle = () => {
     fetch(`${process.env.NEXT_PUBLIC_API_URL_MASTER}/currencies/`)
       .then((res) => res.json())
       .then((data) => {
-        // console.log("Currency data:", data);
+        console.log("Currency data:", data);
         setCurrency(data);
       });
   }, []);
-  
+
   useEffect(() => {
     fetch(`${process.env.NEXT_PUBLIC_API_URL_MASTER}/countries/`)
       .then((res) => res.json())
@@ -1333,18 +1338,6 @@ useEffect(() => {
   if (!profileData.personalInfo.cityId) {
     return toast.error("City is required");
   }
-  if (!profileData.personalInfo.professional_summary?.trim()) {
-    return toast.error("Please Fill Profile Summary.");
-  }
-//   const wordCount = profileData.personalInfo.professional_summary
-//   .trim()
-//   .split(/\s+/)
-//   .filter(word => word.length > 0).length;
-
-// if (wordCount < 5) {
-//   return toast.error("Profile Summary must contain at least 5 words.");
-// }
-
     if (selectedImage) {
 
   const imageUploaded = await uploadProfileImage();
@@ -1473,6 +1466,8 @@ useEffect(() => {
       console.error("Save profile failed:", errText);
       toast.error(`Error saving profile. ${errText}`);
     }
+     localStorage.removeItem("full_name"); 
+    localStorage.setItem("full_name", profileData.personalInfo.fullName);
   };
 
   // Fetch User Data for Profile Name, Email, Phone or country
@@ -2151,14 +2146,14 @@ const removeAppliedJob = async (applicationId: number) => {
                         <div className="flex gap-2 mt-1">
                           <Select
                             value={profileData.personalInfo.phoneCode || ""}
-                            
+                            disabled
                             onValueChange={(value) =>
                               setProfileData((prev) => ({
                                 ...prev,
                                 personalInfo: {
                                   ...prev.personalInfo,
                                   phoneCode: value,
-                                  
+
                                 },
                               }))
                             }
@@ -2596,40 +2591,27 @@ const removeAppliedJob = async (applicationId: number) => {
                        onChange={(e) => handleSummaryChange(e.target.value)}
                        maxLength={250}
                        rows={4}
-                       placeholder="Example: Full Stack Developer with 2+ years experience in React, Next.js and Django"
+                       placeholder="Example: Senior Oracle Fusion Cloud ERP Consultant with 5+ years’ experience in Financials, SQL and Reporting"
                        className="w-full border rounded-md p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                      />
                     {/* Footer */}
                     <div className="flex justify-between items-center mt-2 text-xs text-gray-400">
-                      {/* <span >
-                       {summaryError ? (
-                         <p className="text-sm text-red-500 mt-1">{summaryError}</p>
-                       ): (
-                       <p className="text-xs text-gray-500 mt-2">
-                         Minimum 5 words required
-                       </p>
-                       )}
-                      </span> */}
                       <span>
                         {(profileData.personalInfo.professional_summary || "").length}/250
                       </span>
                     </div>
 
                   </div>
-                    <div className="flex justify-between mt-6">
+                  <div className="flex flex-col sm:flex-row justify-end gap-3 mt-6">
                     <Button
-                      onClick={handleSaveProfile}
-                      className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-10 lg:h-11 mt-6"
+                      onClick={async () => {
+                        await handleSaveProfile();
+                        handleNext();
+                      }}
+                      className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-10 lg:h-11"
                     >
-                      SUBMIT
+                      Save & Next
                     </Button>
-                    <Button
-                      onClick={handleNext}
-                      className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-10 lg:h-11 mt-6"
-                    >
-                      Next
-                    </Button>
-                    
                   </div>
                   </CardContent>
                 </Card>
@@ -2987,21 +2969,26 @@ const removeAppliedJob = async (applicationId: number) => {
                         </Card>
                       )}
                     </div>
-                    <div className="flex justify-between mt-6">
+                    <div className="flex flex-col sm:flex-row justify-between gap-3 mt-6">
+
                     <Button
-                      onClick={handleSaveProfile}
-                      className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-10 lg:h-11 mt-6"
+                      onClick={handleBack}
+                      className="w-full sm:w-auto bg-gray-500 hover:bg-gray-600 h-10 lg:h-11"
                     >
-                      SUBMIT
+                      Back
                     </Button>
+
                     <Button
-                      onClick={handleNext}
-                      className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-10 lg:h-11 mt-6"
+                      onClick={async () => {
+                        await handleSaveProfile();
+                        handleNext();
+                      }}
+                      className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-10 lg:h-11"
                     >
-                      Next
+                      Save & Next
                     </Button>
-                   
-                    </div>
+
+                  </div>
                   </CardContent>
                 </Card>
               )}
@@ -3049,8 +3036,7 @@ const removeAppliedJob = async (applicationId: number) => {
                                   {edu.institution}
                                 </p>
                                 <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 text-xs lg:text-sm text-gray-600 mt-1 gap-1 sm:gap-0">
-                                  <span>Start Year: {edu.start_year}</span>
-                                  <span>End Year: {edu.end_year}</span>
+                                  <span>Year: {edu.start_year}-{edu.end_year}</span>
 
                                   <span>
                                   Score: {edu.percentage}{" "}
@@ -3262,12 +3248,12 @@ const removeAppliedJob = async (applicationId: number) => {
                               </div>
                              <div>
                                 <Label  className="text-sm font-medium text-gray-700">
-                                  Education Duration *
+                                  Year of education *
                                  </Label>
                                   <div className="mt-1 grid grid-cols-2 gap-3">
                                 <DatePicker
                                   views={["year"]}
-                                  label="Start Year"
+                                  label=" Starting Year"
                                   value={educationForm.start_year ?? null}
                                   disableFuture
                                   maxDate={dayjs()}
@@ -3289,7 +3275,7 @@ const removeAppliedJob = async (applicationId: number) => {
                                 />
                                   <DatePicker
                                   views={["year"]}
-                                  label="Graduation Year"
+                                  label=" Graduation Year"
                                   value={educationForm.end_year ?? null}
                                   maxDate={dayjs().add(101, "year")}
                                   onChange={(date) => {
@@ -3318,8 +3304,8 @@ const removeAppliedJob = async (applicationId: number) => {
 
                                   </div>
                                   {yearError && (
-  <p className="text-red-500 text-xs mt-1">{yearError}</p>
-)}
+                                    <p className="text-red-500 text-xs mt-1">{yearError}</p>
+                                  )}
                               </div>
 
                               <div>
@@ -3361,7 +3347,7 @@ const removeAppliedJob = async (applicationId: number) => {
                                    onChange={(e) => {
                                      let value = e.target.value;
 
-                                     //  GRADE 
+                                     //  GRADE
                                     if (educationForm.score_type === "grade") {
                                       const upperValue = value.toUpperCase();
                                       if (!/^[A-Z][+-]?$/.test(upperValue) && upperValue !== "") return;
@@ -3453,20 +3439,24 @@ const removeAppliedJob = async (applicationId: number) => {
                         </Card>
                       )}
                     </div>
-                    <div className="flex justify-between mt-6">
+                  <div className="flex flex-col sm:flex-row justify-between gap-3 mt-6">
                     <Button
-                      onClick={handleSaveProfile}
-                      className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-10 lg:h-11 mt-6"
+                      onClick={handleBack}
+                      className="w-full sm:w-auto bg-gray-500 hover:bg-gray-600 h-10 lg:h-11"
                     >
-                      SUBMIT
+                      Back
                     </Button>
+
                     <Button
-                      onClick={handleNext}
-                      className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-10 lg:h-11 mt-6"
+                      onClick={async () => {
+                        await handleSaveProfile();
+                        handleNext();
+                      }}
+                      className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-10 lg:h-11"
                     >
-                      Next
+                      Save & Next
                     </Button>
-                    
+
                   </div>
                   </CardContent>
                 </Card>
@@ -3523,19 +3513,24 @@ const removeAppliedJob = async (applicationId: number) => {
                         ))}
                       </div>
                     </div>
-                    <div className="flex justify-between mt-6">
-                     <Button
-                      onClick={handleSaveProfile}
-                      className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-10 lg:h-11 mt-6"
-                    >
-                      SUBMIT
-                    </Button>
-                    <Button
-                      onClick={handleNext}
-                      className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-10 lg:h-11 mt-6"
-                    >
-                      Next
-                    </Button>
+                    <div className="flex flex-col sm:flex-row justify-between gap-3 mt-6">
+
+                      <Button
+                        onClick={handleBack}
+                        className="w-full sm:w-auto bg-gray-500 hover:bg-gray-600 h-10 lg:h-11"
+                      >
+                        Back
+                      </Button>
+
+                      <Button
+                        onClick={async () => {
+                          await handleSaveProfile();
+                          handleNext();
+                        }}
+                        className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-10 lg:h-11"
+                      >
+                        Save & Next
+                      </Button>
 
                     </div>
                   </CardContent>
