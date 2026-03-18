@@ -71,7 +71,7 @@ import {
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useMemo } from "react";
-
+import AsyncCreatableSelect from 'react-select/async-creatable'
 import Link from "next/link";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -941,40 +941,84 @@ const handleRemoveSkill = (skillToRemove: Skill) => {
     setCourseSuggestions(data);
   }, 300);
 
-const fetchCompanies = debounce(async (value: string) => {
-  if (!value) return;
 
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL_MASTER}/companies?q=${value}`
-  );
+ const getCompanyOptions = async (inputValue: string) => {
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL_MASTER}/companies?q=${inputValue || ""}`
+    );
 
-  const data = await res.json();
-  setCompanySuggestions(data);
-}, 300);
+    const data = await res.json();
 
-const fetchJobCategories = debounce(async (value: string) => {
-  if (!value) return;
+    return data.map((company: any) => ({
+      label: company.name,
+      value: company.name,
+    }));
+  } catch (error) {
+    console.error("Error fetching companies:", error);
+    return [];
+  }
+};
+const getSelectedCompany = () => {
+  if (!experienceForm.company) return null;
 
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL_MASTER}/jobs_category/?q=${value}`
-  );
+  return {
+    label: experienceForm.company,
+    value: experienceForm.company,
+  };
+};
 
-  const data = await res.json();
-  setJobCategorySuggestions(data);
-},300);
+const getJobCategoryOptions = async (inputValue: string) => {
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL_MASTER}/jobs_category?q=${inputValue || ""}`
+    );
 
-const fetchJobTitles = debounce(async (value: string) => {
-  if (!value) return;
+    const data = await res.json();
 
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL_MASTER}/jobs_title/?q=${value}`
-  );
+    return data.map((category: any) => ({
+      label: category.name,
+      value: category.name,
+    }));
+  } catch (error) {
+    console.error("Error fetching job categories:", error);
+    return [];
+  }
+};
+const getSelectedJobCategory = () => {
+  if (!experienceForm.category) return null;
 
-  const data = await res.json();
-  console.log("Fetched job titles:", data);
-  setJobTitleSuggestions(data);
-},300);
+  return {
+    label: experienceForm.category,
+    value: experienceForm.category,
+  };
+};
 
+const getJobTitlesOptions = async (inputValue: string) => {
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL_MASTER}/jobs_title/?q=${inputValue || ""}`
+    );
+
+    const data = await res.json();
+
+    return data.map((category: any) => ({
+      label: category.title,
+      value: category.title,
+    }));
+  } catch (error) {
+    console.error("Error fetching job categories:", error);
+    return [];
+  }
+};
+const getSelectedJobTitle = () => {
+  if (!experienceForm.job_title) return null;
+
+  return {
+    label: experienceForm.job_title,
+    value: experienceForm.job_title,
+  };
+};
   // Fetch and send The Data From API
   // Fetch Profile Data
   useEffect(() => {
@@ -2695,46 +2739,29 @@ const removeAppliedJob = async (applicationId: number) => {
                           <CardContent className="space-y-4">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">                           
                               <div className="relative">
-                                <Label className="text-sm font-medium">Company *</Label>
+                                 <Label className="text-sm font-medium">Company *</Label>
+                                <AsyncCreatableSelect
+                                cacheOptions
+                                defaultOptions
+                                placeholder="e.g., Deloitte"
+                                className="mt-1"
+                                loadOptions={getCompanyOptions}
+                                value={getSelectedCompany()}
 
-                                <Input
-                                  id="company"
-                                  value={experienceForm.company || ""}
-                                  onChange={(e) => {
-                                    const value = e.target.value;
+                                onChange={(selectedOption: any) => {
+                                  setExperienceForm((prev) => ({
+                                    ...prev,
+                                    company: selectedOption?.value || "",
+                                  }));
+                                }}
 
-                                    setExperienceForm((prev) => ({
-                                      ...prev,
-                                      company: value,
-                                    }));
+                                isClearable
 
-                                    fetchCompanies(value);
-                                    setShowCompanySuggestions(true);
-                                  }}
-                                  placeholder="e.g., Infosys"
-                                  className="mt-1"
-                                />
-
-                                {showCompanySuggestions && companySuggestions.length > 0 && (
-                                  <div className="absolute bg-white border w-full mt-1 rounded-md shadow-md z-10">
-                                    {companySuggestions.map((company) => (
-                                      <div
-                                        key={company.id}
-                                        className="p-2 hover:bg-gray-100 cursor-pointer"
-                                        onClick={() => {
-                                          setExperienceForm((prev) => ({
-                                            ...prev,
-                                            company: company.name,
-                                          }));
-
-                                          setShowCompanySuggestions(false);
-                                        }}
-                                      >
-                                        {company.name}
-                                      </div>
-                                    ))}
-                                  </div>
-                                )}
+                                menuPortalTarget={typeof window !== "undefined" ? document.body : null}
+                                styles={{
+                                  menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                                }}
+                              />
                               </div>
                               <div>
                                 <Label className="text-sm font-medium">Location *</Label>
@@ -2787,93 +2814,60 @@ const removeAppliedJob = async (applicationId: number) => {
                                 </Popover>
                               </div>
                               <div>
-                              
                                 <div className="relative">
                                 <Label className="text-sm font-medium">Job Category *</Label>
+                                <AsyncCreatableSelect
+                                cacheOptions
+                                defaultOptions
+                                placeholder="e.g., Accounting"
+                                className="mt-1"
+                                loadOptions={getJobCategoryOptions}
+                                value={getSelectedJobCategory()}
 
-                                <Input
-                                  value={experienceForm.category || ""}
-                                  onChange={(e) => {
-                                    const value = e.target.value;
+                                onChange={(selectedOption: any) => {
+                                  setExperienceForm((prev) => ({
+                                    ...prev,
+                                    category: selectedOption?.value || "",
+                                  }));
+                                }}
 
-                                    setExperienceForm((prev) => ({
-                                      ...prev,
-                                      category: value,
-                                    }));
+                                isClearable
 
-                                    fetchJobCategories(value);
-                                    setShowJobCategorySuggestions(true);
-                                  }}
-                                  placeholder="e.g., Web Development"
-                                  className="mt-1"
-                                />
+                                menuPortalTarget={typeof window !== "undefined" ? document.body : null}
+                                styles={{
+                                  menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                                }}
+                              />
 
-                                {showJobCategorySuggestions && jobCategorySuggestions.length > 0 && (
-                                  <div className="absolute bg-white border w-full mt-1 rounded-md shadow-md z-10">
-                                    {jobCategorySuggestions.map((category) => (
-                                      <div
-                                        key={category.id}
-                                        className="p-2 hover:bg-gray-100 cursor-pointer"
-                                        onClick={() => {
-                                          setExperienceForm((prev) => ({
-                                            ...prev,
-                                            category: category.name,
-                                          }));
-
-                                          setShowJobCategorySuggestions(false);
-                                        }}
-                                      >
-                                        {category.name}
-                                      </div>
-                                    ))}
-                                  </div>
-                                )}
                               </div>
                               </div>
 
                               <div>
                                 <div className="relative">
                                 <Label className="text-sm font-medium">Job Title *</Label>
+                               <AsyncCreatableSelect
+                                cacheOptions
+                                defaultOptions
+                                placeholder="e.g., Oracle Fusion Senior Consultant"
+                                className="mt-1"
+                                loadOptions={getJobTitlesOptions}
+                                value={getSelectedJobTitle()}
 
-                                <Input
-                                  value={experienceForm.job_title || ""}
-                                  onChange={(e) => {
-                                    const value = e.target.value;
+                                onChange={(selectedOption: any) => {
+                                  setExperienceForm((prev) => ({
+                                    ...prev,
+                                    job_title: selectedOption?.value || "",
+                                  }));
+                                }}
 
-                                    setExperienceForm((prev) => ({
-                                      ...prev,
-                                      job_title: value,
-                                    }));
+                                isClearable
 
-                                    fetchJobTitles(value);
-                                    setShowJobTitleSuggestions(true);
-                                  }}
-                                  placeholder="e.g., Software Engineer"
-                                  className="mt-1"
-                                />
-
-                                {showJobTitleSuggestions && jobTitleSuggestions.length > 0 && (
-                                  <div className="absolute bg-white border w-full mt-1 rounded-md shadow-md z-10">
-                                    {jobTitleSuggestions.map((job) => (
-                                      <div
-                                        key={job.id}
-                                        className="p-2 hover:bg-gray-100 cursor-pointer"
-                                        onClick={() => {
-                                          setExperienceForm((prev) => ({
-                                            ...prev,
-                                            job_title: job.title,
-                                          }));
-
-                                          setShowJobTitleSuggestions(false);
-                                        }}
-                                      >
-                                        {job.title}
-                                      </div>
-                                    ))}
-                                  </div>
-                                )}
+                                menuPortalTarget={typeof window !== "undefined" ? document.body : null}
+                                styles={{
+                                  menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                                }}
+                              />
                               </div>
-                                
                               </div>
 
                               <div>
