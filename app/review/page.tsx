@@ -151,8 +151,8 @@ const formatNumber = (value:any) => {
             location: `${data.city?.name || ""}, ${data.state?.name || ""}`,
             experience: data.experience,
             currentSalary: data.current_salary,
-            currentCurrency: data?.current_currency?.symbol ?? "",
-            expectedCurrency: data?.expected_currency?.symbol ?? "",
+            currentCurrency: data?.current_currency?.symbol_native ?? "",
+            expectedCurrency: data?.expected_currency?.symbol_native ?? "",
 
             expectedSalary: data.expected_salary,
             noticePeriod: data.notice_period,

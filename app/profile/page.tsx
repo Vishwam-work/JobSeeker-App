@@ -277,7 +277,8 @@ type CourseSuggestion ={
 type Currency = {
   id: string | number;
   name: string;
-  symbol: string;
+  symbol_native: string;
+  code: string;
 }
 type JobCategory = {
   id: string;
@@ -364,6 +365,7 @@ type ProfileData = {
     experience: string;
     currentSalary: number | null;
     expectedSalary: number | null;
+     symbol_native?: string;
     noticePeriod: string;
     resume?: string | null;
     profile_image?: string | null;
@@ -1192,13 +1194,34 @@ const getSelectedJobTitle = () => {
       })
       .catch((err) => console.error(err));
   }, []);
+const selectedCurrency = currency.find(
+  (c) => c.id.toString() === profileData.personalInfo.currentcurrency
+);
+const code = selectedCurrency?.code;
+const symbol = selectedCurrency?.symbol_native || "";
 
-const formatNumber = (value: number | string) => {
-  if (!value) return "";
-  return new Intl.NumberFormat("en-US").format(Number(value));
+const selectedExpectedCurrency = currency.find(
+  (c) => String(c.id) === profileData.personalInfo.expectedCurrency
+);
+
+const expectedCode = selectedExpectedCurrency?.code || "";
+const formatNumber = (
+  value: number | string | null | undefined,
+  currency?: string,
+  symbol?: string
+): string => {
+  if (value === null || value === undefined || value === "") return "-";
+console.log("Currency value:", currency);
+  const curr = currency?.toString().trim().toUpperCase();
+ 
+  const locale = curr === "INR" ? "en-IN" : "en-US";
+
+  const formatted = new Intl.NumberFormat(locale).format(Number(value));
+
+  return symbol ? `${symbol} ${formatted}` : formatted;
 };
 
-const parseNumber = (value: string) => {
+const parseNumber = (value: string): string => {
   return value.replace(/,/g, "");
 };
 
@@ -1629,10 +1652,10 @@ const removeAppliedJob = async (applicationId: number) => {
       <div className="min-h-screen bg-gray-50">
         <Header />
 
-        <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-6">
-          <div className="grid lg:grid-cols-3 gap-4 lg:gap-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-6">
+          <div className="grid lg:grid-cols-2 gap-4 lg:gap-6">
             {/* Left Sidebar - Profile Summary */}
-         
+
 
             {/* Main Content */}
             <div className="lg:col-span-3 order-1 lg:order-2">
@@ -1692,132 +1715,142 @@ const removeAppliedJob = async (applicationId: number) => {
                   </Card>
                 )}
               </div>
-<div className="w-full order-2 lg:order-1">
-  <Card className="lg:sticky lg:top-24 bg-white rounded-lg shadow-sm overflow-x-auto">
-    <CardContent className="p-4 lg:p-6">
-      {/* Top Section: Profile Photo + Progress + Info */}
-      <div className="flex flex-col lg:flex-row items-center lg:items-start gap-6">
-        {/* Profile Photo*/}
+              <div className="grid lg:grid-cols-4 gap-10 lg:gap-6">
+    <div className="lg:col-span-1">
+      <div className="w-full order-2 lg:order-1">
+      <Card className="lg:sticky lg:top-24 bg-white rounded-xl shadow-sm">
+      <CardContent className="p-4">
+          {/* Top Section: Profile Photo + Progress + Info */}
+      <div className="flex flex-col items-center text-center gap-3">
+          {/* Profile Photo*/}
                   <div className="flex flex-col items-center w-28">
-            <label className="relative w-28 h-28 cursor-pointer">
-             {/* Border */}
-              <div className="absolute inset-0 flex items-center justify-center rounded-full border-4 border-gray-200">
-                <div className="w-24 h-24 rounded-full bg-gray-300 flex items-center justify-center text-white text-sm">
-                  {selectedImage || profileData.personalInfo.profile_image ? "" : "Add photo"}
+              <label className="relative w-28 h-28 cursor-pointer group">
+
+            {/* Border */}
+            <div className="absolute inset-0 flex items-center justify-center rounded-full border-4 border-gray-200">
+              <div className="w-24 h-24 rounded-full bg-gray-300 flex items-center justify-center text-white text-sm">
+                {!selectedImage && !profileData.personalInfo.profile_image}
+              </div>
+            </div>
+
+            {/* Profile Image */}
+            <div className="absolute inset-0 flex items-center justify-center rounded-full overflow-hidden">
+              {selectedImage ? (
+                <img
+                  src={URL.createObjectURL(selectedImage)}
+                  className="w-24 h-24 rounded-full object-cover"
+                  alt="Profile Preview"
+                />
+              ) : profileData.personalInfo.profile_image ? (
+                <img
+                  src={profileData.personalInfo.profile_image}
+                  className="w-24 h-24 rounded-full object-cover"
+                  alt="Profile"
+                />
+              ) : (
+                <User className="w-10 h-10 text-purple-600" />
+              )}
+            </div>
+
+            {/* Hover Overlay */}
+            <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center
+                            opacity-0 group-hover:opacity-100 transition">
+              <span className="text-white text-xs font-medium">
+                {selectedImage || profileData.personalInfo.profile_image
+                  ? "Update Photo"
+                  : "Add Photo"}
+              </span>
+            </div>
+
+            {/* Hidden File Input */}
+            <input
+              type="file"
+              accept="image/jpeg,image/jpg,image/png,image/webp"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+
+                const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+                if (!allowedTypes.includes(file.type)) {
+                  setImageError("Only JPG, JPEG, PNG, WEBP formats are allowed.");
+                  return;
+                }
+
+                if (file.size > 1024 * 1024) {
+                  setImageError("Image size must be less than 1MB.");
+                  return;
+                }
+
+                setImageError(null);
+                setSelectedImage(file);
+              }}
+            />
+          </label>
+
+             {imageError && (
+               <p className="text-red-500 text-xs mt-2 text-center break-words">
+                 {imageError}
+               </p>
+             )}
+            </div>
+               <h2 className="text-lg lg:text-xl font-bold text-gray-900 mb-1">
+                   {profileData.personalInfo.fullName}
+                </h2>
+                      {/* Profile Info */}
+                <div className="mt-3 space-y-2 text-sm text-gray-600">
+
+                  <div className="flex gap-4">
+                    <span className="font-medium text-gray-500">City, Country:</span>
+                    <span className="font-semibold text-gray-800">
+                      {profileData.personalInfo.cityId &&
+                        cities.find(c => c.id.toString() === profileData.personalInfo.cityId)?.name},{" "}
+                      {profileData.personalInfo.countryId &&
+                        countries.find(c => c.id.toString() === profileData.personalInfo.countryId)?.name}
+                    </span>
+                  </div>
+
+                  <div className="flex gap-7">
+                    <span className="font-medium text-gray-500">Experience:</span>
+                    <span className="font-semibold text-gray-800">
+                      {profileData.personalInfo.experience || "-"}
+                    </span>
+                  </div>
+
+                  <div className="flex gap-14">
+                    <span className="font-medium text-gray-500">Phone:</span>
+                    <span className="font-semibold text-gray-800">
+                      +{profileData.personalInfo.phoneCode || ""}{" "}
+                      {profileData.personalInfo.phone || "-"}
+                    </span>
+                  </div>
+
+                  <div className="flex gap-16">
+                    <span className="font-medium text-gray-500">Email:</span>
+                    <span className="font-semibold text-gray-800">
+                      {profileData.personalInfo.email || "-"}
+                    </span>
+                  </div>
+
+                  <div className="flex gap-1">
+                  <span className="font-medium text-gray-500">Current Salary:</span>
+                  <span className="font-semibold text-gray-800">
+                    {formatNumber(
+                      profileData.personalInfo.currentSalary,
+                      selectedCurrency?.code,
+                      selectedCurrency?.symbol_native
+                    )}
+                  </span>
                 </div>
-              </div>
 
-              {/* Profile Image */}
-              <div className="absolute inset-0 flex items-center justify-center rounded-full overflow-hidden">
-                {selectedImage ? (
-                  <img
-                    src={URL.createObjectURL(selectedImage)}
-                    className="w-24 h-24 rounded-full object-cover"
-                    alt="Profile Preview"
-                  />
-                ) : profileData.personalInfo.profile_image ? (
-                  <img
-                    src={profileData.personalInfo.profile_image}
-                    className="w-24 h-24 rounded-full object-cover"
-                    alt="Profile"
-                  />
-                ) : (
-                  <User className="w-10 h-10 text-purple-600" />
-                )}
-              </div>
+                  <div className="flex gap-14 ">
+                    <span className="font-medium text-gray-500">Notice:</span>
+                    <span className="font-semibold text-gray-800">
+                      {profileData.personalInfo.noticePeriod || "-"}
+                    </span>
+                  </div>
 
-              {/* Hidden File Input */}
-              <input
-                type="file"
-                accept="image/jpeg,image/jpg,image/png,image/webp"
-                className="hidden"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (!file) return;
-
-                  const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
-                  if (!allowedTypes.includes(file.type)) {
-                    setImageError("Only JPG, JPEG, PNG, WEBP formats are allowed.");
-                    return;
-                  }
-
-                  if (file.size > 1024 * 1024) {
-                    setImageError("Image size must be less than 1MB.");
-                    return;
-                  }
-
-                  setImageError(null);
-                  setSelectedImage(file);
-                }}
-              />
-            </label>
-
-            {imageError && (
-              <p className="text-red-500 text-xs mt-2 text-center break-words">
-                {imageError}
-              </p>
-            )}
-          </div>
-
-        {/* Profile Info */}
-        <div className="flex-1">
-  <h2 className="text-xl font-semibold text-gray-800">
-    {profileData.personalInfo.fullName || "Your Name"}
-  </h2>
-
-  <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-y-3 gap-x-8 text-sm text-gray-600">
-
-    <div>
-      <span className="font-medium text-gray-500">Phone Number:</span>
-      <span className="ml-2 font-semibold text-gray-800">
-        +{profileData.personalInfo.phoneCode || "+"}
-        <span className="ml-1">{profileData.personalInfo.phone || "-"}</span>
-      </span>
-    </div>
-
-    <div>
-      <span className="font-medium text-gray-500">Email:</span>
-      <span className="ml-2 font-semibold text-gray-800">
-        {profileData.personalInfo.email || "-"}
-      </span>
-    </div>
-
-    <div>
-      <span className="font-medium text-gray-500">Experience:</span>
-      <span className="ml-2 font-semibold text-gray-800">
-        {profileData.personalInfo.experience
-          ? profileData.personalInfo.experience.charAt(0).toUpperCase() +
-            profileData.personalInfo.experience.slice(1).toLowerCase()
-          : "-"}
-      </span>
-    </div>
-
-    <div>
-      <span className="font-medium text-gray-500">Notice Period:</span>
-      <span className="ml-2 font-semibold text-gray-800">
-        {profileData.personalInfo.noticePeriod || "-"}
-      </span>
-    </div>
-    <div>
-      <span className="font-medium text-gray-500">Gender:</span>
-      <span className="ml-2 font-semibold text-gray-800">
-        {profileData.personalInfo.gender
-         ? profileData.personalInfo.gender.charAt(0).toUpperCase() +
-         profileData.personalInfo.gender.slice(1).toLowerCase()
-         : ""}
-      </span>
-    </div>
-    <div>
-  <span className="font-medium text-gray-500">Date of Birth:</span>
-  <span className="ml-2 font-semibold text-gray-800">
-    {profileData.personalInfo.date_of_birth
-      ? new Date(profileData.personalInfo.date_of_birth)
-          .toLocaleDateString("en-GB")
-      : "-"}
-  </span>
-</div>
-  </div>
-</div>
+                 </div>
 
                  {/* Action Buttons*/}
                     <div className="mt-3 space-y-3">
@@ -1831,12 +1864,24 @@ const removeAppliedJob = async (applicationId: number) => {
                      }
                    }}
                     >
-                      <DialogTrigger asChild>
-                        <Button className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-sm lg:text-base h-10 lg:h-11">
-                          <Upload className="w-4 h-4 mr-2" />
-                          Upload Resume
-                        </Button>
-                      </DialogTrigger>
+                    {(resumeFile || uploadedResumeName) && (
+                      <p className="text-xs font-semibold text-gray-600 mt-2 truncate max-w-[200px]">
+                       Resume: {resumeFile?.name || uploadedResumeName}
+                      </p>
+                    )}
+                  <DialogTrigger asChild>
+                    <Button
+                      className={`w-full text-sm lg:text-base h-10 lg:h-11 bg-gradient-to-r from-purple-600 to-blue-600 "${
+                        (resumeFile || uploadedResumeName)
+                      }`}
+                    >
+                      <Upload className="w-4 h-4 mr-2" />
+                      {(resumeFile || uploadedResumeName )
+                        ? "Update Resume"
+                        : "Upload Resume"}
+                    </Button>
+                  </DialogTrigger>
+
 
                      <DialogContent className="sm:max-w-md rounded-2xl p-6 overflow-hidden">
                         <DialogHeader>
@@ -1919,105 +1964,67 @@ const removeAppliedJob = async (applicationId: number) => {
                            </button>
                          )}
 
-                    </div>
-                </DialogContent>
-              </Dialog>
-
-        {isProfileSubmitted && (
-          <button
-            type="button"
-            onClick={() => window.location.assign("/review")}
-            className="w-full text-sm lg:text-base h-10 lg:h-11 border rounded-md flex items-center justify-center"
-          >
-            <Eye className="w-4 h-4 mr-2" />
-            Preview Profile
-          </button>
-        )}
-      </div>
-      </div>
-
-     
-    </CardContent>
-  </Card>
-</div>
-              {/* Desktop Navigation Tabs */}
-              <div className="hidden lg:block bg-white rounded-lg shadow-sm mb-6 overflow-x-auto">
-                <div className="flex border-b">
-                  <div className="flex border-b relative">
-                    {sections.map((tab) => {
-                      const IconComponent = tab.icon;
-
-                      // ✅ Normal hover dropdown for "Save"
-                      if (tab.id === "save") {
-                        return (
-                          <div key={tab.id} className="relative group">
-                            <button
-                              className={`flex items-center space-x-2 px-4 xl:px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
-                                ["SavedJobs", "AppliedJobs"].includes(
-                                  activeSection
-                                )
-                                  ? "border-purple-600 text-purple-600"
-                                  : "border-transparent text-gray-600 hover:text-purple-600"
-                              }`}
-                            >
-                              <IconComponent className="w-4 h-4" />
-                              <span className="hidden xl:inline">
-                                {tab.label}
-                              </span>
-                            </button>
-
-                            {/* 👇 fixed dropdown - detached from clipped container */}
-                            <div
-                              className="hidden group-hover:block fixed bg-white border border-gray-200 rounded-lg shadow-lg w-56 z-[9999] mt-1"
-                              style={{
-                                transform: "translateX(-10px)",
-                                top: "70px",
-                              }}
-                            >
-                              <ul className="text-sm text-gray-700">
-                                <li
-                                  onClick={() => setActiveSection("SavedJobs")}
-                                  className="px-4 py-2 hover:bg-purple-50 cursor-pointer"
-                                >
-                                  Saved Jobs
-                                </li>
-                                <li
-                                  onClick={() =>
-                                    setActiveSection("AppliedJobs")
-                                  }
-                                  className="px-4 py-2 hover:bg-purple-50 cursor-pointer"
-                                >
-                                  Applied Jobs
-                                </li>
-                              </ul>
-                            </div>
                           </div>
-                        );
-                      }
+                        </DialogContent>
+                      </Dialog>
 
-                      // ✅ Default tab buttons
-                      return (
+                      {isProfileSubmitted && (
                         <button
-                          key={tab.id}
-                          onClick={() => setActiveSection(tab.id)}
-                          className={`flex items-center space-x-2 px-4 xl:px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
-                            activeSection === tab.id
-                              ? "border-purple-600 text-purple-600"
-                              : "border-transparent text-gray-600 hover:text-purple-600"
-                          }`}
+                          type="button"
+                          onClick={() => window.location.assign("/review")}
+                          className="w-full text-sm lg:text-base h-10 lg:h-11 border rounded-md flex items-center justify-center"
                         >
-                          <IconComponent className="w-4 h-4" />
-                          <span className="hidden xl:inline">{tab.label}</span>
-                          <span className="xl:hidden">
-                            {tab.label.split(" ")[0]}
-                          </span>
+                          <Eye className="w-4 h-4 mr-2" />
+                          Preview Profile
                         </button>
-                      );
-                    })}
-                  </div>
+                      )}
+                    </div>
+                    </div>
+                  </CardContent>
+                </Card>
                 </div>
               </div>
-              
+              {/* Desktop Navigation Tabs */}
+               <div className=" lg:col-span-3 bg-white rounded-lg shadow-sm mb-6 overflow-x-auto ">
+              <div className="flex justify-between items-center border-b ">
+                <div className="flex gap-10">
+                  {sections.map((tab) => {
+                    const IconComponent = tab.icon;
+
+                    const isActive = activeSection === tab.id;
+
+                    return (
+                      <button
+                        key={tab.id}
+                        onClick={() => setActiveSection(tab.id)}
+                        className="flex items-center gap-2 py-3 text-sm font-medium relative"
+                      >
+                        <IconComponent
+                          className={`w-4 h-4 ${
+                            isActive ? "text-purple-600" : "text-gray-400"
+                          }`}
+                        />
+
+                        <span
+                          className={
+                            isActive ? "text-purple-600" : "text-gray-500"
+                          }
+                        >
+                          {tab.label}
+                        </span>
+
+                        {/* 🔥 Active underline */}
+                        {isActive && (
+                          <div className="absolute bottom-0 left-0 w-full h-[2px] bg-purple-600 rounded-full"></div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+
+
              {loading ? (
               <div className="p-6 max-w-5xl mx-auto space-y-6 animate-pulse">
                 <div className="h-8 bg-gray-200 rounded w-1/3"></div>
@@ -2117,23 +2124,6 @@ const removeAppliedJob = async (applicationId: number) => {
                         <Label htmlFor="date_of_birth" className="text-sm font-medium">
                           Date Of Birth
                         </Label>
-
-                        {/* <Input
-                          id="date_of_birth"
-                          type="date"
-                          value={profileData.personalInfo.date_of_birth || ""}
-                          max={new Date().toISOString().split("T")[0]}
-                          onChange={(e) =>
-                            setProfileData((prev) => ({
-                              ...prev,
-                              personalInfo: {
-                                ...prev.personalInfo,
-                                date_of_birth: e.target.value,
-                              },
-                            }))
-                          }
-                          className="mt-1 h-10 lg:h-11"
-                        /> */}
                         <DatePicker
                           value={
                             profileData.personalInfo.date_of_birth
@@ -2522,20 +2512,23 @@ const removeAppliedJob = async (applicationId: number) => {
                             <SelectContent>
                               {currency.map((curr) => (
                                 <SelectItem key={curr.id} value={String(curr.id)}>
-                                  {curr.symbol} - {curr.name}
+                                  {curr.code}
                                 </SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
                           <Input
-                             id="currentSalary"
-                             type="text"
-                            value={formatNumber(profileData.personalInfo.currentSalary ?? 0)}
+                            id="currentSalary"
+                            type="text"
+                            value={formatNumber(
+                              profileData.personalInfo.currentSalary ?? "",
+                              code,
+                            )}
                             onChange={(e) => {
-                               const rawValue = parseNumber(e.target.value);
+                              const rawValue = parseNumber(e.target.value);
 
-                               if (!/^\d*$/.test(rawValue)) return;
-                          
+                              if (!/^\d*$/.test(rawValue)) return;
+
                               setProfileData((prev) => ({
                                 ...prev,
                                 personalInfo: {
@@ -2543,8 +2536,8 @@ const removeAppliedJob = async (applicationId: number) => {
                                   currentSalary: rawValue === "" ? null : Number(rawValue),
                                 },
                               }));
-                             }}
-                             className="flex-1 h-10 lg:h-11"
+                            }}
+                            className="flex-1 h-10 lg:h-11"
                             placeholder="Enter amount"
                           />
 
@@ -2577,31 +2570,34 @@ const removeAppliedJob = async (applicationId: number) => {
                             <SelectContent>
                               {currency.map((curr) => (
                                 <SelectItem key={curr.id} value={String(curr.id)}>
-                                  {curr.symbol} - {curr.name}
+                                  {curr.code}
                                 </SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
-                          <Input
-                           id="expectedSalary"
-                           type="text"
-                           value={formatNumber(profileData.personalInfo.expectedSalary ?? "")}
-                           onChange={(e) => {
-                             const rawValue = parseNumber(e.target.value);
+                         <Input
+                            id="expectedSalary"
+                            type="text"
+                            value={formatNumber(
+                              profileData.personalInfo.expectedSalary ?? "",
+                              expectedCode,
+                            )}
+                            onChange={(e) => {
+                              const rawValue = parseNumber(e.target.value);
 
-                             if (!/^\d*$/.test(rawValue)) return;
+                              if (!/^\d*$/.test(rawValue)) return;
 
-                             setProfileData((prev) => ({
-                               ...prev,
-                               personalInfo: {
-                                 ...prev.personalInfo,
-                                 expectedSalary: rawValue === "" ? null : Number(rawValue),
-                               },
-                             }));
-                           }}
-                           className="flex-1 h-10 lg:h-11"
-                           placeholder="Enter amount"
-                         />
+                              setProfileData((prev) => ({
+                                ...prev,
+                                personalInfo: {
+                                  ...prev.personalInfo,
+                                  expectedSalary: rawValue === "" ? null : Number(rawValue),
+                                },
+                              }));
+                            }}
+                            className="flex-1 h-10 lg:h-11"
+                            placeholder="Enter amount"
+                          />
 
                         </div>
                       </div>
@@ -2749,7 +2745,7 @@ const removeAppliedJob = async (applicationId: number) => {
                             </CardTitle>
                           </CardHeader>
                           <CardContent className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">                           
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <div className="relative">
                                  <Label className="text-sm font-medium">Company *</Label>
                                 <AsyncCreatableSelect
@@ -2791,7 +2787,7 @@ const removeAppliedJob = async (applicationId: number) => {
                                       <ChevronDown className="h-4 w-4 opacity-60" />
                                     </button>
                                   </PopoverTrigger>
-                              
+
                                   <PopoverContent className="p-0 w-[300px]">
                                     <Command
                                       filter={(value, search) =>
@@ -2799,12 +2795,12 @@ const removeAppliedJob = async (applicationId: number) => {
                                       }
                                     >
                                       <CommandInput placeholder="Search location..." />
-                              
+
                                       <CommandList>
                                         {countries.length === 0 && (
                                           <CommandItem disabled>No locations found</CommandItem>
                                         )}
-                              
+
                                         {countries.map((location) => (
                                           <CommandItem
                                             key={location.id}
@@ -3196,7 +3192,7 @@ const removeAppliedJob = async (applicationId: number) => {
                               </div>
                              <div>
                                 <Label  className="text-sm font-medium text-gray-700">
-                                  Year of education *
+                                  Course duration *
                                  </Label>
                                   <div className="mt-1 grid grid-cols-2 gap-3">
                                 <DatePicker
@@ -3223,7 +3219,7 @@ const removeAppliedJob = async (applicationId: number) => {
                                 />
                                   <DatePicker
                                   views={["year"]}
-                                  label=" Graduation Year"
+                                  label=" Ending Year"
                                   value={educationForm.end_year ?? null}
                                   maxDate={dayjs().add(101, "year")}
                                   onChange={(date) => {
@@ -3779,8 +3775,8 @@ const removeAppliedJob = async (applicationId: number) => {
                     </Card>
               )}
 
-
-           
+              </div>
+             </div>      
             </div>
           </div>
         </div>
