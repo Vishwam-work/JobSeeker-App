@@ -76,7 +76,8 @@ import AsyncSelect from "react-select/async";
 import Link from "next/link";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-
+import ReactDatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { TextField } from "@mui/material";
 import dayjs, { Dayjs } from "dayjs";
@@ -133,8 +134,11 @@ export default function Profile() {
   const [locationOpen, setLocationOpen] = useState(false);
   const [citySearch, setCitySearch] = useState("");
   const [newSkill, setNewSkill] = useState("");
-
-
+  const [dobInput, setDobInput] = useState("");
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [dobError, setDobError] = useState("");
+  const [startInput, setStartInput] = useState("");
+ const [endInput, setEndInput] = useState("");
  const [dateError, setDateError] = useState<string | null>(null);
  const [scoreError, setScoreError] = useState<string | null>(null);
  const [yearError, setYearError] = useState("");
@@ -464,7 +468,77 @@ type Major = {
   category: string | number;
 };
 
+ useEffect(() => {
+  if (profileData?.personalInfo?.date_of_birth) {
+    const d = dayjs(profileData.personalInfo.date_of_birth);
 
+    if (d.isValid()) {
+      setDobInput(d.format("DD/MM/YYYY"));
+      setSelectedDate(d.toDate());
+    }
+  }
+}, [profileData?.personalInfo?.date_of_birth]);
+
+const formatDOB = (value: string) => {
+  let input = value.replace(/\D/g, "");
+
+  if (input.length > 8) input = input.slice(0, 8);
+
+  let day = input.slice(0, 2);
+  let month = input.slice(2, 4);
+  let year = input.slice(4, 8);
+
+  let error = "";
+
+  // DAY FIX
+  if (day.length === 1) {
+    if (!["0", "1", "2", "3"].includes(day)) {
+      day = "0" + day;
+    }
+  }
+
+  if (day.length === 2) {
+    let d = parseInt(day);
+    if (d > 31) day = "31";
+    if (d === 0) day = "01";
+  }
+
+  // MONTH FIX
+  if (month.length === 1) {
+    if (month !== "0" && month !== "1") {
+      month = "0" + month;
+    }
+  }
+
+  if (month.length === 2) {
+    let m = parseInt(month);
+    if (m > 12) month = "12";
+    if (m === 0) month = "01";
+  }
+
+  // YEAR VALIDATION
+  const currentYear = dayjs().year();
+
+  if (year.length === 4) {
+    let y = parseInt(year);
+
+    if (y > currentYear) {
+      error = "Future year not allowed";
+    }
+
+    if (y < 1900) {
+      error = "Year must be after 1900";
+    }
+  }
+
+  let formatted = day;
+  if (month) formatted += "/" + month;
+  if (year) formatted += "/" + year;
+
+  const parsed = dayjs(formatted, "DD/MM/YYYY", true);
+
+  return { formatted, parsed, error };
+};
 
 useEffect(() => {
   const userKey = getUserKey();
@@ -1211,7 +1285,7 @@ const formatNumber = (
   symbol?: string
 ): string => {
   if (value === null || value === undefined || value === "") return "-";
-console.log("Currency value:", currency);
+
   const curr = currency?.toString().trim().toUpperCase();
  
   const locale = curr === "INR" ? "en-IN" : "en-US";
@@ -1300,7 +1374,7 @@ const parseNumber = (value: string): string => {
       } else {
         const error = await res.json();
         console.error("Failed to upload resume:", error);
-        
+
         toast.error("Resume upload failed", {
         description: error?.message || "Unknown error. Please try again.",
         });
@@ -1389,6 +1463,8 @@ useEffect(() => {
     return;
   }
 }
+
+
 
 
     const payload = {
@@ -1519,8 +1595,6 @@ useEffect(() => {
       console.error("Save profile failed:", errText);
       toast.error(`Error saving profile. ${errText}`);
     }
-     localStorage.removeItem("full_name"); 
-    localStorage.setItem("full_name", profileData.personalInfo.fullName);
   };
 
   // Fetch User Data for Profile Name, Email, Phone or country
@@ -2119,43 +2193,117 @@ const removeAppliedJob = async (applicationId: number) => {
                         </Select>
                       </div>
 
+
                       {/* date_of_birth */}
-                      <div>
-                        <Label htmlFor="date_of_birth" className="text-sm font-medium">
-                          Date Of Birth
-                        </Label>
-                        <DatePicker
-                          value={
-                            profileData.personalInfo.date_of_birth
-                              ? dayjs(profileData.personalInfo.date_of_birth)
-                              : null
-                          }
-                          onChange={(date) =>
-                            setProfileData((prev) => ({
-                              ...prev,
-                              personalInfo: {
-                                ...prev.personalInfo,
-                                date_of_birth: date ? date.format("YYYY-MM-DD") : "",
-                              },
-                            }))
-                          }
-                          maxDate={dayjs()}
-                          views={["year", "month", "day"]}
-                          format="DD/MM/YYYY"
-                          slotProps={{
-                            textField: {
-                              fullWidth: true,
-                              size: "small",
-                              sx: {
-                                mt: 1,
-                                "& .MuiOutlinedInput-root": {
-                                  height: "44px",
-                                  borderRadius: "6px",
-                                },
-                              },
-                            },
-                          }}
-                        />
+                      <div className="w-full">
+                          <label className="text-sm font-medium">Date Of Birth</label>
+
+                          <div className="relative mt-1">
+                            <input
+                              type="text"
+                              placeholder="DD/MM/YYYY"
+                              maxLength={10}
+                              value={dobInput}
+                              onChange={(e) => {
+                                const raw = e.target.value;
+
+                                const { formatted, parsed, error } = formatDOB(raw);
+
+
+                                const yearPart = formatted.split("/")[2];
+
+                                if (yearPart && yearPart.length === 4) {
+                                  const currentYear = dayjs().year();
+
+                                  if (parseInt(yearPart) > currentYear) {
+
+                                    return;
+                                  }
+                                }
+
+                                setDobInput(formatted);
+
+                                if (error) {
+                                  setDobError(error);
+                                  setSelectedDate(null);
+                                  return;
+                                }
+
+                                if (formatted.length < 10) {
+                                  setDobError("");
+                                  setSelectedDate(null);
+                                  return;
+                                }
+
+                                if (!parsed.isValid()) {
+                                  setDobError("Invalid date");
+                                  setSelectedDate(null);
+                                  return;
+                                }
+
+                                if (parsed.isAfter(dayjs())) {
+                                  setDobError("Future date not allowed");
+                                  setSelectedDate(null);
+                                  return;
+                                }
+
+                                setDobError("");
+                                setSelectedDate(parsed.toDate());
+
+                                setProfileData((prev: any) => ({
+                                  ...prev,
+                                  personalInfo: {
+                                    ...prev.personalInfo,
+                                    date_of_birth: parsed.format("YYYY-MM-DD"),
+                                  },
+                                }));
+                              }}
+                              className={`w-full h-[44px] px-3 pr-10 text-sm border rounded-md outline-none
+                                ${dobError ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:ring-blue-500"}
+                              `}
+                                />
+
+                            {/*  CALENDAR ICON */}
+                            <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                              <ReactDatePicker
+                                selected={selectedDate}
+                                onChange={(date) => {
+                                  if (!date) return;
+
+                                  const parsed = dayjs(date);
+
+                                  setSelectedDate(date);
+                                  setDobInput(parsed.format("DD/MM/YYYY"));
+
+                                  setProfileData((prev: any) => ({
+                                    ...prev,
+                                    personalInfo: {
+                                      ...prev.personalInfo,
+                                      date_of_birth: parsed.format("YYYY-MM-DD"),
+                                    },
+                                  }));
+                                }}
+                                maxDate={new Date()}
+                                popperPlacement="bottom-end"
+                                popperClassName="z-[9999]"
+                                portalId="root"
+                                customInput={
+                                  <button
+                                    type="button"
+                                    className="p-1 rounded hover:bg-gray-100 cursor-pointer"
+                                  >
+                                    <Calendar size={18} />
+                                  </button>
+                                }
+                              />
+
+                            </div>
+                            {dobError && (
+                              <p className="text-red-500 text-xs mt-1">
+                                {dobError}
+                              </p>
+                            )}
+                          </div>
                       </div>
 
 
@@ -2194,35 +2342,34 @@ const removeAppliedJob = async (applicationId: number) => {
 
                           </Select>
                           <Input
-  id="phone"
-  type="tel"
-  value={profileData.personalInfo.phone}
-  maxLength={10}
-  inputMode="numeric"
-  pattern="[0-9]{10}"
-  onChange={(e) => {
-    const value = e.target.value;
+                            id="phone"
+                            type="tel"
+                            value={profileData.personalInfo.phone}
+                            maxLength={10}
+                            inputMode="numeric"
+                            pattern="[0-9]{10}"
+                            onChange={(e) => {
+                              const value = e.target.value;
 
-    // Sirf digits allow kare
-    if (/^\d{0,10}$/.test(value)) {
-      setProfileData((prev) => ({
-        ...prev,
-        personalInfo: {
-          ...prev.personalInfo,
-          phone: value,
-        },
-      }));
-    }
-  }}
-  onKeyDown={(e) => {
-    if (e.key === "e" || e.key === "E" || e.key === "+" || e.key === "-") {
-      e.preventDefault();
-    }
-  }}
-  className="flex-1 h-10 lg:h-11"
-  placeholder="Enter 10-digit phone number"
-  required
-/>
+                              if (/^\d{0,10}$/.test(value)) {
+                                setProfileData((prev) => ({
+                                  ...prev,
+                                  personalInfo: {
+                                    ...prev.personalInfo,
+                                    phone: value,
+                                  },
+                                }));
+                              }
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === "e" || e.key === "E" || e.key === "+" || e.key === "-") {
+                                e.preventDefault();
+                              }
+                            }}
+                            className="flex-1 h-10 lg:h-11"
+                            placeholder="Enter 10-digit phone number"
+                            required
+                          />
 
                         </div>
                       </div>
@@ -2878,86 +3025,156 @@ const removeAppliedJob = async (applicationId: number) => {
                               </div>
                               </div>
 
-                              <div>
-                               <DatePicker
-                                  label="Start Date *"
-                                  value={experienceForm.startDate}
-                                  onChange={(date) => {
-                                    setExperienceForm((prev) => ({
-                                      ...prev,
-                                      startDate: date,
-                                    }));
-                                    setDateError(validateDates(date, experienceForm.endDate));
-                                  }}
-                                  maxDate={dayjs()}
-                                  views={["day", "month", "year"]}
-                                  format="DD/MM/YYYY"
-                                  slotProps={{
-                                    textField: {
-                                      error: !!dateError,
-                                      helperText: dateError,
-                                      fullWidth: true,
-                                      size: "small",
-                                      sx: {
-                                        mt: 1,
-                                        "& .MuiOutlinedInput-root": {
-                                          height: "44px",
-                                          borderRadius: "6px",
-                                        },
-                                      },
-                                    },
-                                  }}
-                                />
-                              </div>
-                              <div>
-                                <div className="space-y-2">
-                                  {!experienceForm.isCurrentJob && (
-                                    <DatePicker
-                                      views={["day", "month", "year"]}
-                                      label="End Date"
-                                      format="DD/MM/YYYY"
-                                      value={experienceForm.endDate}
+                              <div className="w-full">
+                                <label className="text-sm font-medium">Start Date *</label>
+
+                                <div className="relative mt-1">
+                                  <input
+                                    type="text"
+                                    placeholder="DD/MM/YYYY"
+                                    maxLength={10}
+                                    value={startInput}
+                                    onChange={(e) => {
+                                      const { formatted, parsed } = formatDOB(e.target.value);
+
+                                      setStartInput(formatted);
+
+                                      if (formatted.length < 10) return;
+
+                                      if (!parsed.isValid()) {
+                                        setDateError("Invalid start date");
+                                        return;
+                                      }
+
+                                      if (parsed.isAfter(dayjs())) {
+                                        setDateError("Future date not allowed");
+                                        return;
+                                      }
+
+                                      setExperienceForm((prev) => ({
+                                        ...prev,
+                                        startDate: parsed,
+                                      }));
+
+                                      setDateError(validateDates(parsed, experienceForm.endDate));
+                                    }}
+                                    className="w-full h-[44px] px-3 pr-10 border rounded-md"
+                                  />
+
+                                  <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                                    <ReactDatePicker
+                                      selected={experienceForm.startDate?.toDate()}
                                       onChange={(date) => {
+                                        if (!date) return;
+
+                                        const parsed = dayjs(date);
+
+                                        setStartInput(parsed.format("DD/MM/YYYY"));
+
                                         setExperienceForm((prev) => ({
                                           ...prev,
-                                          endDate: date,
+                                          startDate: parsed,
                                         }));
-                                        setDateError(validateDates(experienceForm.startDate, date));
+
+                                        setDateError(validateDates(parsed, experienceForm.endDate));
                                       }}
-                                      minDate={experienceForm.startDate ?? undefined}
-                                      slotProps={{
-                                        textField: {
-                                          error: !!dateError,
-                                          helperText: dateError,
-                                          fullWidth: true,
-                                          size: "small",
-                                        },
+                                      maxDate={new Date()}
+                                      customInput={<Calendar size={18} />}
+                                    />
+                                  </div>
+                                </div>
+
+                                {dateError && <p className="text-red-500 text-xs mt-1">{dateError}</p>}
+                              </div>
+                                <div>
+                              {!experienceForm.isCurrentJob && (
+                                <div className="w-full">
+                                  <label className="text-sm font-medium">End Date</label>
+
+                                  <div className="relative mt-1">
+                                    <input
+                                      type="text"
+                                      placeholder="DD/MM/YYYY"
+                                      maxLength={10}
+                                      value={endInput}
+                                      onChange={(e) => {
+                                        const { formatted, parsed } = formatDOB(e.target.value);
+
+                                        setEndInput(formatted);
+
+                                        if (formatted.length < 10) return;
+
+                                        if (!parsed.isValid()) {
+                                          setDateError("Invalid end date");
+                                          return;
+                                        }
+
+                                        if (parsed.isBefore(experienceForm.startDate)) {
+                                          setDateError("End date must be after start date");
+                                          return;
+                                        }
+
+                                        setExperienceForm((prev) => ({
+                                          ...prev,
+                                          endDate: parsed,
+                                        }));
+
+                                        setDateError(validateDates(experienceForm.startDate, parsed));
                                       }}
+                                      className="w-full h-[44px] px-3 pr-10 border rounded-md"
                                     />
 
+                                    <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                                      <ReactDatePicker
+                                        selected={experienceForm.endDate?.toDate()}
+                                        onChange={(date) => {
+                                          if (!date) return;
 
-                                  )}
+                                          const parsed = dayjs(date);
+
+                                          setEndInput(parsed.format("DD/MM/YYYY"));
+
+                                          setExperienceForm((prev) => ({
+                                            ...prev,
+                                            endDate: parsed,
+                                          }));
+
+                                          setDateError(validateDates(experienceForm.startDate, parsed));
+                                        }}
+                                        minDate={experienceForm.startDate?.toDate()}
+                                        maxDate={new Date()}
+                                        customInput={<Calendar size={18} />}
+                                      />
+                                    </div>
+                                  </div>
+                                     {dateError && (
+                                        <p className="text-red-500 text-xs mt-1">{dateError}</p>
+                                      )}
                                 </div>
-                                <div className="flex items-center space-x-2 mt-1">
-                                  <Checkbox
-                                    id="currentJob"
-                                    checked={experienceForm.isCurrentJob}
-                                    onCheckedChange={(checked) => {
-                                         const isChecked = checked === true; 
-                                       setExperienceForm((prev) => ({
-                                         ...prev,
-                                         isCurrentJob: isChecked,
-                                         endDate: isChecked ? null : prev.endDate,
-                                       }));
-                                     }}
-                                  />
-                                  <Label
-                                    htmlFor="currentJob"
-                                    className="text-sm"
-                                  >
-                                    I currently work here
-                                  </Label>
-                                </div>
+                              )}
+                              <div className="flex items-center space-x-2 mt-2">
+                                <Checkbox
+                                  id="currentJob"
+                                  checked={experienceForm.isCurrentJob}
+                                  onCheckedChange={(checked) => {
+                                    const isChecked = checked === true;
+
+                                    setExperienceForm((prev) => ({
+                                      ...prev,
+                                      isCurrentJob: isChecked,
+                                      endDate: isChecked ? null : prev.endDate,
+                                    }));
+
+                                    if (isChecked) {
+                                      setEndInput("");
+                                      setDateError("");
+                                    }
+                                  }}
+                                />
+                                <Label htmlFor="currentJob" className="text-sm">
+                                  I currently work here
+                                </Label>
+                              </div>
                               </div>
                             </div>
                             <div>
