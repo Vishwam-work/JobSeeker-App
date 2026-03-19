@@ -54,6 +54,8 @@ interface Education {
   id: string | number;
   education: string;
   course: string;
+  course_name?: string;
+  education_name?: string;
   // optional fields used during data mapping
   course_id?: string | number;
   institution: string;
@@ -175,7 +177,9 @@ const formatNumber = (value:any) => {
             end_year: e.end_year,
             percentage: e.percentage,
             score_type: e.score_type?.toLowerCase() || "cgpa",
-            course_type: e.course_type?.toLowerCase() || "full_time",
+            course_type: e.course_type,
+            education_name: e.education_detail?.name || "N/A",
+            course_name: e.course_detail?.name || "N/A",
           })),
           certifications: data.certifications.map((cert: any) => ({
             name : cert.name,
@@ -428,8 +432,8 @@ const formatNumber = (value:any) => {
                         <GraduationCap className="w-6 h-6 text-green-600" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-lg text-gray-900">{edu.education}</h3>
-                        <p className="text-green-600 font-medium">{edu.course}</p>
+                        <h3 className="font-semibold text-lg text-gray-900">{edu.education_name}</h3>
+                        <p className="text-green-600 font-medium">{edu.course_name}</p>
                         <p className="text-gray-600">University:{edu.institution}</p>
                         <p className="text-gray-600">Course Type:{edu.course_type}</p>
                         <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 text-sm text-gray-600 mt-1 gap-1 sm:gap-0">

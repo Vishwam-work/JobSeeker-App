@@ -647,6 +647,8 @@ const getUserKey = () => {
       category: exp.category || "",
       description: exp.description || "",
     });
+    setStartInput(startDate ? startDate.format("DD/MM/YYYY") : "");
+    setEndInput(endDate ? endDate.format("DD/MM/YYYY") : "");
     setEditingExperience(exp);
     setShowAddExperience(true);
   };
@@ -1587,6 +1589,7 @@ useEffect(() => {
     );
     setIsProfileSubmitted(true);
   }
+    localStorage.setItem("full_name", profileData.personalInfo.fullName || "");
       toast.success("Profile saved successfully!", {
       description: "Your changes have been saved.",
       });
@@ -2776,10 +2779,10 @@ const removeAppliedJob = async (applicationId: number) => {
 
                   </div>
                   <div className="flex flex-col sm:flex-row justify-end gap-3 mt-6">
-                    <Button
+                     <Button
                       onClick={async () => {
                         await handleSaveProfile();
-                        handleNext();
+                            handleNext();
                       }}
                       className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-10 lg:h-11"
                     >
@@ -3221,10 +3224,10 @@ const removeAppliedJob = async (applicationId: number) => {
                       Back
                     </Button>
 
-                    <Button
+                     <Button
                       onClick={async () => {
                         await handleSaveProfile();
-                        handleNext();
+                            handleNext();
                       }}
                       className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-10 lg:h-11"
                     >
@@ -3608,10 +3611,10 @@ const removeAppliedJob = async (applicationId: number) => {
                       Back
                     </Button>
 
-                    <Button
+                     <Button
                       onClick={async () => {
                         await handleSaveProfile();
-                        handleNext();
+                            handleNext();
                       }}
                       className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-10 lg:h-11"
                     >
@@ -3683,13 +3686,13 @@ const removeAppliedJob = async (applicationId: number) => {
                         Back
                       </Button>
 
-                      <Button
-                        onClick={async () => {
+                       <Button
+                      onClick={async () => {
                           await handleSaveProfile();
-                          handleNext();
-                        }}
-                        className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-10 lg:h-11"
-                      >
+                            handleNext();
+                      }}
+                      className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-10 lg:h-11"
+                    >
                         Save & Next
                       </Button>
 
