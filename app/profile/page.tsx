@@ -516,7 +516,6 @@ const formatDOB = (value: string) => {
     if (m === 0) month = "01";
   }
 
-  // YEAR VALIDATION
   const currentYear = dayjs().year();
 
   if (year.length === 4) {
@@ -531,6 +530,54 @@ const formatDOB = (value: string) => {
     }
   }
 
+  // ✅ FULL DATE VALIDATION 
+  if (day.length === 2 && month.length === 2 && year.length === 4) {
+    const d = parseInt(day);
+    const m = parseInt(month);
+    const y = parseInt(year);
+
+    // Leap year check
+    const isLeapYear =
+      (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;
+
+    const daysInMonth = [
+      31,
+      isLeapYear ? 29 : 28, // Feb
+      31,
+      30,
+      31,
+      30,
+      31,
+      31,
+      30,
+      31,
+      30,
+      31,
+    ];
+
+    if (m >= 1 && m <= 12) {
+      if (d > daysInMonth[m - 1]) {
+        error = `Invalid day for month`;
+      }
+    }
+
+    // Extra safety with dayjs
+    const parsedCheck = dayjs(
+      `${day}/${month}/${year}`,
+      "DD/MM/YYYY",
+      true
+    );
+
+    if (!parsedCheck.isValid()) {
+      error = "Invalid date";
+    }
+
+    if (parsedCheck.isAfter(dayjs())) {
+      error = "Future date not allowed";
+    }
+  }
+
+  // ✅ FORMAT OUTPUT
   let formatted = day;
   if (month) formatted += "/" + month;
   if (year) formatted += "/" + year;
@@ -654,70 +701,78 @@ const getUserKey = () => {
   };
 
   const handleSaveExperience = () => {
-    if (
-      !experienceForm.company ||
-      !experienceForm.job_title ||
-      !experienceForm.category ||
-      !experienceForm.startDate
-    ) {
-      
-      toast("Incomplete form", {
-       description: "Please fill in all required fields before continuing.",
-      });
-
-      return;
-    }
-    const today = dayjs();
+  const today = dayjs();
   const minDate = dayjs("1960-01-01");
 
-  // ✅ Start date validation
-  if (experienceForm.startDate.isAfter(today)) {
-    toast.error("Invalid date", {
-      description: "Start date cannot be in the future.",
+  // ✅ REQUIRED FIELDS
+  if (
+    !experienceForm.company?.trim() ||
+    !experienceForm.job_title?.trim() ||
+    !experienceForm.category?.trim() ||
+    !startInput // input string bhi required
+  ) {
+    toast("Incomplete form", {
+      description: "Please fill in all required fields before continuing.",
     });
     return;
   }
 
-  if (experienceForm.startDate.isBefore(minDate)) {
-    toast.error("Invalid date", {
-      description: "Start date cannot be before 1960.",
-    });
+  // 🔹 START DATE VALIDATION USING formatDOB
+  const startCheck = formatDOB(startInput);
+  if (startCheck.error || !startCheck.parsed.isValid()) {
+    toast.error(startCheck.error || "Invalid start date");
+    return;
+  }
+  if (startCheck.parsed.isAfter(today)) {
+    toast.error("Start date cannot be in the future");
+    return;
+  }
+  if (startCheck.parsed.isBefore(minDate)) {
+    toast.error("Start date cannot be before 1960");
     return;
   }
 
-  // ✅ End date validation
-  if (!experienceForm.isCurrentJob && experienceForm.endDate) {
-    if (experienceForm.endDate.isBefore(experienceForm.startDate)) {
-      toast.error("Invalid date", {
-        description: "End date cannot be before start date.",
-      });
+  // 🔹 END DATE VALIDATION
+  let formattedEnd: string | null = null;
+  if (!experienceForm.isCurrentJob) {
+    if (!endInput) {
+      toast.error("End date is required");
+      return;
+    }
+    const endCheck = formatDOB(endInput);
+    if (endCheck.error || !endCheck.parsed.isValid()) {
+      toast.error(endCheck.error || "Invalid end date");
+      return;
+    }
+    if (endCheck.parsed.isBefore(startCheck.parsed)) {
+      toast.error("End date cannot be before start date");
+      return;
+    }
+    if (endCheck.parsed.isAfter(today)) {
+      toast.error("End date cannot be in the future");
+      return;
+    }
+    if (endCheck.parsed.isBefore(minDate)) {
+      toast.error("End date cannot be before 1960");
       return;
     }
 
-    if (experienceForm.endDate.isAfter(today)) {
-      toast.error ("Invalid date", {
-        description: "End date cannot be in the future.",
-      });
-      return;
-    }
+    formattedEnd = endCheck.parsed.format("DD-MM-YYYY");
   }
 
+  // ✅ FORMAT DATES (Backend Safe)
+  const formattedStart = startCheck.parsed.format("DD-MM-YYYY");
 
-    const formattedStart = experienceForm.startDate?.format("YYYY-MM-DD");
-    const formattedEnd = experienceForm.isCurrentJob
-      ? null
-      : experienceForm.endDate?.format("YYYY-MM-DD");
-
-    const newExperience = {
-      id: editingExperience ? editingExperience.id : Date.now(),
-      company: experienceForm.company,
-      job_title: experienceForm.job_title,
-      category: experienceForm.category,
-      start_date: formattedStart,
-      end_date: formattedEnd,
-      location_id: experienceForm.location_id,
-      description: experienceForm.description,
-    };
+  const newExperience = {
+    id: editingExperience ? editingExperience.id : Date.now(),
+    company: experienceForm.company.trim(),
+    job_title: experienceForm.job_title.trim(),
+    category: experienceForm.category,
+    start_date: formattedStart,
+    end_date: formattedEnd,
+    location_id: experienceForm.location_id,
+    description: experienceForm.description,
+  };
 
     if (editingExperience) {
       setProfileData((prev) => ({
@@ -1430,8 +1485,7 @@ useEffect(() => {
 
   // Save Api
   const handleSaveProfile = async () => {
-
-     //  REQUIRED FIELD VALIDATION
+  // REQUIRED FIELD VALIDATION
   if (!profileData.personalInfo.fullName?.trim()) {
     return toast.error("Full Name is required");
   }
@@ -1455,16 +1509,30 @@ useEffect(() => {
   if (!profileData.personalInfo.cityId) {
     return toast.error("City is required");
   }
-    if (selectedImage) {
 
-  const imageUploaded = await uploadProfileImage();
-  if (!imageUploaded) {
-    toast.error("Image upload failed", {
-    description: "Please try again.",
-  });
-    return;
+  // DOB validation
+  const dob = profileData.personalInfo.date_of_birth;
+  if (!dob) return toast.error("Date of Birth is required");
+
+  const dobCheck = formatDOB(dob); // ✅ Use your formatDOB function
+
+  if (dobCheck.error || !dobCheck.parsed.isValid()) {
+    return toast.error(dobCheck.error || "Invalid Date of Birth");
   }
-}
+
+  if (dobCheck.parsed.isAfter(dayjs())) {
+    return toast.error("Future date not allowed");
+  }
+
+  // ✅ Use DD/MM/YYYY for backend
+  const formattedDOB = dobCheck.formatted; 
+
+  if (selectedImage) {
+    const imageUploaded = await uploadProfileImage();
+    if (!imageUploaded) {
+      return toast.error("Image upload failed. Please try again.");
+    }
+  }
 
 
 
@@ -2196,19 +2264,18 @@ const removeAppliedJob = async (applicationId: number) => {
                         </Select>
                       </div>
 
+{/* date_of_birth */}
+<div className="w-full">
+  <label className="text-sm font-medium">Date Of Birth</label>
 
-                      {/* date_of_birth */}
-                      <div className="w-full">
-                          <label className="text-sm font-medium">Date Of Birth</label>
-
-                          <div className="relative mt-1">
-                            <input
-                              type="text"
-                              placeholder="DD/MM/YYYY"
-                              maxLength={10}
-                              value={dobInput}
-                              onChange={(e) => {
-                                const raw = e.target.value;
+  <div className="relative mt-1">
+    <input
+      type="text"
+      placeholder="DD/MM/YYYY"
+      maxLength={10}
+      value={profileData.personalInfo.date_of_birth || dobInput}
+      onChange={(e) => {
+  const raw = e.target.value;
 
                                 const { formatted, parsed, error } = formatDOB(raw);
 
@@ -2218,11 +2285,11 @@ const removeAppliedJob = async (applicationId: number) => {
                                 if (yearPart && yearPart.length === 4) {
                                   const currentYear = dayjs().year();
 
-                                  if (parseInt(yearPart) > currentYear) {
-
-                                    return;
-                                  }
-                                }
+    if (parseInt(yearPart) > currentYear) {
+      setDobError("Future year not allowed");
+      return;
+    }
+  }
 
                                 setDobInput(formatted);
 
@@ -2253,18 +2320,18 @@ const removeAppliedJob = async (applicationId: number) => {
                                 setDobError("");
                                 setSelectedDate(parsed.toDate());
 
-                                setProfileData((prev: any) => ({
-                                  ...prev,
-                                  personalInfo: {
-                                    ...prev.personalInfo,
-                                    date_of_birth: parsed.format("YYYY-MM-DD"),
-                                  },
-                                }));
-                              }}
-                              className={`w-full h-[44px] px-3 pr-10 text-sm border rounded-md outline-none
-                                ${dobError ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:ring-blue-500"}
-                              `}
-                                />
+  setProfileData((prev: any) => ({
+    ...prev,
+    personalInfo: {
+      ...prev.personalInfo,
+      date_of_birth: parsed.format("DD/MM/YYYY"),
+    },
+  }));
+}}
+      className={`w-full h-[44px] px-3 pr-10 text-sm border rounded-md outline-none
+        ${dobError ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:ring-blue-500"}
+      `}
+    />
 
                             {/*  CALENDAR ICON */}
                             <div className="absolute right-2 top-1/2 -translate-y-1/2">
@@ -2273,41 +2340,40 @@ const removeAppliedJob = async (applicationId: number) => {
                                 onChange={(date) => {
                                   if (!date) return;
 
-                                  const parsed = dayjs(date);
+          const parsed = dayjs(date);
 
-                                  setSelectedDate(date);
-                                  setDobInput(parsed.format("DD/MM/YYYY"));
+          setSelectedDate(date);
+          setDobInput(parsed.format("DD/MM/YYYY"));
+          setProfileData((prev: any) => ({
+            ...prev,
+            personalInfo: {
+              ...prev.personalInfo,
+              date_of_birth: parsed.format("DD/MM/YYYY"),
+            },
+          }));
+        }}
+        maxDate={new Date()}
+        popperPlacement="bottom-end"
+        popperClassName="z-[9999]"
+        portalId="root"
+        customInput={
+          <button
+            type="button"
+            className="p-1 rounded hover:bg-gray-100 cursor-pointer"
+          >
+            <Calendar size={18} />
+          </button>
+        }
+      />
+    </div>
 
-                                  setProfileData((prev: any) => ({
-                                    ...prev,
-                                    personalInfo: {
-                                      ...prev.personalInfo,
-                                      date_of_birth: parsed.format("YYYY-MM-DD"),
-                                    },
-                                  }));
-                                }}
-                                maxDate={new Date()}
-                                popperPlacement="bottom-end"
-                                popperClassName="z-[9999]"
-                                portalId="root"
-                                customInput={
-                                  <button
-                                    type="button"
-                                    className="p-1 rounded hover:bg-gray-100 cursor-pointer"
-                                  >
-                                    <Calendar size={18} />
-                                  </button>
-                                }
-                              />
-
-                            </div>
-                            {dobError && (
-                              <p className="text-red-500 text-xs mt-1">
-                                {dobError}
-                              </p>
-                            )}
-                          </div>
-                      </div>
+    {dobError && (
+      <p className="text-red-500 text-xs mt-1">
+        {dobError}
+      </p>
+    )}
+  </div>
+</div>
 
 
                       <div>
