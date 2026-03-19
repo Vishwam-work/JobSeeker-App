@@ -293,9 +293,9 @@ export default function Login() {
                         className="pr-10 bg-gray-50 h-12 border-gray-200 focus:border-purple-500 focus:ring-purple-500"
                         value={password}
                         onChange={(e) => {
-  setPassword(e.target.value);
-  setPasswordError("");
-}}
+                      setPassword(e.target.value);
+                      setPasswordError("");
+                    }}
                       />
                       {passwordError && (
   <p className="text-red-500 text-xs mt-1">{passwordError}</p>
@@ -318,6 +318,14 @@ export default function Login() {
                   <Button className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold py-3 h-12 shadow-lg hover:shadow-xl transition-all duration-200">
                     Login
                   </Button>
+                  <div className="flex justify-end mt-2">
+                  <Link
+                    href="/forgot-password"
+                    className="text-sm text-purple-600 hover:underline"
+                  >
+                    Forgot Password?
+                  </Link>
+                </div>
 
                   {/* <Button
                     variant="outline"
