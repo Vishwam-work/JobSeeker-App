@@ -84,7 +84,8 @@ import dayjs, { Dayjs } from "dayjs";
 import exp from "node:constants";
 import { profile } from "node:console";
 import { RadioGroup, FormControlLabel, Radio, FormControl, FormLabel } from "@mui/material";
-
+import customParseFormat from "dayjs/plugin/customParseFormat";
+dayjs.extend(customParseFormat);
 
 
 export default function Profile() {
@@ -468,9 +469,13 @@ type Major = {
   category: string | number;
 };
 
- useEffect(() => {
+useEffect(() => {
   if (profileData?.personalInfo?.date_of_birth) {
-    const d = dayjs(profileData.personalInfo.date_of_birth);
+    const d = dayjs(
+      profileData.personalInfo.date_of_birth,
+      "DD/MM/YYYY",
+      true // strict parsing
+    );
 
     if (d.isValid()) {
       setDobInput(d.format("DD/MM/YYYY"));
@@ -679,10 +684,16 @@ const getUserKey = () => {
     resetExperienceForm();
     setShowAddExperience(true);
     setEditingExperience(null);
+    setStartInput("");
+    setEndInput("");
   };
   const handleEditExperience = (exp: ApiExperience) => {
-    const startDate = exp.start_date ? dayjs(exp.start_date) : null;
-    const endDate = exp.end_date ? dayjs(exp.end_date) : null;
+     const startDate = exp.start_date
+    ? dayjs(exp.start_date, "DD/MM/YYYY", true)
+    : null;
+  const endDate = exp.end_date
+    ? dayjs(exp.end_date, "DD/MM/YYYY", true)
+    : null;
 
     setExperienceForm({
       company: exp.company || "",
@@ -757,11 +768,11 @@ const getUserKey = () => {
       return;
     }
 
-    formattedEnd = endCheck.parsed.format("DD-MM-YYYY");
+    formattedEnd = endCheck.parsed.format("DD/MM/YYYY");
   }
 
   // ✅ FORMAT DATES (Backend Safe)
-  const formattedStart = startCheck.parsed.format("DD-MM-YYYY");
+  const formattedStart = startCheck.parsed.format("DD/MM/YYYY");
 
   const newExperience = {
     id: editingExperience ? editingExperience.id : Date.now(),
@@ -773,6 +784,7 @@ const getUserKey = () => {
     location_id: experienceForm.location_id,
     description: experienceForm.description,
   };
+  console.log("New Experience to Save:", newExperience);
 
     if (editingExperience) {
       setProfileData((prev) => ({
@@ -1341,7 +1353,7 @@ const formatNumber = (
   currency?: string,
   symbol?: string
 ): string => {
-  if (value === null || value === undefined || value === "") return "-";
+  if (value === null || value === undefined || value === "") return "";
 
   const curr = currency?.toString().trim().toUpperCase();
  
@@ -1509,6 +1521,13 @@ useEffect(() => {
   if (!profileData.personalInfo.cityId) {
     return toast.error("City is required");
   }
+  if (!profileData.personalInfo.currentSalary) {
+    return toast.error("Current salary is required");
+  }
+  if(!profileData.personalInfo.expectedSalary) {
+    return toast.error("Expected salary is required");
+  }
+
 
   // DOB validation
   const dob = profileData.personalInfo.date_of_birth;
@@ -1752,6 +1771,14 @@ useEffect(() => {
     setLoadingAppliedJobs(false);
   }
 };
+
+const BASE_URL = "https://jobseeker-backend-jy1y.onrender.com";
+
+const resumeUrl = profileData?.personalInfo?.resume
+  ? profileData.personalInfo.resume.startsWith("http")
+    ? profileData.personalInfo.resume
+    : `${BASE_URL}${profileData.personalInfo.resume}`
+  : null;
 
 useEffect(() => {
   if (activeSection === "AppliedJobs") {
@@ -2009,10 +2036,23 @@ const removeAppliedJob = async (applicationId: number) => {
                      }
                    }}
                     >
-                    {(resumeFile || uploadedResumeName) && (
-                      <p className="text-xs font-semibold text-gray-600 mt-2 truncate max-w-[200px]">
-                       Resume: {resumeFile?.name || uploadedResumeName}
-                      </p>
+                   {(resumeFile || uploadedResumeName) && (
+                      <div className="flex items-center gap-3 mt-2">
+                        <p className="text-xs font-semibold text-gray-600 truncate max-w-[200px]">
+                          Resume: {resumeFile?.name || uploadedResumeName}
+                        </p>
+
+                        {resumeUrl && (
+                            <a
+                              href={resumeUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-blue-600 hover:underline"
+                            >
+                              Preview
+                            </a>
+                          )}
+                      </div>
                     )}
                   <DialogTrigger asChild>
                     <Button
@@ -2273,7 +2313,7 @@ const removeAppliedJob = async (applicationId: number) => {
       type="text"
       placeholder="DD/MM/YYYY"
       maxLength={10}
-      value={profileData.personalInfo.date_of_birth || dobInput}
+      value={dobInput}
       onChange={(e) => {
   const raw = e.target.value;
 
@@ -2908,17 +2948,14 @@ const removeAppliedJob = async (applicationId: number) => {
                                   <div className="flex items-center">
                                     <Clock className="w-3 h-3 lg:w-4 lg:h-4 mr-1 flex-shrink-0" />
                                     <span>
-                                      {exp.start_date &&
-                                        dayjs(exp.start_date).format(
-                                          "MMM YYYY DD"
-                                        )}{" "}
-                                      -{" "}
-                                      {exp.end_date
-                                        ? dayjs(exp.end_date).format(
-                                            "MMM YYYY DD"
-                                          )
-                                        : "Present"}
-                                    </span>
+                                    {exp.start_date && dayjs(exp.start_date, "DD/MM/YYYY").isValid()
+                                      ? dayjs(exp.start_date, "DD/MM/YYYY").format("DD/MM/YYYY")
+                                      : "N/A"}{" "}
+                                    -{" "}
+                                    {exp.end_date && dayjs(exp.end_date, "DD/MM/YYYY").isValid()
+                                      ? dayjs(exp.end_date, "DD/MM/YYYY").format("DD/MM/YYYY")
+                                      : "Present"}
+                                  </span>
                                   </div>
                                 </div>
                               </div>
