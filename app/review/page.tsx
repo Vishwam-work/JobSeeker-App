@@ -84,7 +84,9 @@ interface ProfileData {
     experience: string;
     currentSalary: string;
     currentCurrency: string;
+    currentCurrencySymbol?: string;
     expectedCurrency: string;
+    expectedCurrencySymbol?: string;
     expectedSalary: string;
     noticePeriod: string;
   };
@@ -101,9 +103,20 @@ interface Certification {
   year: string | number;
 }
 
-const formatNumber = (value:any) => {
-  if (!value) return "";
-  return new Intl.NumberFormat("en-US").format(value);
+const formatNumber = (
+  value: any,
+  currency?: string,
+  symbol?: string
+) => {
+  if (!value) return "-";
+
+  const curr = currency?.toUpperCase();
+
+  const locale = curr === "INR" ? "en-IN" : "en-US";
+
+  const formatted = new Intl.NumberFormat(locale).format(Number(value));
+
+  return symbol ? `${symbol} ${formatted}` : formatted;
 };
 
     useEffect(() => {
@@ -153,9 +166,10 @@ const formatNumber = (value:any) => {
             location: `${data.city?.name || ""}, ${data.state?.name || ""}`,
             experience: data.experience,
             currentSalary: data.current_salary,
-            currentCurrency: data?.current_currency?.symbol_native ?? "",
-            expectedCurrency: data?.expected_currency?.symbol_native ?? "",
-
+            currentCurrency: data?.current_currency?.code ?? "",
+            currentCurrencySymbol: data?.current_currency?.symbol_native ?? "",
+            expectedCurrency: data?.expected_currency?.code ?? "",
+            expectedCurrencySymbol: data?.expected_currency?.symbol_native ?? "",
             expectedSalary: data.expected_salary,
             noticePeriod: data.notice_period,
           },
@@ -165,7 +179,7 @@ const formatNumber = (value:any) => {
             position: exp.job_title|| "N/A",
             category: exp.category|| "N/A",
             duration: `${exp.start_date} - ${exp.end_date || "Present"}`,
-            location: exp.location?.name || "N/A",
+            location: exp.location || "N/A",
             description: exp.description,
           })),
           education: data.educations.map((e: any) => ({
@@ -318,31 +332,45 @@ const formatNumber = (value:any) => {
                       {isPDF ? '💼' : <Briefcase className="w-4 h-4" />}
                       <span>Experience: {profileData.personalInfo.experience}</span>
                     </div>
-                    <div className="flex items-center space-x-2 text-gray-600">
-                      Current: <br></br>
-                       {isPDF ? (
-                         <span>{profileData.personalInfo.currentCurrency}</span>
-                       ) : (
-                         <span className="text-sm font-medium">
-                           {profileData.personalInfo.currentCurrency}
-                         </span>
-                       )}
-                       <span>
-                        {formatNumber(profileData.personalInfo.currentSalary) || "0"}
-                       </span>
+                    <div className="flex flex-col text-gray-600">
+                      <div className="flex items-center space-x-2">
+                        <span>Current:</span>
+                        {isPDF ? (
+                          <span>{profileData.personalInfo.currentCurrencySymbol}</span>
+                        ) : (
+                          <span className="text-sm font-medium">
+                            {profileData.personalInfo.currentCurrencySymbol}
+                          </span>
+                        )}
+
+                        <span>
+                          {formatNumber(
+                            profileData.personalInfo.currentSalary,
+                            profileData.personalInfo.currentCurrency,
+                          )}
+                        </span>
+                      </div>
                     </div>
-                    <div className="flex items-center space-x-2 text-gray-600">
-                       Expected: <br></br>
-                       {isPDF ? (
-                         <span>{profileData.personalInfo.expectedCurrency}</span>
-                       ) : (
-                         <span className="text-sm font-medium">
-                           {profileData.personalInfo.expectedCurrency}
-                         </span>
-                       )}
-                       <span>
-                       {formatNumber(profileData.personalInfo.expectedSalary) || "0"}
-                       </span>
+
+                    <div className="flex flex-col text-gray-600 ">
+
+                      <div className="flex items-center space-x-2">
+                        <span>Expected:</span>
+                        {isPDF ? (
+                          <span>{profileData.personalInfo.expectedCurrencySymbol}</span>
+                        ) : (
+                          <span className="text-sm font-medium">
+                            {profileData.personalInfo.expectedCurrencySymbol}
+                          </span>
+                        )}
+
+                        <span>
+                          {formatNumber(
+                            profileData.personalInfo.expectedSalary,
+                            profileData.personalInfo.expectedCurrency,
+                          )}
+                        </span>
+                      </div>
                     </div>
                     <div className="flex items-center space-x-2 text-gray-600">
                       {isPDF ? '🕒' : <Clock className="w-4 h-4" />}
@@ -525,11 +553,13 @@ const formatNumber = (value:any) => {
                 Edit Profile
               </Button>
             </Link>
-            <Link href={profileData.resume} target="_blank">
-            <Button className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-12">
-             Preview Resume
-            </Button>
-           </Link>
+            {profileData?.resume && (
+              <Link href={profileData.resume} target="_blank">
+                <Button className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-12">
+                  Preview Resume
+                </Button>
+              </Link>
+            )}
           </div>
 
         </div>

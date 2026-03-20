@@ -84,7 +84,8 @@ import dayjs, { Dayjs } from "dayjs";
 import exp from "node:constants";
 import { profile } from "node:console";
 import { RadioGroup, FormControlLabel, Radio, FormControl, FormLabel } from "@mui/material";
-
+import customParseFormat from "dayjs/plugin/customParseFormat";
+dayjs.extend(customParseFormat);
 
 
 export default function Profile() {
@@ -157,7 +158,7 @@ export default function Profile() {
     company: "",
     job_title: "",
     category: "",
-    location_id: "",
+    location: "",
     startDate: null,
     endDate: null,
     isCurrentJob: false,
@@ -298,7 +299,7 @@ type ExperienceForm = {
   company: string;
   job_title: string;
   category: string;
-  location_id: string;
+  location: string;
   startDate: dayjs.Dayjs | null;
   endDate: dayjs.Dayjs | null;
   isCurrentJob: boolean;
@@ -316,10 +317,7 @@ type ApiExperience = {
 
   category?: string;
 
-  location?: {
-    id?: string | number;
-    name?: string;
-  };
+  location?: string;
 };
 type ProfileExperience = {
   id?: string | number;
@@ -328,14 +326,7 @@ type ProfileExperience = {
   category?: string;
 
   job_title?: string;
-  location?: {
-    id: string | number;
-    name?: string;
-  };
-
-  // form / payload fields
-
-  location_id?: string;
+  location?:string;
 
   start_date?: string;
   end_date?: string | null;
@@ -468,9 +459,13 @@ type Major = {
   category: string | number;
 };
 
- useEffect(() => {
+useEffect(() => {
   if (profileData?.personalInfo?.date_of_birth) {
-    const d = dayjs(profileData.personalInfo.date_of_birth);
+    const d = dayjs(
+      profileData.personalInfo.date_of_birth,
+      "DD/MM/YYYY",
+      true // strict parsing
+    );
 
     if (d.isValid()) {
       setDobInput(d.format("DD/MM/YYYY"));
@@ -516,7 +511,6 @@ const formatDOB = (value: string) => {
     if (m === 0) month = "01";
   }
 
-  // YEAR VALIDATION
   const currentYear = dayjs().year();
 
   if (year.length === 4) {
@@ -531,6 +525,54 @@ const formatDOB = (value: string) => {
     }
   }
 
+  // ✅ FULL DATE VALIDATION 
+  if (day.length === 2 && month.length === 2 && year.length === 4) {
+    const d = parseInt(day);
+    const m = parseInt(month);
+    const y = parseInt(year);
+
+    // Leap year check
+    const isLeapYear =
+      (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;
+
+    const daysInMonth = [
+      31,
+      isLeapYear ? 29 : 28, // Feb
+      31,
+      30,
+      31,
+      30,
+      31,
+      31,
+      30,
+      31,
+      30,
+      31,
+    ];
+
+    if (m >= 1 && m <= 12) {
+      if (d > daysInMonth[m - 1]) {
+        error = `Invalid day for month`;
+      }
+    }
+
+    // Extra safety with dayjs
+    const parsedCheck = dayjs(
+      `${day}/${month}/${year}`,
+      "DD/MM/YYYY",
+      true
+    );
+
+    if (!parsedCheck.isValid()) {
+      error = "Invalid date";
+    }
+
+    if (parsedCheck.isAfter(dayjs())) {
+      error = "Future date not allowed";
+    }
+  }
+
+  // ✅ FORMAT OUTPUT
   let formatted = day;
   if (month) formatted += "/" + month;
   if (year) formatted += "/" + year;
@@ -596,7 +638,7 @@ const getUserKey = () => {
       company: "",
       job_title: "",
       category: "",
-      location_id: "",
+      location: "",
       startDate: null,
       endDate: null,
       isCurrentJob: false,
@@ -632,10 +674,16 @@ const getUserKey = () => {
     resetExperienceForm();
     setShowAddExperience(true);
     setEditingExperience(null);
+    setStartInput("");
+    setEndInput("");
   };
   const handleEditExperience = (exp: ApiExperience) => {
-    const startDate = exp.start_date ? dayjs(exp.start_date) : null;
-    const endDate = exp.end_date ? dayjs(exp.end_date) : null;
+     const startDate = exp.start_date
+    ? dayjs(exp.start_date, "DD/MM/YYYY", true)
+    : null;
+  const endDate = exp.end_date
+    ? dayjs(exp.end_date, "DD/MM/YYYY", true)
+    : null;
 
     setExperienceForm({
       company: exp.company || "",
@@ -643,7 +691,7 @@ const getUserKey = () => {
       startDate: startDate,
       endDate: endDate,
       isCurrentJob: !exp.end_date,
-      location_id: exp.location?.id?.toString() || "",
+      location: exp.location || "",
       category: exp.category || "",
       description: exp.description || "",
     });
@@ -654,72 +702,82 @@ const getUserKey = () => {
   };
 
   const handleSaveExperience = () => {
-    if (
-      !experienceForm.company ||
-      !experienceForm.job_title ||
-      !experienceForm.category ||
-      !experienceForm.startDate
-    ) {
-      
-      toast("Incomplete form", {
-       description: "Please fill in all required fields before continuing.",
-      });
-
-      return;
-    }
-    const today = dayjs();
+  const today = dayjs();
   const minDate = dayjs("1960-01-01");
 
-  // ✅ Start date validation
-  if (experienceForm.startDate.isAfter(today)) {
-    toast.error("Invalid date", {
-      description: "Start date cannot be in the future.",
+  // ✅ REQUIRED FIELDS
+  if (
+    !experienceForm.company?.trim() ||
+    !experienceForm.job_title?.trim() ||
+    !experienceForm.category?.trim() ||
+    !startInput // input string bhi required
+  ) {
+    toast("Incomplete form", {
+      description: "Please fill in all required fields before continuing.",
     });
     return;
   }
 
-  if (experienceForm.startDate.isBefore(minDate)) {
-    toast.error("Invalid date", {
-      description: "Start date cannot be before 1960.",
-    });
+  // 🔹 START DATE VALIDATION USING formatDOB
+  const startCheck = formatDOB(startInput);
+  if (startCheck.error || !startCheck.parsed.isValid()) {
+    toast.error(startCheck.error || "Invalid start date");
+    return;
+  }
+  if (startCheck.parsed.isAfter(today)) {
+    toast.error("Start date cannot be in the future");
+    return;
+  }
+  if (startCheck.parsed.isBefore(minDate)) {
+    toast.error("Start date cannot be before 1960");
     return;
   }
 
-  // ✅ End date validation
-  if (!experienceForm.isCurrentJob && experienceForm.endDate) {
-    if (experienceForm.endDate.isBefore(experienceForm.startDate)) {
-      toast.error("Invalid date", {
-        description: "End date cannot be before start date.",
-      });
+  // 🔹 END DATE VALIDATION
+  let formattedEnd: string | null = null;
+  if (!experienceForm.isCurrentJob) {
+    if (!endInput) {
+      toast.error("End date is required");
+      return;
+    }
+    const endCheck = formatDOB(endInput);
+    if (endCheck.error || !endCheck.parsed.isValid()) {
+      toast.error(endCheck.error || "Invalid end date");
+      return;
+    }
+    if (endCheck.parsed.isBefore(startCheck.parsed)) {
+      toast.error("End date cannot be before start date");
+      return;
+    }
+    if (endCheck.parsed.isAfter(today)) {
+      toast.error("End date cannot be in the future");
+      return;
+    }
+    if (endCheck.parsed.isBefore(minDate)) {
+      toast.error("End date cannot be before 1960");
       return;
     }
 
-    if (experienceForm.endDate.isAfter(today)) {
-      toast.error ("Invalid date", {
-        description: "End date cannot be in the future.",
-      });
-      return;
-    }
+    formattedEnd = endCheck.parsed.format("DD/MM/YYYY");
   }
 
+  // ✅ FORMAT DATES (Backend Safe)
+  const formattedStart = startCheck.parsed.format("DD/MM/YYYY");
 
-    const formattedStart = experienceForm.startDate?.format("YYYY-MM-DD");
-    const formattedEnd = experienceForm.isCurrentJob
-      ? null
-      : experienceForm.endDate?.format("YYYY-MM-DD");
-
-    const newExperience = {
-      id: editingExperience ? editingExperience.id : Date.now(),
-      company: experienceForm.company,
-      job_title: experienceForm.job_title,
-      category: experienceForm.category,
-      start_date: formattedStart,
-      end_date: formattedEnd,
-      location_id: experienceForm.location_id,
-      description: experienceForm.description,
-    };
+  const newExperience = {
+    id: editingExperience ? editingExperience.id : Date.now(),
+    company: experienceForm.company.trim(),
+    job_title: experienceForm.job_title.trim(),
+    category: experienceForm.category,
+    start_date: formattedStart,
+    end_date: formattedEnd,
+    location: experienceForm.location,
+    description: experienceForm.description,
+  };
+  console.log("New Experience to Save:", newExperience);
 
     if (editingExperience) {
+      console.log("Updating experience with ID:", editingExperience.id);
       setProfileData((prev) => ({
         ...prev,
         experience: prev.experience.map((exp) =>
@@ -727,6 +785,7 @@ const getUserKey = () => {
         ),
       }));
     } else {
+      console.log("Adding new experience");
       setProfileData((prev) => ({
         ...prev,
         experience: [...prev.experience, newExperience],
@@ -1041,6 +1100,24 @@ const loadMajors = async (inputValue: string) => {
   }));
 };
 
+const loadCountryOptions = async (inputValue: string) => {
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL_MASTER}/countries?q=${inputValue || ""}`
+    );
+
+    const data = await res.json();
+
+    return data.map((country: any) => ({
+      label: country.name,
+      value: country.id,
+    }));
+  } catch (error) {
+    console.error("Error fetching countries:", error);
+    return [];
+  }
+};
+
 
  const getCompanyOptions = async (inputValue: string) => {
   try {
@@ -1068,6 +1145,14 @@ const getSelectedCompany = () => {
   };
 };
 
+const getSelectedLocation = () => {
+  if (!experienceForm.location) return null;
+
+  return {
+    label: experienceForm.location,
+    value: experienceForm.location,
+  };
+}
 const getJobCategoryOptions = async (inputValue: string) => {
   try {
     const res = await fetch(
@@ -1188,9 +1273,9 @@ const getSelectedJobTitle = () => {
             },
             experience: (data.experiences || []).map((exp: ProfileExperience) => ({
               ...exp,
-              job_title: exp.category,
-              category: exp.job_title,
-              location_id: exp.location?.id ?? "",
+              job_title: exp.job_title || "",
+              category: exp.category || "",
+              location: exp.location || "",
             })),
            education: (data.educations || []).map((e: any) => ({
             id: e.id,
@@ -1286,7 +1371,7 @@ const formatNumber = (
   currency?: string,
   symbol?: string
 ): string => {
-  if (value === null || value === undefined || value === "") return "-";
+  if (value === null || value === undefined || value === "") return "";
 
   const curr = currency?.toString().trim().toUpperCase();
  
@@ -1430,8 +1515,7 @@ useEffect(() => {
 
   // Save Api
   const handleSaveProfile = async () => {
-
-     //  REQUIRED FIELD VALIDATION
+  // REQUIRED FIELD VALIDATION
   if (!profileData.personalInfo.fullName?.trim()) {
     return toast.error("Full Name is required");
   }
@@ -1455,16 +1539,37 @@ useEffect(() => {
   if (!profileData.personalInfo.cityId) {
     return toast.error("City is required");
   }
-    if (selectedImage) {
-
-  const imageUploaded = await uploadProfileImage();
-  if (!imageUploaded) {
-    toast.error("Image upload failed", {
-    description: "Please try again.",
-  });
-    return;
+  if (!profileData.personalInfo.currentSalary) {
+    return toast.error("Current salary is required");
   }
-}
+  if(!profileData.personalInfo.expectedSalary) {
+    return toast.error("Expected salary is required");
+  }
+
+
+  // DOB validation
+  const dob = profileData.personalInfo.date_of_birth;
+  if (!dob) return toast.error("Date of Birth is required");
+
+  const dobCheck = formatDOB(dob); // ✅ Use your formatDOB function
+
+  if (dobCheck.error || !dobCheck.parsed.isValid()) {
+    return toast.error(dobCheck.error || "Invalid Date of Birth");
+  }
+
+  if (dobCheck.parsed.isAfter(dayjs())) {
+    return toast.error("Future date not allowed");
+  }
+
+  // ✅ Use DD/MM/YYYY for backend
+  const formattedDOB = dobCheck.formatted; 
+
+  if (selectedImage) {
+    const imageUploaded = await uploadProfileImage();
+    if (!imageUploaded) {
+      return toast.error("Image upload failed. Please try again.");
+    }
+  }
 
 
 
@@ -1503,7 +1608,7 @@ useEffect(() => {
         company: exp.company,
         job_title: exp.job_title,
         category: exp.category,
-        location_id: exp.location_id ? Number(exp.location_id) : null,
+        location: exp.location || "",
         start_date: exp.start_date,
         end_date: exp.end_date,
         description: exp.description,
@@ -1684,6 +1789,14 @@ useEffect(() => {
     setLoadingAppliedJobs(false);
   }
 };
+
+const BASE_URL = "https://jobseeker-backend-jy1y.onrender.com";
+
+const resumeUrl = profileData?.personalInfo?.resume
+  ? profileData.personalInfo.resume.startsWith("http")
+    ? profileData.personalInfo.resume
+    : `${BASE_URL}${profileData.personalInfo.resume}`
+  : null;
 
 useEffect(() => {
   if (activeSection === "AppliedJobs") {
@@ -1941,10 +2054,23 @@ const removeAppliedJob = async (applicationId: number) => {
                      }
                    }}
                     >
-                    {(resumeFile || uploadedResumeName) && (
-                      <p className="text-xs font-semibold text-gray-600 mt-2 truncate max-w-[200px]">
-                       Resume: {resumeFile?.name || uploadedResumeName}
-                      </p>
+                   {(resumeFile || uploadedResumeName) && (
+                      <div className="flex items-center gap-3 mt-2">
+                        <p className="text-xs font-semibold text-gray-600 truncate max-w-[200px]">
+                          Resume: {resumeFile?.name || uploadedResumeName}
+                        </p>
+
+                        {resumeUrl && (
+                            <a
+                              href={resumeUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-blue-600 hover:underline"
+                            >
+                              Preview
+                            </a>
+                          )}
+                      </div>
                     )}
                   <DialogTrigger asChild>
                     <Button
@@ -2196,19 +2322,18 @@ const removeAppliedJob = async (applicationId: number) => {
                         </Select>
                       </div>
 
+{/* date_of_birth */}
+<div className="w-full">
+  <label className="text-sm font-medium">Date Of Birth</label>
 
-                      {/* date_of_birth */}
-                      <div className="w-full">
-                          <label className="text-sm font-medium">Date Of Birth</label>
-
-                          <div className="relative mt-1">
-                            <input
-                              type="text"
-                              placeholder="DD/MM/YYYY"
-                              maxLength={10}
-                              value={dobInput}
-                              onChange={(e) => {
-                                const raw = e.target.value;
+  <div className="relative mt-1">
+    <input
+      type="text"
+      placeholder="DD/MM/YYYY"
+      maxLength={10}
+      value={dobInput}
+      onChange={(e) => {
+  const raw = e.target.value;
 
                                 const { formatted, parsed, error } = formatDOB(raw);
 
@@ -2218,11 +2343,11 @@ const removeAppliedJob = async (applicationId: number) => {
                                 if (yearPart && yearPart.length === 4) {
                                   const currentYear = dayjs().year();
 
-                                  if (parseInt(yearPart) > currentYear) {
-
-                                    return;
-                                  }
-                                }
+    if (parseInt(yearPart) > currentYear) {
+      setDobError("Future year not allowed");
+      return;
+    }
+  }
 
                                 setDobInput(formatted);
 
@@ -2253,18 +2378,18 @@ const removeAppliedJob = async (applicationId: number) => {
                                 setDobError("");
                                 setSelectedDate(parsed.toDate());
 
-                                setProfileData((prev: any) => ({
-                                  ...prev,
-                                  personalInfo: {
-                                    ...prev.personalInfo,
-                                    date_of_birth: parsed.format("YYYY-MM-DD"),
-                                  },
-                                }));
-                              }}
-                              className={`w-full h-[44px] px-3 pr-10 text-sm border rounded-md outline-none
-                                ${dobError ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:ring-blue-500"}
-                              `}
-                                />
+  setProfileData((prev: any) => ({
+    ...prev,
+    personalInfo: {
+      ...prev.personalInfo,
+      date_of_birth: parsed.format("DD/MM/YYYY"),
+    },
+  }));
+}}
+      className={`w-full h-[44px] px-3 pr-10 text-sm border rounded-md outline-none
+        ${dobError ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:ring-blue-500"}
+      `}
+    />
 
                             {/*  CALENDAR ICON */}
                             <div className="absolute right-2 top-1/2 -translate-y-1/2">
@@ -2273,41 +2398,40 @@ const removeAppliedJob = async (applicationId: number) => {
                                 onChange={(date) => {
                                   if (!date) return;
 
-                                  const parsed = dayjs(date);
+          const parsed = dayjs(date);
 
-                                  setSelectedDate(date);
-                                  setDobInput(parsed.format("DD/MM/YYYY"));
+          setSelectedDate(date);
+          setDobInput(parsed.format("DD/MM/YYYY"));
+          setProfileData((prev: any) => ({
+            ...prev,
+            personalInfo: {
+              ...prev.personalInfo,
+              date_of_birth: parsed.format("DD/MM/YYYY"),
+            },
+          }));
+        }}
+        maxDate={new Date()}
+        popperPlacement="bottom-end"
+        popperClassName="z-[9999]"
+        portalId="root"
+        customInput={
+          <button
+            type="button"
+            className="p-1 rounded hover:bg-gray-100 cursor-pointer"
+          >
+            <Calendar size={18} />
+          </button>
+        }
+      />
+    </div>
 
-                                  setProfileData((prev: any) => ({
-                                    ...prev,
-                                    personalInfo: {
-                                      ...prev.personalInfo,
-                                      date_of_birth: parsed.format("YYYY-MM-DD"),
-                                    },
-                                  }));
-                                }}
-                                maxDate={new Date()}
-                                popperPlacement="bottom-end"
-                                popperClassName="z-[9999]"
-                                portalId="root"
-                                customInput={
-                                  <button
-                                    type="button"
-                                    className="p-1 rounded hover:bg-gray-100 cursor-pointer"
-                                  >
-                                    <Calendar size={18} />
-                                  </button>
-                                }
-                              />
-
-                            </div>
-                            {dobError && (
-                              <p className="text-red-500 text-xs mt-1">
-                                {dobError}
-                              </p>
-                            )}
-                          </div>
-                      </div>
+    {dobError && (
+      <p className="text-red-500 text-xs mt-1">
+        {dobError}
+      </p>
+    )}
+  </div>
+</div>
 
 
                       <div>
@@ -2842,17 +2966,18 @@ const removeAppliedJob = async (applicationId: number) => {
                                   <div className="flex items-center">
                                     <Clock className="w-3 h-3 lg:w-4 lg:h-4 mr-1 flex-shrink-0" />
                                     <span>
-                                      {exp.start_date &&
-                                        dayjs(exp.start_date).format(
-                                          "MMM YYYY DD"
-                                        )}{" "}
-                                      -{" "}
-                                      {exp.end_date
-                                        ? dayjs(exp.end_date).format(
-                                            "MMM YYYY DD"
-                                          )
-                                        : "Present"}
-                                    </span>
+                                    {exp.start_date && dayjs(exp.start_date, "DD/MM/YYYY").isValid()
+                                      ? dayjs(exp.start_date, "DD/MM/YYYY").format("DD/MM/YYYY")
+                                      : "N/A"}{" "}
+                                    -{" "}
+                                    {exp.end_date && dayjs(exp.end_date, "DD/MM/YYYY").isValid()
+                                      ? dayjs(exp.end_date, "DD/MM/YYYY").format("DD/MM/YYYY")
+                                      : "Present"}
+                                  </span>
+                                  </div>
+                                  <div className="flex items-center space-x-2 text-gray-600">
+                                    <MapPin className="w-4 h-4" />
+                                    <span>{exp.location}</span>
                                   </div>
                                 </div>
                               </div>
@@ -2924,52 +3049,19 @@ const removeAppliedJob = async (applicationId: number) => {
                               <div>
                                 <Label className="text-sm font-medium">Location *</Label>
 
-                                <Popover open={locationOpen} onOpenChange={setLocationOpen}>
-                                  <PopoverTrigger asChild>
-                                    <button className="w-full mt-1 h-10 lg:h-11 border rounded px-3 flex items-center justify-between ">
-                                      <span >
-                                      {experienceForm.location_id
-                                        ? countries.find(
-                                            (c) => c.id == experienceForm.location_id
-                                          )?.name
-                                        : "Select location"}
-                                      </span>
-                                      <ChevronDown className="h-4 w-4 opacity-60" />
-                                    </button>
-                                  </PopoverTrigger>
-
-                                  <PopoverContent className="p-0 w-[300px]">
-                                    <Command
-                                      filter={(value, search) =>
-                                        value.toLowerCase().startsWith(search.toLowerCase()) ? 1 : 0
-                                      }
-                                    >
-                                      <CommandInput placeholder="Search location..." />
-
-                                      <CommandList>
-                                        {countries.length === 0 && (
-                                          <CommandItem disabled>No locations found</CommandItem>
-                                        )}
-
-                                        {countries.map((location) => (
-                                          <CommandItem
-                                            key={location.id}
-                                            value={location.name}
-                                            onSelect={() =>
-                                              setExperienceForm((prev) => ({
-                                                ...prev,
-                                                location_id: location.id.toString(),
-                                              }))
-                                            }
-                                            onPointerDown={() => setLocationOpen(false)}
-                                          >
-                                            {location.name}
-                                          </CommandItem>
-                                        ))}
-                                      </CommandList>
-                                    </Command>
-                                  </PopoverContent>
-                                </Popover>
+                                <AsyncSelect
+                                  cacheOptions
+                                  defaultOptions
+                                  loadOptions={loadCountryOptions}
+                                  value={getSelectedLocation()}
+                                  onChange={(selected: any) => {
+                                    setExperienceForm((prev) => ({
+                                      ...prev,
+                                      location: selected?.value || "",
+                                    }));
+                                  }}
+                                  placeholder="Search Location..."
+                                />
                               </div>
                               <div>
                                 <div className="relative">
