@@ -1103,14 +1103,14 @@ const loadMajors = async (inputValue: string) => {
 const loadCountryOptions = async (inputValue: string) => {
   try {
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL_MASTER}/countries?q=${inputValue || ""}`
+      `${process.env.NEXT_PUBLIC_API_URL_MASTER}/locations/search/?q=${inputValue || ""}`
     );
 
     const data = await res.json();
 
     return data.map((country: any) => ({
       label: country.name,
-      value: country.id,
+      value: country.name,
     }));
   } catch (error) {
     console.error("Error fetching countries:", error);
