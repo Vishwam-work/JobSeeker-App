@@ -158,7 +158,7 @@ export default function Profile() {
     company: "",
     job_title: "",
     category: "",
-    location_id: "",
+    location: "",
     startDate: null,
     endDate: null,
     isCurrentJob: false,
@@ -299,7 +299,7 @@ type ExperienceForm = {
   company: string;
   job_title: string;
   category: string;
-  location_id: string;
+  location: string;
   startDate: dayjs.Dayjs | null;
   endDate: dayjs.Dayjs | null;
   isCurrentJob: boolean;
@@ -317,10 +317,7 @@ type ApiExperience = {
 
   category?: string;
 
-  location?: {
-    id?: string | number;
-    name?: string;
-  };
+  location?: string;
 };
 type ProfileExperience = {
   id?: string | number;
@@ -329,14 +326,7 @@ type ProfileExperience = {
   category?: string;
 
   job_title?: string;
-  location?: {
-    id: string | number;
-    name?: string;
-  };
-
-  // form / payload fields
-
-  location_id?: string;
+  location?:string;
 
   start_date?: string;
   end_date?: string | null;
@@ -648,7 +638,7 @@ const getUserKey = () => {
       company: "",
       job_title: "",
       category: "",
-      location_id: "",
+      location: "",
       startDate: null,
       endDate: null,
       isCurrentJob: false,
@@ -701,7 +691,7 @@ const getUserKey = () => {
       startDate: startDate,
       endDate: endDate,
       isCurrentJob: !exp.end_date,
-      location_id: exp.location?.id?.toString() || "",
+      location: exp.location || "",
       category: exp.category || "",
       description: exp.description || "",
     });
@@ -781,12 +771,13 @@ const getUserKey = () => {
     category: experienceForm.category,
     start_date: formattedStart,
     end_date: formattedEnd,
-    location_id: experienceForm.location_id,
+    location: experienceForm.location,
     description: experienceForm.description,
   };
   console.log("New Experience to Save:", newExperience);
 
     if (editingExperience) {
+      console.log("Updating experience with ID:", editingExperience.id);
       setProfileData((prev) => ({
         ...prev,
         experience: prev.experience.map((exp) =>
@@ -794,6 +785,7 @@ const getUserKey = () => {
         ),
       }));
     } else {
+      console.log("Adding new experience");
       setProfileData((prev) => ({
         ...prev,
         experience: [...prev.experience, newExperience],
@@ -1108,6 +1100,24 @@ const loadMajors = async (inputValue: string) => {
   }));
 };
 
+const loadCountryOptions = async (inputValue: string) => {
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL_MASTER}/countries?q=${inputValue || ""}`
+    );
+
+    const data = await res.json();
+
+    return data.map((country: any) => ({
+      label: country.name,
+      value: country.id,
+    }));
+  } catch (error) {
+    console.error("Error fetching countries:", error);
+    return [];
+  }
+};
+
 
  const getCompanyOptions = async (inputValue: string) => {
   try {
@@ -1135,6 +1145,14 @@ const getSelectedCompany = () => {
   };
 };
 
+const getSelectedLocation = () => {
+  if (!experienceForm.location) return null;
+
+  return {
+    label: experienceForm.location,
+    value: experienceForm.location,
+  };
+}
 const getJobCategoryOptions = async (inputValue: string) => {
   try {
     const res = await fetch(
@@ -1255,9 +1273,9 @@ const getSelectedJobTitle = () => {
             },
             experience: (data.experiences || []).map((exp: ProfileExperience) => ({
               ...exp,
-              job_title: exp.category,
-              category: exp.job_title,
-              location_id: exp.location?.id ?? "",
+              job_title: exp.job_title || "",
+              category: exp.category || "",
+              location: exp.location || "",
             })),
            education: (data.educations || []).map((e: any) => ({
             id: e.id,
@@ -1590,7 +1608,7 @@ useEffect(() => {
         company: exp.company,
         job_title: exp.job_title,
         category: exp.category,
-        location_id: exp.location_id ? Number(exp.location_id) : null,
+        location: exp.location || "",
         start_date: exp.start_date,
         end_date: exp.end_date,
         description: exp.description,
@@ -2957,6 +2975,10 @@ const removeAppliedJob = async (applicationId: number) => {
                                       : "Present"}
                                   </span>
                                   </div>
+                                  <div className="flex items-center space-x-2 text-gray-600">
+                                    <MapPin className="w-4 h-4" />
+                                    <span>{exp.location}</span>
+                                  </div>
                                 </div>
                               </div>
                             </div>
@@ -3027,52 +3049,19 @@ const removeAppliedJob = async (applicationId: number) => {
                               <div>
                                 <Label className="text-sm font-medium">Location *</Label>
 
-                                <Popover open={locationOpen} onOpenChange={setLocationOpen}>
-                                  <PopoverTrigger asChild>
-                                    <button className="w-full mt-1 h-10 lg:h-11 border rounded px-3 flex items-center justify-between ">
-                                      <span >
-                                      {experienceForm.location_id
-                                        ? countries.find(
-                                            (c) => c.id == experienceForm.location_id
-                                          )?.name
-                                        : "Select location"}
-                                      </span>
-                                      <ChevronDown className="h-4 w-4 opacity-60" />
-                                    </button>
-                                  </PopoverTrigger>
-
-                                  <PopoverContent className="p-0 w-[300px]">
-                                    <Command
-                                      filter={(value, search) =>
-                                        value.toLowerCase().startsWith(search.toLowerCase()) ? 1 : 0
-                                      }
-                                    >
-                                      <CommandInput placeholder="Search location..." />
-
-                                      <CommandList>
-                                        {countries.length === 0 && (
-                                          <CommandItem disabled>No locations found</CommandItem>
-                                        )}
-
-                                        {countries.map((location) => (
-                                          <CommandItem
-                                            key={location.id}
-                                            value={location.name}
-                                            onSelect={() =>
-                                              setExperienceForm((prev) => ({
-                                                ...prev,
-                                                location_id: location.id.toString(),
-                                              }))
-                                            }
-                                            onPointerDown={() => setLocationOpen(false)}
-                                          >
-                                            {location.name}
-                                          </CommandItem>
-                                        ))}
-                                      </CommandList>
-                                    </Command>
-                                  </PopoverContent>
-                                </Popover>
+                                <AsyncSelect
+                                  cacheOptions
+                                  defaultOptions
+                                  loadOptions={loadCountryOptions}
+                                  value={getSelectedLocation()}
+                                  onChange={(selected: any) => {
+                                    setExperienceForm((prev) => ({
+                                      ...prev,
+                                      location: selected?.value || "",
+                                    }));
+                                  }}
+                                  placeholder="Search Location..."
+                                />
                               </div>
                               <div>
                                 <div className="relative">

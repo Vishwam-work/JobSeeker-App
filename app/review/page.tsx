@@ -179,7 +179,7 @@ const formatNumber = (
             position: exp.job_title|| "N/A",
             category: exp.category|| "N/A",
             duration: `${exp.start_date} - ${exp.end_date || "Present"}`,
-            location: exp.location?.name || "N/A",
+            location: exp.location || "N/A",
             description: exp.description,
           })),
           education: data.educations.map((e: any) => ({
