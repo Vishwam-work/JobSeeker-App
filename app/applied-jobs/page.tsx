@@ -8,6 +8,33 @@ import Footer from "@/components/Footer";
 export default function AppliedJobsPage() {
   const [appliedJobs, setAppliedJobs] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [selectedJob, setSelectedJob] = useState<any>(null);
+
+  const steps = ["Under Review", "Shortlisted", "Interview Scheduled"];
+  const formatStatus = (status: string) => {
+    switch (status?.toLowerCase()) {
+      case "under_review":
+        return "Under Review";
+      case "shortlisted":
+        return "Shortlisted";
+      case "interview scheduled":
+        return "Interview Scheduled";
+      case "rejected":
+        return "Rejected";
+      default:
+        return status;
+    }
+  };
+  const getCurrentStep = (status: string) => {
+    const index = steps.findIndex(
+      (s) => s.toLowerCase() === status?.toLowerCase(),
+    );
+    return index === -1 ? 1 : index + 1; // default = first step
+  };
+  const getProgressWidth = (status: string) => {
+    const currentStep = getCurrentStep(status);
+    return `${(currentStep / steps.length) * 100}%`;
+  };
 
   const fetchAppliedJobs = async () => {
     const token = localStorage.getItem("auth_token");
@@ -22,10 +49,11 @@ export default function AppliedJobsPage() {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       const data = await res.json();
+      console.log(data);
       setAppliedJobs(data || []);
     } catch (error) {
       console.error("Error fetching applied jobs:", error);
@@ -40,47 +68,186 @@ export default function AppliedJobsPage() {
 
   return (
     <div>
-             <Header />
-    <div className="max-w-4xl mx-auto py-10 px-4">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-xl">
-            <Briefcase className="w-5 h-5" />
-            Applied Jobs
-          </CardTitle>
-        </CardHeader>
+      <Header />
+      <div className="max-w-6xl mx-auto px-4 pt-6 flex items-center justify-between">
+        {/* LEFT TITLE */}
+        <h1 className="text-2xl font-semibold text-gray-900">
+          Job application status
+        </h1>
 
-        <CardContent>
+        {/* RIGHT COUNTERS */}
+        <div className="flex items-center gap-8">
+          <div className="text-right">
+            <p className="text-3xl font-semibold text-gray-900">
+              {appliedJobs.length.toString().padStart(2, "0")}
+            </p>
+            <p className="text-xs text-gray-500">Total applies</p>
+          </div>
+        </div>
+      </div>
+      <div className="max-w-6xl mx-auto py-10 px-4 grid lg:grid-cols-3 gap-6">
+        {/* LEFT SIDE - JOB LIST */}
+        <div className="bg-white border rounded-xl p-4">
+          <h2 className="font-semibold text-lg mb-4">Applied Jobs</h2>
 
-          {loading && (
-            <p className="text-gray-500 text-sm">Loading applied jobs...</p>
-          )}
-
-          {!loading && appliedJobs.length === 0 && (
-            <p className="text-gray-500 text-sm">No applied jobs found.</p>
-          )}
-
-          {appliedJobs.map((job) => (
+          {appliedJobs.map((job, index) => (
             <div
               key={job.id}
-              className="border rounded-lg p-4 mb-3 hover:shadow-sm"
+              onClick={() => setSelectedJob(job)}
+              className="p-3 border rounded-lg mb-3 cursor-pointer hover:bg-gray-50"
             >
-              {/* Job Title */}
-              <h3 className="font-semibold text-lg text-gray-900">
-                {job.job_title}
-              </h3>
+              <h3 className="font-medium text-gray-900">{job.job_title}</h3>
 
-              {/* Application Status */}
-              <p className="text-sm mt-1 text-blue-600">
-                Status: {job.application_status}
+              <p className="text-sm text-gray-500">{job.job.company}</p>
+
+              <span
+                className={`text-xs px-2 py-1 rounded-full font-medium ${
+                  job.application_status?.toLowerCase() === "rejected"
+                    ? "bg-red-100 text-red-600"
+                    : job.application_status?.toLowerCase() === "shortlisted"
+                      ? "bg-blue-100 text-blue-600"
+                      : job.application_status?.toLowerCase() ==="interview scheduled"
+                        ? "bg-purple-100 text-purple-600"
+                        : "bg-green-100 text-green-600"
+                }`}
+              >
+                {formatStatus(job.application_status)}
+              </span>
+              <p className="text-xs text-gray-400 mt-1">
+                Applied on:{" "}
+                {new Date(job.applied_at).toLocaleDateString("en-IN", {
+                  day: "2-digit",
+                  month: "short",
+                  year: "numeric",
+                })}
               </p>
             </div>
           ))}
-
-        </CardContent>
-      </Card>
-    </div>
-        <Footer />
         </div>
+
+        {/* RIGHT SIDE - JOB DETAILS */}
+        <div className="lg:col-span-2 bg-white border rounded-xl p-6">
+          {selectedJob ? (
+            <>
+              {/* Title */}
+              <h2 className="text-xl font-semibold text-gray-900">
+                {selectedJob.job_title}
+              </h2>
+
+              <p className="text-sm text-gray-500 mt-1">
+                {selectedJob.job.company}
+              </p>
+              <p className="text-sm text-gray-500">
+                {selectedJob.job.location?.name} • {selectedJob.job.job_type}
+              </p>
+              <div className="mt-2">
+                <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded ml-2">
+                  {selectedJob.job.work_mode}
+                </span>
+                <p className="text-xs text-gray-400 mt-3">
+                  Applied on:{" "}
+                  {new Date(selectedJob.applied_at).toLocaleDateString()}
+                </p>
+              </div>
+
+              {/* STATUS BAR */}
+              {selectedJob?.application_status?.toLowerCase() !==
+                "rejected" && (
+                <div className="mt-6">
+                  <p className="text-sm font-medium mb-4">Application Status</p>
+
+                  {/* Progress line */}
+                  <div className="relative">
+                    <div className="w-full h-2 bg-gray-200 rounded-full"></div>
+
+                    <div
+                      className="absolute top-0 left-0 h-2 bg-green-500 rounded-full transition-all duration-500"
+                      style={{
+                        width: getProgressWidth(
+                          selectedJob?.application_status,
+                        ),
+                      }}
+                    ></div>
+
+                    {/* Dots */}
+                    <div className="absolute -top-1.5 left-0 w-full flex justify-between">
+                      {steps.map((step, index) => {
+                        const currentStep = getCurrentStep(
+                          selectedJob?.application_status,
+                        );
+
+                        return (
+                          <div
+                            key={index}
+                            className={`w-4 h-4 rounded-full border-2 ${
+                              index + 1 <= currentStep
+                                ? "bg-green-500 border-green-500"
+                                : "bg-white border-gray-300"
+                            }`}
+                          ></div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Labels */}
+                  <div className="flex justify-between text-xs mt-4">
+                    {steps.map((step, index) => {
+                      const currentStep = getCurrentStep(
+                        selectedJob?.application_status,
+                      );
+
+                      return (
+                        <span
+                          key={index}
+                          className={`${
+                            index + 1 <= currentStep
+                              ? "text-green-600 font-medium"
+                              : "text-gray-400"
+                          }`}
+                        >
+                          {step}
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+              {selectedJob?.application_status?.toLowerCase() ===
+                "rejected" && (
+                <div className="mt-6 p-4 border rounded-lg bg-red-50">
+                  <p className="text-sm font-medium text-red-600">
+                    Application Rejected
+                  </p>
+                </div>
+              )}
+
+              {/* STATS */}
+              <div className="mt-6 border rounded-lg p-4 flex justify-between">
+                <div>
+                  <p className="text-lg font-semibold">
+                    {selectedJob.job.applicants}
+                  </p>
+                  <p className="text-xs text-gray-500">Total applications</p>
+                </div>
+
+                <div>
+                  <p className="text-lg font-semibold">
+                    {selectedJob.job.apply_clicks}
+                  </p>
+                  <p className="text-xs text-gray-500">Viewed by recruiter</p>
+                </div>
+              </div>
+            </>
+          ) : (
+            <p className="text-gray-500 text-sm">
+              Select a job to view details
+            </p>
+          )}
+        </div>
+      </div>
+
+      <Footer />
+    </div>
   );
 }
