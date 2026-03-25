@@ -27,6 +27,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import {
   Command,
@@ -122,6 +123,7 @@ export default function Profile() {
   const [profileImage, setProfileImage] = useState(null);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imageError, setImageError] = useState<string | null>(null);
+  const [isImageDialogOpen, setIsImageDialogOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("personal");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState({
@@ -164,15 +166,14 @@ export default function Profile() {
     isCurrentJob: false,
     description: "",
   });
-  
   const [educationForm, setEducationForm] = useState<EducationForm>({
     education: "",
     education_name: "",
     course: "",
     course_name: "",
     institution: "",
-    start_year: null,
-    end_year: null,
+    start_year: "",
+    end_year: "",
     percentage: "",
     score_type: "",
     course_type: "",
@@ -192,7 +193,7 @@ export default function Profile() {
   const [certificationForm, setCertificationForm] = useState<CertificationForm>({
     name: "",
     issuer: "",
-    year: null,
+    year: "",
   });
 
   const sections = [
@@ -210,11 +211,7 @@ export default function Profile() {
   const [jobTitles, setJobTitles] = useState<JobTitle[]>([]);
   const [jobCategories, setJobCategories] = useState<JobCategory[]>([]);
   const [currency, setCurrency] = useState<Currency[]>([]);
-  const [savedJobsData, setSavedJobsData] = useState<SavedJob[]>([]);
-  const [activeSaveTab, setActiveSaveTab] = useState("SavedJobs");
   const [isProfileSubmitted, setIsProfileSubmitted] = useState(false);
-  const [appliedJobs, setAppliedJobs] = useState<any[]>([]);
-  const [loadingAppliedJobs, setLoadingAppliedJobs] = useState(false);
 
   const [noticeRanges] = useState([
     "Immediate Joiner",
@@ -343,7 +340,7 @@ type Certification = {
 type CertificationForm = {
   name: string;
   issuer: string;
-  year: dayjs.Dayjs | null;
+  year: string ;
 };
 
 type ProfileData = {
@@ -394,8 +391,8 @@ type EducationForm = {
   course: string | number ;
   course_name: string;
   institution: string;
-  start_year: dayjs.Dayjs | null; 
-  end_year: dayjs.Dayjs | null; 
+  start_year:string;
+  end_year: string;
   percentage: string;
   score_type: string;
   course_type: string;
@@ -447,17 +444,6 @@ interface SavedJob {
     };
   };
 }
-
-type MajorCategory = {
-  id: string | number;
-  name: string;
-};
-
-type Major = {
-  id: string | number;
-  name: string;
-  category: string | number;
-};
 
 useEffect(() => {
   if (profileData?.personalInfo?.date_of_birth) {
@@ -654,8 +640,8 @@ const getUserKey = () => {
       course: "",
       course_name: "",
       institution: "",
-      start_year: null,
-      end_year: null,
+      start_year: "",
+      end_year: "",
       percentage: "",
       score_type: "",
       course_type: "",
@@ -666,7 +652,7 @@ const getUserKey = () => {
     setCertificationForm({
       name: "",
       issuer: "",
-      year: null,
+      year: "",
     });
   };
 
@@ -708,9 +694,12 @@ const getUserKey = () => {
   // ✅ REQUIRED FIELDS
   if (
     !experienceForm.company?.trim() ||
+    !experienceForm.location?.trim() ||
     !experienceForm.job_title?.trim() ||
     !experienceForm.category?.trim() ||
-    !startInput // input string bhi required
+    !experienceForm.startDate ||
+    !experienceForm.endDate ||
+    !startInput
   ) {
     toast("Incomplete form", {
       description: "Please fill in all required fields before continuing.",
@@ -816,8 +805,8 @@ const getUserKey = () => {
     course: edu.course,
     course_name: edu.course_name,
     institution: edu.institution,
-    start_year: edu.start_year ? dayjs(edu.start_year, "YYYY") : null,
-    end_year: edu.end_year ? dayjs(edu.end_year, "YYYY") : null,
+    start_year: edu.start_year ? String(edu.start_year) : "",
+    end_year: edu.end_year ? String(edu.end_year) : "",
     percentage: edu.percentage ?? "",
     score_type: edu.score_type ? edu.score_type.toLowerCase() : "",
     course_type: edu.course_type ? edu.course_type : "",
@@ -833,6 +822,10 @@ const handleSaveEducation = () => {
     !educationForm.course ||
     !educationForm.institution ||
     !educationForm.score_type ||
+    !educationForm.start_year ||
+    !educationForm.end_year ||
+    !educationForm.percentage ||
+    !educationForm.score_type ||
     !educationForm.course_type
   ) {
     toast("Incomplete form", {
@@ -842,24 +835,24 @@ const handleSaveEducation = () => {
     return;
   }
         if (educationForm.start_year && educationForm.end_year) {
-    const selectedStartYear = educationForm.start_year.year();
-    const selectedEndYear = educationForm.end_year.year();
-    const currentYear = dayjs().year();
+  const selectedStartYear = parseInt(educationForm.start_year);
+  const selectedEndYear = parseInt(educationForm.end_year);
+  const currentYear = new Date().getFullYear();
 
-    if (selectedStartYear > selectedEndYear) {
-      toast.error("Invalid year", {
-        description: "Year of graduation cannot be in the Past.",
-      });
-      return;
-    }
-
-    if (selectedStartYear < 1960) {
-      toast.error("Invalid year", {
-        description: "Year of graduation cannot be before 1960.",
-      });
-      return;
-    }
+  if (selectedStartYear > selectedEndYear) {
+    toast.error("Invalid year", {
+      description: "End year must be greater than or equal to Start year.",
+    });
+    return;
   }
+
+  if (selectedStartYear > currentYear) {
+    toast.error("Invalid year", {
+      description: "Starting year cannot be in the future.",
+    });
+    return;
+  }
+}
 
   const newEducation = {
     id: editingEducation ? editingEducation.id : Date.now(),
@@ -869,8 +862,12 @@ const handleSaveEducation = () => {
     course_name: educationForm.course_name,
     institution: educationForm.institution,
       // year: educationForm.year ? educationForm.year.format("YYYY") : "",
-    start_year: educationForm.start_year ? educationForm.start_year.format("YYYY") : "",
-    end_year: educationForm.end_year ? educationForm.end_year.format("YYYY") : "",
+   start_year: educationForm.start_year
+  ? Number(educationForm.start_year)
+  : null,
+   end_year: educationForm.end_year
+  ? Number(educationForm.end_year)
+  : null,
 
     percentage: educationForm.percentage,
       score_type : educationForm.score_type,
@@ -912,14 +909,14 @@ const handleSaveEducation = () => {
     setCertificationForm({
       name: cert.name,
       issuer: cert.issuer,
-      year: cert.year ? dayjs(cert.year, "YYYY") : null,
+     year: cert.year ? String(cert.year) : "" ,
     });
     setEditingCertification(cert);
     setShowAddCertification(true);
   };
 
   const handleSaveCertification = () => {
-    if (!certificationForm.name || !certificationForm.issuer) {
+    if (!certificationForm.name || !certificationForm.issuer || !certificationForm.year) {
       
       toast("Incomplete form", {
       description: "Please fill in all required fields before continuing.",
@@ -936,8 +933,8 @@ const handleSaveEducation = () => {
     return;
   }
 
-  const selectedYear = certificationForm.year.year();
-  const currentYear = dayjs().year();
+  const selectedYear = parseInt(certificationForm.year);
+  const currentYear = new Date().getFullYear();
 
   if (selectedYear > currentYear) {
     toast.error("Invalid year", {
@@ -957,7 +954,9 @@ const handleSaveEducation = () => {
       id: editingCertification ? editingCertification.id : Date.now(),
       name: certificationForm.name,
       issuer: certificationForm.issuer,
-      year: certificationForm.year ? certificationForm.year.format("YYYY") : "",
+      year: certificationForm.year
+      ? Number(certificationForm.year)
+      : null
     };
 
     if (editingCertification) {
@@ -1063,6 +1062,46 @@ const handleRemoveSkill = (skillToRemove: Skill) => {
   toast.info(`Selected file: ${file.name}`);
 };
 
+const getCurrencyOptions = async (inputValue: string) => {
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL_MASTER}/currencies`
+    );
+
+    const data = await res.json();
+
+    return data
+      .filter((curr: any) =>
+        curr.code.toLowerCase().includes(inputValue.toLowerCase()) ||
+        curr.name.toLowerCase().includes(inputValue.toLowerCase())
+      )
+      .map((curr: any) => ({
+        label: curr.code,
+        value: String(curr.id),
+      }));
+  } catch (error) {
+    console.error("Error fetching currencies:", error);
+    return [];
+  }
+};
+const getSelectedCurrency = () => {
+  const selected = currency.find(
+    (c) => String(c.id) === profileData.personalInfo.currentcurrency
+  );
+
+  return selected
+    ? { label: selected.code, value: String(selected.id) }
+    : null;
+};
+const getSelectedExpectedCurrency = () => {
+  const selected = currency.find(
+    (c) => String(c.id) === profileData.personalInfo.expectedCurrency
+  );
+
+  return selected
+    ? { label: selected.code, value: String(selected.id) }
+    : null;
+};
 const loadCategories = async (inputValue: string) => {
   const token = localStorage.getItem("auth_token");
 
@@ -1309,33 +1348,6 @@ const getSelectedJobTitle = () => {
   }, []);
 
  console.log("Profile Data ---->After Fetch", profileData);
-  useEffect(() => {
-    const fetchSavedJobs = async () => {
-      const token = localStorage.getItem("auth_token");
-      if (!token) return;
-
-      try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL_APP}/saved-jobs-all/`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-
-        if (res.ok) {
-          const data = await res.json();
-          // console.log("Saved jobs data:", data);
-          setSavedJobsData(data);
-        } else {
-          console.error("Failed to fetch saved jobs");
-        }
-      } catch (err) {
-        console.error("Error fetching saved jobs:", err);
-      }
-    };
-
-    fetchSavedJobs();
-  }, []);
 
   useEffect(() => {
     fetch(`${process.env.NEXT_PUBLIC_API_URL_MASTER}/currencies/`)
@@ -1420,7 +1432,6 @@ const parseNumber = (value: string): string => {
       .catch((err) => console.error(err));
   }, []);
 
-
   const uploadResume = async () => {
     if (!resumeFile) {
     return false;
@@ -1476,27 +1487,6 @@ const parseNumber = (value: string): string => {
   };
 const uploadedResumeName =
   profileData?.personalInfo?.resume?.split("/").pop();
- const uploadProfileImage = async () => {
-  if (!selectedImage) return true;
-
-  const formData = new FormData();
-  formData.append("profile_image", selectedImage);
-
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL_APP}/profile/`,
-    {
-      method: "PATCH",
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
-      },
-      body: formData,
-    }
-  );
-
-  return res.ok;
-};
-
-
 useEffect(() => {
   const userKey = getUserKey();
   if (!userKey) {
@@ -1517,62 +1507,78 @@ useEffect(() => {
   const handleSaveProfile = async () => {
   // REQUIRED FIELD VALIDATION
   if (!profileData.personalInfo.fullName?.trim()) {
-    return toast.error("Full Name is required");
+    toast.error("Full Name is required");
+     return false;
   }
+ const phone = profileData.personalInfo.phone?.trim();
+
+if (phone) {
+  if (!/^\d+$/.test(phone)) {
+    toast.error("Phone number must contain only digits");
+    return false;
+  }
+  if (phone.length !== 10) {
+    toast.error("Phone number must be 10 digits");
+    return false;
+  }
+}
 
   if (!profileData.personalInfo.email?.trim()) {
-    return toast.error("Email is required");
+     toast.error("Email is required");
+      return false;
   }
 
   if (!profileData.personalInfo.phone?.trim()) {
-    return toast.error("Phone number is required");
+    toast.error("Phone number is required");
+    return false;
   }
 
   if (!profileData.personalInfo.countryId) {
-    return toast.error("Country is required");
+     toast.error("Country is required");
+     return false;
   }
 
   if (!profileData.personalInfo.stateId) {
-    return toast.error("State is required");
+     toast.error("State is required");
+      return false;
   }
 
   if (!profileData.personalInfo.cityId) {
-    return toast.error("City is required");
+     toast.error("City is required");
+      return false;
   }
   if (!profileData.personalInfo.currentSalary) {
-    return toast.error("Current salary is required");
+     toast.error("Current salary is required");
+      return false;
   }
   if(!profileData.personalInfo.expectedSalary) {
-    return toast.error("Expected salary is required");
+     toast.error("Expected salary is required");
+      return false;
   }
 
 
   // DOB validation
-  const dob = profileData.personalInfo.date_of_birth;
-  if (!dob) return toast.error("Date of Birth is required");
+    const dob = profileData.personalInfo.date_of_birth;
+  if (!dob) {
+    toast.error("Date of Birth is required");
+    return false;
+  }
 
-  const dobCheck = formatDOB(dob); // ✅ Use your formatDOB function
+  const dobCheck = formatDOB(dob);
 
   if (dobCheck.error || !dobCheck.parsed.isValid()) {
-    return toast.error(dobCheck.error || "Invalid Date of Birth");
+    toast.error(dobCheck.error || "Invalid Date of Birth");
+    return false;
   }
 
   if (dobCheck.parsed.isAfter(dayjs())) {
-    return toast.error("Future date not allowed");
+    toast.error("Future date not allowed");
+    return false;
   }
-
-  // ✅ Use DD/MM/YYYY for backend
-  const formattedDOB = dobCheck.formatted; 
-
-  if (selectedImage) {
-    const imageUploaded = await uploadProfileImage();
-    if (!imageUploaded) {
-      return toast.error("Image upload failed. Please try again.");
-    }
+if (!dob) {
+    toast.error("Date of Birth is required");
+    return false;
   }
-
-
-
 
     const payload = {
       full_name: profileData.personalInfo.fullName,
@@ -1698,6 +1704,7 @@ useEffect(() => {
       toast.success("Profile saved successfully!", {
       description: "Your changes have been saved.",
       });
+      return true;
     } else {
       const errText = await res.text();
       console.error("Save profile failed:", errText);
@@ -1755,40 +1762,6 @@ useEffect(() => {
     fetchUserProfile();
   }, []);
 
-  const fetchAppliedJobs = async () => {
-  try {
-    setLoadingAppliedJobs(true);
-
-    const token = localStorage.getItem("auth_token");
-    if (!token) {
-      toast.warning("Please login to view applied jobs");
-      return;
-    }
-
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL_APP}/my-applied-jobs/`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-
-    if (!response.ok) {
-      toast.error("Failed to load applied jobs");
-      return;
-    }
-
-    const data = await response.json();
-    // console.log("Applied jobs data:", data);
-    setAppliedJobs(data || []);
-  } catch (error) {
-    console.error(error);
-    toast.error("Network error while loading applied jobs");
-  } finally {
-    setLoadingAppliedJobs(false);
-  }
-};
 
 const BASE_URL = "https://jobseeker-backend-jy1y.onrender.com";
 
@@ -1797,45 +1770,6 @@ const resumeUrl = profileData?.personalInfo?.resume
     ? profileData.personalInfo.resume
     : `${BASE_URL}${profileData.personalInfo.resume}`
   : null;
-
-useEffect(() => {
-  if (activeSection === "AppliedJobs") {
-    fetchAppliedJobs();
-  }
-}, [activeSection]);
-
-const removeAppliedJob = async (applicationId: number) => {
-  try {
-    const token = localStorage.getItem("auth_token");
-    if (!token) {
-      toast.error("Please login again");
-      return;
-    }
-
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL_APP}/my-applied-jobs/${applicationId}/`,
-      {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-
-    if (!response.ok) {
-      toast.error("Failed to remove applied job");
-      return;
-    }
-
-    toast.success("Application removed");
-
-    setAppliedJobs((prev) =>
-      prev.filter((job) => job.id !== applicationId)
-    );
-  } catch (error) {
-    toast.error("Network error. Please try again.");
-  }
-};
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -1913,76 +1847,160 @@ const removeAppliedJob = async (applicationId: number) => {
           {/* Top Section: Profile Photo + Progress + Info */}
       <div className="flex flex-col items-center text-center gap-3">
           {/* Profile Photo*/}
-                  <div className="flex flex-col items-center w-28">
-              <label className="relative w-28 h-28 cursor-pointer group">
+           <div className="flex flex-col items-center w-28">
+              <Dialog
+                  open={isImageDialogOpen}
+                  onOpenChange={(open) => setIsImageDialogOpen(open)}
+                >
+                <DialogTrigger asChild>
+                  {/* Only this div as trigger */}
+                  <div className="relative w-28 h-28 cursor-pointer group">
+                    {/* Border */}
+                    <div className="absolute inset-0 flex items-center justify-center rounded-full border-4 border-gray-200">
+                      <div className="w-24 h-24 rounded-full bg-gray-300 flex items-center justify-center text-white text-sm">
+                        {!selectedImage && !profileData.personalInfo.profile_image && "Add"}
+                      </div>
+                    </div>
 
-            {/* Border */}
-            <div className="absolute inset-0 flex items-center justify-center rounded-full border-4 border-gray-200">
-              <div className="w-24 h-24 rounded-full bg-gray-300 flex items-center justify-center text-white text-sm">
-                {!selectedImage && !profileData.personalInfo.profile_image}
-              </div>
-            </div>
+                    {/* Profile Image */}
+                    <div className="absolute inset-0 flex items-center justify-center rounded-full overflow-hidden">
+                      {selectedImage ? (
+                        <img
+                          src={URL.createObjectURL(selectedImage)}
+                          className="w-24 h-24 rounded-full object-cover"
+                          alt="Profile Preview"
+                        />
+                      ) : profileData.personalInfo.profile_image ? (
+                        <img
+                          src={profileData.personalInfo.profile_image}
+                          className="w-24 h-24 rounded-full object-cover"
+                          alt="Profile"
+                        />
+                      ) : (
+                        <User className="w-10 h-10 text-purple-600" />
+                      )}
+                    </div>
 
-            {/* Profile Image */}
-            <div className="absolute inset-0 flex items-center justify-center rounded-full overflow-hidden">
-              {selectedImage ? (
-                <img
-                  src={URL.createObjectURL(selectedImage)}
-                  className="w-24 h-24 rounded-full object-cover"
-                  alt="Profile Preview"
+                    {/* Hover Overlay */}
+                    <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center
+                                    opacity-0 group-hover:opacity-100 transition">
+                      <span className="text-white text-xs font-medium">
+                        {selectedImage || profileData.personalInfo.profile_image ? "Update Photo" : "Add Photo"}
+                      </span>
+                    </div>
+                  </div>
+                </DialogTrigger>
+                <DialogContent className="bg-white rounded-lg p-4 w-80">
+                  <DialogHeader>
+                    <DialogTitle>Update Profile Photo</DialogTitle>
+                  </DialogHeader>
+                  {selectedImage && (
+                      <img
+                        src={URL.createObjectURL(selectedImage)}
+                        alt="Preview"
+                        className="w-24 h-24 rounded-full object-cover mx-auto mt-4"
+                      />
+                    )}
+                  {/* File Input */}
+                  <div className="flex flex-col items-center gap-4">
+              {/* File Upload Button */}
+              <label className="w-full cursor-pointer">
+                <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-xl p-6 hover:border-purple-600 hover:bg-purple-50 transition duration-300">
+                  <svg
+                    className="w-10 h-10 text-purple-600 mb-2"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v4h16v-4M12 4v12m0 0l-4-4m4 4l4-4" />
+                  </svg>
+                  <span className="text-sm font-medium text-gray-700">
+                    {selectedImage ? selectedImage.name : "Click to upload photo"}
+                  </span>
+                  <span className="text-xs text-gray-400 mt-1">
+                    JPG, JPEG, PNG, WEBP — Max 1MB
+                  </span>
+                </div>
+                <input
+                  type="file"
+                  accept="image/jpeg,image/jpg,image/png,image/webp"
+                  className="hidden"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+
+                    const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+                    if (!allowedTypes.includes(file.type)) {
+                      setImageError("Only JPG, JPEG, PNG, WEBP formats are allowed.");
+                      return;
+                    }
+
+                    if (file.size > 1024 * 1024) {
+                      setImageError("Image size must be less than 1MB.");
+                      return;
+                    }
+
+                    setImageError(null);
+                    setSelectedImage(file);
+
+                    // AUTO UPLOAD
+                    const formData = new FormData();
+                    formData.append("profile_image", file);
+
+                    try {
+                      const res = await fetch(
+                        `${process.env.NEXT_PUBLIC_API_URL_APP}/profile/upload-profile-image/`,
+                        {
+                          method: "PATCH",
+                          headers: {
+                            Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
+                          },
+                          body: formData,
+                        }
+                      );
+
+                      if (res.ok) {
+                        const data = await res.json();
+
+                        const newImageUrl =
+                          process.env.NEXT_PUBLIC_API_URL_APP +
+                          data.profile_image_url +
+                          "?t=" +
+                          Date.now();
+
+                        // update UI instantly
+                        setProfileData((prev) => ({
+                          ...prev,
+                          personalInfo: {
+                            ...prev.personalInfo,
+                            profile_image: newImageUrl,
+                          },
+                        }));
+
+                        // close dialog automatically
+                        setIsImageDialogOpen(false);
+
+                      } else {
+                        const error = await res.json();
+                        setImageError(error?.error || "Upload failed");
+                      }
+                    } catch (err) {
+                      console.error(err);
+                      setImageError("Network error");
+                    }
+                  }}
                 />
-              ) : profileData.personalInfo.profile_image ? (
-                <img
-                  src={profileData.personalInfo.profile_image}
-                  className="w-24 h-24 rounded-full object-cover"
-                  alt="Profile"
-                />
-              ) : (
-                <User className="w-10 h-10 text-purple-600" />
+              </label>
+
+              {/* Error */}
+              {imageError && (
+                <p className="text-red-500 text-xs text-center break-words">{imageError}</p>
               )}
             </div>
 
-            {/* Hover Overlay */}
-            <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center
-                            opacity-0 group-hover:opacity-100 transition">
-              <span className="text-white text-xs font-medium">
-                {selectedImage || profileData.personalInfo.profile_image
-                  ? "Update Photo"
-                  : "Add Photo"}
-              </span>
-            </div>
-
-            {/* Hidden File Input */}
-            <input
-              type="file"
-              accept="image/jpeg,image/jpg,image/png,image/webp"
-              className="hidden"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (!file) return;
-
-                const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
-                if (!allowedTypes.includes(file.type)) {
-                  setImageError("Only JPG, JPEG, PNG, WEBP formats are allowed.");
-                  return;
-                }
-
-                if (file.size > 1024 * 1024) {
-                  setImageError("Image size must be less than 1MB.");
-                  return;
-                }
-
-                setImageError(null);
-                setSelectedImage(file);
-              }}
-            />
-          </label>
-
-             {imageError && (
-               <p className="text-red-500 text-xs mt-2 text-center break-words">
-                 {imageError}
-               </p>
-             )}
+                </DialogContent>
+              </Dialog>
             </div>
                <h2 className="text-lg lg:text-xl font-bold text-gray-900 mb-1">
                    {profileData.personalInfo.fullName}
@@ -1990,9 +2008,9 @@ const removeAppliedJob = async (applicationId: number) => {
                       {/* Profile Info */}
                 <div className="mt-3 space-y-2 text-sm text-gray-600">
 
-                  <div className="flex gap-4">
-                    <span className="font-medium text-gray-500">City, Country:</span>
-                    <span className="font-semibold text-gray-800">
+                  <div className="flex gap-11">
+                    <span className="font-medium text-gray-500">Location:</span>
+                    <span className="font-semibold text-gray-800 break-all">
                       {profileData.personalInfo.cityId &&
                         cities.find(c => c.id.toString() === profileData.personalInfo.cityId)?.name},{" "}
                       {profileData.personalInfo.countryId &&
@@ -2017,7 +2035,7 @@ const removeAppliedJob = async (applicationId: number) => {
 
                   <div className="flex gap-16">
                     <span className="font-medium text-gray-500">Email:</span>
-                    <span className="font-semibold text-gray-800">
+                    <span className="font-semibold text-gray-800 break-all">
                       {profileData.personalInfo.email || "-"}
                     </span>
                   </div>
@@ -2322,32 +2340,47 @@ const removeAppliedJob = async (applicationId: number) => {
                         </Select>
                       </div>
 
-{/* date_of_birth */}
-<div className="w-full">
-  <label className="text-sm font-medium">Date Of Birth</label>
+                        {/* date_of_birth */}
+                        <div className="w-full">
+                          <label className="text-sm font-medium">Date Of Birth</label>
 
-  <div className="relative mt-1">
-    <input
-      type="text"
-      placeholder="DD/MM/YYYY"
-      maxLength={10}
-      value={dobInput}
-      onChange={(e) => {
-  const raw = e.target.value;
+                          <div className="relative mt-1">
+                            <input
+                              type="text"
+                              placeholder="DD/MM/YYYY"
+                              maxLength={10}
+                              value={dobInput}
+                              onChange={(e) => {
+                                const raw = e.target.value;
+
+                                if (!raw) {
+                                  setDobInput("");
+                                  setDobError("");
+                                  setSelectedDate(null);
+
+                                  setProfileData((prev: any) => ({
+                                    ...prev,
+                                    personalInfo: {
+                                      ...prev.personalInfo,
+                                      date_of_birth: "",
+                                    },
+                                  }));
+
+                                  return;
+                                }
 
                                 const { formatted, parsed, error } = formatDOB(raw);
-
 
                                 const yearPart = formatted.split("/")[2];
 
                                 if (yearPart && yearPart.length === 4) {
                                   const currentYear = dayjs().year();
 
-    if (parseInt(yearPart) > currentYear) {
-      setDobError("Future year not allowed");
-      return;
-    }
-  }
+                                  if (parseInt(yearPart) > currentYear) {
+                                    setDobError("Future year not allowed");
+                                    return;
+                                  }
+                                }
 
                                 setDobInput(formatted);
 
@@ -2360,6 +2393,16 @@ const removeAppliedJob = async (applicationId: number) => {
                                 if (formatted.length < 10) {
                                   setDobError("");
                                   setSelectedDate(null);
+
+                                  //  ALSO CLEAR HERE
+                                  setProfileData((prev: any) => ({
+                                    ...prev,
+                                    personalInfo: {
+                                      ...prev.personalInfo,
+                                      date_of_birth: "",
+                                    },
+                                  }));
+
                                   return;
                                 }
 
@@ -2378,18 +2421,18 @@ const removeAppliedJob = async (applicationId: number) => {
                                 setDobError("");
                                 setSelectedDate(parsed.toDate());
 
-  setProfileData((prev: any) => ({
-    ...prev,
-    personalInfo: {
-      ...prev.personalInfo,
-      date_of_birth: parsed.format("DD/MM/YYYY"),
-    },
-  }));
-}}
-      className={`w-full h-[44px] px-3 pr-10 text-sm border rounded-md outline-none
-        ${dobError ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:ring-blue-500"}
-      `}
-    />
+                                setProfileData((prev: any) => ({
+                                  ...prev,
+                                  personalInfo: {
+                                    ...prev.personalInfo,
+                                    date_of_birth: parsed.format("DD/MM/YYYY"),
+                                  },
+                                }));
+                              }}
+                              className={`w-full h-[44px] px-3 pr-10 text-sm border rounded-md outline-none
+                                ${dobError ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:ring-blue-500"}
+                              `}
+                            />
 
                             {/*  CALENDAR ICON */}
                             <div className="absolute right-2 top-1/2 -translate-y-1/2">
@@ -2398,40 +2441,40 @@ const removeAppliedJob = async (applicationId: number) => {
                                 onChange={(date) => {
                                   if (!date) return;
 
-          const parsed = dayjs(date);
+                                const parsed = dayjs(date);
 
-          setSelectedDate(date);
-          setDobInput(parsed.format("DD/MM/YYYY"));
-          setProfileData((prev: any) => ({
-            ...prev,
-            personalInfo: {
-              ...prev.personalInfo,
-              date_of_birth: parsed.format("DD/MM/YYYY"),
-            },
-          }));
-        }}
-        maxDate={new Date()}
-        popperPlacement="bottom-end"
-        popperClassName="z-[9999]"
-        portalId="root"
-        customInput={
-          <button
-            type="button"
-            className="p-1 rounded hover:bg-gray-100 cursor-pointer"
-          >
-            <Calendar size={18} />
-          </button>
-        }
-      />
-    </div>
+                                setSelectedDate(date);
+                                setDobInput(parsed.format("DD/MM/YYYY"));
+                                setProfileData((prev: any) => ({
+                                  ...prev,
+                                  personalInfo: {
+                                    ...prev.personalInfo,
+                                    date_of_birth: parsed.format("DD/MM/YYYY"),
+                                  },
+                                }));
+                              }}
+                              maxDate={new Date()}
+                              popperPlacement="bottom-end"
+                              popperClassName="z-[9999]"
+                              portalId="root"
+                              customInput={
+                                <button
+                                  type="button"
+                                  className="p-1 rounded hover:bg-gray-100 cursor-pointer"
+                                >
+                                  <Calendar size={18} />
+                                </button>
+                              }
+                            />
+                          </div>
 
-    {dobError && (
-      <p className="text-red-500 text-xs mt-1">
-        {dobError}
-      </p>
-    )}
-  </div>
-</div>
+                          {dobError && (
+                            <p className="text-red-500 text-xs mt-1">
+                              {dobError}
+                            </p>
+                          )}
+                        </div>
+                      </div>
 
 
                       <div>
@@ -2766,31 +2809,28 @@ const removeAppliedJob = async (applicationId: number) => {
                         >
                           Current Salary (Annual)
                         </Label>
-                        <div className="flex gap-2 mt-1">
-                          <Select
-                            value={profileData.personalInfo.currentcurrency || ""}
-                            onValueChange={(value) =>
+                        <div className="flex gap-2 mt-1 items-center">
+                          <AsyncSelect
+                            cacheOptions
+                            defaultOptions
+                            placeholder="Currency"
+                            loadOptions={getCurrencyOptions}
+                            value={getSelectedCurrency()}
+                            onChange={(selectedOption: any) => {
                               setProfileData((prev) => ({
                                 ...prev,
                                 personalInfo: {
                                   ...prev.personalInfo,
-                                  currentcurrency: value,
+                                  currentcurrency: selectedOption?.value || "",
                                 },
-                              }))
-                            }
-                          >
-                            <SelectTrigger className="w-28 h-10 lg:h-11">
-                              <SelectValue placeholder="Currency" />
-                            </SelectTrigger>
-
-                            <SelectContent>
-                              {currency.map((curr) => (
-                                <SelectItem key={curr.id} value={String(curr.id)}>
-                                  {curr.code}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                              }));
+                            }}
+                            isClearable
+                            menuPortalTarget={typeof window !== "undefined" ? document.body : null}
+                            styles={{
+                              menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                            }}
+                          />
                           <Input
                             id="currentSalary"
                             type="text"
@@ -2824,31 +2864,29 @@ const removeAppliedJob = async (applicationId: number) => {
                         >
                           Expected Salary (Annual)
                         </Label>
-                        <div className="flex gap-2 mt-1">
-                         <Select
-                            value={profileData.personalInfo.expectedCurrency || ""}
-                            onValueChange={(value) =>
+                        <div className="flex gap-2 mt-1 items-center">
+                          <AsyncSelect
+                            cacheOptions
+                            defaultOptions
+                            placeholder="Currency"
+                            loadOptions={getCurrencyOptions}
+                            value={getSelectedExpectedCurrency()}
+                            onChange={(selectedOption: any) => {
                               setProfileData((prev) => ({
                                 ...prev,
                                 personalInfo: {
                                   ...prev.personalInfo,
-                                  expectedCurrency: value,
+                                  expectedCurrency: selectedOption?.value || "",
                                 },
-                              }))
-                            }
-                          >
-                            <SelectTrigger className="w-28 h-10 lg:h-11">
-                              <SelectValue placeholder="Currency" />
-                            </SelectTrigger>
-
-                            <SelectContent>
-                              {currency.map((curr) => (
-                                <SelectItem key={curr.id} value={String(curr.id)}>
-                                  {curr.code}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                              }));
+                            }}
+                            isClearable
+                            menuPortalTarget={typeof window !== "undefined" ? document.body : null}
+                            menuPosition="fixed"
+                            styles={{
+                              menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                            }}
+                          />
                          <Input
                             id="expectedSalary"
                             type="text"
@@ -2904,9 +2942,12 @@ const removeAppliedJob = async (applicationId: number) => {
                   </div>
                   <div className="flex flex-col sm:flex-row justify-end gap-3 mt-6">
                      <Button
-                      onClick={async () => {
-                        await handleSaveProfile();
-                            handleNext();
+                        onClick={async () => {
+                        const isSaved = await handleSaveProfile();
+
+                        if (isSaved) {
+                          handleNext();
+                        }
                       }}
                       className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-10 lg:h-11"
                     >
@@ -3506,57 +3547,150 @@ const removeAppliedJob = async (applicationId: number) => {
                                 <Label  className="text-sm font-medium text-gray-700">
                                   Course duration *
                                  </Label>
-                                  <div className="mt-1 grid grid-cols-2 gap-3">
-                                <DatePicker
-                                  views={["year"]}
-                                  label=" Starting Year"
-                                  value={educationForm.start_year ?? null}
-                                  disableFuture
-                                  maxDate={dayjs()}
-                                  onChange={(date) => {
-                                    if (!date) return;
+                                  <div className="mt-1 flex items-center gap-3">
 
-                                    setEducationForm((prev) => ({
-                                      ...prev,
-                                      start_year: date,
-                                    }));
-                                      setYearError("");
-                                  }}
-                                  slotProps={{
-                                    textField: {
-                                      fullWidth: true,
-                                      size: "small",
-                                    },
-                                  }}
-                                />
-                                  <DatePicker
-                                  views={["year"]}
-                                  label=" Ending Year"
-                                  value={educationForm.end_year ?? null}
-                                  maxDate={dayjs().add(101, "year")}
-                                  onChange={(date) => {
-                                    if (!date) return;
-                                    if (
-                                      educationForm.start_year &&
-                                      date.isBefore(educationForm.start_year, "year")
-                                    ) {
-                                       setYearError("End year must be greater than or equal to Start year");
-                                      return;
-                                    }
+                                  {/* START YEAR */}
+                                  <div className="relative w-full">
+                                    <input
+                                      type="text"
+                                      placeholder="Starting Year"
+                                      maxLength={4}
+                                      value={educationForm.start_year || ""}
+                                      onChange={(e) => {
+                                        const value = e.target.value.replace(/\D/g, "");
 
-                                    setEducationForm((prev) => ({
-                                      ...prev,
-                                      end_year: date,
-                                    }));
-                                    setYearError("");
-                                  }}
-                                  slotProps={{
-                                    textField: {
-                                      fullWidth: true,
-                                      size: "small",
-                                    },
-                                  }}
-                                />
+                                        if (value.length > 4) return;
+
+                                        if (value && parseInt(value) > new Date().getFullYear()) {
+                                          setYearError("Starting year cannot be in the future");
+                                          return;
+                                        }
+
+                                        setEducationForm((prev) => ({
+                                          ...prev,
+                                          start_year: value,
+                                        }));
+
+                                        setYearError("");
+                                      }}
+                                      className="w-full h-[44px] px-3 pr-10 border rounded-md"
+                                    />
+
+                                    <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                                       <ReactDatePicker
+                                          selected={
+                                            educationForm.start_year
+                                              ? new Date(Number(educationForm.start_year), 0)
+                                              : null
+                                          }
+                                          onChange={(date) => {
+                                            if (!date) return;
+
+                                            const year = new Date(date).getFullYear().toString();
+
+                                            setEducationForm((prev) => ({
+                                              ...prev,
+                                              start_year: year,
+                                            }));
+
+                                            setYearError("");
+                                          }}
+                                          showYearPicker // ✅ ONLY YEAR
+                                          dateFormat="yyyy" // ✅ FORMAT
+                                          maxDate={new Date()}
+                                          popperPlacement="bottom-end"
+                                          popperClassName="z-[9999]"
+                                          portalId="root"
+                                          customInput={
+                                            <button
+                                              type="button"
+                                              className="p-1 rounded hover:bg-gray-100 cursor-pointer"
+                                            >
+                                              <Calendar size={18} />
+                                            </button>
+                                          }
+                                        />
+                                    </div>
+                                  </div>
+
+                                  <span className="text-sm text-gray-500 whitespace-nowrap">
+                                    to
+                                  </span>
+
+                                  <div className="relative w-full">
+                                    <input
+                                      type="text"
+                                      placeholder="Ending Year"
+                                      maxLength={4}
+                                      value={educationForm.end_year || ""}
+                                      onChange={(e) => {
+                                        const value = e.target.value.replace(/\D/g, "");
+
+                                        if (value.length > 4) return;
+
+                                        setEducationForm((prev) => ({
+                                          ...prev,
+                                          end_year: value,
+                                        }));
+
+                                        if (
+                                          educationForm.start_year &&
+                                          value.length === 4 &&
+                                          educationForm.start_year.length === 4 &&
+                                          parseInt(value) < parseInt(educationForm.start_year)
+                                        ) {
+                                          setYearError("End year must be greater than or equal to Start year");
+                                          return;
+                                        }
+
+                                        setYearError("");
+                                      }}
+                                      className="w-full h-[44px] px-3 pr-10 border rounded-md"
+                                    />
+
+                                    <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                                        <ReactDatePicker
+                                          selected={
+                                            educationForm.end_year
+                                              ? new Date(Number(educationForm.end_year), 0)
+                                              : null
+                                          }
+                                          onChange={(date) => {
+                                            if (!date) return;
+
+                                            const year = new Date(date).getFullYear().toString();
+
+                                            if (
+                                              educationForm.start_year &&
+                                              parseInt(year) < parseInt(educationForm.start_year)
+                                            ) {
+                                              setYearError("End year must be greater than or equal to Start year");
+                                              return;
+                                            }
+
+                                            setEducationForm((prev) => ({
+                                              ...prev,
+                                              end_year: year,
+                                            }));
+
+                                            setYearError("");
+                                          }}
+                                          showYearPicker
+                                          dateFormat="yyyy"
+                                          popperPlacement="bottom-end"
+                                          popperClassName="z-[9999]"
+                                          portalId="root"
+                                          customInput={
+                                            <button
+                                              type="button"
+                                              className="p-1 rounded hover:bg-gray-100 cursor-pointer"
+                                            >
+                                              <Calendar size={18} />
+                                            </button>
+                                          }
+                                        />
+                                    </div>
+                                  </div>
 
                                   </div>
                                   {yearError && (
@@ -3906,34 +4040,68 @@ const removeAppliedJob = async (applicationId: number) => {
                                 />
                               </div>
                               <div>
-                                <Label>Year Obtained *</Label>
-                                <div className="mt-1">
-                                <DatePicker
-                                   value={certificationForm.year ?? undefined} 
-                                  onChange={(date) =>
+                              <Label>Year Obtained *</Label>
+
+                              <div className="relative mt-1">
+                                <input
+                                  type="text"
+                                  placeholder="YYYY"
+                                  maxLength={4}
+                                  value={certificationForm.year || ""}
+                                  onChange={(e) => {
+                                    const value = e.target.value.replace(/\D/g, "");
+
+                                    if (value.length > 4) return;
+
+                                    // future year block
+                                    if (value && parseInt(value) > new Date().getFullYear()) {
+                                      toast.error("Year cannot be in the future");
+                                      return;
+                                    }
+
                                     setCertificationForm((prev) => ({
                                       ...prev,
-                                      year: date,
-                                    }))
-                                  }
-                                  views={["year"]}
-                                   maxDate={dayjs()} 
-                                  slotProps={{
-                                    textField: {
-                                      fullWidth: true,
-                                      size: "small",
-                                      sx: {
-                                        mt: 1,
-                                        "& .MuiOutlinedInput-root": {
-                                          height: "44px",
-                                          borderRadius: "6px",
-                                        },
-                                      },
-                                    },
+                                      year: value,
+                                    }));
                                   }}
+                                  className="w-full h-[44px] px-3 pr-10 text-sm border rounded-md outline-none"
                                 />
 
+                                {/* 🔥 YEAR PICKER ICON */}
+                                <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                                  <ReactDatePicker
+                                    selected={
+                                      certificationForm.year
+                                        ? new Date(Number(certificationForm.year), 0)
+                                        : null
+                                    }
+                                    onChange={(date) => {
+                                      if (!date) return;
+
+                                      const year = new Date(date).getFullYear().toString();
+
+                                      setCertificationForm((prev) => ({
+                                        ...prev,
+                                        year,
+                                      }));
+                                    }}
+                                    showYearPicker
+                                    dateFormat="yyyy"
+                                    maxDate={new Date()}
+                                    popperPlacement="bottom-end"
+                                    popperClassName="z-[9999]"
+                                    portalId="root"
+                                    customInput={
+                                      <button
+                                        type="button"
+                                        className="p-1 rounded hover:bg-gray-100 cursor-pointer"
+                                      >
+                                        <Calendar size={18} />
+                                      </button>
+                                    }
+                                  />
                                 </div>
+                              </div>
                               </div>
                             </div>
                             <div className="flex justify-end space-x-2">
@@ -3962,133 +4130,8 @@ const removeAppliedJob = async (applicationId: number) => {
                   </CardContent>
                 </Card>
               )}
-
-              {activeSection === "SavedJobs" && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-lg lg:text-xl">
-                      <Bookmark className="w-5 h-5" />
-                      <span>Saved Jobs</span>
-                    </CardTitle>
-                  </CardHeader>
-
-                  <CardContent>
-                    {savedJobsData.length > 0 ? (
-                      savedJobsData.map((savedJob) => (
-                        <div
-                          key={savedJob.id}
-                          className="border rounded-lg p-4 mb-4 hover:shadow-md transition-shadow"
-                        >
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <h3 className="font-semibold text-base lg:text-lg text-gray-900">
-                                {savedJob.job_title || "No title"}
-                              </h3>
-                              <p className="text-purple-600 font-medium text-sm">
-                                {savedJob.job?.company || "Unknown Company"}
-                              </p>
-                              <p className="text-gray-600 text-xs">
-                                {savedJob.job?.location?.name ||
-                                  "Location not available"}
-                              </p>
-                            </div>
-
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={async () => {
-                                const token =
-                                  localStorage.getItem("auth_token");
-                                if (!token) return;
-                                try {
-                                  const res = await fetch(
-                                    `${process.env.NEXT_PUBLIC_API_URL_APP}/saved-jobs/${savedJob.id}/`,
-                                    {
-                                      method: "DELETE",
-                                      headers: {
-                                        Authorization: `Bearer ${token}`,
-                                      },
-                                    }
-                                  );
-                                  if (res.ok) {
-                                    setSavedJobsData((prev) =>
-                                      prev.filter((j) => j.id !== savedJob.id)
-                                    );
-                                  }
-                                } catch (err) {
-                                  console.error(
-                                    "Error deleting saved job:",
-                                    err
-                                  );
-                                }
-                              }}
-                              className="text-red-500 border-red-200 hover:bg-red-50"
-                            >
-                              <BookmarkX className="w-4 h-4 mr-2" />
-                              Remove
-                            </Button>
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-gray-500 text-sm">
-                        No saved jobs yet.
-                      </p>
-                    )}
-                  </CardContent>
-                </Card>
-              )}
-
-              {activeSection === "AppliedJobs" && (
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-lg lg:text-xl">
-                          <Bookmark className="w-5 h-5" />
-                          <span>Applied Jobs</span>
-                        </CardTitle>
-                      </CardHeader>
-                  
-                      <CardContent>
-                        {loadingAppliedJobs && (
-                          <p className="text-sm text-gray-500">Loading applied jobs...</p>
-                        )}
-                  
-                        {!loadingAppliedJobs && appliedJobs.length === 0 && (
-                          <p className="text-sm text-gray-500">No applied jobs found.</p>
-                        )}
-                  
-                        {appliedJobs.map((appliedJob) => (
-                          <div
-                            key={appliedJob.id}
-                            className="border rounded-lg p-4 mb-4 hover:shadow-md transition-shadow"
-                          >
-                            <div className="flex justify-between items-start">
-                              <div>
-                                <h3 className="font-semibold text-base lg:text-lg text-gray-900">
-                                  {appliedJob.job_title}
-                                </h3>
-                  
-                                <p className="text-purple-600 font-medium text-sm">
-                                  {appliedJob.job?.company}
-                                </p>
-                  
-                                <p className="text-gray-600 text-xs">
-                                  {appliedJob.job?.location?.name}
-                                </p>
-                              </div>
-                  
-                             <div className="flex items-center gap-2">
-                        </div>
-                  
-                            </div>
-                          </div>
-                        ))}
-                      </CardContent>
-                    </Card>
-              )}
-
               </div>
-             </div>      
+             </div>
             </div>
           </div>
         </div>
