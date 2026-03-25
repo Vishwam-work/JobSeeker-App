@@ -238,6 +238,19 @@ export default function AppliedJobsPage() {
                   <p className="text-xs text-gray-500">Viewed by recruiter</p>
                 </div>
               </div>
+              <div className="mt-4">
+                <p className="text-sm font-medium mb-2">Skills</p>
+                <div className="flex flex-wrap gap-2">
+                  {selectedJob.job.skills.map((skill: string, i: number) => (
+                    <span
+                      key={i}
+                      className="text-xs bg-gray-100 px-2 py-1 rounded"
+                    >
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              </div>
             </>
           ) : (
             <p className="text-gray-500 text-sm">
