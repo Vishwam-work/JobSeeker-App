@@ -2,20 +2,33 @@
 
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Bookmark, BookmarkX } from "lucide-react";
+import { Bookmark,Briefcase, IndianRupee, MapPin  } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 interface SavedJob {
   id: number;
   job_title: string;
+  saved_at: string;
+
   job: {
     id: number;
     title: string;
     company: string;
-    location?: {
+
+    description: string;
+    experience: string;
+    salary: string | null;
+
+    location: {
       name: string;
-    };
+    } | null;
+
+    skills: string[];
+
+    job_type: string;
+    work_mode: string;
+
+    created_at: string;
   };
 }
 
@@ -74,56 +87,102 @@ export default function SavedJobsPage() {
   };
 
   return (
-    <div>
+    <div className="bg-gray-100">
          <Header />
-    <div className="max-w-5xl mx-auto py-10 px-4">
-     
+    <div className=" max-w-4xl  py-10 px-4">
+      <div className=" rounded-xl  mb-6">
+        <p className="text-3xl font-bold text-black-500">Jobs saved by you</p>
+      </div>
+     <div className=" bg-white rounded-xl p-6 mb-6">
+        <h2 className=" text-3xl font-bold">
+          {savedJobs.length.toString().padStart(2, "0")}
+        </h2>
+        <p className="text-gray-500">Saved Job(s)</p>
+      </div>
 
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-xl">
-            <Bookmark className="w-5 h-5" />
-            Saved Jobs
-          </CardTitle>
+          <CardTitle>Saved Jobs</CardTitle>
         </CardHeader>
-
         <CardContent>
-          {savedJobs.length > 0 ? (
-            savedJobs.map((savedJob) => (
-              <div
-                key={savedJob.id}
-                className="border rounded-lg p-4 mb-4 hover:shadow-md transition"
-              >
-                <div className="flex justify-between items-start">
+         {savedJobs.length > 0 ? (
+            savedJobs.map((savedJob) => {
+              const job = savedJob.job;
 
-                  <div>
-                    <h3 className="font-semibold text-lg">
-                      {savedJob.job?.title || savedJob.job_title}
-                    </h3>
+              return (
+                <div
+                  key={savedJob.id}
+                  className="border rounded-xl p-5 mb-5 bg-white hover:shadow-md transition"
+                >
+                  {/* Top Section */}
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        {job?.title}
+                      </h3>
 
-                    <p className="text-purple-600 font-medium text-sm">
-                      {savedJob.job?.company || "Unknown Company"}
-                    </p>
+                      <p className="text-gray-600 text-sm mt-1">
+                        {job?.company}
+                      </p>
+                    </div>
 
-                    <p className="text-gray-500 text-sm">
-                      {savedJob.job?.location?.name ||
-                        "Location not available"}
-                    </p>
+                    <button
+                      onClick={() => removeSavedJob(savedJob.id)}
+                      className="text-gray-500 "
+                    >
+                      <Bookmark className="w-5 h-5 fill-green-500" />
+                    </button>
                   </div>
 
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => removeSavedJob(savedJob.id)}
-                    className="text-red-500 border-red-200 hover:bg-red-50"
-                  >
-                    <BookmarkX className="w-4 h-4 mr-2" />
-                    Remove
-                  </Button>
+                  {/* Info Row */}
+                  <div className="flex flex-wrap gap-4 text-sm text-gray-500 mt-3">
 
+                    <span className="flex items-center gap-1">
+                      <Briefcase className="w-4 h-4" />
+                      {job?.experience || ""}
+                    </span>
+
+                    <span className="flex items-center gap-1">
+                      <IndianRupee className="w-4 h-4" />
+                      {job?.salary || ""}
+                    </span>
+
+                    <span className="flex items-center gap-1">
+                      <MapPin className="w-4 h-4" />
+                      {job?.location?.name || ""}
+                    </span>
+
+                  </div>
+
+                  {/* Description */}
+                  <p className="text-gray-600 text-sm mt-3 line-clamp-2">
+                    {job?.description}
+                  </p>
+
+                  {/* Skills */}
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    {job?.skills?.map((skill: string, i: number) => (
+                      <span
+                        key={i}
+                        className="text-xs bg-gray-100 px-2 py-1 rounded"
+                      >
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+
+                  {/* Bottom Row */}
+                  <div className="flex justify-between items-center mt-4 text-sm text-gray-400">
+                    <span>
+                      Posted{" "}
+                      {new Date(job?.created_at).toLocaleDateString()}
+                    </span>
+
+                    <span className="text-black font-medium">Saved</span>
+                  </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           ) : (
             <p className="text-gray-500 text-center">
               No saved jobs yet.
@@ -131,7 +190,7 @@ export default function SavedJobsPage() {
           )}
         </CardContent>
       </Card>
-       
+
     </div>
      <Footer />
     </div>
