@@ -85,7 +85,7 @@ export default function EmployerRegister() {
   const router = useRouter();
   const [email, setemail] = useState("");
   const [showText, setShowText] = useState(false)
-
+  const [agreeTerms, setAgreeTerms] = useState(false);
   // Error states
   const [websiteError, setWebsiteError] = useState<string>("");
   const [descriptionError, setDescriptionError] = useState<string>("");
@@ -1200,7 +1200,7 @@ const validateWebsite = (url?: string): boolean => {
                       </div>
 
                       <div className="space-y-4">
-                        <div className="flex items-start space-x-2">
+                        {/* <div className="flex items-start space-x-2">
                           <Checkbox
                             id="agreeTerms"
                             checked={formData.agreeTerms}
@@ -1228,7 +1228,33 @@ const validateWebsite = (url?: string): boolean => {
                               Privacy Policy
                             </Link>
                           </label>
-                        </div>
+                        </div> */}
+                         <div className="flex items-start gap-2 mt-4">
+                                      <Checkbox
+                                        checked={agreeTerms}
+                                        onCheckedChange={(val) => setAgreeTerms(val === true)}
+                                      />
+                                     <p className="text-sm text-gray-600">
+                                       By clicking Register, you agree to the{" "}
+                                       <Link
+                                         href="/terms-and-conditions"
+                                         target="_blank"
+                                         rel="noopener noreferrer"
+                                         className="text-blue-600 font-medium"
+                                       >
+                                         Terms and Conditions
+                                       </Link>{" "}
+                                       &{" "}
+                                       <Link
+                                         href="/privacy-policy"
+                                         target="_blank"
+                                         rel="noopener noreferrer"
+                                         className="text-blue-600 font-medium"
+                                       >
+                                         Privacy Policy
+                                       </Link>
+                                     </p>
+                                    </div>
 
                         <div className="flex items-start space-x-2">
                           <Checkbox
@@ -1264,7 +1290,7 @@ const validateWebsite = (url?: string): boolean => {
                       </Button>
                     )}
 
-                    {currentStep < 3 ? (
+                    {currentStep < 2 ? (
 
                       <Button
                         type="button"

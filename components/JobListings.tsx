@@ -2008,25 +2008,39 @@ setUserData({
                       </div>
                     ) : (
                       userData && (
-                        <div className="p-4 bg-gray-50 rounded-lg space-y-2">
-                          <h4 className="font-semibold text-gray-900">
-                            Your Application Details
-                          </h4>
-                          <div className="text-sm text-gray-600 space-y-1">
-                            <p>
-                              <span className="font-medium">Name:</span>
-                              {userData.name || userData.full_name}
-                            </p>
-                            <p>
-                              <span className="font-medium">Email:</span>
-                              {userData.email}
-                            </p>
-                            <p>
-                              <span className="font-medium">Phone:</span>
-                              {userData.phone || "Not provided"}
-                            </p>
+                       <div className="p-4 bg-gray-50 rounded-lg space-y-3">
+                        <h4 className="font-semibold text-gray-900">
+                          Your Application Details
+                        </h4>
+
+                        <div className="text-sm text-gray-600 space-y-2">
+
+                          {/* Name */}
+                          <div className="flex flex-col sm:flex-row sm:items-center">
+                            <span className="sm:w-28 text-gray-500">Name:</span>
+                            <span className="font-medium text-gray-900 break-all">
+                              {userData.name || userData.full_name || "-"}
+                            </span>
                           </div>
+
+                          {/* Email */}
+                          <div className="flex flex-col sm:flex-row sm:items-center">
+                            <span className="sm:w-28 text-gray-500">Email:</span>
+                            <span className="font-medium text-gray-900 break-all">
+                              {userData.email || "-"}
+                            </span>
+                          </div>
+
+                          {/* Phone */}
+                          <div className="flex flex-col sm:flex-row sm:items-center">
+                            <span className="sm:w-28 text-gray-500">Phone:</span>
+                            <span className="font-medium text-gray-900">
+                              +{userData.phone_code || ""} {userData.phone || "Not provided"}
+                            </span>
+                          </div>
+
                         </div>
+                      </div>
                       )
                     )}
                   </div>

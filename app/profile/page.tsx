@@ -2035,7 +2035,7 @@ const resumeUrl = profileData?.personalInfo?.resume
 
                   <div className="flex gap-16">
                     <span className="font-medium text-gray-500">Email:</span>
-                    <span className="font-semibold text-gray-800 break-all">
+                    <span className="font-semibold text-gray-800 ">
                       {profileData.personalInfo.email || "-"}
                     </span>
                   </div>
@@ -2296,6 +2296,7 @@ const resumeUrl = profileData?.personalInfo?.resume
                         <Input
                           id="email"
                           type="email"
+                          readOnly
                           value={profileData.personalInfo.email}
                           onChange={(e) =>
                             setProfileData((prev) => ({

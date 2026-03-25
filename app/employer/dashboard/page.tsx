@@ -1843,6 +1843,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
                     <Input
                       id="company"
                       value={CompanyName}
+                      readOnly
                       onChange={(e) =>
                         setJobForm((prev) => ({
                           ...prev,
@@ -2719,6 +2720,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
                   <Input
                     name="company"
                     value={jobForm.company || ""}
+                    readOnly
                     onChange={(e) =>
                       setJobForm({
                         ...jobForm,
@@ -2767,7 +2769,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
                        "ArrowRight",
                         "Tab",
                      ];
-                
+
                        if (!/[0-9]/.test(e.key) && !allowedKeys.includes(e.key)) {
                         e.preventDefault();
                       }
