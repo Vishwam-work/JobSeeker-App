@@ -2,11 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Save, ChevronDown } from "lucide-react";
+import { Plus, Save} from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { jwtDecode } from "jwt-decode";
-
+import dayjs from "dayjs";
+import ReactDatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import { Calendar } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -14,25 +17,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import AsyncSelect from "react-select/async";
+import Selectt from "react-select";
+import customParseFormat from "dayjs/plugin/customParseFormat";
 
+dayjs.extend(customParseFormat);
 export default function PostJobPage() {
   const [jobForm, setJobForm] = useState<JobForm>({
     title: "",
@@ -43,13 +36,13 @@ export default function PostJobPage() {
     experience: "",
     salary: "",
     currency: "",
-    job_type: "",
+    job_type:  [],
     workMode: "",
     description: "",
     requirements: "",
     benefits: "",
     skills: [],
-    applicationDeadline: "",
+    application_deadline: "",
     vacancies: "",
     isUrgent: false,
     isRemote: false,
@@ -72,6 +65,11 @@ export default function PostJobPage() {
   const [cities, setCities] = useState<City[]>([]);
   const [currency, setCurrency] = useState<Currency[]>([]);
 
+
+  //date validation
+  const [deadlineInput, setDeadlineInput] = useState("");
+  const [deadlineError, setDeadlineError] = useState("");
+  const [deadlineDate, setDeadlineDate] = useState<Date | null>(null);
   interface JobForm {
     title: string;
     category: string;
@@ -81,13 +79,14 @@ export default function PostJobPage() {
     experience: string;
     salary: string;
     currency: string;
-    job_type: string;
+    currencyLabel?: string;
+    job_type: string[];
     workMode: string;
     description: string;
     requirements: string;
     benefits: string;
     skills: string[];
-    applicationDeadline: string;
+    application_deadline: string;
     vacancies: string;
     isUrgent: boolean;
     isRemote: boolean;
@@ -97,7 +96,7 @@ export default function PostJobPage() {
   interface PostedJob {
     id: number;
     title: string;
-    job_title: number;
+    job_title: string;
     company: string;
     location_id: number;
     experience: string;
@@ -136,13 +135,24 @@ export default function PostJobPage() {
   }
   interface Currency {
     id: number;
+    code: string;
+    name: string;
     symbol: string;
+    currencyLabel?: string; 
   }
   interface DecodedToken {
     user_id: number | string;
     exp?: number;
     iat?: number;
   }
+
+  const jobTypeOptions = [
+  { value: "full-time", label: "Full Time" },
+  { value: "part-time", label: "Part Time" },
+  { value: "contract", label: "Contract" },
+  { value: "internship", label: "Internship" },
+];
+
   const fetchPostedJobs = async () => {
     try {
       const token = localStorage.getItem("auth_token");
@@ -164,7 +174,7 @@ export default function PostJobPage() {
       const data = await response.json();
       // console.log("Here is the Job-list-view-data:",data)
       // console.log(data.category)
-      setPostedJobs(data); // Set jobs into stateq
+      setPostedJobs(data);
     } catch (error) {
       console.error("Error fetching jobs:", error);
     }
@@ -180,18 +190,19 @@ export default function PostJobPage() {
         return;
       }
       const payload = {
+
         title: jobForm.title,
-        category_id: parseInt(jobForm.category),
-        job_title: parseInt(jobForm.jobTitle),
+        job_title:(jobForm.jobTitle),
         company: CompanyName,
-        location_id: parseInt(jobForm.location),
+        category: jobForm.category,
+        location: (jobForm.location),
         currency_id: parseInt(jobForm.currency),
         experience: jobForm.experience,
         salary: jobForm.salary,
         job_type: jobForm.job_type,
         work_mode: jobForm.workMode,
         vacancies: parseInt(jobForm.vacancies) || 1, // Ensure integer
-        application_deadline: jobForm.applicationDeadline,
+        application_deadline: jobForm.application_deadline,
         description: jobForm.description,
         requirements: jobForm.requirements,
         benefits: jobForm.benefits,
@@ -201,7 +212,7 @@ export default function PostJobPage() {
         status: "active",
         questions: Array.isArray(jobForm.questions) ? jobForm.questions : [],
       };
-      // console.log("Payload:", payload);
+      console.log("Payload:", payload);
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/job-postings/`,
         {
@@ -227,6 +238,9 @@ export default function PostJobPage() {
       const data = await response.json();
       // console.log("Job posted successfully:", data);
       setPostedJobs((prev) => [...prev, data]);
+      setDeadlineInput("");
+      setDeadlineDate(null);
+      setDeadlineError("");
       toast.success("Job posted successfully!");
       await fetchPostedJobs();
 
@@ -240,13 +254,13 @@ export default function PostJobPage() {
         experience: "",
         salary: "",
         currency: "",
-        job_type: "",
+        job_type: [],
         workMode: "",
         description: "",
         requirements: "",
         benefits: "",
         skills: [],
-        applicationDeadline: "",
+        application_deadline: "",
         vacancies: "",
         isUrgent: false,
         isRemote: false,
@@ -271,8 +285,8 @@ export default function PostJobPage() {
         if (!token) return;
 
         const decoded = jwtDecode<DecodedToken>(token);
-        console.log("DECODED:", decoded);
-        console.log("Employer ID:", decoded.user_id);
+        // console.log("DECODED:", decoded);
+        // console.log("Employer ID:", decoded.user_id);
 
         const res = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/companies/${decoded.user_id}/`,
@@ -297,14 +311,31 @@ export default function PostJobPage() {
 
     run();
   }, []);
-  //   const getSelectedLocation = () => {
-  //   if (!experienceForm.location) return null;
+  const loadCountryOptions = async (inputValue: string) => {
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL_MASTER}/locations/search/?q=${inputValue || ""}`,
+      );
 
-  //   return {
-  //     label: experienceForm.location,
-  //     value: experienceForm.location,
-  //   };
-  // }
+      const data = await res.json();
+
+      return data.map((country: any) => ({
+        label: country.name,
+        value: country.name,
+      }));
+    } catch (error) {
+      console.error("Error fetching countries:", error);
+      return [];
+    }
+  };
+  const getSelectedLocation = () => {
+    if (!jobForm.location) return null;
+
+    return {
+      label: jobForm.location,
+      value: jobForm.location,
+    };
+  };
   const getJobCategoryOptions = async (inputValue: string) => {
     try {
       const res = await fetch(
@@ -356,9 +387,33 @@ export default function PostJobPage() {
       value: jobForm.jobTitle,
     };
   };
-  const filteredCities = cities.filter((city) =>
-    city.name.toLowerCase().startsWith(searchTerm.toLowerCase()),
-  );
+  const getCurrencyOptions = async (inputValue: string) => {
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL_MASTER}/currencies`,
+      );
+
+      const data = await res.json();
+
+      return data
+        .filter(
+          (curr: any) =>
+            curr.code.toLowerCase().includes(inputValue.toLowerCase()) ||
+            curr.name.toLowerCase().includes(inputValue.toLowerCase()),
+        )
+        .map((curr: any) => ({
+          label: curr.code,
+          value: String(curr.id),
+          code: curr.code,
+          name: curr.name,
+          symbol: curr.symbol,
+        }));
+    } catch (error) {
+      console.error("Error fetching currencies:", error);
+      return [];
+    }
+  };
+
   const formatNumber = (value: string | number): string => {
     if (!value) return "";
     return new Intl.NumberFormat("en-IN").format(Number(value));
@@ -401,6 +456,105 @@ export default function PostJobPage() {
     setJobForm((prev) => ({ ...prev, questions: updated }));
     setQuestions(updated);
   };
+
+const formatDeadline = (value: string) => {
+   let input = value.replace(/\D/g, "");
+    if (input.length > 8) input = input.slice(0, 8);
+    let day = input.slice(0, 2);
+    let month = input.slice(2, 4);
+    let year = input.slice(4, 8);
+    let error = "";
+
+    // DAY FIX
+    if (day.length === 1) {
+      if (!["0", "1", "2", "3"].includes(day)) {
+        day = "0" + day;
+      }
+    }
+
+    if (day.length === 2) {
+      let d = parseInt(day);
+      if (d > 31) day = "31";
+      if (d === 0) day = "01";
+    }
+
+    // MONTH FIX
+    if (month.length === 1) {
+      if (month !== "0" && month !== "1") {
+        month = "0" + month;
+      }
+    }
+
+    if (month.length === 2) {
+      let m = parseInt(month);
+      if (m > 12) month = "12";
+      if (m === 0) month = "01";
+    }
+
+    const currentYear = dayjs().year();
+
+    if (year.length === 4) {
+      let y = parseInt(year);
+
+      if (y < 1900) {
+        error = "Year must be after 1900";
+      }
+    }
+
+    // ✅ FULL DATE VALIDATION
+    if (day.length === 2 && month.length === 2 && year.length === 4) {
+      const d = parseInt(day);
+      const m = parseInt(month);
+      const y = parseInt(year);
+
+      // Leap year check
+      const isLeapYear =
+        (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;
+
+      const daysInMonth = [
+        31,
+        isLeapYear ? 29 : 28, // Feb
+        31,
+        30,
+        31,
+        30,
+        31,
+        31,
+        30,
+        31,
+        30,
+        31,
+      ];
+      if (m >= 1 && m <= 12) {
+        if (d > daysInMonth[m - 1]) {
+          error = `Invalid day for month`;
+        }
+      }
+      // Extra safety with dayjs
+      const parsedCheck = dayjs(
+        `${day}/${month}/${year}`,
+        "DD/MM/YYYY",
+        true
+      );
+
+      if (!parsedCheck.isValid()) {
+        error = "Invalid date";
+      }
+
+      if (parsedCheck.isBefore(dayjs())) {
+        error = "Past date not allowed";
+      }
+    }
+
+    // ✅ FORMAT OUTPUT
+    let formatted = day;
+    if (month) formatted += "/" + month;
+    if (year) formatted += "/" + year;
+
+    const parsed = dayjs(formatted, "DD/MM/YYYY", true);
+    return { formatted, parsed, error };
+};
+
   return (
     <Card>
       <CardHeader>
@@ -506,64 +660,23 @@ export default function PostJobPage() {
                 required
               />
             </div>
-
             <div>
-              <Label className="text-sm font-medium">Job Location *</Label>
+              <Label className="text-sm font-medium">Location *</Label>
 
-              <Popover open={open} onOpenChange={setOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    role="combobox"
-                    className="w-full justify-between mt-1 h-10 lg:h-11"
-                  >
-                    {selectedCity || "Select location"}
-                    <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-
-                <PopoverContent className="w-full p-0">
-                  <Command>
-                    <CommandInput
-                      placeholder="Search location..."
-                      value={search}
-                      onValueChange={setSearch}
-                    />
-                    <CommandList>
-                      {filteredCities.length === 0 ? (
-                        <CommandEmpty>No location found.</CommandEmpty>
-                      ) : (
-                        <CommandGroup>
-                          {filteredCities
-                            .filter((city) =>
-                              city.name
-                                .toLowerCase()
-                                .startsWith(search.toLowerCase()),
-                            )
-                            .map((city) => (
-                              <CommandItem
-                                key={city.id}
-                                onSelect={() => {
-                                  setSelectedCity(city.name);
-
-                                  setJobForm((prev: any) => ({
-                                    ...prev,
-                                    location: city.id.toString(),
-                                  }));
-
-                                  setSearch("");
-                                  setOpen(false);
-                                }}
-                              >
-                                {city.name}
-                              </CommandItem>
-                            ))}
-                        </CommandGroup>
-                      )}
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
+              <AsyncSelect
+                cacheOptions
+                defaultOptions
+                loadOptions={loadCountryOptions}
+                value={getSelectedLocation()}
+                onChange={(selected: any) => {
+                  setJobForm((prev) => ({
+                    ...prev,
+                    location: selected?.value || "",
+                  }));
+                }}
+                isClearable
+                placeholder="Search Location..."
+              />
             </div>
 
             <div>
@@ -594,24 +707,34 @@ export default function PostJobPage() {
                 Salary Range (Annual)
               </Label>
               <div className="flex gap-2 mt-1">
-                <Select
-                  value={jobForm.currency || ""}
-                  onValueChange={(value) =>
-                    setJobForm((prev) => ({ ...prev, currency: value }))
+                <AsyncSelect
+                  cacheOptions
+                  defaultOptions
+                  placeholder="Currency"
+                  loadOptions={getCurrencyOptions}
+                  value={
+                    jobForm.currency
+                      ? {
+                          value: jobForm.currency,
+                          label: jobForm.currencyLabel,
+                        }
+                      : null
                   }
-                  required={true}
-                >
-                  <SelectTrigger className="w-20 h-10 lg:h-11">
-                    <SelectValue placeholder="Select Currency" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {currency.map((curr) => (
-                      <SelectItem key={curr.id} value={curr.id.toString()}>
-                        {curr.symbol}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  onChange={(selectedOption: any) => {
+                    setJobForm((prev) => ({
+                      ...prev,
+                      currency: selectedOption?.value || "",
+                      currencyLabel: selectedOption?.label || "",
+                    }));
+                  }}
+                  isClearable
+                  menuPortalTarget={
+                    typeof window !== "undefined" ? document.body : null
+                  }
+                  styles={{
+                    menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                  }}
+                />
                 <Input
                   type="text"
                   id="salary"
@@ -647,22 +770,19 @@ export default function PostJobPage() {
 
             <div>
               <Label className="text-sm font-medium">Job Type *</Label>
-              <Select
-                value={jobForm.job_type}
-                onValueChange={(value) =>
-                  setJobForm((prev) => ({ ...prev, job_type: value }))
+              <Selectt
+                isMulti
+                options={jobTypeOptions}
+                value={jobTypeOptions.filter(option =>
+                  jobForm.job_type.includes(option.value)
+                )}
+                onChange={(selectedOptions) =>
+                  setJobForm((prev) => ({
+                    ...prev,
+                    job_type: selectedOptions.map((opt) => opt.value),
+                  }))
                 }
-              >
-                <SelectTrigger className="mt-1">
-                  <SelectValue placeholder="Select job type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="full-time">Full Time</SelectItem>
-                  <SelectItem value="part-time">Part Time</SelectItem>
-                  <SelectItem value="contract">Contract</SelectItem>
-                  <SelectItem value="internship">Internship</SelectItem>
-                </SelectContent>
-              </Select>
+              />
             </div>
 
             <div>
@@ -684,42 +804,152 @@ export default function PostJobPage() {
               </Select>
             </div>
 
-            <div>
+           <div>
               <Label htmlFor="vacancies" className="text-sm font-medium">
                 Number of Vacancies
               </Label>
+
               <Input
                 id="vacancies"
-                type="number"
+                type="text"
+                inputMode="numeric"
+                maxLength={5}
                 value={jobForm.vacancies}
-                onChange={(e) =>
-                  setJobForm((prev) => ({
-                    ...prev,
-                    vacancies: e.target.value,
-                  }))
-                }
+                onChange={(e) => {
+                  const value = e.target.value;
+
+                  if (/^\d{0,5}$/.test(value)) {
+                    setJobForm((prev) => ({
+                      ...prev,
+                      vacancies: value,
+                    }));
+                  }
+                }}
+                onKeyDown={(e) => {
+                  const allowedKeys = [
+                    "Backspace",
+                    "Delete",
+                    "ArrowLeft",
+                    "ArrowRight",
+                    "Tab",
+                  ];
+
+                  if (!/[0-9]/.test(e.key) && !allowedKeys.includes(e.key)) {
+                    e.preventDefault();
+                  }
+                }}
                 placeholder="e.g., 5"
                 className="mt-1"
               />
             </div>
 
-            <div>
-              <Label htmlFor="deadline" className="text-sm font-medium">
-                Application Deadline
-              </Label>
-              <Input
-                id="deadline"
-                type="date"
-                min={new Date().toISOString().split("T")[0]}
-                value={jobForm.applicationDeadline}
-                onChange={(e) =>
-                  setJobForm((prev) => ({
-                    ...prev,
-                    applicationDeadline: e.target.value,
-                  }))
-                }
-                className="mt-1"
-              />
+
+            <div className="w-full">
+              <label className="text-sm font-medium">Application Deadline</label>
+
+              <div className="relative mt-1">
+                <input
+                  type="text"
+                  placeholder="DD/MM/YYYY"
+                  maxLength={10}
+                  value={deadlineInput}
+                  onChange={(e) => {
+                    const raw = e.target.value;
+                    if (!raw) {
+                      setDeadlineInput("");
+                      setDeadlineError("");
+                      setDeadlineDate(null);
+
+                      setJobForm((prev) => ({
+                        ...prev,
+                        application_deadline: "",
+                      }));
+                      return;
+                    }
+
+                    const { formatted, parsed, error } = formatDeadline(raw);
+                    setDeadlineInput(formatted);
+
+                    if (error) {
+                      setDeadlineError(error);
+                      setDeadlineDate(null);
+                      return;
+                    }
+
+                    if (formatted.length < 10) {
+                      setDeadlineError("");
+                      setDeadlineDate(null);
+                      setJobForm((prev) => ({
+                        ...prev,
+                        application_deadline: "",
+                      }));
+                      return;
+                    }
+
+                    if (!parsed.isValid()) {
+                      setDeadlineError("Invalid date");
+                      setDeadlineDate(null);
+                      return;
+                    }
+
+                    if (parsed.isBefore(dayjs(), "day")) {
+                      setDeadlineError("Past date not allowed");
+                      setDeadlineDate(null);
+                      return;
+                    }
+
+                    setDeadlineError("");
+                    setDeadlineDate(parsed.toDate());
+
+                    setJobForm((prev) => ({
+                      ...prev,
+                      application_deadline: parsed.format("DD/MM/YYYY"),
+                    }));
+                  }}
+                  className={`w-full h-[44px] px-3 pr-10 text-sm border rounded-md outline-none
+                    ${
+                      deadlineError
+                        ? "border-red-500 focus:ring-red-500"
+                        : "border-gray-300 focus:ring-blue-500"
+                    }
+                  `}
+                />
+
+                {/* CALENDAR */}
+                <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                  <ReactDatePicker
+                    selected={deadlineDate}
+                    onChange={(date) => {
+                      if (!date) return;
+
+                      const parsed = dayjs(date);
+
+                      setDeadlineDate(date);
+                      setDeadlineInput(parsed.format("DD/MM/YYYY"));
+
+                      setJobForm((prev) => ({
+                        ...prev,
+                        application_deadline: parsed.format("DD/MM/YYYY"),
+                      }));
+                    }}
+                    minDate={new Date()} // IMPORTANT (future only)
+                    popperPlacement="bottom-end"
+                    portalId="root"
+                    customInput={
+                      <button
+                        type="button"
+                        className="p-1 rounded hover:bg-gray-100"
+                      >
+                        <Calendar size={18} />
+                      </button>
+                    }
+                  />
+                </div>
+              </div>
+
+              {deadlineError && (
+                <p className="text-red-500 text-xs mt-1">{deadlineError}</p>
+              )}
             </div>
           </div>
 

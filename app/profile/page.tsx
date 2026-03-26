@@ -564,7 +564,9 @@ const formatDOB = (value: string) => {
   if (year) formatted += "/" + year;
 
   const parsed = dayjs(formatted, "DD/MM/YYYY", true);
-
+  console.log("format ",formatted);
+  console.log("format length",formatted.length);
+  console.log("parsed ",parsed);
   return { formatted, parsed, error };
 };
 
@@ -2035,7 +2037,7 @@ const resumeUrl = profileData?.personalInfo?.resume
 
                   <div className="flex gap-16">
                     <span className="font-medium text-gray-500">Email:</span>
-                    <span className="font-semibold text-gray-800 ">
+                    <span className="font-semibold text-gray-800 break-all">
                       {profileData.personalInfo.email || "-"}
                     </span>
                   </div>
@@ -2823,10 +2825,10 @@ const resumeUrl = profileData?.personalInfo?.resume
                                 personalInfo: {
                                   ...prev.personalInfo,
                                   currentcurrency: selectedOption?.value || "",
+                                  expectedCurrency: selectedOption?.value || "",
                                 },
                               }));
                             }}
-                            isClearable
                             menuPortalTarget={typeof window !== "undefined" ? document.body : null}
                             styles={{
                               menuPortal: (base) => ({ ...base, zIndex: 9999 }),
@@ -2872,6 +2874,7 @@ const resumeUrl = profileData?.personalInfo?.resume
                             placeholder="Currency"
                             loadOptions={getCurrencyOptions}
                             value={getSelectedExpectedCurrency()}
+                            isDisabled
                             onChange={(selectedOption: any) => {
                               setProfileData((prev) => ({
                                 ...prev,
