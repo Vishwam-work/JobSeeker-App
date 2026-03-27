@@ -58,6 +58,7 @@ import {
 } from "@/components/ui/input-otp";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { result } from "lodash";
 
 
 
@@ -81,17 +82,27 @@ export default function EmployerRegister() {
   const [isOtpOpen, setIsOtpOpen] = useState(false);
   const [otp, setOtp] = useState("");
   const [IsOtpVerified, setIsOtpVerified] = useState(false);
-  const isRegDisabled = currentStep === 2 && !IsOtpVerified;
+  // const isRegDisabled = currentStep === 2 && !IsOtpVerified;
   const router = useRouter();
   const [email, setemail] = useState("");
   const [showText, setShowText] = useState(false)
   const [agreeTerms, setAgreeTerms] = useState(false);
   // Error states
-  const [websiteError, setWebsiteError] = useState<string>("");
   const [descriptionError, setDescriptionError] = useState<string>("");
   const [phoneError, setPhoneError] = useState<string>("");
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [otpError, setOtpError] = useState("");
+  const [showErrors, setShowErrors] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [selectedCountry, setSelectedCountry] = useState("");
+  const domains = ["gmail.com", "yahoo.com", "outlook.com", "hotmail.com"];
+  const emailParts = email.split("@");
+  const filteredDomains = domains.filter((d) =>
+    d.startsWith(emailParts[1] || "")
+  );
 
-
+  const [timer, setTimer] = useState(60);
+  const [canResend, setCanResend] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     // Company Information
     companyName: "",
@@ -234,38 +245,170 @@ export default function EmployerRegister() {
     id: string; // or number, depending on your API
     name: string;
   }
-const validateWebsite = (url?: string): boolean => {
-  if (!url) return true;
+  type FormErrors = {
+  companyName?: string;
+  companyType?: string;
+  industry?: string;
+  companySize?: string;
+  description?: string;
 
-  const pattern =
-    /^(https?:\/\/)?([\w\-])+\.{1}([a-zA-Z]{2,})([\w\-._~:/?#[\]@!$&'()*+,;=.]+)?$/;
+  contactPersonName?: string;
+  designation?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  countryId?: string;
+  stateId?: string;
+  cityId?: string;
+  pincode?: string;
 
-  return pattern.test(url);
+  password?: string;
+  confirmPassword?: string;
+  agreeTerms?: string;
 };
-  const handleResendOTP = async () => {
-    const response = await handlesendotp()
-    setTimeLeft(OTP_EXPIRY_SECONDS);
-  };
+const validateStep = () => {
+  let newErrors: any = {};
 
-  const [timeLeft, setTimeLeft] = useState(OTP_EXPIRY_SECONDS);
+  if (currentStep === 1) {
+   const companyName = formData.companyName?.trim();
 
-  useEffect(() => {
-    if (!isOtpOpen) return;
+    if (!companyName) {
+      newErrors.companyName = "Company name is required";
+    } else if (companyName.length < 3) {
+      newErrors.companyName = "Minimum 3 characters required";
+    }
 
-    setTimeLeft(OTP_EXPIRY_SECONDS);
+    if (!formData.companyType)
+      newErrors.companyType = "Select company type";
 
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          return 0;
-        }
-        return prev - 1;
-      });
+    if (!formData.industry)
+      newErrors.industry = "Select industry";
+
+    if (!formData.companySize)
+      newErrors.companySize = "Select company size";
+
+    if (!formData.description?.trim())
+      newErrors.description = "Description is required";
+  }
+
+  if (currentStep === 2) {
+   const name = formData.contactPersonName?.trim();
+
+if (!name) {
+  newErrors.contactPersonName = "Contact person name is required";
+} else if (name.length < 3) {
+  newErrors.contactPersonName = "Minimum 3 characters required";
+}
+    if (!formData.designation?.trim())
+      newErrors.designation = "Designation is required";
+
+    if (!email?.trim())
+      newErrors.email = "Email is required";
+
+    if (!IsOtpVerified)
+      newErrors.email = "Please verify OTP";
+
+    if (!formData.phone || formData.phone.length !== 10)
+      newErrors.phone = "Enter valid 10 digit phone";
+
+    if (!formData.address?.trim())
+      newErrors.address = "Address is required";
+
+    if (!formData.countryId)
+      newErrors.countryId = "Select country";
+
+    if (!formData.stateId)
+      newErrors.stateId = "Select state";
+
+    if (!formData.cityId)
+      newErrors.cityId = "Select city";
+
+      if (!formData.pincode) {
+      newErrors.pincode = "Pincode is required";
+    } else if (formData.pincode.length !== 6) {
+      newErrors.pincode = "Enter valid 6 digit pincode";
+    }
+      }
+
+  if (currentStep === 3) {
+    if (!formData.password)
+      newErrors.password = "Password is required";
+
+    if (!formData.confirmPassword)
+      newErrors.confirmPassword = "Confirm your password";
+
+    if (
+      formData.password &&
+      formData.confirmPassword &&
+      formData.password !== formData.confirmPassword
+    )
+      newErrors.confirmPassword = "Passwords do not match";
+
+    if (!formData.agreeTerms)
+      newErrors.agreeTerms = "You must accept terms";
+  }
+
+  setErrors(newErrors);
+  return Object.keys(newErrors).length === 0;
+};
+const validateEmail = (value: string) => {
+  if (!value) return "Email is required";
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+    return "Enter valid email";
+  }
+  return "";
+};
+
+
+// OTP Timer
+useEffect(() => {
+  let interval: NodeJS.Timeout;
+
+  if (isOtpOpen && timer > 0) {
+    interval = setInterval(() => {
+      setTimer((prev) => prev - 1);
     }, 1000);
+  }
 
-    return () => clearInterval(timer);
-  }, [isOtpOpen]);
+  if (timer === 0) {
+    setCanResend(true);
+  }
+
+  return () => clearInterval(interval);
+}, [isOtpOpen, timer]);
+const handleResendOTP = async () => {
+   console.log("Resend OTP clicked");
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL_APP}/send_otp/`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      }
+    );
+
+    console.log("API Status:", res.status);
+
+    const data = await res.json();
+    console.log("API Response:", data);
+
+    if (!res.ok) {
+      toast.error(data.error || "Failed to resend OTP");
+      return;
+    }
+
+    toast.success("OTP Resent Successfully");
+    setOtp("");
+    setOtpError("");
+    setTimer(60);
+    setCanResend(false);
+
+  } catch (error) {
+    console.error(error);
+    toast.error("Something went wrong");
+  }
+};
 
   // Fetch the Data from the MASTER DB
   useEffect(() => {
@@ -311,11 +454,17 @@ const validateWebsite = (url?: string): boolean => {
     setemail(value)
   };
 
-  const handleNext = () => {
+ const handleNext = () => {
+  const isValid = validateStep(); // 🔥 validation call
 
-    setCurrentStep(prev => Math.min(prev + 1, 3));
+  if (!isValid) {
+    setShowErrors(true); // errors show karo
+    return;
+  }
 
-  };
+  setShowErrors(false);
+  setCurrentStep((prev) => Math.min(prev + 1, 3));
+};
 
   const handlePrevious = () => {
     if (currentStep > 1) {
@@ -378,10 +527,18 @@ const validateWebsite = (url?: string): boolean => {
       }
 
       const result = await response.json();
-      console.log("Registration successful");
-      router.push("/employer/login");
+      // if(!result.ok()){
+      //   toast.error(result.error);
+      // }  
+      toast.success("Registration successful ");
+
+        setTimeout(() => {
+          router.push("/employer/login");
+        }, 1500);
+
     } catch (error) {
       console.error("Registration error:", error);
+        toast.error("Registration failed");
     }
   };
 
@@ -584,6 +741,11 @@ const validateWebsite = (url?: string): boolean => {
                           className="mt-1 h-12"
                           required
                         />
+                          {showErrors && errors.companyName && (
+                            <p className="text-red-500 text-sm mt-1">
+                              {errors.companyName}
+                            </p>
+                          )}
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -595,8 +757,10 @@ const validateWebsite = (url?: string): boolean => {
                             value={formData.companyType}
                             onValueChange={(value) =>
                               handleInputChange("companyType", value)
+
                             }
                           >
+
                             <SelectTrigger className="mt-1 h-12">
                               <SelectValue placeholder="Select company type" />
                             </SelectTrigger>
@@ -608,6 +772,11 @@ const validateWebsite = (url?: string): boolean => {
                               ))}
                             </SelectContent>
                           </Select>
+                          {showErrors && errors.companyType  && (
+                          <p className="text-red-500 text-sm mt-1">
+                            {errors.companyType }
+                          </p>
+                        )}
                         </div>
 
                         <div>
@@ -631,6 +800,11 @@ const validateWebsite = (url?: string): boolean => {
                               ))}
                             </SelectContent>
                           </Select>
+                          {showErrors && errors.industry   && (
+                          <p className="text-red-500 text-sm mt-1">
+                            {errors.industry  }
+                          </p>
+                        )}
                         </div>
                       </div>
 
@@ -656,6 +830,11 @@ const validateWebsite = (url?: string): boolean => {
                               ))}
                             </SelectContent>
                           </Select>
+                          {showErrors && errors.companySize   && (
+                          <p className="text-red-500 text-sm mt-1">
+                            {errors.companySize  }
+                          </p>
+                        )}
                         </div>
 
                         <div>
@@ -671,22 +850,11 @@ const validateWebsite = (url?: string): boolean => {
                             value={formData.website || ""}
                             onChange={(e) => {
                               const value = e.target.value;
-
                               handleInputChange("website", value);
-
-                              if (value && !validateWebsite(value)) {
-                                setWebsiteError("Enter a valid website URL");
-                              } else {
-                                setWebsiteError("");
-                              }
                             }}
                             placeholder="https://www.company.com"
                             className="mt-1 h-12"
                           />
-
-                          {websiteError && (
-                            <p className="text-red-500 text-xs mt-1">{websiteError}</p>
-                          )}
                         </div>
                       </div>
 
@@ -715,8 +883,13 @@ const validateWebsite = (url?: string): boolean => {
                           rows={4}
                           placeholder="Tell us about your company..."
                           className="mt-1"
+                          required
                         />
-
+                         {showErrors && errors.description   && (
+                          <p className="text-red-500 text-sm mt-1">
+                            {errors.description  }
+                          </p>
+                         )}
                         {descriptionError && (
                           <p className="text-red-500 text-xs mt-1">{descriptionError}</p>
                         )}
@@ -752,6 +925,11 @@ const validateWebsite = (url?: string): boolean => {
                             className="mt-1 h-12"
                             required
                           />
+                            {showErrors && errors.contactPersonName  && (
+                            <p className="text-red-500 text-sm mt-1">
+                              {errors.contactPersonName }
+                            </p>
+                          )}
                         </div>
 
                         <div>
@@ -771,48 +949,160 @@ const validateWebsite = (url?: string): boolean => {
                             className="mt-1 h-12"
                             required
                           />
+                            {showErrors && errors.designation   && (
+                            <p className="text-red-500 text-sm mt-1">
+                              {errors.designation  }
+                            </p>
+                          )}
                         </div>
                       </div>
 
-                      
-
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                        <Label
-                          htmlFor="email"
-                          className="text-sm font-medium text-gray-700"
-                        >
-                          Email Address *
-                        </Label>
+                          <Label>Email *</Label>
 
-                        <div className="relative mt-1">
-                          <Input
-                            id="email"
-                            type="email"
-                            value={email}
-                            onChange={(e) => handleEmailChange(e.target.value)}
-                            placeholder="Enter email address"
-                            className={`h-12 pr-10 ${
-                              IsOtpVerified ? "border-green-500 focus:ring-green-500" : ""
-                            }`}
-                             required
-                           />
+                          <div className="relative mt-1">
+                            <Input
+                              type="email"
+                              disabled={IsOtpVerified}
+                              value={email}
+                              placeholder="Enter your email"
+                              className={`h-12 pr-10 ${
+                                errors.email
+                                  ? "border-red-500 focus:ring-red-500"
+                                  : IsOtpVerified
+                                  ? "border-green-500 focus:ring-green-500"
+                                  : ""
+                              }`}
+                              onChange={(e) => {
+                                const value = e.target.value;
 
-                          {IsOtpVerified && (
-                            <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 text-green-600 w-5 h-5" />
+                                setemail(value);
+                                setIsOtpVerified(false);
+                                setIsOtpOpen(false);
+                                setErrors((prev) => ({
+                                  ...prev,
+                                  email: validateEmail(value),
+                                }));
+
+                                setShowSuggestions(value.includes("@"));
+                              }}
+                            />
+
+                            {/* Suggestions */}
+                            {showSuggestions && filteredDomains.length > 0 && (
+                              <div className="absolute top-full left-0 right-0 bg-white border rounded-md shadow-md z-10">
+                                {filteredDomains.map((domain) => (
+                                  <div
+                                    key={domain}
+                                    className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+                                    onClick={() => {
+                                      const newEmail = `${emailParts[0]}@${domain}`;
+                                      setemail(newEmail);
+
+                                      setErrors((prev) => ({
+                                        ...prev,
+                                        email: validateEmail(newEmail),
+                                      }));
+
+                                      setShowSuggestions(false);
+                                    }}
+                                  >
+                                    {domain}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+
+                            {/* Error */}
+                            {errors.email && (
+                              <p className="text-sm text-red-500 mt-1">{errors.email}</p>
+                            )}
+
+                            {/* Helper text */}
+                            {!errors.email && !email && (
+                              <p className="text-xs text-gray-500 mt-1">
+                                Verify your email before continuing
+                              </p>
+                            )}
+
+                            {!errors.email && email && (
+                              <p className="text-xs text-gray-500 mt-1">
+                                We'll send updates to this email
+                              </p>
+                            )}
+
+                            {/* Verified icon */}
+                            {IsOtpVerified && (
+                              <CheckCircle className="absolute right-3 top-6 -translate-y-1/2 text-green-600 w-5 h-5" />
+                            )}
+                          </div>
+
+                          {/* Verify Button */}
+                          {!IsOtpVerified && !isOtpOpen && (
+                            <Button
+                              type="button"
+                              className="mt-2"
+                              disabled={!email || !!validateEmail(email)}
+                              onClick={handlesendotp}
+                            >
+                              Verify Email OTP
+                            </Button>
+                          )}
+
+                          {/* OTP Section */}
+                          {isOtpOpen && !IsOtpVerified && (
+                            <div className="mt-3">
+                              <InputOTP
+                                maxLength={6}
+                                value={otp}
+                                onChange={(value) => {
+                                  setOtp(value);
+                                  setOtpError("");
+                                }}
+                              >
+                                <InputOTPGroup className="gap-3">
+                                  {[0, 1, 2, 3, 4, 5].map((i) => (
+                                    <InputOTPSlot
+                                      key={i}
+                                      index={i}
+                                      className="w-10 h-10 text-lg border"
+                                    />
+                                  ))}
+                                </InputOTPGroup>
+                              </InputOTP>
+                              <div className="flex items-center gap-2 mt-2 text-sm">
+                                {!canResend ? (
+                                  <span className="text-gray-500">
+                                    Expired OTP in <span className="font-medium">{timer}s</span>
+                                  </span>
+                                ) : (
+                                  <>
+                                    <span className="text-gray-500">Didn't receive OTP?</span>
+                                    <button
+                                      type="button"
+                                      onClick={handleResendOTP}
+                                      className="text-blue-600 font-medium hover:underline"
+                                    >
+                                      Resend
+                                    </button>
+                                  </>
+                                )}
+                              </div>
+                              {otpError && (
+                                <p className="text-sm text-red-500 mt-1">{otpError}</p>
+                              )}
+
+                              <Button
+                                type="button"
+                                className="mt-3 bg-blue-600 text-white w-full"
+                                onClick={handleVerifyOTP}
+                              >
+                                Verify OTP
+                              </Button>
+                            </div>
                           )}
                         </div>
-
-                        <Button
-                          type="button"
-                           className="mt-2"
-                           disabled={!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || IsOtpVerified}
-                           onClick={handlesendotp}
-                         >
-                           {IsOtpVerified ? "Email Verified" : "Verify Email OTP"}
-                         </Button>
-                       </div>
-
                         <div>
                           <div>
                             <Label
@@ -863,12 +1153,17 @@ const validateWebsite = (url?: string): boolean => {
 
                             </div>
                             {phoneError ? (
-                              <p className="text-red-500 text-xs mt-1">{phoneError}</p>
-                            ):(
-                              <p className="text-xs text-gray-500 mt-1">
-                                Enter a valid 10-digit mobile number.
-                              </p>
-                            )}
+                                <p className="text-red-500 text-xs mt-1">{phoneError}</p>
+                              ) : showErrors && errors.phone ? (
+                                <p className="text-red-500 text-sm mt-1">{errors.phone}</p>
+                              ) : showErrors && !formData.countryId ? (
+                                <p className="text-red-500 text-sm mt-1">
+                                  Please select country
+                                </p>
+                              ) : (
+                                <p className="text-xs text-gray-500 mt-1">
+                                </p>
+                              )}
                           </div>
                         </div>
                       </div>
@@ -891,6 +1186,11 @@ const validateWebsite = (url?: string): boolean => {
                           className="mt-1"
                           required
                         />
+                          {showErrors && errors.address   && (
+                            <p className="text-red-500 text-sm mt-1">
+                              {errors.address  }
+                            </p>
+                          )}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         {/* Country Dropdown */}
                         <div>
@@ -966,6 +1266,11 @@ const validateWebsite = (url?: string): boolean => {
                               </Command>
                             </PopoverContent>
                           </Popover>
+                            {showErrors && errors.countryId   && (
+                            <p className="text-red-500 text-sm mt-1">
+                              {errors.countryId  }
+                            </p>
+                          )}
                         </div>
 
                         {/* State Dropdown */}
@@ -1031,6 +1336,11 @@ const validateWebsite = (url?: string): boolean => {
                               </Command>
                             </PopoverContent>
                           </Popover>
+                            {showErrors && errors.stateId  && (
+                            <p className="text-red-500 text-sm mt-1">
+                              {errors.stateId }
+                            </p>
+                          )}
                         </div>
 
                         {/* City Dropdown */}
@@ -1096,6 +1406,11 @@ const validateWebsite = (url?: string): boolean => {
                               </Command>
                             </PopoverContent>
                           </Popover>
+                            {showErrors && errors.cityId  && (
+                            <p className="text-red-500 text-sm mt-1">
+                              {errors.cityId }
+                            </p>
+                          )}
                         </div>
                       </div>
                         <div>
@@ -1108,16 +1423,22 @@ const validateWebsite = (url?: string): boolean => {
                           <Input
                             id="pincode"
                             value={formData.pincode}
-                            onChange={(e) =>
-                              handleInputChange("pincode", e.target.value)
-                            }
+                            onChange={(e) => {
+                              const value = e.target.value.replace(/\D/g, "");
+                              handleInputChange("pincode", value);
+                            }}
                             placeholder="Enter pincode"
+                             maxLength={6}
                             className="mt-1 h-12"
                             required
                           />
                         </div>
                       </div>
-                      
+                        {showErrors && errors.pincode   && (
+                            <p className="text-red-500 text-sm mt-1">
+                              {errors.pincode  }
+                            </p>
+                          )}
                     </div>
                   )}
 
@@ -1200,7 +1521,7 @@ const validateWebsite = (url?: string): boolean => {
                       </div>
 
                       <div className="space-y-4">
-                        {/* <div className="flex items-start space-x-2">
+                        <div className="flex items-start space-x-2">
                           <Checkbox
                             id="agreeTerms"
                             checked={formData.agreeTerms}
@@ -1215,46 +1536,22 @@ const validateWebsite = (url?: string): boolean => {
                           >
                             I agree to the{" "}
                             <Link
-                              href="#"
+                              href="/terms-and-conditions"
+                              target="_blank"
                               className="text-blue-600 hover:underline"
                             >
                               Terms and Conditions
                             </Link>{" "}
                             and{" "}
                             <Link
-                              href="#"
+                              href="/privacy-policy"
+                              target="_blank"
                               className="text-blue-600 hover:underline"
                             >
                               Privacy Policy
                             </Link>
                           </label>
-                        </div> */}
-                         <div className="flex items-start gap-2 mt-4">
-                                      <Checkbox
-                                        checked={agreeTerms}
-                                        onCheckedChange={(val) => setAgreeTerms(val === true)}
-                                      />
-                                     <p className="text-sm text-gray-600">
-                                       By clicking Register, you agree to the{" "}
-                                       <Link
-                                         href="/terms-and-conditions"
-                                         target="_blank"
-                                         rel="noopener noreferrer"
-                                         className="text-blue-600 font-medium"
-                                       >
-                                         Terms and Conditions
-                                       </Link>{" "}
-                                       &{" "}
-                                       <Link
-                                         href="/privacy-policy"
-                                         target="_blank"
-                                         rel="noopener noreferrer"
-                                         className="text-blue-600 font-medium"
-                                       >
-                                         Privacy Policy
-                                       </Link>
-                                     </p>
-                                    </div>
+                        </div>
 
                         <div className="flex items-start space-x-2">
                           <Checkbox
@@ -1290,12 +1587,12 @@ const validateWebsite = (url?: string): boolean => {
                       </Button>
                     )}
 
-                    {currentStep < 2 ? (
+                    {currentStep < 3 ? (
 
                       <Button
                         type="button"
                         onClick={handleNext}
-                        disabled={isRegDisabled}
+                        // disabled={!isStepValid()}
                         className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 h-12 px-6 ml-auto"
                       >
                         Next
@@ -1304,6 +1601,7 @@ const validateWebsite = (url?: string): boolean => {
 
                     ) : (
                       <Button
+                        // disabled={!isStepValid()}
                         type="submit"
                         className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 h-12 px-6 ml-auto"
                       >
@@ -1324,46 +1622,6 @@ const validateWebsite = (url?: string): boolean => {
           </div>
         </div>
       </div>
-
-
-      <Dialog open={isOtpOpen} onOpenChange={setIsOtpOpen}>
-        <DialogContent className="max-w-md">
-          <div className="text-center">
-       
-            <h2 className="text-xl font-semibold mb-2">
-               Verify email
-            </h2>
-
-            <div className="text-sm text-gray-600 mb-6">
-              We just sent a verification code to <b>{email}</b>
-            </div>
-
-            <InputOTP maxLength={6} value={otp} onChange={setOtp}>
-              <InputOTPGroup className="gap-3 justify-center">
-                {[0,1,2,3,4,5].map((i)=>(
-                   <InputOTPSlot
-                    key={i}
-                    index={i}
-                    className="w-12 h-12 text-lg rounded-lg border border-blue-400"
-                  />
-                ))}
-              </InputOTPGroup>
-            </InputOTP>
-
-            <p className="text-xs text-gray-500 mt-4">
-              Your OTP should arrive in {timeLeft} seconds
-            </p>
-
-             <Button
-              className="w-full mt-5 bg-blue-600 hover:bg-blue-700 text-white h-11"
-              onClick={handleVerifyOTP}
-            >
-              Verify
-            </Button>
-
-          </div>
-         </DialogContent>
-       </Dialog>
 
     </div>
   );

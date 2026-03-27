@@ -172,7 +172,8 @@ interface JobTitle {
 
 interface Currency{
   id: number;
-  symbol: string;
+  // symbol: string;
+  symbol_native: string;
 }
 
 interface Candidate {
@@ -366,6 +367,11 @@ interface PostedJob {
   location_id: number;
   experience: string;
   salary: string;
+ currency: {
+  value: string;
+  label: string;
+  symbol_native: string;
+  };
   job_type: string;
   work_mode: string;
   vacancies: number;
@@ -1784,7 +1790,7 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
                               <span>{job.experience} Years</span>
                             </div>
                             <div className="flex items-center">
-                              <DollarSign className="w-4 h-4 mr-1" />
+                              <span>{job.currency?.symbol_native}</span>
                               <span>
                                 {job.salary
                                   ? new Intl.NumberFormat("en-IN").format(Number(job.salary))
@@ -1793,14 +1799,10 @@ const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
                             </div>
                             <div className="flex items-center">
                               <Calendar className="w-4 h-4 mr-1" />
-                              {/* <span>
-                                Posted:{" "}
-                                {new Date(job.created_at).toLocaleDateString()}
-                              </span> */}
                               <span>
                             Posted:{" "}
                             {job.created_at
-                              ? new Date(job.created_at).toLocaleDateString()
+                              ? new Date(job.created_at).toLocaleDateString("en-GB")
                               : "N/A"}
                           </span>
                             </div>
