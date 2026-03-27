@@ -443,6 +443,7 @@ const handleResendOTP = async () => {
                         ? "border-green-500 focus:ring-green-500"
                         : ""
                   }`}
+                   disabled={isOtpVerified}
                   value={email}
                   onChange={(e) => {
                     const value = e.target.value;
