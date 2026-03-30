@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { debounce } from "lodash";
-
+import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -46,6 +46,7 @@ import {
   User,
   Mail,
   Phone,
+  TrendingUp,
   MapPin,
   Calendar,
   Briefcase,
@@ -79,7 +80,7 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import ReactDatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { DateCalendar } from "@mui/x-date-pickers/DateCalendar";
 import { TextField } from "@mui/material";
 import dayjs, { Dayjs } from "dayjs";
 import exp from "node:constants";
@@ -145,8 +146,10 @@ export default function Profile() {
  const [dateError, setDateError] = useState<string | null>(null);
  const [scoreError, setScoreError] = useState<string | null>(null);
  const [yearError, setYearError] = useState("");
-
-
+ const [value, setValue] = useState(dayjs());
+ const [endOpen, setEndOpen] = useState(false);
+ const [endYearOpen, setEndYearOpen] = useState(false);
+ const [yearOpen, setYearOpen] = useState(false);
   // States for inline forms
   const [showAddExperience, setShowAddExperience] = useState(false);
   const [showAddEducation, setShowAddEducation] = useState(false);
@@ -215,6 +218,7 @@ export default function Profile() {
 
   const [noticeRanges] = useState([
     "Immediate Joiner",
+    "Serving notice period",
     "1-15 days",
     "15-30 days",
     "30-60 days",
@@ -429,6 +433,7 @@ type StateItem = {
 type CityItem = {
   id: string | number;
   name: string;
+  stateId: number;
 };
 type Company = {
   id: string | number;
@@ -444,7 +449,19 @@ interface SavedJob {
     };
   };
 }
+const containerRef = useRef<HTMLDivElement>(null); // <-- ref declared here
 
+  // Click-away to close
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 useEffect(() => {
   if (profileData?.personalInfo?.date_of_birth) {
     const d = dayjs(
@@ -700,7 +717,6 @@ const getUserKey = () => {
     !experienceForm.job_title?.trim() ||
     !experienceForm.category?.trim() ||
     !experienceForm.startDate ||
-    !experienceForm.endDate ||
     !startInput
   ) {
     toast("Incomplete form", {
@@ -1158,8 +1174,134 @@ const loadCountryOptions = async (inputValue: string) => {
     return [];
   }
 };
+const loadCountryOptionss = async (inputValue: string) => {
+  if (!inputValue) {
+    return countries.map((c) => ({
+      label: c.name ?? "",
+      value: c.id.toString(),
+      phonecode: c.phonecode,
+    }));
+  }
 
+  return countries
+    .filter((c) =>
+      c.name?.toLowerCase().includes(inputValue.toLowerCase())
+    )
+    .map((c) => ({
+      label: c.name ?? "",
+      value: c.id.toString(),
+      phonecode: c.phonecode,
+    }));
+};
+const getSelectedCountry = () => {
+  const country = countries.find(
+    (c) => c.id.toString() === profileData.personalInfo.countryId
+  );
 
+  return country
+    ? {
+        label: country.name,
+        value: country.id.toString(),
+        phonecode: country.phonecode,
+      }
+    : null;
+};
+const loadStateOptions = async (inputValue: string) => {
+  const search = inputValue.toLowerCase();
+
+  return states
+    .filter((s) => {
+      if (!s.name) return false;
+
+      return s.name.toLowerCase().includes(search);
+    })
+    .map((s) => ({
+      label: s.name,
+      value: s.id.toString(),
+    }));
+};
+const getSelectedState = () => {
+  const state = states.find(
+    (s) => s.id.toString() === profileData.personalInfo.stateId
+  );
+
+  return state
+    ? {
+        label: state.name,
+        value: state.id.toString(),
+      }
+    : null;
+};
+const loadCityOptions = async (inputValue: string) => {
+  const search = inputValue?.toLowerCase()?.trim() || "";
+
+  return cities
+    .filter((c) => {
+      if (!c.name) return false;
+      if (!search) return true;
+
+      return c.name.toLowerCase().includes(search);
+    })
+    .map((c) => ({
+      label: c.name,
+      value: c.id.toString(),
+    }));
+};
+const getSelectedCity = () => {
+  const city = cities.find(
+    (c) => c.id.toString() === profileData.personalInfo.cityId
+  );
+
+  return city
+    ? {
+        label: city.name,
+        value: city.id.toString(),
+      }
+    : null;
+};
+const experienceOptions = [
+  { label: "Fresher", value: "fresher" },
+  ...Array.from({ length: 19 }, (_, i) => {
+    const year = i + 1;
+    return {
+      label: `${year} ${year === 1 ? "year" : "years"}`,
+      value: `${year} year`,
+    };
+  }),
+  { label: "20+ years", value: "20+ years" },
+];
+const loadExperienceOptions = async (inputValue: string) => {
+  const search = inputValue.toLowerCase().trim();
+
+  return experienceOptions.filter((opt) =>
+    opt.label.toLowerCase().includes(search)
+  );
+};
+const getSelectedExperience = () => {
+  return (
+    experienceOptions.find(
+      (opt) => opt.value === profileData.personalInfo.experience
+    ) || null
+  );
+};
+const noticeOptions = noticeRanges.map((range) => ({
+  label: range,
+  value: range,
+}));
+const loadNoticeOptions = async (inputValue: string) => {
+  const search = inputValue.toLowerCase().trim();
+
+  return noticeOptions.filter((opt) =>
+    opt.label.toLowerCase().includes(search)
+  );
+};
+const getSelectedNotice = () => {
+  return (
+    noticeOptions.find(
+      (opt) => opt.value === profileData.personalInfo.noticePeriod
+    ) || null
+  );
+};
  const getCompanyOptions = async (inputValue: string) => {
   try {
     const res = await fetch(
@@ -1506,7 +1648,7 @@ useEffect(() => {
 
 
   // Save Api
-  const handleSaveProfile = async () => {
+  const handleSaveProfile = async (type?: string) => {
   // REQUIRED FIELD VALIDATION
   if (!profileData.personalInfo.fullName?.trim()) {
     toast.error("Full Name is required");
@@ -1703,9 +1845,12 @@ if (!dob) {
     setIsProfileSubmitted(true);
   }
     localStorage.setItem("full_name", profileData.personalInfo.fullName || "");
-      toast.success("Profile saved successfully!", {
-      description: "Your changes have been saved.",
-      });
+
+     if (type === "submit") {
+        toast.success("Profile saved successfully!", {
+          description: "Your changes have been saved.",
+        });
+      }
       return true;
     } else {
       const errText = await res.text();
@@ -2008,59 +2153,82 @@ const resumeUrl = profileData?.personalInfo?.resume
                    {profileData.personalInfo.fullName}
                 </h2>
                       {/* Profile Info */}
-                <div className="mt-3 space-y-2 text-sm text-gray-600">
+                    <div className="mt-1 space-y-2 text-sm text-gray-600">
 
-                  <div className="flex gap-11">
-                    <span className="font-medium text-gray-500">Location:</span>
-                    <span className="font-semibold text-gray-800 break-all">
-                      {profileData.personalInfo.cityId &&
-                        cities.find(c => c.id.toString() === profileData.personalInfo.cityId)?.name},{" "}
-                      {profileData.personalInfo.countryId &&
-                        countries.find(c => c.id.toString() === profileData.personalInfo.countryId)?.name}
-                    </span>
-                  </div>
+                      <div className="flex items-start gap-2">
+                        <MapPin size={16} className="text-gray-500 mt-1" />
+                        <div className="flex flex-col items-start">
+                          <span className="font-medium text-gray-500">Location:</span>
+                          <span className="font-semibold text-gray-800 break-all">
+                            {profileData.personalInfo.cityId &&
+                              cities.find(c => c.id.toString() === profileData.personalInfo.cityId)?.name},{" "}
+                            {profileData.personalInfo.countryId &&
+                              countries.find(c => c.id.toString() === profileData.personalInfo.countryId)?.name}
+                          </span>
+                        </div>
+                      </div>
 
-                  <div className="flex gap-7">
-                    <span className="font-medium text-gray-500">Experience:</span>
-                    <span className="font-semibold text-gray-800">
-                      {profileData.personalInfo.experience || "-"}
-                    </span>
-                  </div>
+                      <div className="flex items-start gap-2">
+                        <Briefcase size={16} className="text-gray-500 mt-1" />
+                        <div className="flex flex-col items-start">
+                          <span className="font-medium text-gray-500">Experience:</span>
+                          <span className="font-semibold text-gray-800">
+                            {profileData.personalInfo.experience
+                              ? profileData.personalInfo.experience.charAt(0).toUpperCase() +
+                                profileData.personalInfo.experience.slice(1)
+                              : ""}
+                          </span>
+                        </div>
+                      </div>
 
-                  <div className="flex gap-14">
-                    <span className="font-medium text-gray-500">Phone:</span>
-                    <span className="font-semibold text-gray-800">
-                      +{profileData.personalInfo.phoneCode || ""}{" "}
-                      {profileData.personalInfo.phone || "-"}
-                    </span>
-                  </div>
+                      <div className="flex items-start gap-2">
+                        <Phone size={16} className="text-gray-500 mt-1" />
+                        <div className="flex items-start flex-col">
+                          <span className="font-medium text-gray-500">Phone:</span>
+                          <span className="font-semibold text-gray-800">
+                            +{profileData.personalInfo.phoneCode || ""}{" "}
+                            {profileData.personalInfo.phone || ""}
+                          </span>
+                        </div>
+                      </div>
 
-                  <div className="flex gap-16">
-                    <span className="font-medium text-gray-500">Email:</span>
-                    <span className="font-semibold text-gray-800 break-all">
-                      {profileData.personalInfo.email || "-"}
-                    </span>
-                  </div>
+                      <div className="flex items-start gap-2">
+                        <Mail size={16} className="text-gray-500 mt-1" />
+                        <div className="flex items-start flex-col">
+                          <span className="font-medium text-gray-500">Email:</span>
+                          <span className="font-semibold text-gray-800 break-all">
+                            {profileData.personalInfo.email || ""}
+                          </span>
+                        </div>
+                      </div>
 
-                  <div className="flex gap-1">
-                  <span className="font-medium text-gray-500">Current Salary:</span>
-                  <span className="font-semibold text-gray-800">
-                    {formatNumber(
-                      profileData.personalInfo.currentSalary,
-                      selectedCurrency?.code,
-                      selectedCurrency?.symbol_native
-                    )}
-                  </span>
-                </div>
+                      <div className="flex items-start gap-2">
+                        <TrendingUp size={16} className="text-gray-500 mt-1" />
+                        <div className="flex items-start flex-col">
+                          <span className="font-medium text-gray-500">Current Salary:</span>
+                         <span className="font-semibold text-gray-800">
+                            {profileData.personalInfo.currentSalary
+                              ? `${formatNumber(
+                                  profileData.personalInfo.currentSalary,
+                                  selectedCurrency?.code,
+                                  selectedCurrency?.symbol_native
+                                )} / yr`
+                              : ""}
+                          </span>
+                        </div>
+                      </div>
 
-                  <div className="flex gap-14 ">
-                    <span className="font-medium text-gray-500">Notice:</span>
-                    <span className="font-semibold text-gray-800">
-                      {profileData.personalInfo.noticePeriod || "-"}
-                    </span>
-                  </div>
+                      <div className="flex items-start gap-2">
+                        <Clock size={16} className="text-gray-500 mt-1" />
+                        <div className="flex items-start flex-col">
+                          <span className="font-medium text-gray-500">Notice:</span>
+                          <span className="font-semibold text-gray-800">
+                            {profileData.personalInfo.noticePeriod || ""}
+                          </span>
+                        </div>
+                      </div>
 
-                 </div>
+                    </div>
 
                  {/* Action Buttons*/}
                     <div className="mt-3 space-y-3">
@@ -2075,8 +2243,8 @@ const resumeUrl = profileData?.personalInfo?.resume
                    }}
                     >
                    {(resumeFile || uploadedResumeName) && (
-                      <div className="flex items-center gap-3 mt-2">
-                        <p className="text-xs font-semibold text-gray-600 truncate max-w-[200px]">
+                      <div className="flex items-center ">
+                        <p className="text-xs font-semibold text-gray-600 truncate max-w-[150px]">
                           Resume: {resumeFile?.name || uploadedResumeName}
                         </p>
 
@@ -2438,39 +2606,41 @@ const resumeUrl = profileData?.personalInfo?.resume
                             />
 
                             {/*  CALENDAR ICON */}
-                            <div className="absolute right-2 top-1/2 -translate-y-1/2">
-                              <ReactDatePicker
-                                selected={selectedDate}
-                                onChange={(date) => {
-                                  if (!date) return;
+                           <div className="absolute right-2 top-1/2">
+                             <button type="button" onClick={() => setOpen((prev) => !prev)}>
+                                      <Calendar size={18} />
+                              </button>
 
-                                const parsed = dayjs(date);
+                            {/* Calendar (ON/OFF) */}
+                            {open && (
+                              <div className="absolute right-0 mt-2 z-50 bg-white shadow-lg rounded">
+                                <LocalizationProvider dateAdapter={AdapterDayjs}>
+                                  <DateCalendar
+                                    value={dobInput ? dayjs(dobInput, "DD/MM/YYYY") : null}
+                                    onChange={(newValue) => {
+                                      if (!newValue) return;
 
-                                setSelectedDate(date);
-                                setDobInput(parsed.format("DD/MM/YYYY"));
-                                setProfileData((prev: any) => ({
-                                  ...prev,
-                                  personalInfo: {
-                                    ...prev.personalInfo,
-                                    date_of_birth: parsed.format("DD/MM/YYYY"),
-                                  },
-                                }));
-                              }}
-                              maxDate={new Date()}
-                              popperPlacement="bottom-end"
-                              popperClassName="z-[9999]"
-                              portalId="root"
-                              customInput={
-                                <button
-                                  type="button"
-                                  className="p-1 rounded hover:bg-gray-100 cursor-pointer"
-                                >
-                                  <Calendar size={18} />
-                                </button>
-                              }
-                            />
+                                      setValue(newValue);
+
+                                      const formatted = newValue.format("DD/MM/YYYY");
+
+                                      setDobInput(formatted);
+
+                                      setProfileData((prev: any) => ({
+                                        ...prev,
+                                        personalInfo: {
+                                          ...prev.personalInfo,
+                                          date_of_birth: formatted,
+                                        },
+                                      }));
+
+                                      setOpen(false);
+                                    }}
+                                  />
+                                </LocalizationProvider>
+                              </div>
+                            )}
                           </div>
-
                           {dobError && (
                             <p className="text-red-500 text-xs mt-1">
                               {dobError}
@@ -2549,115 +2719,56 @@ const resumeUrl = profileData?.personalInfo?.resume
                       <div>
                         <Label className="text-sm font-medium">Country *</Label>
 
-                        <Popover open={countryOpen} onOpenChange={setCountryOpen}>
-                          <PopoverTrigger asChild>
-                            <button className="w-full mt-1 h-10 lg:h-11 border rounded px-3 flex items-center justify-between">
-                                <span>
-                              {profileData.personalInfo.countryId
-                                ? countries.find(
-                                    (c) =>
-                                      c.id == profileData.personalInfo.countryId
-                                  )?.name
-                                : "Select country"}
-                                </span>
-                                 <ChevronDown className="h-4 w-4 opacity-60" />
-                            </button>
-                          </PopoverTrigger>
-
-                          <PopoverContent className="p-0 w-[300px]">
-                            <Command
-                              filter={(value, search) =>
-                                value
-                                  .toLowerCase()
-                                  .startsWith(search.toLowerCase())
-                                  ? 1
-                                  : 0
-                              }
-                            >
-                              <CommandInput placeholder="Search country..." />
-
-                              <CommandList>
-                                {countries.map((country) => (
-                                  <CommandItem
-                                    key={country.id}
-                                    value={country.name}
-                                    onSelect={() => {
-                                      setProfileData((prev) => ({
-                                        ...prev,
-                                        personalInfo: {
-                                          ...prev.personalInfo,
-                                          countryId: country.id.toString(),
-                                          stateId: "",
-                                          cityId: "",
-                                          phoneCode: country.phonecode,
-                                        },
-                                      }));
-                                      setCountryOpen(false);
-                                    }}
-                                  >
-                                    {country.name}
-                                  </CommandItem>
-                                ))}
-                              </CommandList>
-                            </Command>
-                          </PopoverContent>
-                        </Popover>
+                      <AsyncSelect
+                        cacheOptions
+                        defaultOptions={countries.map((c) => ({
+                          label: c.name ?? "",
+                          value: c.id.toString(),
+                          phonecode: c.phonecode,
+                        }))}
+                        loadOptions={loadCountryOptionss}
+                        value={getSelectedCountry()}
+                        onChange={(selected: any) => {
+                          setProfileData((prev) => ({
+                            ...prev,
+                            personalInfo: {
+                              ...prev.personalInfo,
+                              countryId: selected?.value || "",
+                              stateId: "",
+                              cityId: "",
+                              phoneCode: selected?.phonecode || "",
+                            },
+                          }));
+                        }}
+                        placeholder="Search Country..."
+                      />
                       </div>
 
                       <div>
                         <Label className="text-sm font-medium">State *</Label>
 
-                        <Popover open={stateOpen} onOpenChange={setStateOpen}>
-                          <PopoverTrigger asChild>
-                            <button className="w-full mt-1 h-10 lg:h-11 border rounded px-3 flex items-center justify-between">
-                              <span>
-                              {profileData.personalInfo.stateId
-                                ? states.find(
-                                    (s) =>
-                                      s.id == profileData.personalInfo.stateId
-                                  )?.name
-                                : "Select state"}
-                              </span>
-                              <ChevronDown className="h-4 w-4 opacity-60" />
-                            </button>
-                          </PopoverTrigger>
+                        <AsyncSelect
+                          cacheOptions
+                          defaultOptions={states.map((s) => ({
+                            label: s.name ?? "",
+                            value: s.id.toString(),
+                          }))}
+                          loadOptions={loadStateOptions}
+                          value={getSelectedState()}
+                          onChange={(selected: any) => {
+                            setProfileData((prev) => ({
+                              ...prev,
+                              personalInfo: {
+                                ...prev.personalInfo,
+                                stateId: selected?.value || "",
+                                cityId: "",
+                              },
+                            }));
+                          }}
+                          placeholder="Search State..."
+                          isDisabled={!profileData.personalInfo.countryId}
 
-                          <PopoverContent className="p-0 w-[300px]">
-                            <Command
-                              filter={(value, search) =>
-                                value
-                                  .toLowerCase()
-                                  .startsWith(search.toLowerCase())
-                                  ? 1
-                                  : 0
-                              }
-                            >
-                              <CommandInput placeholder="Search state..." />
-
-                              <CommandList>
-                                {states.map((state) => (
-                                  <CommandItem
-                                    key={state.id}
-                                    value={state.name}
-                                    onSelect={() => {
-                                      setProfileData((prev) => ({
-                                        ...prev,
-                                        personalInfo: {
-                                          ...prev.personalInfo,
-                                           stateId: state.id.toString(),
-                                          cityId: "",
-                                        },
-                                      }));
-                                      setStateOpen(false);
-                                    }}
-                                  >
-                                    {state.name}
-                                  </CommandItem>
-                                ))}
-                              </CommandList>
-                            </Command>
-                          </PopoverContent>
-                        </Popover>
+                        />
                       </div>
 
                       <div>
@@ -2665,145 +2776,71 @@ const resumeUrl = profileData?.personalInfo?.resume
                           City *
                         </Label>
 
-                        <Popover open={cityOpen} onOpenChange={setCityOpen}>
-                          <PopoverTrigger asChild>
-                            <Button
-                              variant="outline"
-                              className=" w-full mt-1 h-10 lg:h-11 border rounded px-3 flex items-center justify-between"
-                            >
-                                <span>
-                              {profileData.personalInfo.cityId
-                                ? cities.find(
-                                    (c: CityItem) =>
-                                      c.id == profileData.personalInfo.cityId
-                                  )?.name
-                                : "Select city"}
-                                </span>
-                              <ChevronDown className="h-4 w-4 opacity-60" />
-                            </Button>
-                          </PopoverTrigger>
-
-                          <PopoverContent align="start" className="w-full p-0">
-                            <Command>
-                              <CommandInput
-                                placeholder="Search city..."
-                                value={citySearch}
-                                onValueChange={setCitySearch}
-                              />
-
-                              <CommandList className="max-h-60 overflow-y-auto">
-                                <CommandEmpty>No city found.</CommandEmpty>
-
-                                <CommandGroup>
-                                  {cities
-                                    .filter((city) =>
-                                      city.name
-                                        .toLowerCase()
-                                        .startsWith(citySearch.toLowerCase())
-                                    )
-                                    .map((city) => (
-                                      <CommandItem
-                                        key={city.id}
-                                        value={city.name}
-                                        onSelect={() => {
-                                          setProfileData((prev) => ({
-                                            ...prev,
-                                            personalInfo: {
-                                              ...prev.personalInfo,
-                                              cityId: city.id.toString(),
-                                            },
-                                          }));
-                                          setCityOpen(false);
-                                        }}
-                                      >
-                                        {city.name}
-                                      </CommandItem>
-                                    ))}
-                                </CommandGroup>
-                              </CommandList>
-                            </Command>
-                          </PopoverContent>
-                        </Popover>
-                      </div>
-
-                      <div>
-                        <Label
-                          htmlFor="experience"
-                          className="text-sm font-medium"
-                        >
-                          Total Experience
-                        </Label>
-                        <Select
-                          value={profileData.personalInfo.experience}
-                          onValueChange={(value) =>
+                        <AsyncSelect
+                          cacheOptions
+                          defaultOptions={cities.map((c) => ({
+                            label: c.name ?? "",
+                            value: c.id.toString(),
+                          }))}
+                          loadOptions={loadCityOptions}
+                          value={getSelectedCity()}
+                          onChange={(selected: any) => {
                             setProfileData((prev) => ({
                               ...prev,
                               personalInfo: {
                                 ...prev.personalInfo,
-                                experience: value,
+                                cityId: selected?.value || "",
                               },
-                            }))
-                          }
-                          required={true}
-                        >
-                          <SelectTrigger className="mt-1 h-10 lg:h-11">
-                            <SelectValue placeholder="Select experience" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="fresher">Fresher</SelectItem>
-                            <SelectItem value="1 year">1 year</SelectItem>
-                            <SelectItem value="2 years">2 years</SelectItem>
-                            <SelectItem value="3 years">3 years</SelectItem>
-                            <SelectItem value="4 years">4 years</SelectItem>
-                            <SelectItem value="5 years">5 years</SelectItem>
-                            <SelectItem value="6 years">6 years</SelectItem>
-                            <SelectItem value="7 years">7 years</SelectItem>
-                            <SelectItem value="8 years">8 years</SelectItem>
-                            <SelectItem value="9 years">9 years</SelectItem>
-                            <SelectItem value="10 years">10 years</SelectItem>
-                            <SelectItem value="11 years">11 years</SelectItem>
-                            <SelectItem value="12 years">12 years</SelectItem>
-                            <SelectItem value="13 years">13 years</SelectItem>
-                            <SelectItem value="14 years">14 years</SelectItem>
-                            <SelectItem value="15 years">15 years</SelectItem>
-                            <SelectItem value="16 years">16 years</SelectItem>
-                            <SelectItem value="17 years">17 years</SelectItem>
-                            <SelectItem value="18 years">18 years</SelectItem>
-                            <SelectItem value="19 years">19 years</SelectItem>
-                            <SelectItem value="20+ years">20+ years</SelectItem>
-                          </SelectContent>
-                        </Select>
+                            }));
+                          }}
+                          placeholder="Search City..."
+                          isDisabled={!profileData.personalInfo.stateId}
+                        />
                       </div>
+
                       <div>
-                        <Label
-                          htmlFor="noticePeriod"
-                          className="text-sm font-medium"
-                        >
+                      <Label className="text-sm font-medium">
+                        Total Experience
+                      </Label>
+
+                      <AsyncSelect
+                        cacheOptions
+                        defaultOptions={experienceOptions}
+                        loadOptions={loadExperienceOptions}
+                        value={getSelectedExperience()}
+                        onChange={(selected: any) => {
+                          setProfileData((prev) => ({
+                            ...prev,
+                            personalInfo: {
+                              ...prev.personalInfo,
+                              experience: selected?.value || "",
+                            },
+                          }));
+                        }}
+                        placeholder="Search Experience..."
+                      />
+                    </div>
+                      <div>
+                        <Label className="text-sm font-medium">
                           Notice Period
                         </Label>
-                        <Select
-                          value={profileData.personalInfo.noticePeriod}
-                          onValueChange={(value) =>
+
+                        <AsyncSelect
+                          cacheOptions
+                          defaultOptions={noticeOptions}
+                          loadOptions={loadNoticeOptions}
+                          value={getSelectedNotice()}
+                          onChange={(selected: any) => {
                             setProfileData((prev) => ({
                               ...prev,
                               personalInfo: {
                                 ...prev.personalInfo,
-                                noticePeriod: value,
+                                noticePeriod: selected?.value || "",
                               },
-                            }))
-                          }
-                        >
-                          <SelectTrigger className="mt-1 h-10 lg:h-11">
-                            <SelectValue placeholder="Select notice period" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {noticeRanges.map((range) => (
-                              <SelectItem key={range} value={range}>
-                                {range}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                            }));
+                          }}
+                          placeholder="Search Notice Period..."
+                        />
                       </div>
                       <div>
                         <Label
@@ -2816,7 +2853,7 @@ const resumeUrl = profileData?.personalInfo?.resume
                           <AsyncSelect
                             cacheOptions
                             defaultOptions
-                            placeholder="Currency"
+                            placeholder="INR"
                             loadOptions={getCurrencyOptions}
                             value={getSelectedCurrency()}
                             onChange={(selectedOption: any) => {
@@ -2871,7 +2908,7 @@ const resumeUrl = profileData?.personalInfo?.resume
                           <AsyncSelect
                             cacheOptions
                             defaultOptions
-                            placeholder="Currency"
+                            placeholder="INR"
                             loadOptions={getCurrencyOptions}
                             value={getSelectedExpectedCurrency()}
                             isDisabled
@@ -2984,8 +3021,26 @@ const resumeUrl = profileData?.personalInfo?.resume
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4 lg:space-y-6">
+
                       {/* Existing Experience Items */}
-                      {profileData.experience.map((exp) => (
+                       {profileData.experience.length === 0 && !showAddExperience ? (
+                          <div className="flex flex-col items-center justify-center text-center py-10 lg:py-16 border rounded-lg">
+
+                            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                              <Briefcase className="w-6 h-6 text-gray-500" />
+                            </div>
+
+                            <h3 className="text-base lg:text-lg font-semibold text-gray-800 mb-2">
+                              No work experience added yet
+                            </h3>
+
+                            <p className="text-gray-500 text-sm max-w-md">
+                              Adding experience helps recruiters understand your background and increases your chances of being shortlisted.
+                            </p>
+
+                          </div>
+                        ) : (
+                        profileData.experience.map((exp) => (
                         <div
                           key={exp.id}
                           className="border rounded-lg p-4 lg:p-6 hover:shadow-md transition-shadow"
@@ -3052,7 +3107,8 @@ const resumeUrl = profileData?.personalInfo?.resume
                             </p>
                           )}
                         </div>
-                      ))}
+                      ))
+                     )}
 
                       {/* Add/Edit Experience Form */}
                       {showAddExperience && (
@@ -3201,26 +3257,41 @@ const resumeUrl = profileData?.personalInfo?.resume
                                     className="w-full h-[44px] px-3 pr-10 border rounded-md"
                                   />
 
-                                  <div className="absolute right-2 top-1/2 -translate-y-1/2">
-                                    <ReactDatePicker
-                                      selected={experienceForm.startDate?.toDate()}
-                                      onChange={(date) => {
-                                        if (!date) return;
+                                 <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                                    <button type="button" onClick={() => setOpen((prev) => !prev)}>
+                                      <Calendar size={18} />
+                                    </button>
 
-                                        const parsed = dayjs(date);
+                                    {open && (
+                                      <div className="absolute right-0 mt-2 z-50 bg-white shadow-lg rounded">
+                                        <LocalizationProvider dateAdapter={AdapterDayjs}>
+                                        <DateCalendar
+                                            value={
+                                              startInput && startInput.length === 10
+                                                ? dayjs(startInput, "DD/MM/YYYY")
+                                                : experienceForm.startDate || null
+                                            }
+                                            onChange={(newValue) => {
+                                              if (!newValue) return;
 
-                                        setStartInput(parsed.format("DD/MM/YYYY"));
+                                              const formatted = newValue.format("DD/MM/YYYY");
 
-                                        setExperienceForm((prev) => ({
-                                          ...prev,
-                                          startDate: parsed,
-                                        }));
+                                              setStartInput(formatted);
 
-                                        setDateError(validateDates(parsed, experienceForm.endDate));
-                                      }}
-                                      maxDate={new Date()}
-                                      customInput={<Calendar size={18} />}
-                                    />
+                                              setExperienceForm((prev) => ({
+                                                ...prev,
+                                                startDate: newValue,
+                                              }));
+
+                                              setDateError(validateDates(newValue, experienceForm.endDate));
+
+                                              setOpen(false);
+                                            }}
+                                            maxDate={dayjs()}
+                                          />
+                                        </LocalizationProvider>
+                                      </div>
+                                    )}
                                   </div>
                                 </div>
 
@@ -3264,28 +3335,62 @@ const resumeUrl = profileData?.personalInfo?.resume
                                       className="w-full h-[44px] px-3 pr-10 border rounded-md"
                                     />
 
-                                    <div className="absolute right-2 top-1/2 -translate-y-1/2">
-                                      <ReactDatePicker
-                                        selected={experienceForm.endDate?.toDate()}
-                                        onChange={(date) => {
-                                          if (!date) return;
+                                  <div className="absolute right-2 top-1/2 -translate-y-1/2">
 
-                                          const parsed = dayjs(date);
+                                    {/* ICON */}
+                                    <button type="button" onClick={() => setEndOpen((prev) => !prev)}>
+                                      <Calendar size={18} />
+                                    </button>
 
-                                          setEndInput(parsed.format("DD/MM/YYYY"));
+                                    {/* CALENDAR */}
+                                    {endOpen && (
+                                      <div className="absolute right-0 mt-2 z-50 bg-white shadow-lg rounded">
+                                        <LocalizationProvider dateAdapter={AdapterDayjs}>
+                                          <DateCalendar
+                                            value={
+                                              endInput && endInput.length === 10
+                                                ? dayjs(endInput, "DD/MM/YYYY")
+                                                : experienceForm.endDate || null
+                                            }
 
-                                          setExperienceForm((prev) => ({
-                                            ...prev,
-                                            endDate: parsed,
-                                          }));
+                                            onChange={(newValue) => {
+                                              if (!newValue) return;
 
-                                          setDateError(validateDates(experienceForm.startDate, parsed));
-                                        }}
-                                        minDate={experienceForm.startDate?.toDate()}
-                                        maxDate={new Date()}
-                                        customInput={<Calendar size={18} />}
-                                      />
-                                    </div>
+                                              // ❗ validation same as input
+                                              if (newValue.isBefore(experienceForm.startDate)) {
+                                                setDateError("End date must be after start date");
+                                                return;
+                                              }
+
+                                              if (newValue.isAfter(dayjs())) {
+                                                setDateError("Future date not allowed");
+                                                return;
+                                              }
+
+                                              const formatted = newValue.format("DD/MM/YYYY");
+
+                                              setEndInput(formatted);
+
+                                              setExperienceForm((prev) => ({
+                                                ...prev,
+                                                endDate: newValue,
+                                              }));
+
+                                              setDateError(validateDates(experienceForm.startDate, newValue));
+
+                                              setEndOpen(false); // 👈 auto close
+                                            }}
+
+                                            // ✅ disable future dates
+                                            maxDate={dayjs()}
+
+                                            // ✅ disable dates before start date
+                                            minDate={experienceForm.startDate || undefined}
+                                          />
+                                        </LocalizationProvider>
+                                      </div>
+                                    )}
+                                  </div>
                                   </div>
                                      {dateError && (
                                         <p className="text-red-500 text-xs mt-1">{dateError}</p>
@@ -3547,160 +3652,7 @@ const resumeUrl = profileData?.personalInfo?.resume
                                   className="mt-1"
                                 />
                               </div>
-                             <div>
-                                <Label  className="text-sm font-medium text-gray-700">
-                                  Course duration *
-                                 </Label>
-                                  <div className="mt-1 flex items-center gap-3">
-
-                                  {/* START YEAR */}
-                                  <div className="relative w-full">
-                                    <input
-                                      type="text"
-                                      placeholder="Starting Year"
-                                      maxLength={4}
-                                      value={educationForm.start_year || ""}
-                                      onChange={(e) => {
-                                        const value = e.target.value.replace(/\D/g, "");
-
-                                        if (value.length > 4) return;
-
-                                        if (value && parseInt(value) > new Date().getFullYear()) {
-                                          setYearError("Starting year cannot be in the future");
-                                          return;
-                                        }
-
-                                        setEducationForm((prev) => ({
-                                          ...prev,
-                                          start_year: value,
-                                        }));
-
-                                        setYearError("");
-                                      }}
-                                      className="w-full h-[44px] px-3 pr-10 border rounded-md"
-                                    />
-
-                                    <div className="absolute right-2 top-1/2 -translate-y-1/2">
-                                       <ReactDatePicker
-                                          selected={
-                                            educationForm.start_year
-                                              ? new Date(Number(educationForm.start_year), 0)
-                                              : null
-                                          }
-                                          onChange={(date) => {
-                                            if (!date) return;
-
-                                            const year = new Date(date).getFullYear().toString();
-
-                                            setEducationForm((prev) => ({
-                                              ...prev,
-                                              start_year: year,
-                                            }));
-
-                                            setYearError("");
-                                          }}
-                                          showYearPicker // ✅ ONLY YEAR
-                                          dateFormat="yyyy" // ✅ FORMAT
-                                          maxDate={new Date()}
-                                          popperPlacement="bottom-end"
-                                          popperClassName="z-[9999]"
-                                          portalId="root"
-                                          customInput={
-                                            <button
-                                              type="button"
-                                              className="p-1 rounded hover:bg-gray-100 cursor-pointer"
-                                            >
-                                              <Calendar size={18} />
-                                            </button>
-                                          }
-                                        />
-                                    </div>
-                                  </div>
-
-                                  <span className="text-sm text-gray-500 whitespace-nowrap">
-                                    to
-                                  </span>
-
-                                  <div className="relative w-full">
-                                    <input
-                                      type="text"
-                                      placeholder="Ending Year"
-                                      maxLength={4}
-                                      value={educationForm.end_year || ""}
-                                      onChange={(e) => {
-                                        const value = e.target.value.replace(/\D/g, "");
-
-                                        if (value.length > 4) return;
-
-                                        setEducationForm((prev) => ({
-                                          ...prev,
-                                          end_year: value,
-                                        }));
-
-                                        if (
-                                          educationForm.start_year &&
-                                          value.length === 4 &&
-                                          educationForm.start_year.length === 4 &&
-                                          parseInt(value) < parseInt(educationForm.start_year)
-                                        ) {
-                                          setYearError("End year must be greater than or equal to Start year");
-                                          return;
-                                        }
-
-                                        setYearError("");
-                                      }}
-                                      className="w-full h-[44px] px-3 pr-10 border rounded-md"
-                                    />
-
-                                    <div className="absolute right-2 top-1/2 -translate-y-1/2">
-                                        <ReactDatePicker
-                                          selected={
-                                            educationForm.end_year
-                                              ? new Date(Number(educationForm.end_year), 0)
-                                              : null
-                                          }
-                                          onChange={(date) => {
-                                            if (!date) return;
-
-                                            const year = new Date(date).getFullYear().toString();
-
-                                            if (
-                                              educationForm.start_year &&
-                                              parseInt(year) < parseInt(educationForm.start_year)
-                                            ) {
-                                              setYearError("End year must be greater than or equal to Start year");
-                                              return;
-                                            }
-
-                                            setEducationForm((prev) => ({
-                                              ...prev,
-                                              end_year: year,
-                                            }));
-
-                                            setYearError("");
-                                          }}
-                                          showYearPicker
-                                          dateFormat="yyyy"
-                                          popperPlacement="bottom-end"
-                                          popperClassName="z-[9999]"
-                                          portalId="root"
-                                          customInput={
-                                            <button
-                                              type="button"
-                                              className="p-1 rounded hover:bg-gray-100 cursor-pointer"
-                                            >
-                                              <Calendar size={18} />
-                                            </button>
-                                          }
-                                        />
-                                    </div>
-                                  </div>
-
-                                  </div>
-                                  {yearError && (
-                                    <p className="text-red-500 text-xs mt-1">{yearError}</p>
-                                  )}
-                              </div>
+                            
 
                               <div>
                                 <Label className="text-sm font-medium text-gray-700">
@@ -3778,12 +3730,179 @@ const resumeUrl = profileData?.personalInfo?.resume
 
                                 </div>
                               </div>
+                               <div>
+                                <Label  className="text-sm font-medium text-gray-700">
+                                  Course duration *
+                                 </Label>
+                                  <div className=" mt-1 flex items-center gap-3">
+
+                                  {/* START YEAR */}
+                                  <div className="relative w-full">
+                                    <input
+                                      type="text"
+                                      placeholder="Starting Year"
+                                      maxLength={4}
+                                      value={educationForm.start_year || ""}
+                                      onChange={(e) => {
+                                        const value = e.target.value.replace(/\D/g, "");
+
+                                        if (value.length > 4) return;
+
+                                        if (value && parseInt(value) > new Date().getFullYear()) {
+                                          setYearError("Starting year cannot be in the future");
+                                          return;
+                                        }
+
+                                        setEducationForm((prev) => ({
+                                          ...prev,
+                                          start_year: value,
+                                        }));
+
+                                        setYearError("");
+                                      }}
+                                      className="w-full h-[44px] px-3 pr-10 border rounded-md"
+                                    />
+
+                                    <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-100">
+                                     {/* Calendar toggle button */}
+                                      <button type="button" onClick={() => setOpen((prev) => !prev)}>
+                                        <Calendar size={18} />
+                                      </button>
+
+                                      {/* Year picker dropdown */}
+                                      {open && (
+                                        <div className="absolute right-0 mt-2 z-999 bg-white shadow-lg rounded">
+                                          <LocalizationProvider dateAdapter={AdapterDayjs}>
+                                            <DateCalendar
+                                              views={["year"]}
+                                              value={
+                                                educationForm.start_year
+                                                  ? dayjs(educationForm.start_year, "YYYY")
+                                                  : null
+                                              }
+                                              maxDate={dayjs()}
+                                              onChange={(newValue) => {
+                                                if (!newValue) return;
+
+                                                const formattedYear = newValue.format("YYYY");
+
+                                                setEducationForm((prev) => ({
+                                                  ...prev,
+                                                  start_year: formattedYear,
+                                                }));
+
+                                                setYearError("");
+
+                                                setOpen(false);
+                                              }}
+                                            />
+                                          </LocalizationProvider>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+
+                                  <span className="text-sm text-gray-500 whitespace-nowrap">
+                                    to
+                                  </span>
+
+                                  <div className="relative w-full">
+                                    <input
+                                      type="text"
+                                      placeholder="Ending Year"
+                                      maxLength={4}
+                                      value={educationForm.end_year || ""}
+                                      onChange={(e) => {
+                                        const value = e.target.value.replace(/\D/g, "");
+
+                                        if (value.length > 4) return;
+
+                                        setEducationForm((prev) => ({
+                                          ...prev,
+                                          end_year: value,
+                                        }));
+
+                                        if (
+                                          educationForm.start_year &&
+                                          value.length === 4 &&
+                                          educationForm.start_year.length === 4 &&
+                                          parseInt(value) < parseInt(educationForm.start_year)
+                                        ) {
+                                          setYearError("End year must be greater than or equal to Start year");
+                                          return;
+                                        }
+
+                                        setYearError("");
+                                      }}
+                                      className="w-full h-[44px] px-3 pr-10 border rounded-md"
+                                    />
+
+                                    <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                                      {/* ICON */}
+                                      <button
+                                        type="button"
+                                        onClick={() => setEndYearOpen((prev) => !prev)}
+                                        className="p-1 rounded hover:bg-gray-100 cursor-pointer"
+                                      >
+                                        <Calendar size={18} />
+                                      </button>
+
+                                      {/* CALENDAR */}
+                                      {endYearOpen && (
+                                        <div className="absolute right-0 mt-2 z-50 bg-white shadow-lg rounded">
+                                          <LocalizationProvider dateAdapter={AdapterDayjs}>
+                                            <DateCalendar
+                                              views={['year']}
+
+                                              value={
+                                                educationForm.end_year
+                                                  ? dayjs(educationForm.end_year, 'YYYY')
+                                                  : null
+                                              }
+
+                                              onChange={(newValue) => {
+                                                if (!newValue) return;
+
+                                                const year = newValue.year().toString();
+
+                                                if (
+                                                  educationForm.start_year &&
+                                                  parseInt(year) < parseInt(educationForm.start_year)
+                                                ) {
+                                                  setYearError(
+                                                    'End year must be greater than or equal to Start year'
+                                                  );
+                                                  return;
+                                                }
+
+                                                setEducationForm((prev) => ({
+                                                  ...prev,
+                                                  end_year: year,
+                                                }));
+
+                                                setYearError('');
+                                                setEndYearOpen(false); 
+                                              }}
+
+                                              maxDate={dayjs()}
+                                            />
+                                          </LocalizationProvider>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+
+                                  </div>
+                                  {yearError && (
+                                    <p className="text-red-500 text-xs mt-1">{yearError}</p>
+                                  )}
+                              </div>
                               <div>
                                 <FormControl>
-                                  <FormLabel className="text-sm font-medium">
+                                  <FormLabel className=" text-sm font-medium">
                                     Course Type
                                   </FormLabel>
-
+                                  <div>
                                   <RadioGroup
                                     row
                                     value={educationForm.course_type}
@@ -3812,9 +3931,14 @@ const resumeUrl = profileData?.personalInfo?.resume
                                       label="Correspondence / Distance Learning"
                                     />
                                   </RadioGroup>
+                                </div>
                                 </FormControl>
                               </div>
-
+                              {/* <div>
+                                 <Label className="text-sm font-medium text-gray-700">
+                                  Description
+                                </Label>
+</div> */}
                             </div>
                             <div className="flex justify-end space-x-2">
                               <Button
@@ -4072,39 +4196,51 @@ const resumeUrl = profileData?.personalInfo?.resume
                                 />
 
                                 {/* 🔥 YEAR PICKER ICON */}
-                                <div className="absolute right-2 top-1/2 -translate-y-1/2">
-                                  <ReactDatePicker
-                                    selected={
-                                      certificationForm.year
-                                        ? new Date(Number(certificationForm.year), 0)
-                                        : null
-                                    }
-                                    onChange={(date) => {
-                                      if (!date) return;
+                               <div className="absolute right-2 top-1/2 -translate-y-1/2">
 
-                                      const year = new Date(date).getFullYear().toString();
+  {/* ICON */}
+  <button
+    type="button"
+    onClick={() => setYearOpen((prev) => !prev)}
+    className="p-1 rounded hover:bg-gray-100 cursor-pointer"
+  >
+    <Calendar size={18} />
+  </button>
 
-                                      setCertificationForm((prev) => ({
-                                        ...prev,
-                                        year,
-                                      }));
-                                    }}
-                                    showYearPicker
-                                    dateFormat="yyyy"
-                                    maxDate={new Date()}
-                                    popperPlacement="bottom-end"
-                                    popperClassName="z-[9999]"
-                                    portalId="root"
-                                    customInput={
-                                      <button
-                                        type="button"
-                                        className="p-1 rounded hover:bg-gray-100 cursor-pointer"
-                                      >
-                                        <Calendar size={18} />
-                                      </button>
-                                    }
-                                  />
-                                </div>
+  {/* YEAR PICKER */}
+  {yearOpen && (
+    <div className="absolute right-0 mt-2 z-50 bg-white shadow-lg rounded">
+      <LocalizationProvider dateAdapter={AdapterDayjs}>
+        <DateCalendar
+          views={["year"]} // 👈 ONLY YEAR
+          
+          // ✅ preselected year
+          value={
+            certificationForm.year
+              ? dayjs(certificationForm.year, "YYYY")
+              : null
+          }
+
+          onChange={(newValue) => {
+            if (!newValue) return;
+
+            const year = newValue.format("YYYY");
+
+            setCertificationForm((prev) => ({
+              ...prev,
+              year,
+            }));
+
+            setYearOpen(false); // auto close
+          }}
+
+          maxDate={dayjs()} // future year not allowed
+        />
+      </LocalizationProvider>
+    </div>
+  )}
+
+</div>
                               </div>
                               </div>
                             </div>
@@ -4125,12 +4261,14 @@ const resumeUrl = profileData?.personalInfo?.resume
                         </Card>
                       )}
                     </div>
+                   <div className="flex justify-end">
                     <Button
-                      onClick={handleSaveProfile}
+                      onClick={() => handleSaveProfile("submit")}
                       className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-10 lg:h-11 mt-6"
                     >
                       SUBMIT
                     </Button>
+                  </div>
                   </CardContent>
                 </Card>
               )}
