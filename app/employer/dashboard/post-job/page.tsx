@@ -648,7 +648,6 @@ const formatDeadline = (value: string) => {
               <Input
                 id="company"
                 value={CompanyName}
-                readOnly
                 onChange={(e) =>
                   setJobForm((prev) => ({
                     ...prev,

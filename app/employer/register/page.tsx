@@ -1191,7 +1191,7 @@ const handleResendOTP = async () => {
                               {errors.address  }
                             </p>
                           )}
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
                         {/* Country Dropdown */}
                         <div>
                           <Label className="text-sm font-medium text-gray-700">
@@ -1413,7 +1413,7 @@ const handleResendOTP = async () => {
                           )}
                         </div>
                       </div>
-                        <div>
+                        <div className="mt-4">
                           <Label
                             htmlFor="pincode"
                             className="text-sm font-medium text-gray-700"

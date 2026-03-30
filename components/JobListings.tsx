@@ -208,17 +208,13 @@ const sortedJobs = [...filteredJobs]
     id: string | number;
     name: string;
   }
-  interface JobLocation {
-    id?: number | string;
-    name: string;
-  }
 
   interface Job {
     id: number | string;
     title: string;
     company: string;
     skills: string[];
-    location?: JobLocation;
+    location?: string;
     experience?: string;
     work_mode?: string;
     job_type?: string;
@@ -230,6 +226,10 @@ const sortedJobs = [...filteredJobs]
     requirements?: string[];
     benefits?: string[];
     questions?: string[];
+    currency?:{
+      code: string;
+      symbol_native: string;
+    }
   }
   interface Filters {
     skills: string[];
@@ -443,9 +443,7 @@ const sortedJobs = [...filteredJobs]
       filtered = filtered.filter(
         (job) =>
           job.location &&
-          job.location.name &&
-          job.location.name
-            .toLowerCase()
+            job.location.toLowerCase()
             .includes(filters.location.toLowerCase()),
       );
     }
@@ -1602,14 +1600,14 @@ setUserData({
                                 <div className="flex flex-wrap items-center gap-3 md:gap-4 text-sm text-gray-600 mb-3">
                                   <div className="flex items-center">
                                     <MapPin className="w-4 h-4 mr-1 flex-shrink-0" />
-                                    <span>{job.location?.name ?? "N/A"}</span>
+                                    <span>{job.location ?? "N/A"}</span>
                                   </div>
                                   <div className="flex items-center">
                                     <Briefcase className="w-4 h-4 mr-1 flex-shrink-0" />
                                     <span>{job.experience}</span>
                                   </div>
                                   <div className="flex items-center">
-                                    <DollarSign className="w-4 h-4 mr-1 flex-shrink-0" />
+                                    {job.currency?.symbol_native ?? "N/A"}
                                     <span>{job.salary}</span>
                                   </div>
                                   <Badge
@@ -1829,14 +1827,14 @@ setUserData({
                     <div className="space-y-2">
                       <div className="flex items-center text-gray-600">
                         <MapPin className="w-4 h-4 mr-2" />
-                        <span>{selectedJob.location?.name ?? "N/A"}</span>
+                        <span>{selectedJob.location ?? "N/A"}</span>
                       </div>
                       <div className="flex items-center text-gray-600">
                         <Briefcase className="w-4 h-4 mr-2" />
                         <span>{selectedJob.experience}</span>
                       </div>
                       <div className="flex items-center text-gray-600">
-                        <DollarSign className="w-4 h-4 mr-2" />
+                        {selectedJob.currency?.symbol_native ?? "N/A"}
                         <span>{selectedJob.salary}</span>
                       </div>
                     </div>
