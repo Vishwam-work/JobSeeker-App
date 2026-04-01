@@ -589,6 +589,7 @@ const formatDeadline = (value: string) => {
             <div>
               <Label className="text-sm font-medium">Job Category *</Label>
               <AsyncSelect
+                required
                 cacheOptions
                 defaultOptions
                 placeholder="e.g., Accounting"
@@ -619,6 +620,7 @@ const formatDeadline = (value: string) => {
               </Label>
 
               <AsyncSelect
+                required
                 cacheOptions
                 defaultOptions
                 loadOptions={getJobTitlesOptions}
@@ -664,6 +666,7 @@ const formatDeadline = (value: string) => {
               <Label className="text-sm font-medium">Location *</Label>
 
               <AsyncSelect
+                required
                 cacheOptions
                 defaultOptions
                 loadOptions={loadCountryOptions}
@@ -684,6 +687,7 @@ const formatDeadline = (value: string) => {
                 Experience Required *
               </Label>
               <Select
+                required
                 value={jobForm.experience}
                 onValueChange={(value) =>
                   setJobForm((prev) => ({ ...prev, experience: value }))
@@ -771,6 +775,7 @@ const formatDeadline = (value: string) => {
             <div>
               <Label className="text-sm font-medium">Job Type *</Label>
               <Selectt
+                required
                 isMulti
                 options={jobTypeOptions}
                 value={jobTypeOptions.filter(option =>
@@ -806,10 +811,11 @@ const formatDeadline = (value: string) => {
 
            <div>
               <Label htmlFor="vacancies" className="text-sm font-medium">
-                Number of Vacancies
+                Number of Vacancies *
               </Label>
 
               <Input
+                required
                 id="vacancies"
                 type="text"
                 inputMode="numeric"
@@ -845,10 +851,11 @@ const formatDeadline = (value: string) => {
 
 
             <div className="w-full">
-              <label className="text-sm font-medium">Application Deadline</label>
+              <label className="text-sm font-medium">Application Deadline *</label>
 
               <div className="relative mt-1">
                 <input
+                  required
                   type="text"
                   placeholder="DD/MM/YYYY"
                   maxLength={10}
