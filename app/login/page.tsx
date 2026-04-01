@@ -102,8 +102,8 @@ export default function Login() {
     setAlertMessage("Email not registered. Please register first.");
   } 
   else if (data.error === "Invalid email") {
-    setEmailError("Please enter a valid email.");
-    setAlertMessage("Please enter a valid email address.");
+    setEmailError("Invalid details. Please check the Email ID, Password combination.");
+    setAlertMessage("Invalid details. Please check the Email ID, Password combination.");
   } 
   else if (data.error === "Invalid credentials") {
     setPasswordError("Incorrect password.");
@@ -117,7 +117,7 @@ export default function Login() {
       }
     } catch (error) {
       setAlertType("error");
-      setAlertMessage("Please enter a valid email address.");
+      setAlertMessage("Invalid details. Please check the Email ID,Password combination.");
       setAlertOpen(true);
     }
   };
@@ -181,7 +181,7 @@ export default function Login() {
           </div>
         </div>
       </div>
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center py-8 md:py-12 px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen bg-gray-50 flex justify-center py-8 md:py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl w-full">
           <div className="grid lg:grid-cols-2 gap-6 md:gap-8">
             {/* Left Side - Benefits */}

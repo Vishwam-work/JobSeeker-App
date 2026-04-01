@@ -93,13 +93,7 @@ export default function EmployerRegister() {
   const [errors, setErrors] = useState<FormErrors>({});
   const [otpError, setOtpError] = useState("");
   const [showErrors, setShowErrors] = useState(false);
-  const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState("");
-  const domains = ["gmail.com", "yahoo.com", "outlook.com", "hotmail.com"];
-  const emailParts = email.split("@");
-  const filteredDomains = domains.filter((d) =>
-    d.startsWith(emailParts[1] || "")
-  );
 
   const [timer, setTimer] = useState(60);
   const [canResend, setCanResend] = useState(false);
@@ -985,34 +979,8 @@ const handleResendOTP = async () => {
                                   email: validateEmail(value),
                                 }));
 
-                                setShowSuggestions(value.includes("@"));
                               }}
                             />
-
-                            {/* Suggestions */}
-                            {showSuggestions && filteredDomains.length > 0 && (
-                              <div className="absolute top-full left-0 right-0 bg-white border rounded-md shadow-md z-10">
-                                {filteredDomains.map((domain) => (
-                                  <div
-                                    key={domain}
-                                    className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm"
-                                    onClick={() => {
-                                      const newEmail = `${emailParts[0]}@${domain}`;
-                                      setemail(newEmail);
-
-                                      setErrors((prev) => ({
-                                        ...prev,
-                                        email: validateEmail(newEmail),
-                                      }));
-
-                                      setShowSuggestions(false);
-                                    }}
-                                  >
-                                    {domain}
-                                  </div>
-                                ))}
-                              </div>
-                            )}
 
                             {/* Error */}
                             {errors.email && (

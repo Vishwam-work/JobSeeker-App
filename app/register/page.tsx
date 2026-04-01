@@ -7,6 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
+import AsyncSelect from "react-select/async";
+
 import {
   CheckCircle,
   User,
@@ -614,7 +616,7 @@ const handleResendOTP = async () => {
             </div>
 
             {/* Country */}
-            <div>
+            {/* <div>
               <Label>Country *</Label>
 
               <Popover open={countryOpen} onOpenChange={setCountryOpen}>
@@ -676,7 +678,56 @@ const handleResendOTP = async () => {
                   </Command>
                 </PopoverContent>
               </Popover>
-            </div>
+            </div> */}
+            <div>
+  <Label>Country *</Label>
+
+  <AsyncSelect
+    cacheOptions
+    defaultOptions={countries.map((c) => ({
+      label: c.name ?? "",
+      value: c.id,
+      phonecode: c.phonecode,
+    }))}
+    loadOptions={async (inputValue) => {
+      const search = inputValue.toLowerCase().trim();
+
+      return countries
+        .filter((c) =>
+          c.name?.toLowerCase().includes(search)
+        )
+        .map((c) => ({
+          label: c.name ?? "",
+          value: c.id,
+          phonecode: c.phonecode,
+        }));
+    }}
+    value={
+      countries
+        .filter(
+          (c) => c.id == profileData.personalInfo.countryId
+        )
+        .map((c) => ({
+          label: c.name,
+          value: c.id,
+          phonecode: c.phonecode,
+        }))[0] || null
+    }
+    onChange={(selected: any) => {
+      // ✅ SAME LOGIC (unchanged)
+      setProfileData((prev) => ({
+        ...prev,
+        personalInfo: {
+          ...prev.personalInfo,
+          countryId: selected?.value,
+        },
+      }));
+
+      setPhoneCode(selected?.phonecode);
+    }}
+    placeholder="Search Country..."
+  />
+</div>
 
             {/* Mobile Number */}
             <div>
