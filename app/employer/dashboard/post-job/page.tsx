@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, Save} from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,9 @@ import dayjs from "dayjs";
 import ReactDatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { Calendar } from "lucide-react";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { DateCalendar } from "@mui/x-date-pickers/DateCalendar";
 import {
   Select,
   SelectContent,
@@ -554,7 +557,24 @@ const formatDeadline = (value: string) => {
     const parsed = dayjs(formatted, "DD/MM/YYYY", true);
     return { formatted, parsed, error };
 };
+const calendarRef = useRef<HTMLDivElement | null>(null);
 
+useEffect(() => {
+  const handleClickOutside = (event: MouseEvent) => {
+    if (
+      calendarRef.current &&
+      !calendarRef.current.contains(event.target as Node)
+    ) {
+      setOpen(false);
+    }
+  };
+
+  document.addEventListener("mousedown", handleClickOutside);
+
+  return () => {
+    document.removeEventListener("mousedown", handleClickOutside);
+  };
+}, []);
   return (
     <Card>
       <CardHeader>
@@ -922,35 +942,51 @@ const formatDeadline = (value: string) => {
                 />
 
                 {/* CALENDAR */}
-                <div className="absolute right-2 top-1/2 -translate-y-1/2">
-                  <ReactDatePicker
-                    selected={deadlineDate}
-                    onChange={(date) => {
-                      if (!date) return;
+                <div
+  ref={calendarRef}
+  className="absolute right-2 top-1/2"
+>
+  {/* ICON */}
+  <button
+    type="button"
+    onClick={() => setOpen((prev) => !prev)}
+  >
+    <Calendar size={18} />
+  </button>
 
-                      const parsed = dayjs(date);
+  {/* Calendar (ON/OFF) */}
+  {open && (
+    <div className="absolute right-0 mt-2 z-50 bg-white shadow-lg rounded">
+      <LocalizationProvider dateAdapter={AdapterDayjs}>
+        <DateCalendar
+          value={
+            jobForm.application_deadline
+              ? dayjs(jobForm.application_deadline, "DD/MM/YYYY")
+              : null
+          }
 
-                      setDeadlineDate(date);
-                      setDeadlineInput(parsed.format("DD/MM/YYYY"));
+          minDate={dayjs()} // ✅ only future dates allowed
 
-                      setJobForm((prev) => ({
-                        ...prev,
-                        application_deadline: parsed.format("DD/MM/YYYY"),
-                      }));
-                    }}
-                    minDate={new Date()} // IMPORTANT (future only)
-                    popperPlacement="bottom-end"
-                    portalId="root"
-                    customInput={
-                      <button
-                        type="button"
-                        className="p-1 rounded hover:bg-gray-100"
-                      >
-                        <Calendar size={18} />
-                      </button>
-                    }
-                  />
-                </div>
+          onChange={(newValue) => {
+            if (!newValue) return;
+
+            const formatted = newValue.format("DD/MM/YYYY");
+
+            setDeadlineDate(newValue.toDate()); // optional (if using state)
+            setDeadlineInput(formatted);        // optional (input sync)
+
+            setJobForm((prev) => ({
+              ...prev,
+              application_deadline: formatted,
+            }));
+
+            setOpen(false); // auto close
+          }}
+        />
+      </LocalizationProvider>
+    </div>
+  )}
+</div>
               </div>
 
               {deadlineError && (
