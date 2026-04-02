@@ -38,6 +38,7 @@ export default function PostJobPage() {
     location: "",
     experience: "",
     salary: "",
+    salary_max: "",
     currency: "",
     job_type:  [],
     workMode: "",
@@ -81,6 +82,7 @@ export default function PostJobPage() {
     location: string;
     experience: string;
     salary: string;
+    salary_max: string;
     currency: string;
     currencyLabel?: string;
     job_type: string[];
@@ -104,6 +106,7 @@ export default function PostJobPage() {
     location_id: number;
     experience: string;
     salary: string;
+    salary_max: string;
     job_type: string;
     work_mode: string;
     vacancies: number;
@@ -202,6 +205,7 @@ export default function PostJobPage() {
         currency_id: parseInt(jobForm.currency),
         experience: jobForm.experience,
         salary: jobForm.salary,
+        salary_max: jobForm.salary_max,
         job_type: jobForm.job_type,
         work_mode: jobForm.workMode,
         vacancies: parseInt(jobForm.vacancies) || 1, // Ensure integer
@@ -256,6 +260,7 @@ export default function PostJobPage() {
         location: "",
         experience: "",
         salary: "",
+        salary_max: "",
         currency: "",
         job_type: [],
         workMode: "",
@@ -785,7 +790,37 @@ useEffect(() => {
                       }));
                     }
                   }}
-                  placeholder="Enter Annual Salary"
+                  placeholder="Minimum Annual Salary"
+                  className="flex-1"
+                />-
+                <Input
+                  type="text"
+                  id="salary_max"
+                  value={formatNumber(jobForm.salary_max)}
+                  onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                    const allowedKeys = [
+                      "Backspace",
+                      "Delete",
+                      "ArrowLeft",
+                      "ArrowRight",
+                      "Tab",
+                    ];
+
+                    if (!/[0-9]/.test(e.key) && !allowedKeys.includes(e.key)) {
+                      e.preventDefault();
+                    }
+                  }}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                    const rawValue = parseNumber(e.target.value);
+
+                    if (!isNaN(Number(rawValue))) {
+                      setJobForm((prev) => ({
+                        ...prev,
+                        salary_max: rawValue,
+                      }));
+                    }
+                  }}
+                  placeholder="Maximum Annual Salary"
                   className="flex-1"
                 />
               </div>

@@ -65,6 +65,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import Selectt from "react-select";
 import AsyncSelect from "react-select/async";
 import dayjs from "dayjs";
 import ReactDatePicker from "react-datepicker";
@@ -87,6 +88,8 @@ const ManageJobs = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [questions, setQuestions] = useState<string[]>([]);
   const [askQuestionEnabled, setAskQuestionEnabled] = useState(false);
+    const [newQuestion, setNewQuestion] = useState("");
+  
   const [selectedCategory, setSelectedCategory] = useState<OptionType | null>(
     null,
   );
@@ -111,7 +114,7 @@ const ManageJobs = () => {
     salary_max: "",
     currency_id: "",
     currencyLabel: "",
-    job_type: "",
+    job_type: [],
     work_mode: "",
     description: "",
     requirements: "",
@@ -134,7 +137,7 @@ const ManageJobs = () => {
     salary_max: string;
     currency_id: string;
     currencyLabel?: string;
-    job_type: string;
+    job_type: string[];
     work_mode: string;
     description: string;
     requirements: string;
@@ -887,6 +890,28 @@ const ManageJobs = () => {
       skills: prev.skills.filter((skill) => skill !== skillToRemove),
     }));
   };
+    const jobTypeOptions = [
+  { value: "full-time", label: "Full Time" },
+  { value: "part-time", label: "Part Time" },
+  { value: "contract", label: "Contract" },
+  { value: "internship", label: "Internship" },
+];
+const handleAddQuestion = () => {
+    if (newQuestion.trim() && !jobForm.questions.includes(newQuestion.trim())) {
+      const updated = [...jobForm.questions, newQuestion.trim()];
+      setJobForm((prev) => ({ ...prev, questions: updated }));
+      setQuestions(updated); // ✅ keep them in sync
+      setNewQuestion("");
+    }
+  };
+
+  const handleRemoveQuestion = (indexToRemove: number) => {
+    const updated = jobForm.questions.filter(
+      (_, index) => index !== indexToRemove,
+    );
+    setJobForm((prev) => ({ ...prev, questions: updated }));
+    setQuestions(updated);
+  };
   return (
     <>
       <Card>
@@ -974,10 +999,15 @@ const ManageJobs = () => {
                         </div>
                         <div className="flex items-center">
                           <Briefcase className="w-4 h-4 mr-1" />
-                          <span>{job.experience} Years</span>
+                          <span>
+                            {job.experience?.toString().trim().toLowerCase() === "fresher" ||
+                            Number(job.experience) === 0
+                              ? "Fresher"
+                              : `${job.experience} ${Number(job.experience) === 1 ? "Year" : "Years"}`}
+                          </span>
                         </div>
                         <div className="flex items-center">
-                          <span>{job.currency?.symbol_native}</span>
+                          <span className="w-3 h-5">{job.currency?.symbol_native}</span>
                           <span>
                             {job.salary
                               ? new Intl.NumberFormat("en-IN").format(
@@ -1109,15 +1139,6 @@ const ManageJobs = () => {
                         <Users className="w-4 h-4 mr-1" />
                         {/* <span>{selectedJob.companyInfo.size}</span> */}
                       </div>
-                      {/* <div className="flex items-center">
-                                      <Building2 className="w-4 h-4 mr-1" />
-                                      <span>{selectedJob.companyInfo.industry}</span>
-                                    </div>
-                                    <div className="flex items-center">
-                                      <Globe className="w-4 h-4 mr-1" />
-                                      <a href={selectedJob.companyInfo.website} className="text-purple-600 hover:underline">
-                                        Website
-                                      </a> */}
                     </div>
                   </div>
                 </div>
@@ -1132,10 +1153,16 @@ const ManageJobs = () => {
                   </div>
                   <div className="flex items-center text-gray-600">
                     <Briefcase className="w-4 h-4 mr-2" />
-                    <span>{selectedJob.experience}</span>
+                     <span>
+                     {selectedJob.experience?.toString().trim().toLowerCase() === "fresher" ||
+                     Number(selectedJob.experience) === 0
+                      ? "Fresher"
+                      : `${selectedJob.experience} ${Number(selectedJob.experience) === 1 ? "Year" : "Years"}`}
+                    </span>
                   </div>
                   <div className="flex items-center text-gray-600">
-                    <DollarSign className="w-4 h-4 mr-2" />
+                    {/* <DollarSign className="w-4 h-4 mr-2" /> */}
+                    <span className="w-4 h-6 ">{selectedJob.currency?.symbol_native}</span>
                     <span>
                       {selectedJob.salary
                         ? new Intl.NumberFormat("en-IN").format(
@@ -1153,9 +1180,20 @@ const ManageJobs = () => {
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center text-gray-600">
-                    <Clock className="w-4 h-4 mr-2" />
-                    <span>{selectedJob.job_type}</span>
-                  </div>
+                  <Clock className="w-4 h-4 mr-2" />
+                 <span>
+                    {Array.isArray(selectedJob.job_type)
+                      ? selectedJob.job_type
+                          .map(
+                            (type) =>
+                              type.charAt(0).toUpperCase() + type.slice(1).toLowerCase()
+                          )
+                          .join(", ")
+                      : selectedJob.job_type
+                          ?.charAt(0).toUpperCase() +
+                        selectedJob.job_type?.slice(1).toLowerCase()}
+                  </span>
+                </div>
                   <div className="flex items-center text-gray-600">
                     <Building2 className="w-4 h-4 mr-2" />
                     <Badge className={getWorkModeColor(selectedJob.work_mode)}>
@@ -1217,7 +1255,6 @@ const ManageJobs = () => {
                   ))}
                 </div>
               </div>
-             
 
               {/* questions */}
               <div>
@@ -1240,37 +1277,6 @@ const ManageJobs = () => {
                   )}
                 </div>
               </div>
-
-              {/* Action Buttons */}
-              {/* <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t">
-                                <Button
-                                  onClick={() => {
-                                    setIsJobDetailOpen(false);
-                                    handleApply(selectedJob);
-                                  }}
-                                  className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 flex-1"
-                                >
-                                  <Send className="w-4 h-4 mr-2" />
-                                  Apply Now
-                                </Button>
-                                <Button
-                                  variant="outline"
-                                  onClick={() => handleBookmark(selectedJob.id)}
-                                  className={`flex-1 ${selectedJob.isBookmarked ? 'border-purple-600 text-purple-600' : ''}`}
-                                >
-                                  <Bookmark className={`w-4 h-4 mr-2 ${selectedJob.isBookmarked ? 'fill-current' : ''}`} />
-                                  {selectedJob.isBookmarked ? 'Bookmarked' : 'Bookmark'}
-                                </Button>
-                                <Button
-                                  variant="outline"
-                                  onClick={() => handleShare(selectedJob)}
-                                  className="flex-1"
-                                >
-                                  <Share2 className="w-4 h-4 mr-2" />
-                                  Share
-                                </Button>
-                              </div> */}
-              {/* </div> */}
             </>
           )}
         </DialogContent>
@@ -1385,62 +1391,29 @@ const ManageJobs = () => {
                 placeholder="Search Location..."
               />
             </div>
-            <div>
-              <Label>Experience</Label>
-              <Input
-                name="experience"
-                value={jobForm.experience || ""}
-                onChange={(e) =>
-                  setJobForm({
-                    ...jobForm,
-                    [e.target.name]: e.target.value,
-                  })
-                }
-              />
-            </div>
-            {/* <div>
-              <Label>Salary</Label>
-              <Input
-                type="text"
-                name="salary"
-                value={formatNumber(jobForm.salary || "")}
-                onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
-                  const allowedKeys = [
-                    "Backspace",
-                    "Delete",
-                    "ArrowLeft",
-                    "ArrowRight",
-                    "Tab",
-                  ];
-
-                  if (!/[0-9]/.test(e.key) && !allowedKeys.includes(e.key)) {
-                    e.preventDefault();
-                  }
-                }}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                  const rawValue = parseNumber(e.target.value);
-
-                  setJobForm({
-                    ...jobForm,
-                    salary: rawValue,
-                  });
-                }}
-                placeholder="Enter Salary"
-              />
-            </div>
-            <div>
-              <Label>Currency</Label>
-              <Input
-                name="currency"
-                value={jobForm.currency || ""}
-                onChange={(e) =>
-                  setJobForm({
-                    ...jobForm,
-                    [e.target.name]: e.target.value,
-                  })
-                }
-              />
-            </div> */}
+             <div>
+              <Label className="text-sm font-medium">
+                            Experience Required *
+                          </Label>
+                          <Select
+                            required
+                            value={jobForm.experience}
+                            onValueChange={(value) =>
+                              setJobForm((prev) => ({ ...prev, experience: value }))
+                            }
+                          >
+                            <SelectTrigger className="mt-1">
+                              <SelectValue placeholder="Select experience level" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="fresher">Fresher</SelectItem>
+                              <SelectItem value="1-2">1-2 years</SelectItem>
+                              <SelectItem value="3-5">3-5 years</SelectItem>
+                              <SelectItem value="6-10">6-10 years</SelectItem>
+                              <SelectItem value="10+">10+ years</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
             <div>
               <Label htmlFor="salary" className="text-sm font-medium">
                 Salary Range (Annual)
@@ -1531,19 +1504,7 @@ const ManageJobs = () => {
                 />
               </div>
             </div>
-            <div>
-              <Label>Job Type</Label>
-              <Input
-                name="job_type"
-                value={jobForm.job_type || ""}
-                onChange={(e) =>
-                  setJobForm({
-                    ...jobForm,
-                    [e.target.name]: e.target.value,
-                  })
-                }
-              />
-            </div>
+          
             {/* <div>
               <Label>Work Mode</Label>
               <Input
@@ -1715,62 +1676,59 @@ const ManageJobs = () => {
             </div>
             <div>
               <Label>Vacancies</Label>
-              <Input
-                type="number"
-                name="vacancies"
-                value={jobForm.vacancies || ""}
-                onChange={(e) =>
-                  setJobForm({
-                    ...jobForm,
-                    [e.target.name]: e.target.value,
-                  })
-                }
+             <Input
+                required
+                id="vacancies"
+                type="text"
+                inputMode="numeric"
+                maxLength={5}
+                value={jobForm.vacancies}
+                onChange={(e) => {
+                  const value = e.target.value;
+
+                  if (/^\d{0,5}$/.test(value)) {
+                    setJobForm((prev) => ({
+                      ...prev,
+                      vacancies: value,
+                    }));
+                  }
+                }}
+                onKeyDown={(e) => {
+                  const allowedKeys = [
+                    "Backspace",
+                    "Delete",
+                    "ArrowLeft",
+                    "ArrowRight",
+                    "Tab",
+                  ];
+
+                  if (!/[0-9]/.test(e.key) && !allowedKeys.includes(e.key)) {
+                    e.preventDefault();
+                  }
+                }}
+                placeholder="e.g., 5"
+                className="mt-1"
               />
             </div>
           </div>
-          <div>
-            <Label>Description</Label>
-            <Textarea
-              name="description"
-              value={jobForm.description || ""}
-              onChange={(e) =>
-                setJobForm({
-                  ...jobForm,
-                  [e.target.name]: e.target.value,
-                })
-              }
-              rows={3}
-            />
-          </div>
-          <div>
-            <Label>Requirements</Label>
-            <Textarea
-              name="requirements"
-              value={jobForm.requirements || ""}
-              onChange={(e) =>
-                setJobForm({
-                  ...jobForm,
-                  [e.target.name]: e.target.value,
-                })
-              }
-              rows={3}
-            />
-          </div>
-          <div>
-            <Label>Benefits</Label>
-            <Textarea
-              name="benefits"
-              value={jobForm.benefits || ""}
-              onChange={(e) =>
-                setJobForm({
-                  ...jobForm,
-                  [e.target.name]: e.target.value,
-                })
-              }
-              rows={3}
-            />
-          </div>
-           <div>
+            <div>
+              <Label className="text-sm font-medium">Job Type *</Label>
+              <Selectt
+                required
+                isMulti
+                options={jobTypeOptions}
+                value={jobTypeOptions.filter(option =>
+                  jobForm.job_type.includes(option.value)
+                )}
+                onChange={(selectedOptions) =>
+                  setJobForm((prev) => ({
+                    ...prev,
+                    job_type: selectedOptions.map((opt) => opt.value),
+                  }))
+                }
+              />
+            </div>
+             <div>
                 <Label className="text-sm font-medium"> Skills</Label>
                 <div className="mt-1 space-y-2">
                   <div className="flex gap-2">
@@ -1813,6 +1771,49 @@ const ManageJobs = () => {
                   </div>
                 </div>
               </div>
+          <div>
+            <Label>Description</Label>
+            <Textarea
+              name="description"
+              value={jobForm.description || ""}
+              onChange={(e) =>
+                setJobForm({
+                  ...jobForm,
+                  [e.target.name]: e.target.value,
+                })
+              }
+              rows={3}
+            />
+          </div>
+          <div>
+            <Label>Requirements</Label>
+            <Textarea
+              name="requirements"
+              value={jobForm.requirements || ""}
+              onChange={(e) =>
+                setJobForm({
+                  ...jobForm,
+                  [e.target.name]: e.target.value,
+                })
+              }
+              rows={3}
+            />
+          </div>
+          <div>
+            <Label>Benefits</Label>
+            <Textarea
+              name="benefits"
+              value={jobForm.benefits || ""}
+              onChange={(e) =>
+                setJobForm({
+                  ...jobForm,
+                  [e.target.name]: e.target.value,
+                })
+              }
+              rows={3}
+            />
+          </div>
+
 
           {/* Checkboxes */}
           <div className="flex items-center gap-4 mt-2">
@@ -1834,8 +1835,55 @@ const ManageJobs = () => {
               />
               <Label>Remote</Label>
             </div>
+            <div className="flex items-center space-x-2">
+                          <Checkbox
+                            id="ask-question"
+                            checked={askQuestionEnabled}
+                            onCheckedChange={(checked) => setAskQuestionEnabled(!!checked)}
+                          />
+                          <Label htmlFor="ask-question" className="text-sm">
+                            Ask Question
+                          </Label>
+                        </div>
           </div>
+          {askQuestionEnabled && (
+            <div className="mt-4 space-y-2 w-full sm:w-3/5 lg:w-2/5">
+              <div className="flex gap-2">
+                <Input
+                  value={newQuestion}
+                  onChange={(e) => setNewQuestion(e.target.value)}
+                  placeholder="Enter a question..."
+                  className="flex-1"
+                />
+                <Button
+                  type="button"
+                  onClick={handleAddQuestion}
+                  variant="outline"
+                >
+                  Add Question
+                </Button>
+              </div>
 
+              {/* Show added questions */}
+              <div className="flex flex-wrap gap-2">
+                {questions.map((q, index) => (
+                  <span
+                    key={index}
+                    className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 text-green-800"
+                  >
+                    {q}
+                    <button
+                      type="button"
+                      className="ml-2 text-red-600 hover:text-red-800"
+                      onClick={() => handleRemoveQuestion(index)}
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
           {/* Footer */}
           <div className="flex justify-end gap-2 mt-4">
             <DialogClose asChild>
