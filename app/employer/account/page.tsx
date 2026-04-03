@@ -327,208 +327,208 @@ const getSelectedCity = () => {
 
               {/* Inputs */}
               <div className="max-w-5xl mx-auto p-6 bg-white rounded-2xl ">
-  <h2 className="text-2xl font-semibold mb-6 text-gray-800">
-    Company Details
-  </h2>
+                  <h2 className="text-2xl font-semibold mb-6 text-gray-800">
+                    Company Details
+                  </h2>
 
-  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
 
-    {/* Company Name */}
-    <div className="flex flex-col">
-      <label className="text-sm font-medium text-gray-600 mb-1">
-        Company Name
-      </label>
-      <input
-        name="company_name"
-        value={formData.company_name}
-        onChange={handleChange}
-        placeholder="Enter company name"
-        className="input-style  border p-2 rounded"
-      />
-    </div>
+                    {/* Company Name */}
+                    <div className="flex flex-col">
+                      <label className="text-sm font-medium text-gray-600 mb-1">
+                        Company Name
+                      </label>
+                      <input
+                        name="company_name"
+                        value={formData.company_name}
+                        onChange={handleChange}
+                        placeholder="Enter company name"
+                        className="input-style  border p-2 rounded"
+                      />
+                    </div>
 
-    {/* Company Type */}
-    <div className="flex flex-col">
-      <label className="text-sm font-medium text-gray-600 mb-1">
-        Company Type
-      </label>
-      <input
-        name="company_type"
-        value={formData.company_type}
-        onChange={handleChange}
-        placeholder="Private / Public"
-        className="input-style  border p-2 rounded"
-      />
-    </div>
+                    {/* Company Type */}
+                    <div className="flex flex-col">
+                      <label className="text-sm font-medium text-gray-600 mb-1">
+                        Company Type
+                      </label>
+                      <input
+                        name="company_type"
+                        value={formData.company_type}
+                        onChange={handleChange}
+                        placeholder="Private / Public"
+                        className="input-style  border p-2 rounded"
+                      />
+                    </div>
 
-    {/* Industry */}
-    <div className="flex flex-col">
-      <label className="text-sm font-medium text-gray-600 mb-1">
-        Industry
-      </label>
-      <input
-        name="industry"
-        value={formData.industry}
-        onChange={handleChange}
-        placeholder="e.g IT, Finance"
-        className="input-style  border p-2 rounded"
-      />
-    </div>
+                    {/* Industry */}
+                    <div className="flex flex-col">
+                      <label className="text-sm font-medium text-gray-600 mb-1">
+                        Industry
+                      </label>
+                      <input
+                        name="industry"
+                        value={formData.industry}
+                        onChange={handleChange}
+                        placeholder="e.g IT, Finance"
+                        className="input-style  border p-2 rounded"
+                      />
+                    </div>
 
-    {/* Company Size */}
-    <div className="flex flex-col">
-      <label className="text-sm font-medium text-gray-600 mb-1">
-        Company Size
-      </label>
-      <input
-        name="company_size"
-        value={formData.company_size}
-        onChange={handleChange}
-        placeholder="e.g 10-50 employees"
-        className="input-style  border p-2 rounded"
-      />
-    </div>
+                    {/* Company Size */}
+                    <div className="flex flex-col">
+                      <label className="text-sm font-medium text-gray-600 mb-1">
+                        Company Size
+                      </label>
+                      <input
+                        name="company_size"
+                        value={formData.company_size}
+                        onChange={handleChange}
+                        placeholder="e.g 10-50 employees"
+                        className="input-style  border p-2 rounded"
+                      />
+                    </div>
 
-    {/* Website */}
-    <div className="flex flex-col">
-      <label className="text-sm font-medium text-gray-600 mb-1">
-        Website
-      </label>
-      <input
-        name="website"
-        value={formData.website}
-        onChange={handleChange}
-        placeholder="https://example.com"
-        className="input-style  border p-2 rounded"
-      />
-    </div>
+                    {/* Website */}
+                    <div className="flex flex-col">
+                      <label className="text-sm font-medium text-gray-600 mb-1">
+                        Website
+                      </label>
+                      <input
+                        name="website"
+                        value={formData.website}
+                        onChange={handleChange}
+                        placeholder="https://example.com"
+                        className="input-style  border p-2 rounded"
+                      />
+                    </div>
 
-    {/* Contact Person */}
-    <div className="flex flex-col">
-      <label className="text-sm font-medium text-gray-600 mb-1">
-        Contact Person
-      </label>
-      <input
-        name="contact_person_name"
-        value={formData.contact_person_name}
-        onChange={handleChange}
-        placeholder="Full name"
-        className="input-style  border p-2 rounded"
-      />
-    </div>
+                    {/* Contact Person */}
+                    <div className="flex flex-col">
+                      <label className="text-sm font-medium text-gray-600 mb-1">
+                        Contact Person
+                      </label>
+                      <input
+                        name="contact_person_name"
+                        value={formData.contact_person_name}
+                        onChange={handleChange}
+                        placeholder="Full name"
+                        className="input-style  border p-2 rounded"
+                      />
+                    </div>
 
-    {/* Designation */}
-    <div className="flex flex-col">
-      <label className="text-sm font-medium text-gray-600 mb-1">
-        Designation
-      </label>
-      <input
-        name="designation"
-        value={formData.designation}
-        onChange={handleChange}
-        placeholder="HR / Manager"
-        className="input-style  border p-2 rounded"
-      />
-    </div>
+                    {/* Designation */}
+                    <div className="flex flex-col">
+                      <label className="text-sm font-medium text-gray-600 mb-1">
+                        Designation
+                      </label>
+                      <input
+                        name="designation"
+                        value={formData.designation}
+                        onChange={handleChange}
+                        placeholder="HR / Manager"
+                        className="input-style  border p-2 rounded"
+                      />
+                    </div>
 
-    {/* Phone */}
-    <div className="flex flex-col">
-      <label className="text-sm font-medium text-gray-600 mb-1">
-        Phone
-      </label>
-      <input
-        name="phone"
-        value={formData.phone}
-        onChange={handleChange}
-        placeholder="+91 9876543210"
-        className="input-style  border p-2 rounded"
-      />
-    </div>
+                    {/* Phone */}
+                    <div className="flex flex-col">
+                      <label className="text-sm font-medium text-gray-600 mb-1">
+                        Phone
+                      </label>
+                      <input
+                        name="phone"
+                        value={formData.phone}
+                        onChange={handleChange}
+                        placeholder="+91 9876543210"
+                        className="input-style  border p-2 rounded"
+                      />
+                    </div>
 
-    {/* Country */}
-    <div className="flex flex-col">
-  <label className="text-sm font-medium text-gray-600 mb-1">
-    Country
-  </label>
+                    {/* Country */}
+                    <div className="flex flex-col">
+                  <label className="text-sm font-medium text-gray-600 mb-1">
+                    Country
+                  </label>
 
- <AsyncSelect
-  cacheOptions
-   defaultOptions={countries.map((c) => ({
-                          label: c.name ?? "",
-                          value: c.id.toString(),
-                        }))}
-  loadOptions={loadCountryOptionss}
-  value={getselectcountry()}
-  onChange={(selected: any) => {
-    setSelectedCountry(selected);
-    setFormData((prev) => ({
-      ...prev,
-      country: selected?.value || "",
-      countryLabel: selected?.label || "",
-       state: "",
-      city: "",
-    }));
-  }}
-  placeholder="Search Country..."
-/>
-</div>
+                <AsyncSelect
+                  cacheOptions
+                  defaultOptions={countries.map((c) => ({
+                                          label: c.name ?? "",
+                                          value: c.id.toString(),
+                                        }))}
+                  loadOptions={loadCountryOptionss}
+                  value={getselectcountry()}
+                  onChange={(selected: any) => {
+                    setSelectedCountry(selected);
+                    setFormData((prev) => ({
+                      ...prev,
+                      country: selected?.value || "",
+                      countryLabel: selected?.label || "",
+                      state: "",
+                      city: "",
+                    }));
+                  }}
+                  placeholder="Search Country..."
+                />
+                </div>
 
-    <div className="flex flex-col">
-  <label className="text-sm font-medium text-gray-600 mb-1">
-    State
-  </label>
+                    <div className="flex flex-col">
+                  <label className="text-sm font-medium text-gray-600 mb-1">
+                    State
+                  </label>
 
-  <AsyncSelect
-    cacheOptions
-    defaultOptions={states.map((s) => ({
-                            label: s.name ?? "",
-                            value: s.id.toString(),
-                          }))}
-    loadOptions={loadStateOptions}
-    value={getSelectedState()}
-    onChange={(selected: any) => {
-      setSelectedState(selected);
+                  <AsyncSelect
+                    cacheOptions
+                    defaultOptions={states.map((s) => ({
+                                            label: s.name ?? "",
+                                            value: s.id.toString(),
+                                          }))}
+                    loadOptions={loadStateOptions}
+                    value={getSelectedState()}
+                    onChange={(selected: any) => {
+                      setSelectedState(selected);
 
-      setFormData((prev) => ({
-        ...prev,
-        state: selected?.value || "",
-        city: "",
-      }));
+                      setFormData((prev) => ({
+                        ...prev,
+                        state: selected?.value || "",
+                        city: "",
+                      }));
 
-    }}
-    placeholder="Search State..."
-    isDisabled={!formData.country}
-  />
-</div>
+                    }}
+                    placeholder="Search State..."
+                    isDisabled={!formData.country}
+                  />
+                </div>
 
-    {/* City */}
-    <div className="flex flex-col">
-  <label className="text-sm font-medium text-gray-600 mb-1">
-    City
-  </label>
+                    {/* City */}
+                    <div className="flex flex-col">
+                  <label className="text-sm font-medium text-gray-600 mb-1">
+                    City
+                  </label>
 
-  <AsyncSelect
-    cacheOptions
-    defaultOptions={cities.map((c) => ({
-                            label: c.name ?? "",
-                            value: c.id.toString(),
-                          }))}
-    loadOptions={loadCityOptions}
-    value={getSelectedCity()}
-    onChange={(selected: any) => {
-      setSelectedCity(selected);
+                  <AsyncSelect
+                    cacheOptions
+                    defaultOptions={cities.map((c) => ({
+                                            label: c.name ?? "",
+                                            value: c.id.toString(),
+                                          }))}
+                    loadOptions={loadCityOptions}
+                    value={getSelectedCity()}
+                    onChange={(selected: any) => {
+                      setSelectedCity(selected);
 
-      setFormData((prev) => ({
-        ...prev,
-        city: selected?.value || "",
-      }));
-    }}
-    placeholder="Search City..."
-    isDisabled={!formData.state} // ✅ disable until state selected
-  />
-</div>
-  </div>
-</div>
+                      setFormData((prev) => ({
+                        ...prev,
+                        city: selected?.value || "",
+                      }));
+                    }}
+                    placeholder="Search City..."
+                    isDisabled={!formData.state} // ✅ disable until state selected
+                  />
+                </div>
+                  </div>
+                </div>
 
               <textarea name="address" value={formData.address} onChange={handleChange} placeholder="Address" className="w-full border p-2 rounded" />
               <textarea name="description" value={formData.description} onChange={handleChange} placeholder="Description" className="w-full border p-2 rounded" />
