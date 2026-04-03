@@ -51,11 +51,14 @@ export default function PostJobPage() {
     isUrgent: false,
     isRemote: false,
     questions: [],
+    website_apply: "",
   });
   const [CompanyName, setCompanyName] = useState("");
   const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
   const [selectedCategory, setSelectedCategory] = useState("");
   const [questions, setQuestions] = useState<string[]>([]);
+  const [websiteEnabled, setWebsiteEnabled] = useState(false);
+  const [websiteUrl, setWebsiteUrl] = useState("");
   const [askQuestionEnabled, setAskQuestionEnabled] = useState(false);
   const [newSkill, setNewSkill] = useState("");
   const [newQuestion, setNewQuestion] = useState("");
@@ -96,6 +99,7 @@ export default function PostJobPage() {
     isUrgent: boolean;
     isRemote: boolean;
     questions: string[];
+      website_apply: string;
   }
 
   interface PostedJob {
@@ -126,6 +130,7 @@ export default function PostJobPage() {
     applicants?: number;
     apply_clicks?: number;
     questions?: string[];
+    website_apply?: string;
   }
   interface JobCategory {
     id: number;
@@ -187,6 +192,12 @@ export default function PostJobPage() {
   };
   const handleSubmitJob = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (websiteEnabled) {
+        if (!websiteUrl.trim()) {
+          toast.error("Website Checkbox Enabled but URL is empty.");
+          return;
+        }
+      }
     try {
       const token = localStorage.getItem("auth_token");
       if (!token) {
@@ -218,6 +229,9 @@ export default function PostJobPage() {
         is_remote: jobForm.isRemote,
         status: "active",
         questions: Array.isArray(jobForm.questions) ? jobForm.questions : [],
+        website_apply: websiteEnabled && websiteUrl.trim() !== ""
+          ? websiteUrl
+          : "",
       };
       console.log("Payload:", payload);
       const response = await fetch(
@@ -234,12 +248,16 @@ export default function PostJobPage() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.error("Error posting job:", errorData);
-        toast.error("Failed to post job", {
-          description: errorData.detail || "Unknown error. Please try again.",
-        });
-
+        if (errorData?.website_apply?.length > 0) {
+          toast.error(errorData.website_apply[0]);
+          return;
+        }
+        else{
+          toast.error("Failed to post job", {
+            description: errorData.detail || "Unknown error. Please try again.",
+          });
         return;
+        }
       }
 
       const data = await response.json();
@@ -273,11 +291,14 @@ export default function PostJobPage() {
         isUrgent: false,
         isRemote: false,
         questions: [],
+        website_apply: "",
       });
       setSelectedCategory("");
       setQuestions([]);
       setAskQuestionEnabled(false); // uncheck the checkbox
       setNewSkill("");
+      setWebsiteUrl("");
+      setWebsiteEnabled(false);
       setNewQuestion("");
     } catch (error) {
       console.error("Error submitting job:", error);
@@ -1135,6 +1156,30 @@ useEffect(() => {
               className="mt-1"
             />
           </div>
+ <div className="flex items-center space-x-2">
+            <Checkbox
+              id="add-website"
+              checked={websiteEnabled}
+              onCheckedChange={(checked) => {
+                setWebsiteEnabled(!!checked);
+
+                // Reset value when unchecked
+                if (!checked) setWebsiteUrl("");
+              }}
+            />
+            <Label htmlFor="add-website" className="text-sm">
+              Website URL
+            </Label>
+          </div>
+          {websiteEnabled && (
+            <div className="mt-4 w-full sm:w-3/5 lg:w-2/5">
+              <Input
+                value={websiteUrl}
+                onChange={(e) => setWebsiteUrl(e.target.value)}
+                placeholder="Enter website URL..."
+              />
+            </div>
+          )}
 
           {/* Checkboxes */}
           <div className="flex flex-col sm:flex-row gap-4">

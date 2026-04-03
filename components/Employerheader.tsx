@@ -71,7 +71,7 @@ export default function EmployerHeader() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
           {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2">
+          <Link href="/employer/home" className="flex items-center space-x-2">
             <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
               <Search className="w-4 h-4 text-white" />
             </div>
@@ -79,7 +79,7 @@ export default function EmployerHeader() {
               jobseeker
             </span>
             <span className="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded-full font-medium">
-              Employer
+              For Employer
             </span>
           </Link>
 
@@ -211,6 +211,23 @@ export default function EmployerHeader() {
               )}
                 </div>
               )}
+               {!isAuthenticated && (
+                  <div className="flex items-center gap-3 text-sm">
+                    <Link
+                      href="/employer/login"
+                      className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition"
+                    >
+                      Login
+                    </Link>
+
+                    <Link
+                      href="/employer/register"
+                      className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition font-medium"
+                    >
+                      Register
+                    </Link>
+                  </div>
+                )}
           </div>
         </div>
       </div>
