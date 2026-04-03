@@ -226,7 +226,26 @@ export default function Profile() {
     "90+ days",
   ]);
 
+const calendarRef = useRef<HTMLDivElement | null>(null);
 
+useEffect(() => {
+  const handleClickOutside = (event: MouseEvent) => {
+    if (
+      calendarRef.current &&
+      !calendarRef.current.contains(event.target as Node)
+    ) {
+      setOpen(false);
+      setEndOpen(false);
+      setYearOpen(false);
+    }
+  };
+
+  document.addEventListener("mousedown", handleClickOutside);
+
+  return () => {
+    document.removeEventListener("mousedown", handleClickOutside);
+  };
+}, []);
 
 const handleSummaryChange = (value: string) => {
   const words = value.trim().split(/\s+/).filter(Boolean);
@@ -2606,7 +2625,9 @@ const resumeUrl = profileData?.personalInfo?.resume
                             />
 
                             {/*  CALENDAR ICON */}
-                           <div className="absolute right-2 top-1/2">
+                           <div
+                           ref={calendarRef}
+                           className="absolute right-2 top-1/2">
                              <button type="button" onClick={() => setOpen((prev) => !prev)}>
                                       <Calendar size={18} />
                               </button>
@@ -3257,7 +3278,7 @@ const resumeUrl = profileData?.personalInfo?.resume
                                     className="w-full h-[44px] px-3 pr-10 border rounded-md"
                                   />
 
-                                 <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                                 <div  ref={calendarRef} onClick={() => setEndOpen(false)} className="absolute right-2 top-1/2 -translate-y-1/2">
                                     <button type="button" onClick={() => setOpen((prev) => !prev)}>
                                       <Calendar size={18} />
                                     </button>
@@ -3335,7 +3356,7 @@ const resumeUrl = profileData?.personalInfo?.resume
                                       className="w-full h-[44px] px-3 pr-10 border rounded-md"
                                     />
 
-                                  <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                                  <div  ref={calendarRef} onClick={() => setOpen(false)} className="absolute right-2 top-1/2 -translate-y-1/2">
 
                                     {/* ICON */}
                                     <button type="button" onClick={() => setEndOpen((prev) => !prev)}>
@@ -3763,7 +3784,7 @@ const resumeUrl = profileData?.personalInfo?.resume
                                       className="w-full h-[44px] px-3 pr-10 border rounded-md"
                                     />
 
-                                    <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-100">
+                                    <div ref={calendarRef} onClick={() => setEndYearOpen(false)} className="absolute right-2 top-1/2 -translate-y-1/2 opacity-100">
                                      {/* Calendar toggle button */}
                                       <button type="button" onClick={() => setOpen((prev) => !prev)}>
                                         <Calendar size={18} />
@@ -3771,7 +3792,7 @@ const resumeUrl = profileData?.personalInfo?.resume
 
                                       {/* Year picker dropdown */}
                                       {open && (
-                                        <div className="absolute right-0 mt-2 z-999 bg-white shadow-lg rounded">
+                                        <div className="absolute left-1/2 -translate-x-1/2 mt-2 z-999 bg-white shadow-lg rounded">
                                           <LocalizationProvider dateAdapter={AdapterDayjs}>
                                             <DateCalendar
                                               views={["year"]}
@@ -3837,7 +3858,7 @@ const resumeUrl = profileData?.personalInfo?.resume
                                       className="w-full h-[44px] px-3 pr-10 border rounded-md"
                                     />
 
-                                    <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                                    <div  ref={calendarRef} onClick={() => setOpen(false)} className="absolute right-2 top-1/2 -translate-y-1/2">
                                       {/* ICON */}
                                       <button
                                         type="button"
@@ -4195,52 +4216,51 @@ const resumeUrl = profileData?.personalInfo?.resume
                                   className="w-full h-[44px] px-3 pr-10 text-sm border rounded-md outline-none"
                                 />
 
-                                {/* 🔥 YEAR PICKER ICON */}
-                               <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                                {/*  YEAR PICKER ICON */}
+                              <div  ref={calendarRef}  className="absolute right-2 top-1/2 -translate-y-1/2">
 
-  {/* ICON */}
-  <button
-    type="button"
-    onClick={() => setYearOpen((prev) => !prev)}
-    className="p-1 rounded hover:bg-gray-100 cursor-pointer"
-  >
-    <Calendar size={18} />
-  </button>
+                                {/* ICON */}
+                                <button
+                                  type="button"
+                                  onClick={() => setYearOpen((prev) => !prev)}
+                                  className="p-1 rounded hover:bg-gray-100 cursor-pointer"
+                                >
+                                  <Calendar size={18} />
+                                </button>
 
-  {/* YEAR PICKER */}
-  {yearOpen && (
-    <div className="absolute right-0 mt-2 z-50 bg-white shadow-lg rounded">
-      <LocalizationProvider dateAdapter={AdapterDayjs}>
-        <DateCalendar
-          views={["year"]} // 👈 ONLY YEAR
-          
-          // ✅ preselected year
-          value={
-            certificationForm.year
-              ? dayjs(certificationForm.year, "YYYY")
-              : null
-          }
+                                {/* YEAR PICKER */}
+                                {yearOpen && (
+                                  <div className="absolute right-0 mt-2 z-50 bg-white shadow-lg rounded">
+                                    <LocalizationProvider dateAdapter={AdapterDayjs}>
+                                      <DateCalendar
+                                        views={["year"]}
 
-          onChange={(newValue) => {
-            if (!newValue) return;
+                                        value={
+                                          certificationForm.year
+                                            ? dayjs(certificationForm.year, "YYYY")
+                                            : null
+                                        }
 
-            const year = newValue.format("YYYY");
+                                        onChange={(newValue) => {
+                                          if (!newValue) return;
 
-            setCertificationForm((prev) => ({
-              ...prev,
-              year,
-            }));
+                                          const year = newValue.format("YYYY");
 
-            setYearOpen(false); // auto close
-          }}
+                                          setCertificationForm((prev) => ({
+                                            ...prev,
+                                            year,
+                                          }));
 
-          maxDate={dayjs()} // future year not allowed
-        />
-      </LocalizationProvider>
-    </div>
-  )}
+                                          setYearOpen(false); // auto close
+                                        }}
 
-</div>
+                                        maxDate={dayjs()} // future year not allowed
+                                      />
+                                    </LocalizationProvider>
+                                  </div>
+                                )}
+
+                              </div>
                               </div>
                               </div>
                             </div>
