@@ -219,6 +219,7 @@ const sortedJobs = [...filteredJobs]
     work_mode?: string;
     job_type?: string;
     salary?: string;
+    salary_max?: string;
     created_at?: string;
     description?: string;
     vacancies?: number;
@@ -1604,11 +1605,28 @@ setUserData({
                                   </div>
                                   <div className="flex items-center">
                                     <Briefcase className="w-4 h-4 mr-1 flex-shrink-0" />
-                                    <span>{job.experience}</span>
+                                    <span>
+                                      {job.experience?.toString().trim().toLowerCase() === "fresher" ||
+                                      Number(job.experience) === 0
+                                        ? "Fresher"
+                                        : `${job.experience} ${Number(job.experience) === 1 ? "Year" : "Years"}`}
+                                    </span>
                                   </div>
                                   <div className="flex items-center">
-                                    {job.currency?.symbol_native ?? "N/A"}
-                                    <span>{job.salary}</span>
+                                    <span className="w-3 h-5">{job.currency?.symbol_native}</span>
+                                  <span>
+                                    {job.salary
+                                      ? new Intl.NumberFormat("en-IN").format(
+                                          Number(job.salary),
+                                        )
+                                      : ""}
+                                    -
+                                    {job.salary_max
+                                      ? new Intl.NumberFormat("en-IN").format(
+                                          Number(job.salary_max),
+                                        )
+                                      : ""}
+                                  </span>
                                   </div>
                                   <Badge
                                     className={getWorkModeColor(
@@ -1831,17 +1849,38 @@ setUserData({
                       </div>
                       <div className="flex items-center text-gray-600">
                         <Briefcase className="w-4 h-4 mr-2" />
-                        <span>{selectedJob.experience}</span>
+                         <span>
+                          {selectedJob.experience?.toString().trim().toLowerCase() === "fresher" ||
+                          Number(selectedJob.experience) === 0
+                            ? "Fresher"
+                            : `${selectedJob.experience} ${Number(selectedJob.experience) === 1 ? "Year" : "Years"}`}
+                          </span>
                       </div>
                       <div className="flex items-center text-gray-600">
-                        {selectedJob.currency?.symbol_native ?? "N/A"}
-                        <span>{selectedJob.salary}</span>
+                        <span className="w-4 h-6 ">{selectedJob.currency?.symbol_native}</span>
+                        <span>
+                          {selectedJob.salary
+                            ? new Intl.NumberFormat("en-IN").format(
+                                Number(selectedJob.salary),
+                              )
+                            : ""}
+                          -
+                          {selectedJob.salary_max
+                            ? new Intl.NumberFormat("en-IN").format(
+                                Number(selectedJob.salary_max),
+                              )
+                            : ""}
+                        </span>
                       </div>
                     </div>
                     <div className="space-y-2">
                       <div className="flex items-center text-gray-600">
                         <Clock className="w-4 h-4 mr-2" />
-                        <span>{selectedJob.job_type}</span>
+                        <span>
+                          {Array.isArray(selectedJob.job_type)
+                            ? selectedJob.job_type.join(", ")
+                            : selectedJob.job_type}
+                        </span>
                       </div>
                       <div className="flex items-center text-gray-600">
                         <Building2 className="w-4 h-4 mr-2" />
