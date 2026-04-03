@@ -11,6 +11,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 // import { useSession, signIn, signOut } from "next-auth/react";
 import CookieConsent from "@/components/Cookie";
+import { GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google';
 
 export default function Login() {
 
@@ -344,23 +345,64 @@ export default function Login() {
                       <span className="px-2 bg-white text-gray-500">Or</span>
                     </div> */}
                   </div>
-
-                  {/* Google Login */}
-                  {/* <Button
-                    type="button"
-                    onClick={handleGoogleLogin}
-                    className="w-full h-12 bg-white border border-gray-300 rounded-lg flex items-center justify-center shadow-sm hover:bg-gray-50 transition-all duration-200"
-                  >
-                    <img
-                      src="https://www.svgrepo.com/show/475656/google-color.svg"
-                      alt="Google Logo"
-                      className="w-5 h-5 mr-3"
-                    />
-                    <span className="text-gray-700 font-medium">
-                      Sign in with Google
-                    </span>
-                  </Button> */}
                 </form>
+                <GoogleOAuthProvider clientId="839330984972-s0g17d8e9ou8eghct8h9f4cnv0p6lm2p.apps.googleusercontent.com">
+                  <GoogleLogin
+                    onSuccess={async (credentialResponse) => {
+                      try {
+                        const token = credentialResponse.credential;
+
+                        const response = await fetch(
+                          `${process.env.NEXT_PUBLIC_API_URL_APP}/google-login/`,
+                          {
+                            method: "POST",
+                            headers: {
+                              "Content-Type": "application/json",
+                            },
+                            body: JSON.stringify({ token }),
+                          }
+                        );
+
+                        const data = await response.json();
+
+                        if (response.ok) {
+                          localStorage.setItem("auth_token", data.access);
+                          localStorage.setItem("full_name", data.full_name);
+                          localStorage.setItem("user_email", data.email);
+                          if (data.user_id)
+                            localStorage.setItem("user_id", data.user_id);
+                          window.dispatchEvent(new Event("user-email-updated"));
+                          const profileRes = await fetch(
+                            `${process.env.NEXT_PUBLIC_API_URL_APP}/profile/`,
+                            {
+                              headers: {
+                                Authorization: `Bearer ${data.access}`,
+                              },
+                            }
+                          );
+
+                          const profileData = await profileRes.json();
+                          setTimeout(() => {
+                            if (isProfileComplete(profileData)) {
+                              router.push("/");
+                            } else {
+                              router.push("/profile");
+                            }
+                          }, 2000);
+                          setAlertType("success");
+                          setAlertMessage("Login Successful!");
+                          setAlertOpen(true);
+                        } else {
+                          console.log("Login failed:", data.error);
+                        }
+
+                      } catch (error) {
+                        console.log("Error:", error);
+                      }
+                    }}
+                    onError={() => console.log("Login Failed")}
+                  />
+                </GoogleOAuthProvider>
               </CardContent>
             </Card>
           </div>
