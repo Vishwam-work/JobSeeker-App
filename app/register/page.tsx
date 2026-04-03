@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import AsyncSelect from "react-select/async";
+import { GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google';
 
 import {
   CheckCircle,
@@ -404,6 +405,50 @@ const handleResendOTP = async () => {
               <p>Find a job and grow your career</p>
             </div>
           </div>
+            <div className="container mt-5">
+             <GoogleOAuthProvider clientId="839330984972-s0g17d8e9ou8eghct8h9f4cnv0p6lm2p.apps.googleusercontent.com">
+                  <GoogleLogin
+                    onSuccess={async (credentialResponse) => {
+                      try {
+                        const token = credentialResponse.credential;
+
+                        const response = await fetch(
+                          `${process.env.NEXT_PUBLIC_API_URL_APP}/google-login/`,
+                          {
+                            method: "POST",
+                            headers: {
+                              "Content-Type": "application/json",
+                            },
+                            body: JSON.stringify({ token }),
+                          }
+                        );
+
+                        const data = await response.json();
+
+                        if (response.ok) {
+                          localStorage.setItem("auth_token", data.access);
+                          localStorage.setItem("full_name", data.full_name);
+                          localStorage.setItem("user_email", data.email);
+                          if (data.user_id)
+                            localStorage.setItem("user_id", data.user_id);
+                          window.dispatchEvent(new Event("user-email-updated"));
+                          setTimeout(() => {
+                              router.push("/profile");
+                          }, 2000);
+                          toast.success("Registration Successful ");
+                        } else {
+                          toast.error("Registration failed: " + data.error);
+                        }
+
+                      } catch (error) {
+                        console.log("Error:", error);
+                      }
+                    }}
+                    onError={() => toast.error("Registration failed: Google login error")}
+                  />
+                </GoogleOAuthProvider>
+            </div>
+
 
         </div>
 
@@ -614,120 +659,55 @@ const handleResendOTP = async () => {
                 </button>
               </div>
             </div>
-
-            {/* Country */}
-            {/* <div>
+            <div>
               <Label>Country *</Label>
 
-              <Popover open={countryOpen} onOpenChange={setCountryOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="w-full mt-1 h-10 lg:h-11 border rounded px-3 flex items-center justify-between"
-                  >
-                    <span>
-                      {profileData.personalInfo.countryId
-                        ? countries.find(
-                            (c) => c.id == profileData.personalInfo.countryId,
-                          )?.name
-                        : "Select Country"}
-                    </span>
-                    <ChevronDown className="h-4 w-4 opacity-60" />
-                  </Button>
-                </PopoverTrigger>
+              <AsyncSelect
+                cacheOptions
+                defaultOptions={countries.map((c) => ({
+                  label: c.name ?? "",
+                  value: c.id,
+                  phonecode: c.phonecode,
+                }))}
+                loadOptions={async (inputValue) => {
+                  const search = inputValue.toLowerCase().trim();
 
-                <PopoverContent className="w-full p-0">
-                  <Command>
-                    <CommandInput
-                      placeholder="Search country..."
-                      value={countrySearch}
-                      onValueChange={setCountrySearch}
-                    />
+                  return countries
+                    .filter((c) =>
+                      c.name?.toLowerCase().includes(search)
+                    )
+                    .map((c) => ({
+                      label: c.name ?? "",
+                      value: c.id,
+                      phonecode: c.phonecode,
+                    }));
+                }}
+                value={
+                  countries
+                    .filter(
+                      (c) => c.id == profileData.personalInfo.countryId
+                    )
+                    .map((c) => ({
+                      label: c.name,
+                      value: c.id,
+                      phonecode: c.phonecode,
+                    }))[0] || null
+                }
+                onChange={(selected: any) => {
+                  // ✅ SAME LOGIC (unchanged)
+                  setProfileData((prev) => ({
+                    ...prev,
+                    personalInfo: {
+                      ...prev.personalInfo,
+                      countryId: selected?.value,
+                    },
+                  }));
 
-                    <CommandList className="max-h-60 overflow-y-auto">
-                      <CommandEmpty>No country found.</CommandEmpty>
-
-                      <CommandGroup>
-                        {countries
-                          .filter((c) =>
-                            c.name
-                              .toLowerCase()
-                              .startsWith(countrySearch.toLowerCase()),
-                          )
-                          .map((country) => (
-                            <CommandItem
-                              key={country.id}
-                              value={country.name}
-                              onSelect={() => {
-                                setProfileData((prev) => ({
-                                  ...prev,
-                                  personalInfo: {
-                                    ...prev.personalInfo,
-                                    countryId: country.id,
-                                  },
-                                }));
-                                setPhoneCode(country.phonecode);
-                                setCountryOpen(false);
-                              }}
-                            >
-                              {country.name}
-                            </CommandItem>
-                          ))}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
-            </div> */}
-            <div>
-  <Label>Country *</Label>
-
-  <AsyncSelect
-    cacheOptions
-    defaultOptions={countries.map((c) => ({
-      label: c.name ?? "",
-      value: c.id,
-      phonecode: c.phonecode,
-    }))}
-    loadOptions={async (inputValue) => {
-      const search = inputValue.toLowerCase().trim();
-
-      return countries
-        .filter((c) =>
-          c.name?.toLowerCase().includes(search)
-        )
-        .map((c) => ({
-          label: c.name ?? "",
-          value: c.id,
-          phonecode: c.phonecode,
-        }));
-    }}
-    value={
-      countries
-        .filter(
-          (c) => c.id == profileData.personalInfo.countryId
-        )
-        .map((c) => ({
-          label: c.name,
-          value: c.id,
-          phonecode: c.phonecode,
-        }))[0] || null
-    }
-    onChange={(selected: any) => {
-      // ✅ SAME LOGIC (unchanged)
-      setProfileData((prev) => ({
-        ...prev,
-        personalInfo: {
-          ...prev.personalInfo,
-          countryId: selected?.value,
-        },
-      }));
-
-      setPhoneCode(selected?.phonecode);
-    }}
-    placeholder="Search Country..."
-  />
-</div>
+                  setPhoneCode(selected?.phonecode);
+                }}
+                placeholder="Search Country..."
+              />
+            </div>
 
             {/* Mobile Number */}
             <div>
@@ -825,7 +805,6 @@ const handleResendOTP = async () => {
               <Label>Resume</Label>
 
               {!resume ? (
-                // 🔽 Upload Button (initial state)
                 <div className="mt-2 flex items-center gap-4">
                   <label className="cursor-pointer bg-orange-500 text-white px-5 py-2 rounded-full hover:bg-orange-600 transition">
                     {" "}
@@ -855,7 +834,7 @@ const handleResendOTP = async () => {
                   </span>
                 </div>
               ) : (
-                // 🔽 Uploaded UI
+                // Uploaded UI
                 <div className="mt-3">
                   <div className="flex items-center justify-between border rounded-full px-4 py-3 bg-gray-50">
                     {/* File Name */}
@@ -976,67 +955,6 @@ const handleResendOTP = async () => {
           </form>
         </div>
       </div>
-
-      {/* OTP Modal */}
-          {/* <Dialog open={isOtpOpen} onOpenChange={setIsOtpOpen}>
-        <DialogContent className="max-w-md">
-          <div className="text-center">
-
-            <h2 className="text-xl font-semibold mb-2">
-        Verify email
-            </h2>
-
-            <div className="flex justify-center items-center gap-2 mb-6 text-sm text-gray-600">
-        <span>We just sent a verification code to <b>{email}</b></span>
-
-            </div>
-
-            <InputOTP
-            maxLength={6}
-            value={otp}
-            onChange={(value) => {
-            setOtp(value);
-            setOtpError("");
-            }}>
-              <InputOTPGroup className="gap-3 justify-center">
-                {[0, 1, 2, 3, 4, 5].map((i) => (
-                  <InputOTPSlot
-                    key={i}
-                    index={i}
-                    className="w-12 h-12 text-lg rounded-lg border border-blue-400"
-                  />
-                ))}
-              </InputOTPGroup>
-            </InputOTP>
-
-            {otpError && (
-        <p className="text-sm text-red-500 mt-2">{otpError}</p>
-      )}
-
-             <div className="mt-4 text-sm text-gray-600">
-              <p className="text-xs text-gray-500 mt-4">
-                Your OTP should arrive in {timer} seconds
-              </p>
-              <Button
-                variant="link"
-                disabled={!canResend}
-                onClick={handleResendOTP}
-                className="text-blue-600 mt-2"
-              >
-                Resend OTP
-              </Button>
-             </div>
-
-            <Button
-              className="w-full mt-5 bg-blue-600 hover:bg-blue-700 text-white h-11"
-              onClick={handleVerifyOTP}
-            >
-              Verify
-            </Button>
-
-          </div>
-        </DialogContent>
-      </Dialog> */}
     </div>
   );
 }
