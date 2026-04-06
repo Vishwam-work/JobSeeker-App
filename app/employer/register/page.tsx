@@ -490,7 +490,8 @@ const handleResendOTP = async () => {
       description: formData.description,
       contact_person_name: formData.contactPersonName,
       designation: formData.designation,
-      phone: `${formData.phoneCode}${formData.phone}`,
+      phone: formData.phone,
+      phone_code: formData.phoneCode,
       address: formData.address,
       country: formData.countryId,
       state: formData.stateId,
@@ -503,7 +504,7 @@ const handleResendOTP = async () => {
       email: email,
       is_verified: true,
     };
-   
+
     try {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/employeer_register/`,
