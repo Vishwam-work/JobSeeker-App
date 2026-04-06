@@ -340,7 +340,6 @@ useEffect(() => {
         <div>
 
           <h2 className="text-lg font-semibold">{localStorage.getItem("full_name") || "User"}</h2>
-          {/* <p className="text-sm text-gray-500">Not Mentioned</p> */}
 
           <Link
             href="/profile"

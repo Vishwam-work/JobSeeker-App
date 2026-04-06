@@ -102,7 +102,7 @@ const ManageJobs = () => {
   const [deadlineDate, setDeadlineDate] = useState<Date | null>(null);
   const [open, setOpen] = useState(false);
   const [newSkill, setNewSkill] = useState("");
-
+  const [loading, setLoading] = useState(true);
   const [jobForm, setJobForm] = useState<JobForm>({
     title: "",
     category: "",
@@ -273,6 +273,7 @@ const ManageJobs = () => {
   }
   const fetchPostedJobs = async () => {
     try {
+      setLoading(true);
       const token = localStorage.getItem("auth_token");
       if (!token) return;
       const response = await fetch(
@@ -295,6 +296,8 @@ const ManageJobs = () => {
       setPostedJobs(data); // Set jobs into stateq
     } catch (error) {
       console.error("Error fetching jobs:", error);
+    } finally {
+       setLoading(false);
     }
   };
 
@@ -961,7 +964,15 @@ const handleAddQuestion = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {filteredJobs.length === 0 ? (
+            {loading ? (
+              [...Array(2)].map((_, i) => (
+                <div key={i} className="border rounded-lg p-6 animate-pulse">
+                  <div className="h-4 bg-gray-200 rounded w-1/3 mb-3"></div>
+                  <div className="h-3 bg-gray-200 rounded w-1/4 mb-2"></div>
+                  <div className="h-3 bg-gray-200 rounded w-full mb-2"></div>
+                </div>
+              ))
+            ) : filteredJobs.length === 0 ? (
               <div className="text-center py-8">
                 <Briefcase className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">
