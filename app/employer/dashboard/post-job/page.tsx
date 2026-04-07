@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { jwtDecode } from "jwt-decode";
 import dayjs from "dayjs";
-import ReactDatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { Calendar } from "lucide-react";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -40,6 +39,7 @@ export default function PostJobPage() {
     salary: "",
     salary_max: "",
     currency: "",
+    currencyCode: "INR",
     job_type:  [],
     workMode: "",
     description: "",
@@ -62,17 +62,7 @@ export default function PostJobPage() {
   const [askQuestionEnabled, setAskQuestionEnabled] = useState(false);
   const [newSkill, setNewSkill] = useState("");
   const [newQuestion, setNewQuestion] = useState("");
-  const [jobCategories, setJobCategories] = useState<JobCategory[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [searchJobTitle, setSearchJobTitle] = useState("");
-  const [jobTitles, setJobTitles] = useState<JobTitle[]>([]);
   const [open, setOpen] = useState(false);
-  const [selectedCity, setSelectedCity] = useState("");
-  const [search, setSearch] = useState("");
-  const [cities, setCities] = useState<City[]>([]);
-  const [currency, setCurrency] = useState<Currency[]>([]);
-
-
   //date validation
   const [deadlineInput, setDeadlineInput] = useState("");
   const [deadlineError, setDeadlineError] = useState("");
@@ -87,6 +77,7 @@ export default function PostJobPage() {
     salary: string;
     salary_max: string;
     currency: string;
+     currencyCode?: "INR" | "USD";
     currencyLabel?: string;
     job_type: string[];
     workMode: string;
@@ -132,25 +123,7 @@ export default function PostJobPage() {
     questions?: string[];
     website_apply?: string;
   }
-  interface JobCategory {
-    id: number;
-    title: string;
-  }
-  interface JobTitle {
-    id: number;
-    title: string;
-  }
-  interface City {
-    id: number;
-    name: string;
-  }
-  interface Currency {
-    id: number;
-    code: string;
-    name: string;
-    symbol: string;
-    currencyLabel?: string; 
-  }
+
   interface DecodedToken {
     user_id: number | string;
     exp?: number;
@@ -192,6 +165,13 @@ export default function PostJobPage() {
   };
   const handleSubmitJob = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    const minSalary = Number(jobForm.salary);
+    const maxSalary = Number(jobForm.salary_max);
+
+    if (minSalary && maxSalary && minSalary > maxSalary) {
+      toast.error("Minimum salary cannot be greater than maximum salary");
+      return;
+    }
     if (websiteEnabled) {
         if (!websiteUrl.trim()) {
           toast.error("Website Checkbox Enabled but URL is empty.");
@@ -280,6 +260,7 @@ export default function PostJobPage() {
         salary: "",
         salary_max: "",
         currency: "",
+         currencyCode: "INR",
         job_type: [],
         workMode: "",
         description: "",
@@ -443,11 +424,17 @@ export default function PostJobPage() {
     }
   };
 
-  const formatNumber = (value: string | number): string => {
-    if (!value) return "";
-    return new Intl.NumberFormat("en-IN").format(Number(value));
-  };
+  
+const formatNumber = (
+  value: string | number,
+  currency: "INR" | "USD" = "INR"
+): string => {
+  if (!value) return "";
 
+  return new Intl.NumberFormat(
+    currency === "INR" ? "en-IN" : "en-US"
+  ).format(Number(value));
+};
   const parseNumber = (value: string): string => {
     return value.replace(/,/g, "");
   };
@@ -773,6 +760,7 @@ useEffect(() => {
                     setJobForm((prev) => ({
                       ...prev,
                       currency: selectedOption?.value || "",
+                      currencyCode: selectedOption?.code || "INR",
                       currencyLabel: selectedOption?.label || "",
                     }));
                   }}
@@ -787,7 +775,7 @@ useEffect(() => {
                 <Input
                   type="text"
                   id="salary"
-                  value={formatNumber(jobForm.salary)}
+                  value={formatNumber(jobForm.salary, jobForm.currencyCode)}
                   onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
                     const allowedKeys = [
                       "Backspace",
@@ -817,7 +805,7 @@ useEffect(() => {
                 <Input
                   type="text"
                   id="salary_max"
-                  value={formatNumber(jobForm.salary_max)}
+                  value={formatNumber(jobForm.salary_max, jobForm.currencyCode)}
                   onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
                     const allowedKeys = [
                       "Backspace",

@@ -69,7 +69,7 @@ import Selectt from "react-select";
 import AsyncSelect from "react-select/async";
 import dayjs from "dayjs";
 import ReactDatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
+// import "react-datepicker/dist/react-datepicker.css";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DateCalendar } from "@mui/x-date-pickers/DateCalendar";
@@ -113,6 +113,7 @@ const ManageJobs = () => {
     salary: "",
     salary_max: "",
     currency_id: "",
+    currencyCode: "INR",
     currencyLabel: "",
     job_type: [],
     work_mode: "",
@@ -136,6 +137,7 @@ const ManageJobs = () => {
     salary: string;
     salary_max: string;
     currency_id: string;
+      currencyCode?: "INR" | "USD";
     currencyLabel?: string;
     job_type: string[];
     work_mode: string;
@@ -163,6 +165,7 @@ const ManageJobs = () => {
       label: string;
       symbol_native: string;
     };
+    currencyCode?: "INR" | "USD";
     job_type: string;
     work_mode: string;
     vacancies: number;
@@ -487,6 +490,7 @@ const ManageJobs = () => {
         salary: data.salary || "",
         salary_max: data.salary_max || "",
         currency_id: data.currency?.id?.toString() || data.currency || "",
+         currencyCode: "INR",
         currencyLabel: data.currency?.code || "",
         job_type: data.job_type || "",
         work_mode: data.work_mode || "",
@@ -613,15 +617,27 @@ const ManageJobs = () => {
     if (diffDays < 30) return `${Math.ceil(diffDays / 7)} weeks ago`;
     return `${Math.ceil(diffDays / 30)} months ago`;
   };
-  const formatNumber = (value: string | number): string => {
-    if (!value) return "";
-    return new Intl.NumberFormat("en-IN").format(Number(value));
-  };
+ const formatNumber = (
+  value: string | number,
+  currency: "INR" | "USD" = "INR"
+): string => {
+  if (!value) return "";
 
+  return new Intl.NumberFormat(
+    currency === "INR" ? "en-IN" : "en-US"
+  ).format(Number(value));
+};
   const parseNumber = (value: string): string => {
     return value.replace(/,/g, "");
   };
   const handleUpdateJob = async () => {
+     const minSalary = Number(jobForm.salary);
+        const maxSalary = Number(jobForm.salary_max);
+    
+        if (minSalary && maxSalary && minSalary > maxSalary) {
+          toast.error("Minimum salary cannot be greater than maximum salary");
+          return;
+        }
     console.log("Updating job with data:", jobForm);
     if (!selectedJob?.id) {
       toast.error("No job selected for update", {
@@ -1021,15 +1037,15 @@ const handleAddQuestion = () => {
                           <span className="w-3 h-5">{job.currency?.symbol_native}</span>
                           <span>
                             {job.salary
-                              ? new Intl.NumberFormat("en-IN").format(
-                                  Number(job.salary),
-                                )
+                              ? new Intl.NumberFormat(
+                                  job.currencyCode === "INR" ? "en-IN" : "en-US"
+                                ).format(Number(job.salary))
                               : ""}
                             -
                             {job.salary_max
-                              ? new Intl.NumberFormat("en-IN").format(
-                                  Number(job.salary_max),
-                                )
+                              ? new Intl.NumberFormat(
+                                  job.currencyCode === "INR" ? "en-IN" : "en-US"
+                                ).format(Number(job.salary_max))
                               : ""}
                           </span>
                         </div>
@@ -1148,7 +1164,7 @@ const handleAddQuestion = () => {
                     <div className="flex flex-wrap gap-4 text-sm text-gray-600">
                       <div className="flex items-center">
                         <Users className="w-4 h-4 mr-1" />
-                        {/* <span>{selectedJob.companyInfo.size}</span> */}
+                        <span>Openings : {selectedJob.vacancies}</span>
                       </div>
                     </div>
                   </div>
@@ -1176,15 +1192,15 @@ const handleAddQuestion = () => {
                     <span className="w-4 h-6 ">{selectedJob.currency?.symbol_native}</span>
                     <span>
                       {selectedJob.salary
-                        ? new Intl.NumberFormat("en-IN").format(
-                            Number(selectedJob.salary),
-                          )
+                        ? new Intl.NumberFormat(
+                            selectedJob.currencyCode === "INR" ? "en-IN" : "en-US"
+                          ).format(Number(selectedJob.salary))
                         : ""}
                       -
                       {selectedJob.salary_max
-                        ? new Intl.NumberFormat("en-IN").format(
-                            Number(selectedJob.salary_max),
-                          )
+                        ? new Intl.NumberFormat(
+                            selectedJob.currencyCode === "INR" ? "en-IN" : "en-US"
+                          ).format(Number(selectedJob.salary_max))
                         : ""}
                     </span>
                   </div>
@@ -1447,6 +1463,7 @@ const handleAddQuestion = () => {
                     setJobForm((prev) => ({
                       ...prev,
                       currency_id: selectedOption?.value || "",
+                      currencyCode: selectedOption?.code || "INR",
                       currencyLabel: selectedOption?.label || "",
                     }));
                   }}
@@ -1455,7 +1472,7 @@ const handleAddQuestion = () => {
                 <Input
                   type="text"
                   id="salary"
-                  value={formatNumber(jobForm.salary)}
+                  value={formatNumber(jobForm.salary, jobForm.currencyCode)}
                   onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
                     const allowedKeys = [
                       "Backspace",
@@ -1486,7 +1503,7 @@ const handleAddQuestion = () => {
                 <Input
                   type="text"
                   id="salary_max"
-                  value={formatNumber(jobForm.salary_max)}
+                  value={formatNumber(jobForm.salary_max, jobForm.currencyCode)}
                   onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
                     const allowedKeys = [
                       "Backspace",
