@@ -223,6 +223,7 @@ const sortedJobs = [...filteredJobs]
     created_at?: string;
     description?: string;
     vacancies?: number;
+    website_apply?: string;
     urgentHiring?: boolean;
     requirements?: string[];
     benefits?: string[];
@@ -1745,6 +1746,16 @@ setUserData({
                             <Eye className="w-4 h-4 mr-2" />
                             View Details
                           </Button>
+                          {job.website_apply && (
+                            <a
+                              href={job.website_apply}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-purple-600 hover:text-purple-800 underline font-medium whitespace-nowrap"
+                            >
+                              Apply on Website
+                            </a>
+                          )}
                         </div>
                       </div>
                     </CardContent>

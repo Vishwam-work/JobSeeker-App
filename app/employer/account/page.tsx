@@ -42,7 +42,7 @@ export default function EmployerAccountEdit() {
     description: "",
     contact_person_name: "",
     designation: "",
-    phoneCode: "",
+    phone_code: "",
     phone: "",
     address: "",
     country: "",
@@ -78,7 +78,7 @@ export default function EmployerAccountEdit() {
     countryLabel: string;
     state: string;
     city: string;
-    phoneCode: string;
+    phone_code: string;
     pincode: string;
     company_logo: string;
   };
@@ -134,7 +134,7 @@ export default function EmployerAccountEdit() {
         );
 
         const data = await response.json();
-
+         console.log("Company Details:", data);
         setFormData({
           company_name: data.company_name || "",
           company_type: data.company_type || "",
@@ -145,7 +145,7 @@ export default function EmployerAccountEdit() {
           contact_person_name: data.contact_person_name || "",
           designation: data.designation || "",
           phone: data.phone || "",
-          phoneCode: data.phone_code || "",
+          phone_code: data.phone_code || "",
           address: data.address || "",
           country: data.country || "",
           countryLabel: data.country_name || "",
@@ -618,7 +618,7 @@ const validateStep = () => {
                                 <p className="text-red-500 text-xs text-center break-words">{imageError}</p>
                               )}
                             </div>
-                
+
                                 </DialogContent>
                               </Dialog>
                             </div>
@@ -798,7 +798,7 @@ const validateStep = () => {
                           ...prev,
                           country: selected?.value || "",
                           countryLabel: selected?.label || "",
-                          phoneCode: selected?.phonecode || "",
+                          phone_code: selected?.phonecode || "",
                           state: "",
                           city: "",
                         }));
@@ -821,7 +821,7 @@ const validateStep = () => {
                       <input
                         className="w-20 h-10 text-center border rounded bg-gray-100"
                         value={
-                          formData.phoneCode ? `+${formData.phoneCode}` : ""
+                          formData.phone_code ? `+${formData.phone_code}` : ""
                         }
                         onChange={(e) => handleChange(e)}
                         readOnly

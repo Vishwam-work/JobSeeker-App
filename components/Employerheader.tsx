@@ -3,24 +3,57 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import {  Search,Settings,HelpCircle,LogOut, User,Activity,CreditCard } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import {  Search,Settings,HelpCircle,LogOut, User,Activity,CreditCard,ChevronDown } from "lucide-react";
 import Image from "next/image";
 import { jwtDecode } from "jwt-decode";
- 
 
 export default function EmployerHeader() {
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
- const [ContactpersonName, setContactpersonName] = useState("");
-    const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  interface DecodedToken {
-    user_id: number | string;
-    exp?: number;
-    iat?: number;
-  }
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [formData, setFormData] = useState<FormData>({
+        company_name: "",
+        company_type: "",
+        industry: "",
+        company_size: "",
+        website: "",
+        description: "",
+        contact_person_name: "",
+        designation: "",
+        phone_code: "",
+        phone: "",
+        address: "",
+        country: "",
+        countryLabel: "",
+        state: "",
+        city: "",
+        pincode: "",
+        company_logo: "",
+      });
+
+  type FormData = {
+    company_name: string;
+    company_type: string;
+    industry: string;
+    company_size: string;
+    website: string;
+    description: string;
+    contact_person_name: string;
+    designation: string;
+    phone: string;
+    address: string;
+    country: string;
+    countryLabel: string;
+    state: string;
+    city: string;
+    phone_code: string;
+    pincode: string;
+    company_logo: string;
+  };
   const router = useRouter();
-  const companyLogo = "/companies_logos/zenoti.png";
+
 
   useEffect(() => {
     const token = localStorage.getItem("auth_token");
@@ -32,39 +65,53 @@ export default function EmployerHeader() {
     setIsAuthenticated(false);
     router.push("/employer/home");
   };
-  useEffect(() => {
-      const run = async () => {
-        try {
-          const token = localStorage.getItem("auth_token");
-          if (!token) return;
-  
-          const decoded = jwtDecode<DecodedToken>(token);
-          // console.log("DECODED:", decoded);
-          // console.log("Employer ID:", decoded.user_id);
-  
-          const res = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/companies/${decoded.user_id}/`,
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            },
-          );
-  
-          if (!res.ok) {
-            console.error("FETCH FAILED:", res.status);
-            return;
-          }
 
-          const data = await res.json();
-          // console.log("Applications:", data);
-          setContactpersonName(data.contact_person_name);
-          // console.log(data.contact_person_name)
-        } catch (err) {
-          console.error("Error:", err);
-        }
-      };
+useEffect(() => {
+    const fetchCompanyDetails = async () => {
+      try {
+        const token = localStorage.getItem("auth_token");
+        if (!token) return;
 
-      run();
-    }, []);
+        const decoded: any = jwtDecode(token);
+        const userId = decoded?.user_id;
+
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/company/${userId}/`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        );
+
+        const data = await response.json();
+        //  console.log("Company Details:", data);
+          setFormData({
+          company_name: data.company_name || "",
+          company_type: data.company_type || "",
+          industry: data.industry || "",
+          company_size: data.company_size || "",
+          website: data.website || "",
+          description: data.description || "",
+          contact_person_name: data.contact_person_name || "",
+          designation: data.designation || "",
+          phone: data.phone || "",
+          phone_code: data.phone_code || "",
+          address: data.address || "",
+          country: data.country || "",
+          countryLabel: data.country_name || "",
+          state: data.state || "",
+          city: data.city || "",
+          pincode: data.pincode || "",
+          company_logo: data.company_logo ? process.env.NEXT_PUBLIC_URL + data.company_logo : "",
+        });
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCompanyDetails();
+  }, []);
 
   return (
     <div className="bg-white shadow-sm border-b">
@@ -85,7 +132,6 @@ export default function EmployerHeader() {
 
           {/* Right Side */}
           <div className="flex items-center gap-4">
-           
 
             {/* Notification */}
             {/* <div className="relative">
@@ -124,15 +170,29 @@ export default function EmployerHeader() {
                 className="rounded-full border-2 border-purple-600 cursor-pointer"
               />
             </div> */}
+
              {isAuthenticated && (
+                <div className="flex items-center gap-3 text-sm">
+
+                <h1 className="text-lg font-semibold">{formData.company_name }</h1>
+
                 <div className="relative">
                   <div
                     onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                     className="cursor-pointer"
                   >
-                    <User className="w-6 h-6 text-gray-700 hover:text-purple-600" />
+                    {formData.company_logo ? (
+                      <Image
+                        src={formData.company_logo}
+                        alt="Company Logo"
+                        width={32}
+                        height={25}
+                        className="w-8 h-8 rounded-full object-cover border"
+                      />
+                    ) : (
+                      <User className="w-6 h-6 text-gray-700 hover:text-purple-600" />
+                    )}
                   </div>
-
                 {isUserMenuOpen && (
                 <>
                   {/* Overlay */}
@@ -147,7 +207,7 @@ export default function EmployerHeader() {
                     {/* Header */}
                     <div className="p-6 border-b flex justify-between items-center">
                       <div>
-                        <h2 className="text-lg font-semibold">{ContactpersonName || "User"}</h2>
+                        <h2 className="text-lg font-semibold">{formData.company_name || "User"}</h2>
                         <Link
                           href="/employer/account"
                           className="text-blue-600 text-sm font-medium"
@@ -210,6 +270,7 @@ export default function EmployerHeader() {
                 </>
               )}
                 </div>
+                </div>
               )}
                {!isAuthenticated && (
                   <div className="flex items-center gap-3 text-sm">
@@ -228,6 +289,37 @@ export default function EmployerHeader() {
                     </Link>
                   </div>
                 )}
+                <div className="relative">
+                  <button
+                    className="flex items-center space-x-1 text-gray-700 hover:text-purple-600 cursor-pointer transition-colors"
+                    onClick={() =>
+                     setIsUserDropdownOpen(!isUserDropdownOpen)
+                    }
+                   onBlur={() =>
+                   setTimeout(() => setIsUserDropdownOpen(false), 200)
+                   }
+                  >
+                <span className="text-sm font-medium">For User</span>
+                <ChevronDown className="w-4 h-4" />
+                </button>
+                {isUserDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+               <Link
+                  href="/"
+                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-colors"
+                >
+                   User Login
+                </Link>
+                <Link
+                   href="/"
+                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-colors"
+                >
+                  Register as User
+                </Link>
+               </div>
+            )}
+
+                </div>
           </div>
         </div>
       </div>

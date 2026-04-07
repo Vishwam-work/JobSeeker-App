@@ -1,0 +1,1164 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  MapPin,
+  Briefcase,
+  Mail,
+  Phone,
+  Award,
+  ExternalLink,
+  CheckCircle,
+  XCircle,
+  Users,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+export default function Candidates() {
+  const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(
+    null,
+  );
+  const [candidates, setCandidates] = useState<Candidate[]>([]);
+  const [isCandidateModalOpen, setIsCandidateModalOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("All");
+  const [locationFilter, setLocationFilter] = useState("All");
+  const [salaryFilter, setSalaryFilter] = useState("All");
+  const [experienceFilter, setExperienceFilter] = useState("All");
+  const [jobTitleFilter, setJobTitleFilter] = useState("All");
+  const [openSchedule, setOpenSchedule] = useState(false);
+  const [interviewDate, setInterviewDate] = useState("");
+  const [interviewMode, setInterviewMode] = useState("Online");
+  const [interviewNotes, setInterviewNotes] = useState("");
+  const [hour, setHour] = useState("12");
+  const [minute, setMinute] = useState("00");
+  const [ampm, setAmPm] = useState("AM");
+  const interviewTime = `${hour}:${minute} ${ampm}`;
+  const [timeZone, setTimeZone] = useState("IST");
+  const [time, setTime] = useState("");
+  const [showResume, setShowResume] = useState(false);
+  const [loading, setLoading] = useState(true);
+  interface Candidate {
+    id: number;
+    name: string;
+    email: string;
+    phone: string;
+    location: string;
+    experience: string;
+    currentRole: string;
+    currentCompany: string;
+    skills: string[];
+    education: string;
+    appliedFor: string;
+    job_title?: string;
+    appliedDate: string;
+    status: string;
+    expectedSalary?: string;
+    resumeUrl?: string;
+    profileImage?: string | null;
+    summary?: string;
+    workExperience: {
+      company: string;
+      role: string;
+      duration: string;
+      description?: string;
+      category?: string;
+      start_date?: string;
+      end_date?: string;
+    }[];
+
+    educationDetails: {
+      education: string;
+      courd: string;
+      institution: string;
+      year: string;
+      start_year?: string;
+      end_year?: string;
+      grade?: string;
+      score_type?: string;
+    }[];
+
+    certifications: {
+      name: string;
+      issuer?: string;
+      year?: string;
+    }[];
+    phoneCode?: string;
+    qa?: CandidateQA[];
+  }
+  interface CandidateQA {
+    question_index?: number;
+    question_text?: string;
+    answer_text?: string;
+  }
+  interface ApplicationUpdateResponse {
+    id: number;
+    application_status: string;
+    detail?: string;
+  }
+  useEffect(() => {
+    const fetchApplications = async () => {
+      try {
+        setLoading(true);
+        const token = localStorage.getItem("auth_token");
+        if (!token) return;
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/employer/applications/`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        );
+        if (!res.ok) {
+          console.error("Failed to fetch employer applications");
+          return;
+        }
+        const data = await res.json();
+        console.log("Employer applications:", data);
+        // Map API to UI candidate shape
+        const mapped = (Array.isArray(data) ? data : []).map((app) => ({
+          id: app.id,
+          name: app.profile?.full_name || app.user_email || "Unknown",
+          email: app.profile?.email || app.user_email,
+          phone: app.profile?.phone || "Not provided",
+          phoneCode: app.profile?.phone_code || "",
+
+          location: [
+            app.profile?.city,
+            app.profile?.state,
+            app.profile?.country,
+          ]
+            .filter(Boolean)
+            .join(", "),
+          experience: app.profile?.experience || "N/A",
+          currentRole: "",
+          currentCompany: "",
+          skills: app.profile?.skills || [],
+          education: "",
+          appliedFor: app.job_title,
+          appliedDate: app.applied_at,
+          status:
+            app.application_status &&
+            app.application_status !== "application_status"
+              ? app.application_status
+              : "Under Review",
+          resumeUrl: app.profile?.resume
+            ? `${process.env.NEXT_PUBLIC_URL}${app.profile.resume}`
+            : "#",
+          profileImage: null,
+          summary: "",
+          workExperience: app.profile?.experiences || [],
+          educationDetails: app.profile?.educations || [],
+          certifications: app.profile?.certifications || [],
+          qa: app.answers || [],
+        }));
+        setCandidates(mapped);
+        console.log("MAPPED:", mapped);
+      } catch (e) {
+        console.error("Failed to fetch employer applications", e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchApplications();
+  }, []);
+  const filteredCategories = candidates.filter((c) => {
+    const nameMatch =
+      c.name?.toLowerCase().startsWith(searchTerm.toLowerCase()) ||
+      c.currentRole?.toLowerCase().startsWith(searchTerm.toLowerCase()) ||
+      c.appliedFor?.toLowerCase().startsWith(searchTerm.toLowerCase()) ||
+      c.skills?.some((skill) =>
+        skill.toLowerCase().includes(searchTerm.toLowerCase()),
+      );
+
+    const statusMatch =
+      statusFilter === "All" ||
+      c.status?.toLowerCase() === statusFilter.toLowerCase();
+
+    const locationMatch =
+      locationFilter === "All" ||
+      c.location?.toLowerCase() === locationFilter.toLowerCase();
+
+    const jobTitleMatch =
+      jobTitleFilter === "All" ||
+      c.appliedFor?.toLowerCase() === jobTitleFilter.toLowerCase();
+
+    const salary = parseInt(c.expectedSalary ?? "0", 10);
+    const salaryMatch =
+      salaryFilter === "All" ||
+      (salaryFilter === "Below 20000" && salary < 20000) ||
+      (salaryFilter === "20000-50000" && salary >= 20000 && salary <= 50000) ||
+      (salaryFilter === "Above 50000" && salary > 50000);
+
+    const expMatch =
+      experienceFilter === "All" ||
+      (experienceFilter === "Fresher" &&
+        (c.experience?.toLowerCase().includes("fresher") ||
+          c.experience?.includes("0"))) ||
+      (experienceFilter === "1-3 Years" &&
+        (c.experience?.includes("1") ||
+          c.experience?.includes("2") ||
+          c.experience?.includes("3"))) ||
+      (experienceFilter === "3-5 Years" &&
+        (c.experience?.includes("3") ||
+          c.experience?.includes("4") ||
+          c.experience?.includes("5"))) ||
+      (experienceFilter === "5+ Years" &&
+        (c.experience?.includes("5") ||
+          c.experience?.includes("6") ||
+          c.experience?.includes("7")));
+
+    return (
+      nameMatch &&
+      statusMatch &&
+      locationMatch &&
+      salaryMatch &&
+      expMatch &&
+      jobTitleMatch
+    );
+  });
+  const getStatusColor = (status?: string) => {
+    const normalized = status?.toLowerCase();
+
+    switch (normalized) {
+      case "active":
+        return "bg-green-100 text-green-800";
+      case "closed":
+        return "bg-red-100 text-red-800";
+      case "under review":
+        return "bg-yellow-100 text-yellow-800";
+      case "shortlisted":
+        return "bg-blue-100 text-blue-800";
+      case "rejected":
+        return "bg-red-100 text-red-800";
+        case "interview scheduled":
+        return "bg-blue-100 text-blue-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+  const formatStatus = (status?: string) => {
+    if (!status) return "";
+    return status
+      .toLowerCase()
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+  };
+  // SHORTLIST
+  const handleShortlistCandidate = async (candidate: any) => {
+    try {
+      const token = localStorage.getItem("auth_token");
+      if (!token) {
+        toast.error("Token missing", {
+          description: "Please log in again to continue.",
+        });
+        return;
+      }
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/employer/applications/${candidate.id}/update/`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            application_status: "shortlisted",
+          }),
+        },
+      );
+
+      const updated = await response.json();
+      // console.log("Updated Response:", updated);
+
+      if (!response.ok) {
+        toast.error(updated.error || "Update failed", {
+          description: "Please check and try again.",
+        });
+        return;
+      }
+
+      setCandidates((prev) =>
+        prev.map((c) =>
+          c.id === updated.id
+            ? { ...c, status: updated.application_status }
+            : c,
+        ),
+      );
+
+      setSelectedCandidate((prev) =>
+        prev && prev.id === updated.id
+          ? { ...prev, status: updated.application_status }
+          : prev,
+      );
+      //console.log("Now>>>>>>>", selectedCandidate);
+      toast.success("Candidate Shortlisted!");
+    } catch (err) {
+      console.log("Shortlist error:", err);
+      toast.error("Network error. Please try again.");
+    }
+  };
+
+  /* REJECT */
+  const handleRejectCandidate = async (candidate: Pick<Candidate, "id">) => {
+    try {
+      // console.log("Rejecting candidate: ", candidate);
+
+      if (!candidate?.id) {
+        toast.error("Candidate ID missing", {
+          description: "Please select a candidate and try again.",
+        });
+        return;
+      }
+
+      const token = localStorage.getItem("auth_token");
+      if (!token) {
+        toast.error("Token missing", {
+          description: "Please log in again to continue.",
+        });
+        return;
+      }
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/employer/applications/${candidate.id}/update/`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            application_status: "rejected",
+          }),
+        },
+      );
+
+      const text = await response.text();
+      console.log("Raw Response → ", text);
+
+      let data: ApplicationUpdateResponse | null = null;
+      try {
+        data = JSON.parse(text) as ApplicationUpdateResponse;
+      } catch {
+        console.log("HTML Error Response Received");
+      }
+
+      if (!response.ok) {
+        toast.error(data?.detail || "Update failed", {
+          description: "Please check and try again.",
+        });
+        return;
+      }
+
+      if (!data) {
+        toast.error("Invalid server response", {
+          description: "Please try again later.",
+        });
+        return;
+      }
+      const { id, application_status } = data;
+      setCandidates((prev) =>
+        prev.map((c) =>
+          c.id === id ? { ...c, status: application_status } : c,
+        ),
+      );
+
+      setSelectedCandidate((prev) =>
+        prev && prev.id === id ? { ...prev, status: application_status } : prev,
+      );
+
+      toast.error("Candidate Rejected!");
+    } catch (err) {
+      console.log("Reject error: ", err);
+      toast.error("Network error. Please try again.");
+    }
+  };
+
+  // INTERVIEW SCHEDULE
+  const handleScheduleInterview = (candidate: any) => {
+    setSelectedCandidate(candidate);
+    setOpenSchedule(true);
+  };
+
+  const handleScheduleSubmit = async () => {
+    if (!selectedCandidate) {
+      toast.error("No candidate selected", {
+        description: "Please select a candidate and try again.",
+      });
+      return;
+    }
+    if (!interviewDate) {
+      toast.warning("Please select interview date");
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("auth_token");
+      if (!token)
+        return toast.error("Token missing", {
+          description: "Please log in again to continue.",
+        });
+
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/employer/applications/${selectedCandidate.id}/schedule-interview/`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            interview_date: interviewDate,
+            interview_time: interviewTime,
+            interview_mode: interviewMode,
+            notes: interviewNotes,
+          }),
+        },
+      );
+      // meet_link: meetLink,
+      if (!res.ok) {
+        const text = await res.text();
+        console.error("Backend error:", text);
+        return toast.error("Failed to schedule interview", {
+          description: "Please try again or check your network connection.",
+        });
+      }
+
+      const data = await res.json();
+
+      setCandidates((prev) =>
+        prev.map((c) =>
+          c.id === data.id ? { ...c, status: data.application_status } : c,
+        ),
+      );
+
+      setSelectedCandidate((prev) =>
+        prev && prev.id === data.id
+          ? { ...prev, status: data.application_status }
+          : prev,
+      );
+
+      toast.success("Interview Scheduled!");
+      setOpenSchedule(false);
+    } catch (err) {
+      console.error(err);
+      toast.error("Network error. Please try again.");
+    }
+  };
+  return (
+    <div className="grid lg:grid-cols-3 gap-6">
+      {/* Candidates List */}
+      <div className="lg:col-span-1">
+        <Card className="h-full">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <CardTitle className="text-lg">Applications</CardTitle>
+
+                <Badge variant="secondary">{filteredCategories.length}</Badge>
+              </div>
+
+              <button
+                onClick={() => {
+                  setStatusFilter("All");
+                  setLocationFilter("All");
+                  setSalaryFilter("All");
+                  setExperienceFilter("All");
+                  setJobTitleFilter("All");
+                }}
+                className="text-sm px-3 py-1 border rounded-md hover:bg-gray-100"
+              >
+                Clear Filters
+              </button>
+            </div>
+
+            {/*  Search Bar  */}
+            <div className="mb-4">
+              <div className="relative">
+                <Input
+                  type="text"
+                  placeholder="Search by name, role or applied job..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full h-11 pl-10"
+                />
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 21l-4.35-4.35M11 18a7 7 0 100-14 7 7 0 000 14z"
+                  />
+                </svg>
+              </div>
+            </div>
+
+            {/*  Filters */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+              {/*  Status Filter */}
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full h-10">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="All">All Status</SelectItem>
+                  <SelectItem value="Under Review">Under Review</SelectItem>
+                  <SelectItem value="Shortlisted">Shortlisted</SelectItem>
+                  <SelectItem value="Rejected">Rejected</SelectItem>
+                </SelectContent>
+              </Select>
+
+              {/* Location Filter */}
+              <Select value={locationFilter} onValueChange={setLocationFilter}>
+                <SelectTrigger className="w-full h-10">
+                  <SelectValue placeholder="Location" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="All">All Locations</SelectItem>
+                  {Array.from(new Set(candidates.map((c) => c.location)))
+                    .filter(Boolean)
+                    .map((loc, i) => (
+                      <SelectItem key={i} value={loc}>
+                        {loc}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+              {/* Experience Filter */}
+              <Select
+                value={experienceFilter}
+                onValueChange={setExperienceFilter}
+              >
+                <SelectTrigger className="w-full h-10">
+                  <SelectValue placeholder="Experience" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="All">All Experience</SelectItem>
+                  <SelectItem value="Fresher">Fresher</SelectItem>
+                  <SelectItem value="1-3 Years">1–3 Years</SelectItem>
+                  <SelectItem value="3-5 Years">3–5 Years</SelectItem>
+                  <SelectItem value="5+ Years">5+ Years</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={jobTitleFilter} onValueChange={setJobTitleFilter}>
+                <SelectTrigger className="w-full h-10">
+                  <SelectValue placeholder="Job Title" />
+                </SelectTrigger>
+
+                <SelectContent>
+                  <SelectItem value="All">All Job Titles</SelectItem>
+
+                  {Array.from(new Set(candidates.map((c) => c.appliedFor)))
+                    .filter(Boolean)
+                    .map((title, i) => (
+                      <SelectItem key={i} value={title}>
+                        {title}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            {loading ? (
+              [...Array(2)].map((_, i) => (
+                <div key={i} className="border rounded-lg p-6 animate-pulse">
+                  <div className="h-4 bg-gray-200 rounded w-1/3 mb-3"></div>
+                  <div className="h-3 bg-gray-200 rounded w-1/4 mb-2"></div>
+                  <div className="h-3 bg-gray-200 rounded w-full mb-2"></div>
+                </div>
+              ))
+            ) : filteredCategories.length > 0 ? (
+              filteredCategories.map((candidate) => (
+                <div
+                  key={candidate.id}
+                  onClick={() => {
+                    setSelectedCandidate(candidate);
+                    setIsCandidateModalOpen(true);
+                  }}
+                  className={`p-4 cursor-pointer hover:bg-gray-50 border-l-4 transition-colors ${
+                    selectedCandidate?.id === candidate.id
+                      ? "border-l-blue-500 bg-blue-50"
+                      : "border-l-transparent"
+                  }`}
+                >
+                  <div className="flex items-start space-x-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-purple-100 to-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                      <Users className="w-5 h-5 text-purple-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-medium text-gray-900 truncate">
+                        {candidate.name}
+                      </h4>
+                      <p className="text-sm text-gray-600 truncate">
+                        {candidate.currentRole}
+                      </p>
+                      <p className="text-sm text-gray-500 truncate">
+                        {candidate.appliedFor}
+                      </p>
+                      <div className="flex items-center justify-between mt-2">
+                        <Badge
+                          className={`text-xs ${getStatusColor(
+                            candidate.status,
+                          )}`}
+                        >
+                          {formatStatus(candidate.status)}
+                        </Badge>
+                        <span className="text-xs text-gray-500">
+                          {new Date(candidate.appliedDate).toLocaleDateString()}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-gray-500 text-sm">No candidates found</p>
+            )}
+            <div className="flex flex-wrap gap-3 mb-4 items-center"></div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Candidate Profile */}
+      <div className="lg:col-span-2">
+        {selectedCandidate ? (
+          <Card className="h-full">
+            <CardHeader>
+              <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                <div className="flex items-start space-x-4">
+                  <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-blue-100 rounded-full flex items-center justify-center">
+                    <Users className="w-8 h-8 text-purple-600" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900">
+                      {selectedCandidate.name}
+                    </h2>
+                    <p className="text-purple-600 font-medium">
+                      {selectedCandidate.currentRole}
+                    </p>
+                    <p className="text-gray-600">
+                      {selectedCandidate.currentCompany}
+                    </p>
+                    <div className="flex items-center space-x-4 mt-2 text-sm text-gray-600">
+                      <div className="flex items-center">
+                        <MapPin className="w-4 h-4 mr-1" />
+                        <span>{selectedCandidate.location}</span>
+                      </div>
+                      <div className="flex items-center">
+                        <Briefcase className="w-4 h-4 mr-1" />
+                        <span>{selectedCandidate.experience}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                  <Button variant="outline" size="sm">
+                    {selectedCandidate.resumeUrl ? (
+                      <a
+                        href={selectedCandidate.resumeUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-purple-600 hover:text-purple-800 underline inline-flex items-center gap-1"
+                      >
+                        View Resume
+                      </a>
+                    ) : (
+                      <span className="text-gray-400 italic">
+                        No resume uploaded
+                      </span>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Contact Information */}
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-3">
+                  Contact Information
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  <div className="flex items-center">
+                    <Mail className="w-4 h-4 mr-2 text-gray-400" />
+                    <span>{selectedCandidate.email}</span>
+                  </div>
+                   <div className="flex items-center gap-2 text-sm text-gray-700">
+                      <Phone className="w-4 h-4 text-gray-400" />
+                      <span className="font-medium">
+                        +{selectedCandidate.phoneCode} {selectedCandidate.phone}
+                      </span>
+                    </div>
+                </div>
+              </div>
+
+              {/* Application Details */}
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-3">
+                  Application Details
+                </h3>
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-gray-600">Applied for:</span>
+                      <p className="font-medium">
+                        {selectedCandidate.appliedFor}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Application Date:</span>
+                      <p className="font-medium">
+                        {new Date(
+                          selectedCandidate.appliedDate,
+                        ).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Status:</span>
+                      <Badge
+                        className={`ml-2 ${getStatusColor(
+                          selectedCandidate.status,
+                        )}`}
+                      >
+                        {formatStatus(selectedCandidate.status)}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Summary */}
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-3">
+                  Professional Summary
+                </h3>
+                <p className="text-gray-700 leading-relaxed">
+                  {selectedCandidate.summary}
+                </p>
+              </div>
+
+              {/* Skills */}
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-3">Skills</h3>
+                <div className="flex flex-wrap gap-2">
+                  {selectedCandidate.skills.map((skill, index) => (
+                    <Badge
+                      key={index}
+                      variant="secondary"
+                      className="bg-purple-100 text-purple-800"
+                    >
+                      {skill}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+
+              {/* Work Experience */}
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-3">
+                  Work Experience
+                </h3>
+                <div className="space-y-4">
+                  {selectedCandidate.workExperience.map((exp, index) => (
+                    <div
+                      key={index}
+                      className="border-l-2 border-purple-200 pl-4"
+                    >
+                      <h4 className="font-medium text-gray-900">{exp.role}</h4>
+                      <p className="text-purple-600 font-medium">
+                        {exp.category}
+                      </p>
+                      <p className="text-purple-600 font-medium">
+                        {exp.company}
+                      </p>
+                      <p className="text-sm text-gray-600 mb-2">
+                        Year: {exp.start_date} to {exp.end_date}
+                      </p>
+                      <p className="text-gray-700 text-sm">{exp.description}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Education */}
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-3">Education</h3>
+                <div className="space-y-4">
+                  {selectedCandidate.educationDetails.map((edu, index) => (
+                    <div
+                      key={index}
+                      className="border-l-2 border-green-200 pl-4"
+                    >
+                      <h4 className="font-medium text-gray-900">
+                        {edu.education}
+                      </h4>
+                      <p className="text-green-600 font-medium">{edu.courd}</p>
+                      <p className="text-gray-600">{edu.institution}</p>
+                      <div className="flex items-center space-x-4 text-sm text-gray-600 mt-1">
+                        <span>
+                          Year: {edu.start_year} - {edu.end_year}
+                        </span>
+                        <span>
+                          Grade: {edu.grade}-{edu.score_type}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              {/* Certifications */}
+              {Array.isArray(selectedCandidate.qa) &&
+                selectedCandidate.qa.length > 0 && (
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-900 mb-2">
+                      Application Q&A
+                    </h4>
+                    <div className="space-y-3">
+                      {selectedCandidate.qa.map((item, index) => (
+                        <div key={index} className="bg-gray-50 rounded p-3">
+                          <p className="text-sm font-medium text-gray-800">
+                            Q{(item.question_index ?? index) + 1}.{" "}
+                            {item.question_text || "Question"}
+                          </p>
+                          <p className="text-sm text-gray-700 mt-1">
+                            {item.answer_text || "-"}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+              {selectedCandidate.certifications.length > 0 && (
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-3">
+                    Certifications
+                  </h3>
+                  <div className="space-y-3">
+                    {selectedCandidate.certifications.map((cert, index) => (
+                      <div
+                        key={index}
+                        className="flex items-start space-x-3 p-3 bg-yellow-50 rounded-lg"
+                      >
+                        <Award className="w-5 h-5 text-yellow-600 mt-0.5" />
+                        <div>
+                          <h4 className="font-medium text-gray-900">
+                            {cert.name}
+                          </h4>
+                          <p className="text-yellow-600 font-medium">
+                            {cert.issuer}
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            Issued: {cert.year}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowResume((prev) => !prev)}
+              >
+                View Resume
+              </Button>
+
+              {showResume && selectedCandidate?.resumeUrl && (
+                <div className="mt-4 h-[500px] border rounded">
+                  <iframe
+                    src={`https://docs.google.com/gview?url=${encodeURIComponent(
+                      selectedCandidate.resumeUrl,
+                    )}&embedded=true&timestamp=${Date.now()}`}
+                    className="w-full h-full"
+                    title="Resume Preview"
+                  />
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t">
+                <div className="flex flex-col sm:flex-row gap-3 mt-4">
+                  {/* UNDER REVIEW */}
+                  {selectedCandidate?.status === "Under Review" && (
+                    <>
+                      <Button
+                        className="bg-green-600 hover:bg-green-700 flex-1"
+                        onClick={() =>
+                          handleShortlistCandidate(selectedCandidate)
+                        }
+                      >
+                        <CheckCircle className="w-4 h-4 mr-2" />
+                        Shortlist Candidate
+                      </Button>
+
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className="border-red-600 text-red-600 hover:bg-red-50 flex-1"
+                          >
+                            <XCircle className="w-4 h-4 mr-2" />
+                            Reject Application
+                          </Button>
+                        </AlertDialogTrigger>
+
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>
+                              Reject this application?
+                            </AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This action cannot be undone. The candidate will
+                              be marked as rejected.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              className="bg-red-600 hover:bg-red-700"
+                              onClick={() =>
+                                handleRejectCandidate(selectedCandidate)
+                              }
+                            >
+                              Yes, Reject
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </>
+                  )}
+
+                  {/* SHORTLISTED */}
+                  {selectedCandidate?.status === "shortlisted" && (
+                    <Button
+                      variant="outline"
+                      className="flex-1 border-blue-600 text-blue-600"
+                      onClick={() => handleScheduleInterview(selectedCandidate)}
+                    >
+                      <ExternalLink className="w-4 h-4 mr-2" />
+                      Schedule Interview
+                    </Button>
+                  )}
+
+                  {/* REJECTED */}
+                  {selectedCandidate?.status === "rejected" && (
+                    <Button
+                      disabled
+                      variant="outline"
+                      className="border-red-600 text-red-600 flex-1 opacity-50 cursor-not-allowed"
+                    >
+                      <XCircle className="w-4 h-4 mr-2" />
+                      Application Rejected
+                    </Button>
+                  )}
+                </div>
+
+                {openSchedule && (
+                  <Dialog
+                    open={openSchedule}
+                    onOpenChange={() => setOpenSchedule(false)}
+                  >
+                    <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto rounded-xl">
+                      <DialogHeader>
+                        <DialogTitle className="text-lg font-semibold">
+                          Schedule Interview
+                        </DialogTitle>
+                      </DialogHeader>
+
+                      <div className="space-y-4 mt-3">
+                        {/* Candidate Name */}
+                        <div className="bg-gray-50 p-3 rounded-lg border">
+                          <p className="text-xs text-gray-500">Candidate</p>
+                          <p className="font-semibold text-gray-800">
+                            {selectedCandidate?.name}
+                          </p>
+                        </div>
+
+                        {/* Candidate Email */}
+                        <div className="bg-gray-50 p-3 rounded-lg border">
+                          <p className="text-xs text-gray-500">Email</p>
+                          <p className="font-semibold text-gray-800">
+                            {selectedCandidate?.email}
+                          </p>
+                        </div>
+
+                        {/* Interview Date */}
+                        <div>
+                          <label className="text-sm font-medium">
+                            Interview Date
+                          </label>
+                          <input
+                            required
+                            type="date"
+                            className="w-full border rounded-lg p-2 mt-1 focus:ring-2 focus:ring-blue-500"
+                            value={interviewDate}
+                            onChange={(e) => setInterviewDate(e.target.value)}
+                          />
+                        </div>
+
+                        {/* Interview Time */}
+                        <div className="flex space-x-2 items-center">
+                          <label className="text-sm font-medium">
+                            Interview Time
+                          </label>
+
+                          <input
+                            type="text"
+                            placeholder="hh:mm AM"
+                            className="w-32 border rounded-lg p-2 text-center"
+                            value={time}
+                            onChange={(e) => {
+                              let value = e.target.value.toUpperCase();
+
+                              value = value.replace(/[^0-9:APM ]/g, "");
+
+                              if (value.length === 2 && !value.includes(":")) {
+                                value = value + ":";
+                              }
+
+                              if (value.length > 8) return;
+
+                              setTime(value);
+                            }}
+                            onBlur={() => {
+                              const regex =
+                                /^(0?[1-9]|1[0-2]):[0-5][0-9]\s?(AM|PM)$/;
+                              if (!regex.test(time)) {
+                                setTime("");
+                              }
+                            }}
+                          />
+
+                          <select
+                            className="border rounded-lg p-2"
+                            value={ampm}
+                            onChange={(e) => setAmPm(e.target.value)}
+                          >
+                            <option>AM</option>
+                            <option>PM</option>
+                          </select>
+
+                          {/* ✅ Time Zone Dropdown */}
+                          <select
+                            className="border rounded-lg p-2"
+                            value={timeZone}
+                            onChange={(e) => setTimeZone(e.target.value)}
+                          >
+                            <option value="IST">IST</option>
+                            <option value="UTC">UTC</option>
+                            <option value="EST">EST</option>
+                            <option value="PST">PST</option>
+                            <option value="CST">CST</option>
+                          </select>
+                        </div>
+
+                        {/* Interview Mode */}
+                        <div>
+                          <label className="text-sm font-medium">
+                            Interview Mode
+                          </label>
+                          <select
+                            className="w-full border rounded-lg p-2 mt-1 focus:ring-2 focus:ring-blue-500"
+                            value={interviewMode}
+                            onChange={(e) => setInterviewMode(e.target.value)}
+                          >
+                            <option>Online</option>
+                            <option>Office</option>
+                            <option>Phone Call</option>
+                          </select>
+                        </div>
+
+                        {/* Notes */}
+                        <div>
+                          <label className="text-sm text-gray-700">Notes</label>
+                          <textarea
+                            className="w-full border rounded-md p-2 mt-1 text-sm focus:ring-2 focus:ring-blue-500"
+                            rows={3}
+                            placeholder="Enter instructions or notes..."
+                            value={interviewNotes}
+                            onChange={(e) => setInterviewNotes(e.target.value)}
+                          />
+                        </div>
+                      </div>
+
+                      <DialogFooter className="mt-3">
+                        <Button
+                          variant="outline"
+                          onClick={() => setOpenSchedule(false)}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          type="button"
+                          className="bg-blue-600 hover:bg-blue-700"
+                          onClick={handleScheduleSubmit}
+                        >
+                          Schedule
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card className="h-full flex items-center justify-center">
+            <CardContent className="text-center">
+              <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                Select a Candidate
+              </h3>
+              <p className="text-gray-600">
+                Choose a candidate from the list to view their detailed profile
+              </p>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    </div>
+  );
+}
