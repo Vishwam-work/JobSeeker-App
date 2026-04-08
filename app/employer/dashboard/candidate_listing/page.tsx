@@ -4,6 +4,11 @@ import { useEffect, useState } from "react";
 import { Phone, FileText, Mail, CheckSquare, Briefcase, DollarSign, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Highlighter from "react-highlight-words";
+import Link from "next/link";
+import dayjs from "dayjs";
+import customParseFormat from "dayjs/plugin/customParseFormat";
+
+dayjs.extend(customParseFormat);
 interface Candidate {
   id: number;
   full_name: string;
@@ -33,17 +38,24 @@ interface Candidate {
   }[];
 
   educations?: {
-    degree?: string;
-    field?: string;
+    education?: string;
+    course?: string;
     institution?: string;
-    year?: string | number;
+    education_detail?: { name: string };
+    course_detail?: { name: string };
+    start_year?: string | number;
+    end_year?: string | number;
     score_type?: string;
     percentage?: string | number;
+   
   }[];
 
   experiences?: {
     designation?: string;
     company?: string;
+    role?: string;
+    category?: string;
+    description?: string;
     start_date?: string | number;
     end_date?: string | number;
   }[];
@@ -128,12 +140,23 @@ export default function CandidatesPage() {
     )
       .then((res) => res.json())
       .then((data) => {
-        // console.log("Candidate data:", data);
+        console.log("Candidate data:", data);
         setCandidates(Array.isArray(data) ? data : []);
         setLoading(false);
       });
   }, []);
+const formatDate = (date?: any) => {
+  if (!date) return "";
 
+  const parsed = dayjs(date);
+
+  // ❗ future date check
+  if (!parsed.isValid() || parsed.year() > dayjs().year()) {
+    return "Invalid Date";
+  }
+
+  return parsed.format("DD/MM/YYYY");
+};
   const filteredCandidates = candidates.filter((c) => {
     // 1. Global Search (Search Bar)
     const q = search.trim().toLowerCase();
@@ -163,10 +186,13 @@ export default function CandidatesPage() {
         ) ?? false) ||
         (c.educations?.some(
           (e) =>
-            matches(e.degree) ||
-            matches(e.field) ||
+            matches(e.education) ||
+            matches(e.course) ||
             matches(e.institution) ||
-            matches(e.year)
+            matches(e.start_year) || 
+            matches(e.end_year) ||
+            matches(e.score_type) ||
+            matches(e.percentage) 
         ) ?? false) ||
         (c.experiences?.some(
           (ex) => matches(ex.designation) || matches(ex.company)
@@ -1244,7 +1270,9 @@ export default function CandidatesPage() {
 
         {!selectedCandidate ? (
           <main className="col-span-12 md:col-span-9 space-y-4">
-            {filteredCandidates.map((c) => (
+
+            {/* FIRST 1 CANDIDATE */}
+            {filteredCandidates.slice(0, 1).map((c) => (
               <div
                 key={c.id}
                 className="bg-white rounded-xl shadow-sm p-4 flex flex-col md:flex-row gap-4"
@@ -1254,57 +1282,79 @@ export default function CandidatesPage() {
 
                 {/* MAIN INFO */}
                 <div className="flex-1 flex flex-col gap-2">
-                  <h3
-                    onClick={() => {
-                      setSelectedCandidate(c);
 
-                      setViewedCandidateIds((prev) =>
-                        prev.includes(c.id) ? prev : [...prev, c.id]
-                      );
-                    }}
-                    className="font-semibold text-gray-900 cursor-pointer hover:text-blue-600 flex items-center gap-2"
-                  >
-                    {viewedCandidateIds.includes(c.id) && (
-                      <CheckSquare size={16} className="text-blue-600" />
-                    )}
-                    <h3 className="font-semibold text-gray-900">
-                      <Highlight text={c.full_name} />
-                    </h3>
-                  </h3>
+                {/* NAME */}
+                <h3
+                  onClick={() => {
+                    setSelectedCandidate(c);
 
-                  {/* Experience, salary, location */}
-                  <div className="text-xs md:text-sm text-gray-600 flex flex-wrap gap-2 md:gap-3">
-                    <span>
-                      <Highlight text={c.experience} />
-                    </span>
-                    <span>
-                      <Highlight text={formatSalary(c.current_salary)} />
-                    </span>
+                    setViewedCandidateIds((prev) =>
+                      prev.includes(c.id) ? prev : [...prev, c.id]
+                    );
+                  }}
+                  className="font-semibold text-gray-900 cursor-pointer hover:text-blue-600 flex items-center gap-2"
+                >
+                  {viewedCandidateIds.includes(c.id) && (
+                    <CheckSquare size={16} className="text-blue-600" />
+                  )}
 
-                    {c.expected_salary && (
-                      <span>
-                        Expected:
-                        <Highlight text={formatSalary(c.expected_salary)} />
-                      </span>
-                    )}
-                    <span>
-                      <Highlight text={c.city?.name} />,{" "}
-                      <Highlight text={c.state?.name} />
-                    </span>
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">Unlock Full Access</h3>
-                  <p className="text-gray-500 mb-6 text-center max-w-sm">
-                    Subscribe to our premium plan to view unlimited candidate profiles and access contact details.
+                  <span className="font-semibold">
+                    <Highlight text={c.full_name} />
+                  </span>
+                </h3>
+
+                {/* ROLE + COMPANY */}
+                {(c.current_role || c.current_company) && (
+                  <p className="text-sm text-gray-700">
+                    <Highlight text={c.current_role || ""} />
+                    {c.current_role && c.current_company && " at "}
+                    <Highlight text={c.current_company || ""} />
                   </p>
-                  <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-2 rounded-full shadow-md transition-transform hover:scale-105">
-                    View Subscription Plans
-                  </Button>
+                )}
+
+                {/* EXPERIENCE + SALARY + LOCATION */}
+                <div className="text-xs md:text-sm text-gray-600 flex flex-wrap gap-2 md:gap-3">
+                  <span>
+                    <Highlight text={c.experience} />
+                  </span>
+
+                  <span>
+                    <Highlight text={formatSalary(c.current_salary)} />
+                  </span>
+
+                  {c.expected_salary && (
+                    <span>
+                      Expected:{" "}
+                      <Highlight text={formatSalary(c.expected_salary)} />
+                    </span>
+                  )}
+
+                  {c.notice_period && (
+                    <span>Notice: <Highlight text={c.notice_period} /></span>
+                  )}
+
+                  <span>
+                    <Highlight text={c.city?.name || ""} />,{" "}
+                    <Highlight text={c.state?.name || ""} />
+                  </span>
                 </div>
 
-                {/* Blurred Content (Render next 3 as background) */}
-                {/* <div className="space-y-4 blur-sm opacity-40 select-none pointer-events-none grayscale">
-                  {filteredCandidates.slice(3, 6).map((c) => renderCandidateCard(c))}
-                </div> */}
+                {/* SKILLS */}
+                {c.skills && c.skills.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-1">
+                    {c.skills.slice(0, 3).map((skill, i) => (
+                      <span
+                        key={i}
+                        className="text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded-md"
+                      >
+                        {skill.name}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+              </div>
+
 
                 {/* RIGHT ACTION PANEL */}
                 <div className="flex md:flex-col items-center md:items-center justify-between md:justify-center gap-2 md:gap-3 md:w-52 w-full border-t md:border-t-0 md:border-l pt-3 md:pt-0 md:pl-4">
@@ -1336,8 +1386,119 @@ export default function CandidatesPage() {
                   )}
                 </div>
               </div>
-            ))}
-          </main>
+              ))}
+
+          {/* BLURRED REST */}
+          <div className="relative">
+
+            <div className="space-y-4 blur-sm opacity-40 select-none pointer-events-none grayscale">
+              {filteredCandidates.slice(1, 3).map((c) => (
+                <div
+                  key={c.id}
+                  className="bg-white rounded-xl shadow-sm p-4 flex flex-col md:flex-row gap-4"
+                >
+                  {/* Checkbox */}
+                        <input type="checkbox" className="mt-2 md:mt-0" />
+
+                        {/* MAIN INFO */}
+                        <div className="flex-1 flex flex-col gap-2">
+                          <h3
+                            onClick={() => {
+                              setSelectedCandidate(c);
+
+                              setViewedCandidateIds((prev) =>
+                                prev.includes(c.id) ? prev : [...prev, c.id]
+                              );
+                            }}
+                            className="font-semibold text-gray-900 cursor-pointer hover:text-blue-600 flex items-center gap-2"
+                          >
+                            {viewedCandidateIds.includes(c.id) && (
+                              <CheckSquare size={16} className="text-blue-600" />
+                            )}
+                            <h3 className="font-semibold text-gray-900">
+                              <Highlight text={c.full_name} />
+                            </h3>
+                          </h3>
+
+                          {/* Experience, salary, location */}
+                          <div className="text-xs md:text-sm text-gray-600 flex flex-wrap gap-2 md:gap-3">
+                            <span>
+                              <Highlight text={c.experience} />
+                            </span>
+                            <span>
+                              <Highlight text={formatSalary(c.current_salary)} />
+                            </span>
+
+                            {c.expected_salary && (
+                              <span>
+                                Expected:
+                                <Highlight text={formatSalary(c.expected_salary)} />
+                              </span>
+                            )}
+                            <span>
+                              <Highlight text={c.city?.name} />,{" "}
+                              <Highlight text={c.state?.name} />
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* RIGHT ACTION PANEL */}
+                        <div className="flex md:flex-col items-center md:items-center justify-between md:justify-center gap-2 md:gap-3 md:w-52 w-full border-t md:border-t-0 md:border-l pt-3 md:pt-0 md:pl-4">
+                          <img
+                            src={
+                              c.profile_image
+                                ? `${process.env.NEXT_PUBLIC_URL}${c.profile_image}`
+                                : `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                                  c.full_name
+                                )}`
+                            }
+                            alt={c.full_name}
+                            className="w-14 h-14 md:w-16 md:h-16 rounded-full object-cover border"
+                          />
+
+                          <p className="text-xs text-gray-500 flex items-center gap-1">
+                            <Mail size={14} /> <Highlight text={c.email} />
+                          </p>
+
+                          {c.resume && (
+                            <a
+                              href={`${process.env.NEXT_PUBLIC_URL}${c.resume}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-gray-600 flex items-center gap-1 hover:underline"
+                            >
+                              <FileText size={14} />  View CV
+                            </a>
+                          )}
+                        </div>
+                </div>
+              ))}
+            </div>
+
+            {/* 🔐 UNLOCK OVERLAY */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="bg-white rounded-xl shadow-xl p-6 text-center w-[350px]">
+
+                <h3 className="text-xl font-bold text-gray-900 mb-2">
+                  Unlock Full Access
+                </h3>
+
+                <p className="text-gray-500 mb-4">
+                  Subscribe to our premium plan to view unlimited candidate profiles
+                  and access contact details.
+                </p>
+                <Link href="/pricing">
+                  <Button className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-2 rounded-full">
+                    View Subscription Plans
+                  </Button>
+                </Link>
+
+              </div>
+            </div>
+
+          </div>
+
+        </main>
         ) : (
           /*DETAIL VIEW  */
           <main className="col-span-12 md:col-span-9">
@@ -1450,19 +1611,22 @@ function CandidateDetail({
 
             {candidate.educations.map((e, i) => (
               <div key={i} className="text-sm mb-3">
-                <p className="font-medium">
-                  <HighlightText text={e.degree} /> {e.field && `(${e.field})`}
-                </p>
-
-                <p className="text-gray-600">
-                  <HighlightText text={e.institution} />
-                </p>
-
-                <p className="text-gray-500 text-xs">
-                  <HighlightText text={e.score_type?.toUpperCase()} />:{" "}
-                  <HighlightText text={String(e.percentage)} /> • Year:{" "}
-                  <HighlightText text={String(e.year)} />
-                </p>
+                <h4 className="font-medium text-gray-900">
+                        {e.education_detail?.name || ""}
+                      </h4>
+                      <p className="text-green-600 font-medium">{e.course_detail?.name || ""}</p>
+                      <p className="text-gray-600">{e.institution}</p>
+                      <div className="flex items-center space-x-4 text-sm text-gray-600 mt-1">
+                        <span>
+                          Year: {e.start_year} - {e.end_year}
+                        </span>
+                        <span>
+                          Score
+                          : {e.percentage}({e.score_type
+                            ? e.score_type.charAt(0).toUpperCase() + e.score_type.slice(1)
+                            : ""})
+                        </span>
+                      </div>
               </div>
             ))}
           </>
@@ -1481,29 +1645,26 @@ function CandidateDetail({
             </span>
           ))}
         </div>
-
+       {/* Work Experience */}
         {candidate.experiences && candidate.experiences.length > 0 && (
           <>
             <hr className="my-4" />
             <h3 className="font-medium mb-2">Experience</h3>
 
             {candidate.experiences.map((ex, i) => (
-              <div key={i} className="text-sm mb-3">
-                <p className="font-medium">
-                  {" "}
-                  <HighlightText text={ex.designation} />
-                </p>
-                <p className="text-gray-600">
-                  {" "}
-                  <HighlightText text={ex.company} />
-                </p>
-                <p className="text-gray-500 text-xs">
-                  <p className="text-gray-500 text-xs">
-                    <HighlightText text={ex.start_date ? String(ex.start_date) : undefined} />{" "}
-                    – <HighlightText text={ex.end_date !== undefined && ex.end_date !== null ? String(ex.end_date) : "Present"} />
-
-                  </p>
-                </p>
+              <div key={i} className="text-sm mb-4">
+                      <h4 className="font-medium text-gray-900">{ex.role}</h4>
+                      <p className="text-purple-600 font-medium">
+                        {ex.category}
+                      </p>
+                      <p className="text-purple-600 font-medium">
+                        {ex.company}
+                      </p>
+                     <p className="text-sm text-gray-600 mb-2">
+                        Year: {(ex.start_date)} -{" "}
+                        {ex.end_date ? (ex.end_date) : "Present"}
+                      </p>
+                      <p className="text-gray-700 text-sm">{ex.description}</p>
               </div>
             ))}
           </>

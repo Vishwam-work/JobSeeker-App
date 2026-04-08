@@ -42,6 +42,10 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import dayjs from "dayjs";
+import customParseFormat from "dayjs/plugin/customParseFormat";
+
+dayjs.extend(customParseFormat);
 export default function Candidates() {
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(
     null,
@@ -100,6 +104,7 @@ export default function Candidates() {
       courd: string;
       institution: string;
       year: string;
+      course_detail?: { name: string };
       start_year?: string;
       end_year?: string;
       grade?: string;
@@ -244,6 +249,19 @@ export default function Candidates() {
       jobTitleMatch
     );
   });
+
+const formatDate = (date?: any) => {
+  if (!date) return "";
+
+  const parsed = dayjs(date);
+
+  // ❗ future date check
+  if (!parsed.isValid() || parsed.year() > dayjs().year()) {
+    return "Invalid Date";
+  }
+
+  return parsed.format("DD/MM/YYYY");
+};
   const getStatusColor = (status?: string) => {
     const normalized = status?.toLowerCase();
 
@@ -644,7 +662,7 @@ export default function Candidates() {
                           {formatStatus(candidate.status)}
                         </Badge>
                         <span className="text-xs text-gray-500">
-                          {new Date(candidate.appliedDate).toLocaleDateString()}
+                           {formatDate(candidate.appliedDate)}
                         </span>
                       </div>
                     </div>
@@ -747,9 +765,7 @@ export default function Candidates() {
                     <div>
                       <span className="text-gray-600">Application Date:</span>
                       <p className="font-medium">
-                        {new Date(
-                          selectedCandidate.appliedDate,
-                        ).toLocaleDateString()}
+                        {formatDate(selectedCandidate.appliedDate)}
                       </p>
                     </div>
                     <div>
@@ -810,8 +826,9 @@ export default function Candidates() {
                       <p className="text-purple-600 font-medium">
                         {exp.company}
                       </p>
-                      <p className="text-sm text-gray-600 mb-2">
-                        Year: {exp.start_date} to {exp.end_date}
+                     <p className="text-sm text-gray-600 mb-2">
+                        Year: {formatDate(exp.start_date)} -{" "}
+                        {exp.end_date ? formatDate(exp.end_date) : "Present"}
                       </p>
                       <p className="text-gray-700 text-sm">{exp.description}</p>
                     </div>
@@ -831,14 +848,17 @@ export default function Candidates() {
                       <h4 className="font-medium text-gray-900">
                         {edu.education}
                       </h4>
-                      <p className="text-green-600 font-medium">{edu.courd}</p>
+                      <p className="text-green-600 font-medium">{edu.course_detail?.name || "Course Details Not Available"}</p>
                       <p className="text-gray-600">{edu.institution}</p>
                       <div className="flex items-center space-x-4 text-sm text-gray-600 mt-1">
                         <span>
                           Year: {edu.start_year} - {edu.end_year}
                         </span>
                         <span>
-                          Grade: {edu.grade}-{edu.score_type}
+                          Score
+                          : {edu.grade}({edu.score_type
+                            ? edu.score_type.charAt(0).toUpperCase() + edu.score_type.slice(1)
+                            : ""})
                         </span>
                       </div>
                     </div>

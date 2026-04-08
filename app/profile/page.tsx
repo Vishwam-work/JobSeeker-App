@@ -79,7 +79,7 @@ import Link from "next/link";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import ReactDatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
+// import "react-datepicker/dist/react-datepicker.css";
 import { DateCalendar } from "@mui/x-date-pickers/DateCalendar";
 import { TextField } from "@mui/material";
 import dayjs, { Dayjs } from "dayjs";
@@ -227,16 +227,22 @@ export default function Profile() {
   ]);
 
 const calendarRef = useRef<HTMLDivElement | null>(null);
-
+const startCalendarRef = useRef<HTMLDivElement | null>(null);
+const endCalendarRef = useRef<HTMLDivElement | null>(null);
 useEffect(() => {
   const handleClickOutside = (event: MouseEvent) => {
-    if (
-      calendarRef.current &&
-      !calendarRef.current.contains(event.target as Node)
-    ) {
+    const target = event.target as Node;
+
+    const isInsideAnyCalendar =
+      (calendarRef.current && calendarRef.current.contains(target)) ||
+      (startCalendarRef.current && startCalendarRef.current.contains(target)) ||
+      (endCalendarRef.current && endCalendarRef.current.contains(target));
+
+    if (!isInsideAnyCalendar) {
       setOpen(false);
       setEndOpen(false);
       setYearOpen(false);
+      setEndYearOpen(false);
     }
   };
 
@@ -246,7 +252,6 @@ useEffect(() => {
     document.removeEventListener("mousedown", handleClickOutside);
   };
 }, []);
-
 const handleSummaryChange = (value: string) => {
   const words = value.trim().split(/\s+/).filter(Boolean);
 
@@ -742,6 +747,7 @@ const getUserKey = () => {
       description: "Please fill in all required fields before continuing.",
     });
     return;
+    
   }
 
   // 🔹 START DATE VALIDATION USING formatDOB
@@ -810,12 +816,14 @@ const getUserKey = () => {
           exp.id === editingExperience.id ? newExperience : exp
         ),
       }));
+       toast.info("Experience updated successfully ");
     } else {
       console.log("Adding new experience");
       setProfileData((prev) => ({
         ...prev,
         experience: [...prev.experience, newExperience],
       }));
+       toast.info("Experience saved successfully ");
     }
 
     setShowAddExperience(false);
@@ -918,11 +926,13 @@ const handleSaveEducation = () => {
         edu.id === editingEducation.id ? newEducation : edu
       ),
     }));
+      toast.info("Education updated successfully ");
   } else {
     setProfileData((prev) => ({
       ...prev,
       education: [...prev.education, newEducation],
     }));
+      toast.info("Education saved successfully ");
   }
 
   setShowAddEducation(false);
@@ -1003,11 +1013,13 @@ const handleSaveEducation = () => {
           cert.id === editingCertification.id ? newCertification : cert
         ),
       }));
+        toast.info("Certification updated successfully ");
     } else {
       setProfileData((prev) => ({
         ...prev,
         certifications: [...prev.certifications, newCertification],
       }));
+        toast.info("Certification saved successfully ");
     }
 
     setShowAddCertification(false);
@@ -3132,15 +3144,16 @@ const resumeUrl = profileData?.personalInfo?.resume
                      )}
 
                       {/* Add/Edit Experience Form */}
-                      {showAddExperience && (
-                        <Card className="border-2 border-purple-200 ">
-                          <CardHeader className="pb-4">
-                            <CardTitle className="text-lg">
-                              {editingExperience
-                                ? "Edit Experience"
-                                : "Add New Experience"}
-                            </CardTitle>
-                          </CardHeader>
+                        <Dialog open={showAddExperience} onOpenChange={setShowAddExperience}>
+                          <DialogContent className="max-w-3xl p-0">
+
+                             <div className="p-6 border-b">
+                              <DialogTitle>
+                                {editingExperience ? "Edit Experience" : "Add New Experience"}
+                              </DialogTitle>
+                            </div>
+                             <div className="max-h-[75vh] overflow-y-auto p-6">
+                         <Card className="border-0 shadow-none">
                           <CardContent className="space-y-4">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <div className="relative">
@@ -3149,7 +3162,6 @@ const resumeUrl = profileData?.personalInfo?.resume
                                 cacheOptions
                                 defaultOptions
                                 placeholder="e.g., Deloitte"
-                                className="mt-1"
                                 loadOptions={getCompanyOptions}
                                 value={getSelectedCompany()}
 
@@ -3161,11 +3173,6 @@ const resumeUrl = profileData?.personalInfo?.resume
                                 }}
 
                                 isClearable
-
-                                menuPortalTarget={typeof window !== "undefined" ? document.body : null}
-                                styles={{
-                                  menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-                                }}
                               />
                               </div>
                               <div>
@@ -3204,11 +3211,6 @@ const resumeUrl = profileData?.personalInfo?.resume
                                 }}
 
                                 isClearable
-
-                                menuPortalTarget={typeof window !== "undefined" ? document.body : null}
-                                styles={{
-                                  menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-                                }}
                               />
 
                               </div>
@@ -3220,7 +3222,7 @@ const resumeUrl = profileData?.personalInfo?.resume
                                <AsyncCreatableSelect
                                 cacheOptions
                                 defaultOptions
-                                placeholder="e.g., Oracle Fusion Senior Consultant"
+                                placeholder="Oracle Fusion Senior Consultant"
                                 className="mt-1"
                                 loadOptions={getJobTitlesOptions}
                                 value={getSelectedJobTitle()}
@@ -3233,11 +3235,6 @@ const resumeUrl = profileData?.personalInfo?.resume
                                 }}
 
                                 isClearable
-
-                                menuPortalTarget={typeof window !== "undefined" ? document.body : null}
-                                styles={{
-                                  menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-                                }}
                               />
                               </div>
                               </div>
@@ -3278,7 +3275,7 @@ const resumeUrl = profileData?.personalInfo?.resume
                                     className="w-full h-[44px] px-3 pr-10 border rounded-md"
                                   />
 
-                                 <div  ref={calendarRef} onClick={() => setEndOpen(false)} className="absolute right-2 top-1/2 -translate-y-1/2">
+                                 <div  ref={startCalendarRef} onClick={() => setEndOpen(false)} className="absolute right-2 top-1/2 -translate-y-1/2">
                                     <button type="button" onClick={() => setOpen((prev) => !prev)}>
                                       <Calendar size={18} />
                                     </button>
@@ -3356,7 +3353,7 @@ const resumeUrl = profileData?.personalInfo?.resume
                                       className="w-full h-[44px] px-3 pr-10 border rounded-md"
                                     />
 
-                                  <div  ref={calendarRef} onClick={() => setOpen(false)} className="absolute right-2 top-1/2 -translate-y-1/2">
+                                  <div  ref={endCalendarRef} onClick={() => setOpen(false)} className="absolute right-2 top-1/2 -translate-y-1/2">
 
                                     {/* ICON */}
                                     <button type="button" onClick={() => setEndOpen((prev) => !prev)}>
@@ -3399,7 +3396,7 @@ const resumeUrl = profileData?.personalInfo?.resume
 
                                               setDateError(validateDates(experienceForm.startDate, newValue));
 
-                                              setEndOpen(false); // 👈 auto close
+                                              setEndOpen(false);
                                             }}
 
                                             // ✅ disable future dates
@@ -3476,7 +3473,9 @@ const resumeUrl = profileData?.personalInfo?.resume
                             </div>
                           </CardContent>
                         </Card>
-                      )}
+                        </div>
+                        </DialogContent>
+                       </Dialog>
                     </div>
                     <div className="flex flex-col sm:flex-row justify-between gap-3 mt-6">
 
@@ -3582,15 +3581,19 @@ const resumeUrl = profileData?.personalInfo?.resume
                         </div>
                       ))}
 
-                      {showAddEducation && (
-                        <Card className="border-2 border-green-200">
-                          <CardHeader className="pb-4">
-                            <CardTitle className="text-lg">
-                              {editingEducation
+                      {/* {showAddEducation && ( */}
+                      <Dialog open={showAddEducation} onOpenChange={setShowAddEducation}>
+                          <DialogContent className="max-w-3xl p-0">
+
+                             <div className="p-6 border-b">
+                              <DialogTitle>
+                                {editingEducation
                                 ? "Edit Education"
                                 : "Add New Education"}
-                            </CardTitle>
-                          </CardHeader>
+                              </DialogTitle>
+                            </div>
+                             <div className="max-h-[75vh] overflow-y-auto p-6">
+                        <Card className="border-0 shadow-none">
                           <CardContent className="space-y-4">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <div>
@@ -3646,12 +3649,6 @@ const resumeUrl = profileData?.personalInfo?.resume
                                     }));
                                   }}
                                   placeholder="Search Course..."
-                                  z-index={9999}
-                                  menuPortalTarget={typeof window !== "undefined" ? document.body : null}
-                                  menuPosition="fixed"
-                                  styles={{
-                                    menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-                                  }}
                                   isClearable
 
                                 />
@@ -3784,7 +3781,7 @@ const resumeUrl = profileData?.personalInfo?.resume
                                       className="w-full h-[44px] px-3 pr-10 border rounded-md"
                                     />
 
-                                    <div ref={calendarRef} onClick={() => setEndYearOpen(false)} className="absolute right-2 top-1/2 -translate-y-1/2 opacity-100">
+                                    <div ref={startCalendarRef} onClick={() => setEndYearOpen(false)} className="absolute right-2 top-1/2 -translate-y-1/2 opacity-100">
                                      {/* Calendar toggle button */}
                                       <button type="button" onClick={() => setOpen((prev) => !prev)}>
                                         <Calendar size={18} />
@@ -3792,7 +3789,7 @@ const resumeUrl = profileData?.personalInfo?.resume
 
                                       {/* Year picker dropdown */}
                                       {open && (
-                                        <div className="absolute left-1/2 -translate-x-1/2 mt-2 z-999 bg-white shadow-lg rounded">
+                                        <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 z-[9999] bg-white shadow-lg rounded">
                                           <LocalizationProvider dateAdapter={AdapterDayjs}>
                                             <DateCalendar
                                               views={["year"]}
@@ -3858,7 +3855,7 @@ const resumeUrl = profileData?.personalInfo?.resume
                                       className="w-full h-[44px] px-3 pr-10 border rounded-md"
                                     />
 
-                                    <div  ref={calendarRef} onClick={() => setOpen(false)} className="absolute right-2 top-1/2 -translate-y-1/2">
+                                    <div  ref={endCalendarRef} onClick={() => setOpen(false)} className="absolute right-2 top-1/2 -translate-y-1/2">
                                       {/* ICON */}
                                       <button
                                         type="button"
@@ -3870,7 +3867,7 @@ const resumeUrl = profileData?.personalInfo?.resume
 
                                       {/* CALENDAR */}
                                       {endYearOpen && (
-                                        <div className="absolute right-0 mt-2 z-50 bg-white shadow-lg rounded">
+                                        <div className="absolute right-0 bottom-full mb-2 z-[9999] bg-white shadow-lg rounded max-h-[300px] overflow-y-auto">
                                           <LocalizationProvider dateAdapter={AdapterDayjs}>
                                             <DateCalendar
                                               views={['year']}
@@ -3955,11 +3952,6 @@ const resumeUrl = profileData?.personalInfo?.resume
                                 </div>
                                 </FormControl>
                               </div>
-                              {/* <div>
-                                 <Label className="text-sm font-medium text-gray-700">
-                                  Description
-                                </Label>
-</div> */}
                             </div>
                             <div className="flex justify-end space-x-2">
                               <Button
@@ -3976,7 +3968,11 @@ const resumeUrl = profileData?.personalInfo?.resume
                             </div>
                           </CardContent>
                         </Card>
-                      )}
+                       </div>
+                      </DialogContent>
+                     </Dialog>
+
+                      {/* )} */}
                     </div>
                   <div className="flex flex-col sm:flex-row justify-between gap-3 mt-6">
                     <Button
@@ -4143,15 +4139,17 @@ const resumeUrl = profileData?.personalInfo?.resume
                       ))}
 
                       {/* Add/Edit Certification Form */}
-                      {showAddCertification && (
-                        <Card className="border-2 ">
-                          <CardHeader className="pb-4">
-                            <CardTitle className="text-lg">
-                              {editingCertification
-                                ? "Edit Certification"
-                                : "Add New Certification"}
-                            </CardTitle>
-                          </CardHeader>
+                      {/* {showAddCertification && ( */}
+                       <Dialog open={showAddCertification} onOpenChange={setShowAddCertification}>
+                          <DialogContent className="max-w-3xl p-0">
+
+                             <div className="p-6 border-b">
+                              <DialogTitle>
+                                {editingCertification ? "Edit Certification" : "Add New Certification"}
+                              </DialogTitle>
+                            </div>
+                             <div className="max-h-[75vh] overflow-y-auto p-6">
+                        <Card className="border-0 shadow-none">
                           <CardContent className="space-y-4">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <div className="md:col-span-2">
@@ -4230,7 +4228,10 @@ const resumeUrl = profileData?.personalInfo?.resume
 
                                 {/* YEAR PICKER */}
                                 {yearOpen && (
-                                  <div className="absolute right-0 mt-2 z-50 bg-white shadow-lg rounded">
+                                 <div
+                                    className="absolute right-0 bottom-full mb-2 z-[9999] bg-white shadow-lg rounded"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
                                     <LocalizationProvider dateAdapter={AdapterDayjs}>
                                       <DateCalendar
                                         views={["year"]}
@@ -4279,7 +4280,10 @@ const resumeUrl = profileData?.personalInfo?.resume
                             </div>
                           </CardContent>
                         </Card>
-                      )}
+                        </div>
+                        </DialogContent>
+                       </Dialog>
+                      {/* )} */}
                     </div>
                    <div className="flex justify-end">
                     <Button
