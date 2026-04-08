@@ -12,7 +12,7 @@ import { Slider } from "@/components/ui/slider";
 import { useSavedJobs } from "@/context/SavedJobsContext";
 import { toast } from "sonner";
 import { v4 as uuidv4 } from "uuid";
-
+import TiptapEditor from "@/components/TiptapEditor";
 import {
   Select,
   SelectContent,
@@ -220,6 +220,7 @@ const sortedJobs = [...filteredJobs]
     job_type?: string;
     salary?: string;
     salary_max?: string;
+    currencyCode?: string;
     created_at?: string;
     description?: string;
     vacancies?: number;
@@ -371,7 +372,7 @@ const sortedJobs = [...filteredJobs]
           : [];
 
       const locationNames: string[] = results
-        .map((job: any): string | undefined => job?.location?.name)
+        .map((job: any): string | undefined => job?.location)
         .filter((loc: string | undefined): loc is string => {
           return typeof loc === "string" && loc.trim() !== "";
         });
@@ -769,13 +770,6 @@ useEffect(() => {
     // "education",
     "experiences",
   ];
-  //  const REQUIRED_PROFILE_FIELDS = [
-  //    "personalInfo",
-  //   "experience",
-  //   "resume",
-  //   "education",
-  //   "skills",
-  // ];
   const isProfileComplete = (profile: Record<string, any>) => {
     return REQUIRED_PROFILE_FIELDS.every((field) => {
       const value = profile?.[field];
@@ -1616,17 +1610,17 @@ setUserData({
                                   <div className="flex items-center">
                                     <span className="w-3 h-5">{job.currency?.symbol_native}</span>
                                   <span>
-                                    {job.salary
-                                      ? new Intl.NumberFormat("en-IN").format(
-                                          Number(job.salary),
-                                        )
-                                      : ""}
-                                    -
-                                    {job.salary_max
-                                      ? new Intl.NumberFormat("en-IN").format(
-                                          Number(job.salary_max),
-                                        )
-                                      : ""}
+                                   {job.salary
+                                    ? new Intl.NumberFormat(
+                                        job.currencyCode === "INR" ? "en-IN" : "en-US"
+                                      ).format(Number(job.salary))
+                                    : ""}
+                                  -
+                                  {job.salary_max
+                                    ? new Intl.NumberFormat(
+                                        job.currencyCode === "INR" ? "en-IN" : "en-US"
+                                      ).format(Number(job.salary_max))
+                                    : ""}
                                   </span>
                                   </div>
                                   <Badge
@@ -1675,9 +1669,12 @@ setUserData({
                           </div>
 
                           {/* Job Description */}
-                          <p className="text-gray-700 text-sm md:text-base leading-relaxed mb-4 line-clamp-2">
-                            {job.description}
-                          </p>
+                          <div
+                            className="text-gray-700 text-sm md:text-base leading-relaxed mb-4 line-clamp-2 overflow-hidden"
+                            dangerouslySetInnerHTML={{
+                              __html: job.description || "",
+                            }}
+                          />
 
                           {/* Skills */}
                           <div className="flex flex-wrap gap-2 mb-4">
@@ -1918,9 +1915,10 @@ setUserData({
                     <h4 className="text-lg font-semibold text-gray-900 mb-3">
                       Job Description
                     </h4>
-                    <p className="text-gray-700 leading-relaxed">
-                      {selectedJob.description}
-                    </p>
+                     <div
+                      className="text-gray-700 leading-relaxed prose max-w-none"
+                      dangerouslySetInnerHTML={{ __html: selectedJob.description ?? "",}}
+                    />
                   </div>
 
                   {/* Requirements */}
@@ -1928,21 +1926,10 @@ setUserData({
                     <h4 className="text-lg font-semibold text-gray-900 mb-3">
                       Requirements
                     </h4>
-                    <ul className="space-y-2">
-                      {Array.isArray(selectedJob?.requirements) &&
-                      selectedJob.requirements.length > 0 ? (
-                        selectedJob.requirements.map((req, index) => (
-                          <li key={index} className="flex items-start">
-                            <CheckCircle className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                            <span className="text-gray-700">{req}</span>
-                          </li>
-                        ))
-                      ) : (
-                        <p className="text-gray-500 italic">
-                          {selectedJob.requirements}
-                        </p>
-                      )}
-                    </ul>
+                    <div
+                      className="prose text-gray-700 max-w-none"
+                      dangerouslySetInnerHTML={{ __html: selectedJob.requirements ?? "",}}
+                    />
                   </div>
 
                   {/* Benefits */}
@@ -1950,21 +1937,10 @@ setUserData({
                     <h4 className="text-lg font-semibold text-gray-900 mb-3">
                       Benefits
                     </h4>
-                    <ul className="space-y-2">
-                      {Array.isArray(selectedJob?.benefits) &&
-                      selectedJob.benefits.length > 0 ? (
-                        selectedJob.benefits.map((req, index) => (
-                          <li key={index} className="flex items-start">
-                            <CheckCircle className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                            <span className="text-gray-700">{req}</span>
-                          </li>
-                        ))
-                      ) : (
-                        <p className="text-gray-500 italic">
-                          {selectedJob.benefits}
-                        </p>
-                      )}
-                    </ul>
+                    <div
+                      className="prose text-gray-700 max-w-none"
+                      dangerouslySetInnerHTML={{ __html: selectedJob.benefits ?? "" ,}}
+                    />
                   </div>
 
                   {/* Skills */}

@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   Select,
   SelectContent,
@@ -40,6 +41,7 @@ import {
   ExternalLink,
   Star,
   CheckCircle,
+  Share2,
   XCircle,
   ChevronsUpDown,
   ChevronDown,
@@ -69,14 +71,16 @@ import Selectt from "react-select";
 import AsyncSelect from "react-select/async";
 import dayjs from "dayjs";
 import ReactDatePicker from "react-datepicker";
-// import "react-datepicker/dist/react-datepicker.css";
+import TiptapEditor from "@/components/TiptapEditor";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DateCalendar } from "@mui/x-date-pickers/DateCalendar";
 import customParseFormat from "dayjs/plugin/customParseFormat";
-
 dayjs.extend(customParseFormat);
+
 const ManageJobs = () => {
+  const searchParams = useSearchParams();
+  const jobId = searchParams.get("id");
   const [activeTab, setActiveTab] = useState("post-job");
   const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
   const [dateFilter, setDateFilter] = useState("all");
@@ -931,6 +935,20 @@ const handleAddQuestion = () => {
     setJobForm((prev) => ({ ...prev, questions: updated }));
     setQuestions(updated);
   };
+  const handleShare = (job: any) => {
+  const shareUrl = `${window.location.origin}/job-details?id=${job.id}`;
+
+  if (navigator.share) {
+    navigator.share({
+      title: job.title,
+      text: `Check out this job at ${job.company}`,
+      url: shareUrl,
+    });
+  } else {
+    navigator.clipboard.writeText(shareUrl);
+    toast.success("Job link copied to clipboard");
+  }
+};
   return (
     <>
       <Card>
@@ -1124,6 +1142,10 @@ const handleAddQuestion = () => {
                               </>
                             )}
                           </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleShare(job)}>
+                            <Share2 className="w-4 h-4 mr-2" />
+                            Share
+                          </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() => handleDeleteJob(job)}
                             className="text-red-600 focus:text-red-600"
@@ -1141,6 +1163,8 @@ const handleAddQuestion = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/*  Job Details Modal  */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           {selectedJob && (
@@ -1244,9 +1268,10 @@ const handleAddQuestion = () => {
                 <h4 className="text-lg font-semibold text-gray-900 mb-3">
                   Job Description
                 </h4>
-                <p className="text-gray-700 leading-relaxed">
-                  {selectedJob.description}
-                </p>
+               <div
+                  className="text-gray-700 leading-relaxed prose max-w-none"
+                  dangerouslySetInnerHTML={{ __html: selectedJob.description }}
+                />
               </div>
 
               {/* Requirements */}
@@ -1254,7 +1279,10 @@ const handleAddQuestion = () => {
                 <h4 className="text-lg font-semibold text-gray-900 mb-3">
                   Requirements
                 </h4>
-                <ul className="space-y-2">{selectedJob.requirements}</ul>
+                 <div
+                  className="prose text-gray-700 max-w-none"
+                  dangerouslySetInnerHTML={{ __html: selectedJob.requirements }}
+                />
               </div>
 
               {/* Benefits */}
@@ -1262,7 +1290,10 @@ const handleAddQuestion = () => {
                 <h4 className="text-lg font-semibold text-gray-900 mb-3">
                   Benefits
                 </h4>
-                <ul className="space-y-2">{selectedJob.benefits}</ul>
+                <div
+                  className="prose text-gray-700 max-w-none"
+                  dangerouslySetInnerHTML={{ __html: selectedJob.benefits }}
+                />
               </div>
 
               {/* Skills */}
@@ -1800,20 +1831,18 @@ const handleAddQuestion = () => {
                 </div>
               </div>
           <div>
-            <Label>Description</Label>
-            <Textarea
-              name="description"
-              value={jobForm.description || ""}
-              onChange={(e) =>
-                setJobForm({
-                  ...jobForm,
-                  [e.target.name]: e.target.value,
-                })
-              }
-              rows={3}
-            />
-          </div>
-          <div>
+          <Label>Description</Label>
+          <TiptapEditor
+            value={jobForm.description || ""}
+            onChange={(value) =>
+              setJobForm({
+                ...jobForm,
+                description: value,
+              })
+            }
+          />
+        </div>
+          {/* <div>
             <Label>Requirements</Label>
             <Textarea
               name="requirements"
@@ -1840,9 +1869,27 @@ const handleAddQuestion = () => {
               }
               rows={3}
             />
+          </div> */}
+
+          <div>
+            <Label>Requirements</Label>
+            <TiptapEditor
+              value={jobForm.requirements || ""}
+              onChange={(value) =>
+                setJobForm({ ...jobForm, requirements: value })
+              }
+            />
           </div>
 
-
+          <div>
+            <Label>Benefits</Label>
+            <TiptapEditor
+              value={jobForm.benefits || ""}
+              onChange={(value) =>
+                setJobForm({ ...jobForm, benefits: value })
+              }
+            />
+          </div>
           {/* Checkboxes */}
           <div className="flex items-center gap-4 mt-2">
             <div className="flex items-center space-x-2">
