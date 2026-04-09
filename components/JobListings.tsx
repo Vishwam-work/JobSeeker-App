@@ -588,23 +588,6 @@ useEffect(() => {
     }));
   };
 
-  // const handleCompanyFilter = (company: string, checked: boolean) => {
-  //   setFilters((prev) => ({
-  //     ...prev,
-  //     companies: checked
-  //       ? [...prev.companies, company]
-  //       : prev.companies.filter((c) => c !== company),
-  //   }));
-  // };
-
-  const handleSkillFilter = (skill: string, checked: boolean) => {
-    setFilters((prev) => ({
-      ...prev,
-      skills: checked
-        ? [...prev.skills, skill]
-        : prev.skills.filter((s) => s !== skill),
-    }));
-  };
 
   const clearAllFilters = () => {
     setFilters({
@@ -744,20 +727,20 @@ useEffect(() => {
     }
   };
 
-  const handleShare = (job: Job) => {
-    if (navigator.share) {
-      navigator.share({
-        title: job.title,
-        text: `Check out this job: ${job.title} at ${job.company}`,
-        url: window.location.href,
-      });
-    } else {
-      navigator.clipboard.writeText(window.location.href);
-      toast("Link copied!", {
-        description: "Job link is copied to clipboard",
-      });
-    }
-  };
+   const handleShare = (job: any) => {
+  const shareUrl = `${window.location.origin}/job-details?id=${job.id}`;
+
+  if (navigator.share) {
+    navigator.share({
+      title: job.title,
+      text: `Check out this job at ${job.company}`,
+      url: shareUrl,
+    });
+  } else {
+    navigator.clipboard.writeText(shareUrl);
+    toast.success("Job link copied to clipboard");
+  }
+};
 
   const REQUIRED_PROFILE_FIELDS = [
     "full_name",
@@ -1992,14 +1975,14 @@ setUserData({
                         : "Save Job"}
                     </Button>
 
-                    <Button
+                    {/* <Button
                       variant="outline"
                       onClick={() => handleShare(selectedJob)}
                       className="flex-1"
                     >
                       <Share2 className="w-4 h-4 mr-2" />
                       Share
-                    </Button>
+                    </Button> */}
                   </div>
                 </div>
               </>

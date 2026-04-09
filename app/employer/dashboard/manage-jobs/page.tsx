@@ -1302,7 +1302,7 @@ const handleAddQuestion = () => {
                   Required Skills
                 </h4>
                 <div className="flex flex-wrap gap-2">
-                  {selectedJob.skills.map((skill, index) => (
+                  {selectedJob.skills?.map((skill, index) => (
                     <Badge
                       key={index}
                       variant="secondary"
@@ -1321,7 +1321,7 @@ const handleAddQuestion = () => {
                 </h4>
                 <div className="flex flex-wrap gap-2">
                   {selectedJob.questions && selectedJob.questions.length > 0 ? (
-                    selectedJob.questions.map((question, index) => (
+                    selectedJob.questions?.map((question, index) => (
                       <Badge
                         key={index}
                         variant="secondary"

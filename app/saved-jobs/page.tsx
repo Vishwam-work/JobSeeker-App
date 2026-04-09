@@ -18,10 +18,12 @@ interface SavedJob {
     description: string;
     experience: string;
     salary: string | null;
-
-    location: {
-      name: string;
+    salary_max: string | null;
+    currency: {
+      symbol_native: string;
     } | null;
+     currencyCode: string | null;
+    location:string | null;
 
     skills: string[];
 
@@ -139,17 +141,34 @@ export default function SavedJobsPage() {
 
                     <span className="flex items-center gap-1">
                       <Briefcase className="w-4 h-4" />
-                      {job?.experience || ""}
+                     <span>
+                      {job.experience?.toString().trim().toLowerCase() === "fresher" ||
+                      Number(job.experience) === 0
+                         ? "Fresher"
+                         : `${job.experience} ${Number(job.experience) === 1 ? "Year" : "Years"}`}
+                     </span>
                     </span>
 
                     <span className="flex items-center gap-1">
-                      <IndianRupee className="w-4 h-4" />
-                      {job?.salary || ""}
+                      <span className="w-3 h-5">{job.currency?.symbol_native}</span>
+                        <span>
+                          {job.salary
+                           ? new Intl.NumberFormat(
+                               job.currencyCode === "INR" ? "en-IN" : "en-US"
+                            ).format(Number(job.salary))
+                           : ""}
+                        -
+                         {job.salary_max
+                           ? new Intl.NumberFormat(
+                               job.currencyCode === "INR" ? "en-IN" : "en-US"
+                            ).format(Number(job.salary_max))
+                           : ""}
+                         </span>
                     </span>
 
                     <span className="flex items-center gap-1">
                       <MapPin className="w-4 h-4" />
-                      {job?.location?.name || ""}
+                      {job?.location || ""}
                     </span>
 
                   </div>

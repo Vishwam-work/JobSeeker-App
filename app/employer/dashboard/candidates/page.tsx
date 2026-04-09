@@ -1,9 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { Calendar } from "lucide-react";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { DateCalendar } from "@mui/x-date-pickers/DateCalendar";
+import { DigitalClock } from "@mui/x-date-pickers/DigitalClock";  
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
@@ -42,7 +47,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import dayjs from "dayjs";
+import dayjs, { Dayjs } from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 
 dayjs.extend(customParseFormat);
@@ -60,16 +65,27 @@ export default function Candidates() {
   const [jobTitleFilter, setJobTitleFilter] = useState("All");
   const [openSchedule, setOpenSchedule] = useState(false);
   const [interviewDate, setInterviewDate] = useState("");
-  const [interviewMode, setInterviewMode] = useState("Online");
+  const [interviewMode, setInterviewMode] = useState("");
+  const [interviewLink, setInterviewLink] = useState("");
   const [interviewNotes, setInterviewNotes] = useState("");
   const [hour, setHour] = useState("12");
   const [minute, setMinute] = useState("00");
   const [ampm, setAmPm] = useState("AM");
-  const interviewTime = `${hour}:${minute} ${ampm}`;
+  const [interviewTime, setInterviewTime] = useState(`${hour}:${minute} ${ampm}`);
   const [timeZone, setTimeZone] = useState("IST");
-  const [time, setTime] = useState("");
   const [showResume, setShowResume] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  //date validation
+    const [deadlineInput, setDeadlineInput] = useState("");
+    const [deadlineError, setDeadlineError] = useState("");
+    const [deadlineDate, setDeadlineDate] = useState<Date | null>(null);
+    const [interviewInput, setInterviewInput] = useState("");
+const [interviewError, setInterviewError] = useState("");
+      const [open, setOpen] = useState(false);
+      const [timeopen, setTimeopen] = useState(false);
+
+    const [time, setTime] = useState<Dayjs | null>(dayjs());
   interface Candidate {
     id: number;
     name: string;
@@ -88,7 +104,7 @@ export default function Candidates() {
     expectedSalary?: string;
     resumeUrl?: string;
     profileImage?: string | null;
-    summary?: string;
+    professional_summary?: string;
     workExperience: {
       company: string;
       role: string;
@@ -178,7 +194,7 @@ export default function Candidates() {
             ? `${process.env.NEXT_PUBLIC_URL}${app.profile.resume}`
             : "#",
           profileImage: null,
-          summary: "",
+          professional_summary: app.profile?.professional_summary || "",
           workExperience: app.profile?.experiences || [],
           educationDetails: app.profile?.educations || [],
           certifications: app.profile?.certifications || [],
@@ -270,13 +286,13 @@ const formatDate = (date?: any) => {
         return "bg-green-100 text-green-800";
       case "closed":
         return "bg-red-100 text-red-800";
-      case "under review":
+      case "Under Review":
         return "bg-yellow-100 text-yellow-800";
       case "shortlisted":
         return "bg-blue-100 text-blue-800";
       case "rejected":
         return "bg-red-100 text-red-800";
-        case "interview scheduled":
+        case "Interview Scheduled":
         return "bg-blue-100 text-blue-800";
       default:
         return "bg-gray-100 text-gray-800";
@@ -456,13 +472,15 @@ const formatDate = (date?: any) => {
           },
           body: JSON.stringify({
             interview_date: interviewDate,
-            interview_time: interviewTime,
+            interview_time: time ? time.format("HH:mm:ss") : "",
             interview_mode: interviewMode,
+            meet_link: interviewLink,
+            timezone : timeZone,
             notes: interviewNotes,
+            application_status: "Interview Scheduled",
           }),
         },
       );
-      // meet_link: meetLink,
       if (!res.ok) {
         const text = await res.text();
         console.error("Backend error:", text);
@@ -492,6 +510,126 @@ const formatDate = (date?: any) => {
       toast.error("Network error. Please try again.");
     }
   };
+  const formatDeadline = (value: string) => {
+     let input = value.replace(/\D/g, "");
+      if (input.length > 8) input = input.slice(0, 8);
+      let day = input.slice(0, 2);
+      let month = input.slice(2, 4);
+      let year = input.slice(4, 8);
+      let error = "";
+  
+      // DAY FIX
+      if (day.length === 1) {
+        if (!["0", "1", "2", "3"].includes(day)) {
+          day = "0" + day;
+        }
+      }
+  
+      if (day.length === 2) {
+        let d = parseInt(day);
+        if (d > 31) day = "31";
+        if (d === 0) day = "01";
+      }
+  
+      // MONTH FIX
+      if (month.length === 1) {
+        if (month !== "0" && month !== "1") {
+          month = "0" + month;
+        }
+      }
+  
+      if (month.length === 2) {
+        let m = parseInt(month);
+        if (m > 12) month = "12";
+        if (m === 0) month = "01";
+      }
+  
+      const currentYear = dayjs().year();
+  
+      if (year.length === 4) {
+        let y = parseInt(year);
+  
+        if (y < 1900) {
+          error = "Year must be after 1900";
+        }
+      }
+  
+      // ✅ FULL DATE VALIDATION
+      if (day.length === 2 && month.length === 2 && year.length === 4) {
+        const d = parseInt(day);
+        const m = parseInt(month);
+        const y = parseInt(year);
+  
+        // Leap year check
+        const isLeapYear =
+          (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;
+  
+        const daysInMonth = [
+          31,
+          isLeapYear ? 29 : 28, // Feb
+          31,
+          30,
+          31,
+          30,
+          31,
+          31,
+          30,
+          31,
+          30,
+          31,
+        ];
+        if (m >= 1 && m <= 12) {
+          if (d > daysInMonth[m - 1]) {
+            error = `Invalid day for month`;
+          }
+        }
+        // Extra safety with dayjs
+        const parsedCheck = dayjs(
+          `${day}/${month}/${year}`,
+          "DD/MM/YYYY",
+          true
+        );
+  
+        if (!parsedCheck.isValid()) {
+          error = "Invalid date";
+        }
+  
+        if (parsedCheck.isBefore(dayjs())) {
+          error = "Past date not allowed";
+        }
+      }
+  
+      // ✅ FORMAT OUTPUT
+      let formatted = day;
+      if (month) formatted += "/" + month;
+      if (year) formatted += "/" + year;
+  
+      const parsed = dayjs(formatted, "DD/MM/YYYY", true);
+      return { formatted, parsed, error };
+  };
+  const calendarRef = useRef<HTMLDivElement | null>(null);
+  const timeRef =useRef<HTMLDivElement | null>(null);
+  
+  useEffect(() => {
+     const handleClickOutside = (event: MouseEvent) => {
+    const target = event.target as Node;
+
+    const isInsideAnyCalendar =
+      (calendarRef.current && calendarRef.current.contains(target)) ||
+      (timeRef.current && timeRef.current.contains(target)) ;
+
+    if (!isInsideAnyCalendar) {
+      setOpen(false);
+      setTimeopen(false);
+    }
+  };
+  
+    document.addEventListener("mousedown", handleClickOutside);
+  
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
   return (
     <div className="grid lg:grid-cols-3 gap-6">
       {/* Candidates List */}
@@ -787,9 +925,11 @@ const formatDate = (date?: any) => {
                 <h3 className="font-semibold text-gray-900 mb-3">
                   Professional Summary
                 </h3>
-                <p className="text-gray-700 leading-relaxed">
-                  {selectedCandidate.summary}
-                </p>
+                <div
+                  className="text-gray-700 leading-relaxed prose max-w-none"
+                  dangerouslySetInnerHTML={{ __html: selectedCandidate.professional_summary
+ || "" }}
+                />
               </div>
 
               {/* Skills */}
@@ -830,7 +970,10 @@ const formatDate = (date?: any) => {
                         Year: {formatDate(exp.start_date)} -{" "}
                         {exp.end_date ? formatDate(exp.end_date) : "Present"}
                       </p>
-                      <p className="text-gray-700 text-sm">{exp.description}</p>
+                      <div
+                        className="text-gray-700 leading-relaxed prose max-w-none"
+                        dangerouslySetInnerHTML={{ __html: exp.description || "" }}
+                      />
                     </div>
                   ))}
                 </div>
@@ -1050,87 +1193,184 @@ const formatDate = (date?: any) => {
                           <label className="text-sm font-medium">
                             Interview Date
                           </label>
-                          <input
+                          {/* <input
                             required
                             type="date"
                             className="w-full border rounded-lg p-2 mt-1 focus:ring-2 focus:ring-blue-500"
                             value={interviewDate}
                             onChange={(e) => setInterviewDate(e.target.value)}
-                          />
+                          /> */}
+                            <div className="relative mt-1">
+                            <input
+                              required
+                              type="text"
+                              placeholder="DD/MM/YYYY"
+                              maxLength={10}
+                              value={interviewInput}
+                              onChange={(e) => {
+                                const raw = e.target.value;
+
+                                if (!raw) {
+                                  setInterviewInput("");
+                                  setInterviewError("");
+                                  setInterviewDate("");
+                                  return;
+                                }
+
+                                const { formatted, parsed, error } = formatDeadline(raw);
+
+                                setInterviewInput(formatted);
+
+                                if (error) {
+                                  setInterviewError(error);
+                                  setInterviewDate("");
+                                  return;
+                                }
+
+                                if (formatted.length < 10) {
+                                  setInterviewError("");
+                                  setInterviewDate("");
+                                  return;
+                                }
+
+                                if (!parsed.isValid()) {
+                                  setInterviewError("Invalid date");
+                                  setInterviewDate("");
+                                  return;
+                                }
+
+                                if (parsed.isBefore(dayjs(), "day")) {
+                                  setInterviewError("Past date not allowed");
+                                  setInterviewDate("");
+                                  return;
+                                }
+
+                                setInterviewError("");
+                                setInterviewDate(parsed.format("DD/MM/YYYY")); // ✅ final value
+                              }}
+                              className={`w-full h-[44px] px-3 pr-10 text-sm border rounded-md outline-none
+                                ${
+                                  interviewError
+                                    ? "border-red-500 focus:ring-red-500"
+                                    : "border-gray-300 focus:ring-blue-500"
+                                }
+                              `}
+                            />
+
+                            {/* CALENDAR */}
+                            <div ref={calendarRef} className="absolute right-2 top-1/2">
+                              <button
+                                type="button"
+                                onClick={() => setOpen((prev) => !prev)}
+                              >
+                                <Calendar size={18} />
+                              </button>
+
+                              {open && (
+                                <div className="absolute right-0 mt-2 z-50 bg-white shadow-lg rounded">
+                                  <LocalizationProvider dateAdapter={AdapterDayjs}>
+                                    <DateCalendar
+                                      value={
+                                        interviewDate
+                                          ? dayjs(interviewDate, "DD/MM/YYYY")
+                                          : null
+                                      }
+                                      minDate={dayjs()}
+                                      onChange={(newValue) => {
+                                        if (!newValue) return;
+
+                                        const formatted = newValue.format("DD/MM/YYYY");
+
+                                        setInterviewInput(formatted);
+                                        setInterviewDate(formatted);
+
+                                        setOpen(false);
+                                      }}
+                                    />
+                                  </LocalizationProvider>
+                                </div>
+                              )}
+                            </div>
+                            </div>
                         </div>
 
-                        {/* Interview Time */}
-                        <div className="flex space-x-2 items-center">
-                          <label className="text-sm font-medium">
-                            Interview Time
-                          </label>
+                        <div className="flex flex-col space-y-3 relative">
+                          <label className="text-sm font-medium">Time</label>
 
-                          <input
-                            type="text"
-                            placeholder="hh:mm AM"
-                            className="w-32 border rounded-lg p-2 text-center"
-                            value={time}
-                            onChange={(e) => {
-                              let value = e.target.value.toUpperCase();
+                          {/* ✅ Input + Timezone */}
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              readOnly
+                              value={time ? time.format("hh:mm A") : ""}
+                              onClick={() => setTimeopen(!timeopen)}
+                              className="border rounded-lg p-2 w-40 bg-gray-100 cursor-pointer"
+                              placeholder="Select time"
+                            />
 
-                              value = value.replace(/[^0-9:APM ]/g, "");
+                            {/* Timezone */}
+                            <select
+                              className="border rounded-lg p-2"
+                              value={timeZone}
+                              onChange={(e) => setTimeZone(e.target.value)}
+                            >
+                              <option value="IST">IST</option>
+                              <option value="UTC">UTC</option>
+                              <option value="EST">EST</option>
+                              <option value="PST">PST</option>
+                              <option value="CST">CST</option>
+                            </select>
+                          </div>
 
-                              if (value.length === 2 && !value.includes(":")) {
-                                value = value + ":";
-                              }
-
-                              if (value.length > 8) return;
-
-                              setTime(value);
-                            }}
-                            onBlur={() => {
-                              const regex =
-                                /^(0?[1-9]|1[0-2]):[0-5][0-9]\s?(AM|PM)$/;
-                              if (!regex.test(time)) {
-                                setTime("");
-                              }
-                            }}
-                          />
-
-                          <select
-                            className="border rounded-lg p-2"
-                            value={ampm}
-                            onChange={(e) => setAmPm(e.target.value)}
-                          >
-                            <option>AM</option>
-                            <option>PM</option>
-                          </select>
-
-                          {/* ✅ Time Zone Dropdown */}
-                          <select
-                            className="border rounded-lg p-2"
-                            value={timeZone}
-                            onChange={(e) => setTimeZone(e.target.value)}
-                          >
-                            <option value="IST">IST</option>
-                            <option value="UTC">UTC</option>
-                            <option value="EST">EST</option>
-                            <option value="PST">PST</option>
-                            <option value="CST">CST</option>
-                          </select>
+                          {timeopen && (
+                            <div ref={timeRef} className="absolute top-20 z-50 bg-white border rounded-xl shadow-lg p-3">
+                              <LocalizationProvider dateAdapter={AdapterDayjs}>
+                                <DigitalClock
+                                  value={time}
+                                  onChange={(newValue) => {
+                                    setTime(newValue);
+                                      if (newValue) {
+                                            setInterviewTime(newValue.format("hh:mm A"));
+                                          }
+                                    setTimeopen(false);
+                                  }}
+                                  ampm
+                                />
+                              </LocalizationProvider>
+                            </div>
+                          )}
+                          </div>
                         </div>
 
                         {/* Interview Mode */}
                         <div>
                           <label className="text-sm font-medium">
-                            Interview Mode
+                             Mode
                           </label>
                           <select
                             className="w-full border rounded-lg p-2 mt-1 focus:ring-2 focus:ring-blue-500"
                             value={interviewMode}
                             onChange={(e) => setInterviewMode(e.target.value)}
                           >
-                            <option>Online</option>
+                            <option value="">Select Mode</option>
                             <option>Office</option>
+                             <option>Online</option>
                             <option>Phone Call</option>
                           </select>
                         </div>
-
+                          {/* Show only when Online selected */}
+                          {interviewMode === "Online" && (
+                            <div className="mt-4">
+                              <label className="text-sm font-medium">Meet Link</label>
+                              <input
+                                type="text"
+                                placeholder="Enter Google Meet / Zoom link"
+                                className="w-full border rounded-lg p-2 mt-1 focus:ring-2 focus:ring-blue-500"
+                                value={interviewLink}
+                                onChange={(e) => setInterviewLink(e.target.value)}
+                              />
+                            </div>
+                          )}
                         {/* Notes */}
                         <div>
                           <label className="text-sm text-gray-700">Notes</label>
@@ -1142,7 +1382,6 @@ const formatDate = (date?: any) => {
                             onChange={(e) => setInterviewNotes(e.target.value)}
                           />
                         </div>
-                      </div>
 
                       <DialogFooter className="mt-3">
                         <Button

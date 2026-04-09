@@ -7,6 +7,7 @@ import StarterKit from "@tiptap/starter-kit";
 type Props = {
   value: string;
   onChange: (value: string) => void;
+  placeholder?: string;
 };
 
 export default function TiptapEditor({ value, onChange }: Props) {

@@ -231,12 +231,12 @@ export default function AppliedJobsPage() {
                   <p className="text-xs text-gray-500">Total applications</p>
                 </div>
 
-                <div>
+                {/* <div>
                   <p className="text-lg font-semibold">
                     {selectedJob.job.apply_clicks}
                   </p>
                   <p className="text-xs text-gray-500">Viewed by recruiter</p>
-                </div>
+                </div> */}
               </div>
               <div className="mt-4">
                 <p className="text-sm font-medium mb-2">Skills</p>
