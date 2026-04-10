@@ -1911,7 +1911,11 @@ setUserData({
                     </h4>
                     <div
                       className="prose text-gray-700 max-w-none"
-                      dangerouslySetInnerHTML={{ __html: selectedJob.requirements ?? "",}}
+                      dangerouslySetInnerHTML={{
+                        __html: Array.isArray(selectedJob.requirements)
+                          ? selectedJob.requirements.join("<br/>")
+                          : selectedJob.requirements || "",
+                      }}
                     />
                   </div>
 
@@ -1922,7 +1926,11 @@ setUserData({
                     </h4>
                     <div
                       className="prose text-gray-700 max-w-none"
-                      dangerouslySetInnerHTML={{ __html: selectedJob.benefits ?? "" ,}}
+                      dangerouslySetInnerHTML={{
+                        __html: Array.isArray(selectedJob.benefits)
+                          ? selectedJob.benefits.join("<br/>")
+                          : selectedJob.benefits || "",
+                      }}
                     />
                   </div>
 

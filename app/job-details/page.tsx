@@ -489,19 +489,27 @@ const handleAnswerChange = (questionIndex: number, value: string) => {
               <h4 className="text-lg font-semibold text-gray-900 mb-3">
                 Requirements
               </h4>
-              <div
-                  className="prose text-gray-700 max-w-none"
-                  dangerouslySetInnerHTML={{ __html: selectedJob.requirements ??"" }}
-                />
+                <div
+                      className="prose text-gray-700 max-w-none"
+                      dangerouslySetInnerHTML={{
+                        __html: Array.isArray(selectedJob.requirements)
+                          ? selectedJob.requirements.join("<br/>")
+                          : selectedJob.requirements || "",
+                      }}
+                    />
             </div>
             <div>
               <h4 className="text-lg font-semibold text-gray-900 mb-3">
                 Benefits
               </h4>
-              <div
-                  className="prose text-gray-700 max-w-none"
-                  dangerouslySetInnerHTML={{ __html: selectedJob.benefits ??"" }}
-                />
+             <div
+              className="prose text-gray-700 max-w-none"
+              dangerouslySetInnerHTML={{
+                __html: Array.isArray(selectedJob.benefits)
+                  ? selectedJob.benefits.join("<br/>")
+                  : selectedJob.benefits || "",
+              }}
+            />
             </div>
             <div>
               <h4 className="text-lg font-semibold text-gray-900 mb-3">
