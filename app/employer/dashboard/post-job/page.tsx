@@ -7,11 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { jwtDecode } from "jwt-decode";
 import dayjs from "dayjs";
-import "react-datepicker/dist/react-datepicker.css";
 import { Calendar } from "lucide-react";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DateCalendar } from "@mui/x-date-pickers/DateCalendar";
+import TiptapEditor from "@/components/TiptapEditor";
 import {
   Select,
   SelectContent,
@@ -1044,20 +1044,17 @@ useEffect(() => {
             <Label htmlFor="description" className="text-sm font-medium">
               Job Description *
             </Label>
-            <Textarea
-              id="description"
-              value={jobForm.description}
-              onChange={(e) =>
-                setJobForm((prev) => ({
-                  ...prev,
-                  description: e.target.value,
-                }))
-              }
-              rows={6}
-              placeholder="Describe the role, responsibilities, and what you're looking for..."
-              className="mt-1"
-              required
-            />
+            <div className="mt-1">
+              <TiptapEditor
+                value={jobForm.description}
+                onChange={(value) =>
+                  setJobForm((prev) => ({
+                    ...prev,
+                    description: value,
+                  }))
+                }
+              />
+            </div>
           </div>
 
           {/* Requirements */}
@@ -1065,7 +1062,7 @@ useEffect(() => {
             <Label htmlFor="requirements" className="text-sm font-medium">
               Requirements & Qualifications
             </Label>
-            <Textarea
+            {/* <Textarea
               id="requirements"
               value={jobForm.requirements}
               onChange={(e) =>
@@ -1077,6 +1074,12 @@ useEffect(() => {
               rows={4}
               placeholder="List the required skills, qualifications, and experience..."
               className="mt-1"
+            /> */}
+            <TiptapEditor
+              value={jobForm.requirements || ""}
+              onChange={(value) =>
+                setJobForm((prev) => ({ ...prev, requirements: value }))
+              }
             />
           </div>
 
@@ -1130,7 +1133,7 @@ useEffect(() => {
             <Label htmlFor="benefits" className="text-sm font-medium">
               Benefits & Perks
             </Label>
-            <Textarea
+            {/* <Textarea
               id="benefits"
               value={jobForm.benefits}
               onChange={(e) =>
@@ -1142,9 +1145,15 @@ useEffect(() => {
               rows={3}
               placeholder="List the benefits, perks, and company culture highlights..."
               className="mt-1"
-            />
+            /> */}
+             <TiptapEditor
+                value={jobForm.benefits || ""}
+                onChange={(value) =>
+                  setJobForm((prev) => ({ ...prev, benefits: value }))
+                }
+              />
           </div>
- <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2">
             <Checkbox
               id="add-website"
               checked={websiteEnabled}

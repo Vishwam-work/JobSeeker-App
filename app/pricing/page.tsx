@@ -33,6 +33,7 @@ export default function PricingPage() {
         );
         const data = await res.json();
         setCountries(data);
+        console.log("Fetched countries:", data);
 
         // default first country select
         if (data.length > 0) {

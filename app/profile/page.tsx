@@ -14,6 +14,7 @@ import { useSavedJobs } from "@/context/SavedJobsContext";
 import { BookmarkX , Check, ChevronsUpDown ,ChevronDown } from "lucide-react";
 import { jwtDecode } from "jwt-decode";
 import { toast } from "sonner";
+import TiptapEditor from "@/components/TiptapEditor";
 import {
   Select,
   SelectContent,
@@ -2998,14 +2999,11 @@ const resumeUrl = profileData?.personalInfo?.resume
                     <p className="text-sm text-gray-500 mb-4">
                       It is the first thing recruiters notice in your profile. Write a concise headline introducing yourself to employers.
                     </p>
-                    <textarea
-                       value={profileData.personalInfo.professional_summary || ""}
-                       onChange={(e) => handleSummaryChange(e.target.value)}
-                       maxLength={250}
-                       rows={4}
-                       placeholder="Example: Senior Oracle Fusion Cloud ERP Consultant with 5+ years’ experience in Financials, SQL and Reporting"
-                       className="w-full border rounded-md p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                     />
+                    <TiptapEditor
+                        value={profileData.personalInfo.professional_summary || ""}
+                        onChange={(value) => handleSummaryChange(value)} // ✅ FIX
+                        placeholder="Example: Senior Oracle Fusion Cloud ERP Consultant with 5+ years’ experience in Financials, SQL and Reporting"
+                      />
                     {/* Footer */}
                     <div className="flex justify-between items-center mt-2 text-xs text-gray-400">
                       <span>
@@ -3135,9 +3133,10 @@ const resumeUrl = profileData?.personalInfo?.resume
                             </div>
                           </div>
                           {exp.description && (
-                            <p className="text-gray-700 leading-relaxed text-sm lg:text-base">
-                              {exp.description}
-                            </p>
+                                    <div
+                  className="text-gray-700 leading-relaxed prose max-w-none"
+                  dangerouslySetInnerHTML={{ __html: exp.description }}
+                />
                           )}
                         </div>
                       ))
@@ -3444,19 +3443,18 @@ const resumeUrl = profileData?.personalInfo?.resume
                               <Label htmlFor="description">
                                 Job Description
                               </Label>
-                              <Textarea
-                                id="description"
-                                value={experienceForm.description}
-                                onChange={(e) =>
-                                  setExperienceForm((prev) => ({
-                                    ...prev,
-                                    description: e.target.value,
-                                  }))
-                                }
-                                rows={4}
-                                placeholder="Describe your role and achievements..."
-                                className="mt-1"
-                              />
+                              <div className="mt-1">
+                                  <TiptapEditor
+                                    value={experienceForm.description || ""}
+                                    onChange={(value) =>
+                                      setExperienceForm((prev) => ({
+                                        ...prev,
+                                        description: value,
+                                      }))
+                                    }
+                                    placeholder="Describe your role and achievements..."
+                                  />
+                                </div>
                             </div>
                             <div className="flex justify-end space-x-2">
                               <Button

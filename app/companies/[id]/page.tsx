@@ -236,9 +236,12 @@ export default function CompanyDetailPage({
                 >
                   <div className="flex-1">
                     <h3 className="font-semibold text-base">{job.title}</h3>
-                    <p className="text-sm text-gray-600 mt-1">
-                      {job.description}
-                    </p>
+                    <div
+                     className="text-gray-700 text-sm md:text-base leading-relaxed mb-4 line-clamp-2 overflow-hidden"
+                     dangerouslySetInnerHTML={{
+                     __html: job.description || "",
+                     }}
+                     />
 
                     <p className="text-xs text-gray-500 mt-2">
                       📍 {job.location} | 💰 {job.salary} | 🕒 {job.type}

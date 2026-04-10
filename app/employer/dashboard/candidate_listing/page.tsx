@@ -14,7 +14,7 @@ interface Candidate {
   full_name: string;
   email: string;
   phone: string;
-
+  phone_code?: string;
   current_role?: string;
   current_company?: string;
 
@@ -47,13 +47,12 @@ interface Candidate {
     end_year?: string | number;
     score_type?: string;
     percentage?: string | number;
-   
   }[];
 
   experiences?: {
     designation?: string;
     company?: string;
-    role?: string;
+    job_title?: string;
     category?: string;
     description?: string;
     start_date?: string | number;
@@ -1532,6 +1531,10 @@ function CandidateDetail({
   onSelect: (c: Candidate) => void;
 }) {
   const cleanSearch = search.trim().replace(/\s+/g, " ");
+  const educations = candidate.educations ?? [];
+const experiences = candidate.experiences ?? [];
+const certifications = candidate.certifications ?? [];
+const skills = candidate.skills ?? [];
   const formatSalary = (value?: string | number) => {
     if (!value) return "-";
     return `₹ ${new Intl.NumberFormat("en-IN").format(Number(value))}`;
@@ -1550,186 +1553,235 @@ function CandidateDetail({
   };
 
   return (
-    <div className="grid grid-cols-12 gap-4 px-2 sm:px-4 lg:px-0">
-      {/* LEFT PROFILE */}
-      <div className="col-span-12 lg:col-span-8 bg-white rounded-xl p-4 sm:p-6 shadow-sm">
-        <button onClick={onBack} className="text-blue-600 text-sm mb-4">
-          ← Back to profiles
-        </button>
+    <div className="grid grid-cols-12 gap-6 px-4 lg:px-8 py-6 bg-gray-50 min-h-screen">
+  {/* LEFT PROFILE */}
+  <div className="col-span-12 lg:col-span-8 bg-white rounded-2xl p-6 shadow-md">
+    
+    <button
+      onClick={onBack}
+      className="text-blue-600 text-sm mb-6 hover:underline"
+    >
+      ← Back to profiles
+    </button>
 
-        <div className="flex flex-col sm:flex-row gap-4 items-start">
-          <img
-            src={
-              candidate.profile_image
-                ? `${process.env.NEXT_PUBLIC_URL}${candidate.profile_image}`
-                : `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                  candidate.full_name
-                )}`
-            }
-            alt={candidate.full_name}
-           className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover border"
-          />
+    {/* Header */}
+    <div className="flex flex-col sm:flex-row gap-5 items-start">
+      <img
+        src={
+          candidate.profile_image
+            ? `${process.env.NEXT_PUBLIC_URL}${candidate.profile_image}`
+            : `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                candidate.full_name
+              )}`
+        }
+        alt={candidate.full_name}
+        className="w-20 h-20 rounded-full object-cover border shadow-sm"
+      />
 
-          <div>
-            <h2 className="text-xl font-semibold">
-              {" "}
-              <HighlightText text={candidate.full_name} />
-            </h2>
-            <p className="text-sm text-gray-600">
-              <HighlightText text={candidate.experience} /> •{" "}
-              <HighlightText text={formatSalary(candidate.current_salary)} />
-            </p>
-            <p className="text-sm text-gray-500">
-              <HighlightText text={candidate.city?.name} />,{" "}
-              <HighlightText text={candidate.state?.name} />
-            </p>
-          </div>
-        </div>
-        <hr className="my-4" />
+      <div>
+        <h2 className="text-2xl font-semibold text-gray-900">
+          <HighlightText text={candidate.full_name} />
+        </h2>
 
-        <h3 className="font-medium mb-2">Compensation</h3>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-          <p>
-            <b>Current:</b>{" "}
+        <p className="text-sm text-gray-600 mt-1">
+          <HighlightText text={candidate.experience} /> •{" "}
+          <span className="font-medium text-gray-800">
             <HighlightText text={formatSalary(candidate.current_salary)} />
-          </p>
-
-          <p>
-            <b>Expected:</b>{" "}
-            <HighlightText text={formatSalary(candidate.expected_salary)} />
-          </p>
-          <p>
-            <b>Notice Period:</b>{" "}
-            <HighlightText text={candidate.notice_period} />
-          </p>
-        </div>
-        {candidate.educations && candidate.educations.length > 0 && (
-          <>
-            <hr className="my-4" />
-            <h3 className="font-medium mb-2">Education</h3>
-
-            {candidate.educations.map((e, i) => (
-              <div key={i} className="text-sm mb-3">
-                <h4 className="font-medium text-gray-900">
-                        {e.education_detail?.name || ""}
-                      </h4>
-                      <p className="text-green-600 font-medium">{e.course_detail?.name || ""}</p>
-                      <p className="text-gray-600">{e.institution}</p>
-                      <div className="flex items-center space-x-4 text-sm text-gray-600 mt-1">
-                        <span>
-                          Year: {e.start_year} - {e.end_year}
-                        </span>
-                        <span>
-                          Score
-                          : {e.percentage}({e.score_type
-                            ? e.score_type.charAt(0).toUpperCase() + e.score_type.slice(1)
-                            : ""})
-                        </span>
-                      </div>
-              </div>
-            ))}
-          </>
-        )}
-
-        <hr className="my-4" />
-
-        <h3 className="font-medium mb-2">Skills</h3>
-        <div className="flex flex-wrap gap-2">
-          {candidate.skills?.map((s, i) => (
-            <span
-              key={i}
-              className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded"
-            >
-              <HighlightText text={s.name} />
-            </span>
-          ))}
-        </div>
-       {/* Work Experience */}
-        {candidate.experiences && candidate.experiences.length > 0 && (
-          <>
-            <hr className="my-4" />
-            <h3 className="font-medium mb-2">Experience</h3>
-
-            {candidate.experiences.map((ex, i) => (
-              <div key={i} className="text-sm mb-4">
-                      <h4 className="font-medium text-gray-900">{ex.role}</h4>
-                      <p className="text-purple-600 font-medium">
-                        {ex.category}
-                      </p>
-                      <p className="text-purple-600 font-medium">
-                        {ex.company}
-                      </p>
-                     <p className="text-sm text-gray-600 mb-2">
-                        Year: {(ex.start_date)} -{" "}
-                        {ex.end_date ? (ex.end_date) : "Present"}
-                      </p>
-                      <p className="text-gray-700 text-sm">{ex.description}</p>
-              </div>
-            ))}
-          </>
-        )}
-        {candidate.certifications && candidate.certifications.length > 0 && (
-          <>
-            <hr className="my-4" />
-            <h3 className="font-medium mb-2">Certifications</h3>
-
-            {candidate.certifications.map((c, i) => (
-              <div key={i} className="text-sm mb-2">
-                <p className="font-medium">
-                  <HighlightText text={c.name} />
-                </p>
-                <p className="text-gray-600">
-                  <HighlightText text={c.issuer} />
-                </p>
-                <p className="text-gray-500 text-xs">
-                  Year:
-                  <HighlightText text={String(c.year)} />
-                </p>
-              </div>
-            ))}
-          </>
-        )}
-
-        <hr className="my-4" />
-
-        <h3 className="font-medium mb-2">Contact</h3>
-        <p className="flex items-center gap-2 text-sm break-all">
-          <Mail size={14} />
-          <HighlightText text={candidate.email} />
-        </p>
-        <p className="flex items-center gap-2 text-sm">
-          <Phone size={14} /> <HighlightText text={candidate.phone} />
+          </span>
         </p>
 
-        {candidate.resume && (
-          <a
-            href={`${process.env.NEXT_PUBLIC_URL}${candidate.resume}`}
-            target="_blank"
-            className="inline-flex items-center gap-1 mt-3 text-blue-600 underline text-sm"
-          >
-            <FileText size={14} /> View CV
-          </a>
-        )}
-      </div>
-
-      {/* RIGHT SIMILAR */}
-      <div className="col-span-12 lg:col-span-4 bg-white rounded-xl p-4 sm:p-5 shadow-sm">
-        <h3 className="font-semibold mb-3">Similar Profiles</h3>
-
-        {candidates
-          .filter((c) => c.id !== candidate.id)
-          .slice(0, 10)
-          .map((c) => (
-            <div
-              key={c.id}
-              onClick={() => onSelect(c)}
-              className="border-b py-2 text-sm cursor-pointer hover:text-blue-600"
-            >
-              <HighlightText text={c.full_name} />
-            </div>
-          ))}
+        <p className="text-sm text-gray-500 mt-1">
+          <HighlightText text={candidate.city?.name} />,{" "}
+          <HighlightText text={candidate.state?.name} />
+        </p>
       </div>
     </div>
+
+    {/* Divider */}
+    <div className="border-t my-6" />
+
+    {/* Compensation */}
+    <h3 className="text-lg font-semibold text-gray-800 mb-3">
+      Compensation
+    </h3>
+
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+      <div className="bg-gray-50 p-3 rounded-lg">
+        <p className="text-gray-500">Current</p>
+        <p className="font-medium text-gray-800">
+          <HighlightText text={formatSalary(candidate.current_salary)} />
+        </p>
+      </div>
+
+      <div className="bg-gray-50 p-3 rounded-lg">
+        <p className="text-gray-500">Expected</p>
+        <p className="font-medium text-gray-800">
+          <HighlightText text={formatSalary(candidate.expected_salary)} />
+        </p>
+      </div>
+
+      <div className="bg-gray-50 p-3 rounded-lg">
+        <p className="text-gray-500">Notice Period</p>
+        <p className="font-medium text-gray-800">
+          <HighlightText text={candidate.notice_period} />
+        </p>
+      </div>
+    </div>
+     {/* Skills */}
+    <div className="border-t my-6" />
+    <h3 className="text-lg font-semibold mb-3">Skills</h3>
+
+    <div className="flex flex-wrap gap-2">
+      {candidate.skills?.map((s, i) => (
+        <span
+          key={i}
+          className="bg-blue-50 text-blue-700 text-xs px-3 py-1 rounded-full font-medium"
+        >
+          <HighlightText text={s.name} />
+        </span>
+      ))}
+    </div>
+ {/* Experience */}
+    {experiences?.length > 0 && (
+      <>
+        <div className="border-t my-6" />
+        <h3 className="text-lg font-semibold mb-3">Experience</h3>
+
+        <div className="space-y-4">
+          {experiences.map((ex, i) => (
+            <div key={i} className="p-4 border rounded-lg">
+              <h4 className="font-medium text-gray-900">{ex.job_title}</h4>
+              <p className="text-purple-600 font-medium"> {ex.category}</p>
+              <p className="text-purple-600 font-medium">{ex.company}</p>
+
+              <p className="text-sm text-gray-500">
+                {ex.start_date} - {ex.end_date || "Present"}
+              </p>
+
+              <p className="text-sm text-gray-700 mt-2">
+                {ex.description}
+              </p>
+            </div>
+          ))}
+        </div>
+      </>
+    )}
+    {/* Education */}
+    {educations?.length > 0 && (
+      <>
+        <div className="border-t my-6" />
+        <h3 className="text-lg font-semibold mb-3">Education</h3>
+
+        <div className="space-y-4">
+          {educations.map((e, i) => (
+            <div key={i} className="p-4 border rounded-lg">
+              <h4 className="font-medium text-gray-900">
+                {e.education_detail?.name}
+              </h4>
+              <p className="text-green-600 font-medium">
+                {e.course_detail?.name}
+              </p>
+              <p className="text-gray-600">{e.institution}</p>
+
+              <div className="text-sm text-gray-500 mt-1">
+                {e.start_year} - {e.end_year} • {e.percentage} ({e.score_type})
+              </div>
+            </div>
+          ))}
+        </div>
+      </>
+    )}
+
+{/* Certifications */}
+{certifications.length > 0 && (
+  <>
+    <div className="border-t my-6" />
+    <h3 className="text-lg font-semibold mb-3">Certifications</h3>
+
+    <div className="space-y-4">
+      {certifications.map((c, i) => (
+        <div
+          key={i}
+          className="p-4 border rounded-lg flex justify-between items-center"
+        >
+          <div>
+            <h4 className="font-medium text-gray-900">
+              <HighlightText text={c.name} />
+            </h4>
+
+            {c.issuer && (
+              <p className="text-sm text-gray-600">
+                <HighlightText text={c.issuer} />
+              </p>
+            )}
+          </div>
+
+          {c.year && (
+            <span className="text-xs bg-gray-100 px-3 py-1 rounded-full text-gray-600">
+              {c.year}
+            </span>
+          )}
+        </div>
+      ))}
+    </div>
+  </>
+)}
+    {/* Contact */}
+    <div className="border-t my-6" />
+    <h3 className="text-lg font-semibold mb-3">Contact</h3>
+
+    <div className="space-y-2 text-sm">
+      <p className="flex items-center gap-2">
+        <Mail size={14} />
+        <span className="text-gray-700 break-all">
+          <HighlightText text={candidate.email} />
+        </span>
+      </p>
+
+      <p className="flex items-center gap-2">
+        <Phone size={14} />
+        <span className="text-gray-700">
+          +<HighlightText text={candidate.phone_code} />{" "}
+          <HighlightText text={candidate.phone} />
+        </span>
+      </p>
+    </div>
+
+    {/* Resume Button */}
+    {candidate.resume && (
+      <button
+        onClick={() =>
+          window.open(
+            `${process.env.NEXT_PUBLIC_URL}${candidate.resume}`,
+            "_blank"
+          )
+        }
+        className="mt-5 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition shadow-sm"
+      >
+        View CV
+      </button>
+    )}
+  </div>
+
+  {/* RIGHT PANEL */}
+  <div className="col-span-12 lg:col-span-4 bg-white rounded-2xl p-5 shadow-md">
+    <h3 className="text-lg font-semibold mb-4">Similar Profiles</h3>
+
+    <div className="space-y-3">
+      {candidates
+        .filter((c) => c.id !== candidate.id)
+        .slice(0, 10)
+        .map((c) => (
+          <div
+            key={c.id}
+            onClick={() => onSelect(c)}
+            className="p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition border"
+          >
+            <HighlightText text={c.full_name} />
+          </div>
+        ))}
+    </div>
+  </div>
+</div>
   );
 }
