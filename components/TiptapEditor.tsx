@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
+import { Editor } from "@tiptap/react";
 
 type Props = {
   value: string;
@@ -15,7 +16,7 @@ export default function TiptapEditor({ value, onChange }: Props) {
     extensions: [StarterKit],
     content: value,
     immediatelyRender: false, // ✅ Fix SSR issue
-    onUpdate: ({ editor }) => {
+    onUpdate: ({ editor }: { editor: Editor }) => {
       onChange(editor.getHTML());
     },
   });
