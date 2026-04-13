@@ -154,8 +154,8 @@ interface CandidateQA {
     const data = filteredCategories.map((c) => ({
       name: c.name || "",
       email: c.email || "",
-      // phone: `+${c.phoneCode}${c.phone}` || "",
-      phone: `+${c.phone || ""}`,
+      phone: `+${c.phoneCode}${c.phone}` || "",
+      // phone: `${c.phone || ""}`,
       appliedFor: c.appliedFor || c.job_title || "",
       status: c.status || "",
       experience: c.experience || "",

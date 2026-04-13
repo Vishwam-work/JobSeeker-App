@@ -2,16 +2,12 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { debounce } from "lodash";
-import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useSavedJobs } from "@/context/SavedJobsContext";
-import { BookmarkX , Check, ChevronsUpDown ,ChevronDown } from "lucide-react";
 import { jwtDecode } from "jwt-decode";
 import { toast } from "sonner";
 import TiptapEditor from "@/components/TiptapEditor";
@@ -2409,18 +2405,17 @@ const resumeUrl = profileData?.personalInfo?.resume
               </div>
               {/* Desktop Navigation Tabs */}
                <div className=" lg:col-span-3 bg-white rounded-lg shadow-sm mb-6 overflow-x-auto ">
-              <div className="flex justify-between items-center border-b ">
-                <div className="flex gap-10">
+              <div className="border-b overflow-x-auto">
+                <div className="flex gap-6 min-w-max px-2">
                   {sections.map((tab) => {
                     const IconComponent = tab.icon;
-
                     const isActive = activeSection === tab.id;
 
                     return (
                       <button
                         key={tab.id}
                         onClick={() => setActiveSection(tab.id)}
-                        className="flex items-center gap-2 py-3 text-sm font-medium relative"
+                        className="flex items-center gap-2 py-3 text-sm font-medium relative whitespace-nowrap"
                       >
                         <IconComponent
                           className={`w-4 h-4 ${
@@ -2436,7 +2431,7 @@ const resumeUrl = profileData?.personalInfo?.resume
                           {tab.label}
                         </span>
 
-                        {/* 🔥 Active underline */}
+                        {/* Active underline */}
                         {isActive && (
                           <div className="absolute bottom-0 left-0 w-full h-[2px] bg-purple-600 rounded-full"></div>
                         )}
@@ -2445,7 +2440,6 @@ const resumeUrl = profileData?.personalInfo?.resume
                   })}
                 </div>
               </div>
-
 
 
              {loading ? (
@@ -3132,11 +3126,10 @@ const resumeUrl = profileData?.personalInfo?.resume
                               </Button>
                             </div>
                           </div>
-                          {exp.description && (
-                                    <div
-                  className="text-gray-700 leading-relaxed prose max-w-none"
-                  dangerouslySetInnerHTML={{ __html: exp.description }}
-                />
+                           {exp.description && (
+                            <p className="text-gray-700 leading-relaxed text-sm lg:text-base">
+                              {exp.description}
+                            </p>
                           )}
                         </div>
                       ))
@@ -3280,8 +3273,14 @@ const resumeUrl = profileData?.personalInfo?.resume
                                     </button>
 
                                     {open && (
-                                      <div className="absolute right-0 mt-2 z-50 bg-white shadow-lg rounded">
-                                        <LocalizationProvider dateAdapter={AdapterDayjs}>
+                                      <div
+                                        className="
+                                          absolute right-0 z-50 bg-white shadow-lg rounded
+                                          bottom-full mb-2
+                                          md:top-full md:bottom-auto md:mt-2
+                                        "
+                                      >
+                                       <LocalizationProvider dateAdapter={AdapterDayjs}>
                                         <DateCalendar
                                             value={
                                               startInput && startInput.length === 10
@@ -3361,8 +3360,14 @@ const resumeUrl = profileData?.personalInfo?.resume
 
                                     {/* CALENDAR */}
                                     {endOpen && (
-                                      <div className="absolute right-0 mt-2 z-50 bg-white shadow-lg rounded">
-                                        <LocalizationProvider dateAdapter={AdapterDayjs}>
+                                      <div
+                                        className="
+                                          absolute right-0 z-50 bg-white shadow-lg rounded
+                                          bottom-full mb-2
+                                          md:top-full md:bottom-auto md:mt-2
+                                        "
+                                      >
+                                      <LocalizationProvider dateAdapter={AdapterDayjs}>
                                           <DateCalendar
                                             value={
                                               endInput && endInput.length === 10
@@ -3439,23 +3444,24 @@ const resumeUrl = profileData?.personalInfo?.resume
                               </div>
                               </div>
                             </div>
-                            <div>
+                             <div>
                               <Label htmlFor="description">
-                                Job Description
+                                 Job Description
                               </Label>
-                              <div className="mt-1">
-                                  <TiptapEditor
-                                    value={experienceForm.description || ""}
-                                    onChange={(value) =>
-                                      setExperienceForm((prev) => ({
-                                        ...prev,
-                                        description: value,
-                                      }))
-                                    }
-                                    placeholder="Describe your role and achievements..."
-                                  />
-                                </div>
-                            </div>
+                              <Textarea
+                                 id="description"
+                                 value={experienceForm.description}
+                                 onChange={(e) =>
+                                   setExperienceForm((prev) => ({
+                                    ...prev,
+                                    description: e.target.value,
+                                   }))
+                                }
+                                rows={4}
+                                 placeholder="Describe your role and achievements..."
+                                className="mt-1"
+                              />
+                             </div>
                             <div className="flex justify-end space-x-2">
                               <Button
                                 variant="outline"
