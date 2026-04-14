@@ -49,6 +49,7 @@ import {
 } from "@/components/ui/dialog";
 import dayjs, { Dayjs } from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
+import { set } from "lodash";
 
 dayjs.extend(customParseFormat);
 export default function Candidates() {
@@ -63,6 +64,7 @@ export default function Candidates() {
   const [salaryFilter, setSalaryFilter] = useState("All");
   const [experienceFilter, setExperienceFilter] = useState("All");
   const [jobTitleFilter, setJobTitleFilter] = useState("All");
+  const [genderFilter, setGenderFilter] = useState("All");
   const [openSchedule, setOpenSchedule] = useState(false);
   const [interviewDate, setInterviewDate] = useState("");
   const [interviewMode, setInterviewMode] = useState("");
@@ -93,8 +95,7 @@ const [interviewError, setInterviewError] = useState("");
     phone: string;
     location: string;
     experience: string;
-    currentRole: string;
-    currentCompany: string;
+    gender: string;
     skills: string[];
     education: string;
     appliedFor: string;
@@ -178,9 +179,8 @@ const [interviewError, setInterviewError] = useState("");
           ]
             .filter(Boolean)
             .join(", "),
-          experience: app.profile?.experience || "N/A",
-          currentRole: "",
-          currentCompany: "",
+          experience: app.profile?.experience || "",
+          gender: app.profile?.gender || "",
           skills: app.profile?.skills || [],
           education: "",
           appliedFor: app.job_title,
@@ -219,7 +219,7 @@ const [interviewError, setInterviewError] = useState("");
   const filteredCategories = candidates.filter((c) => {
     const nameMatch =
       c.name?.toLowerCase().startsWith(searchTerm.toLowerCase()) ||
-      c.currentRole?.toLowerCase().startsWith(searchTerm.toLowerCase()) ||
+      c.gender?.toLowerCase().startsWith(searchTerm.toLowerCase()) ||
       c.appliedFor?.toLowerCase().startsWith(searchTerm.toLowerCase()) ||
       c.skills?.some((skill) =>
         skill.toLowerCase().includes(searchTerm.toLowerCase()),
@@ -236,6 +236,10 @@ const [interviewError, setInterviewError] = useState("");
     const jobTitleMatch =
       jobTitleFilter === "All" ||
       c.appliedFor?.toLowerCase() === jobTitleFilter.toLowerCase();
+
+    const genderMatch =
+      genderFilter === "All" ||
+      c.gender?.toLowerCase() === genderFilter.toLowerCase();
 
     const salary = parseInt(c.expectedSalary ?? "0", 10);
     const salaryMatch =
@@ -268,7 +272,8 @@ const [interviewError, setInterviewError] = useState("");
       locationMatch &&
       salaryMatch &&
       expMatch &&
-      jobTitleMatch
+      jobTitleMatch &&
+      genderMatch
     );
   });
 
@@ -656,6 +661,7 @@ const formatDate = (date?: any) => {
                   setSalaryFilter("All");
                   setExperienceFilter("All");
                   setJobTitleFilter("All");
+                  setGenderFilter("All");
                 }}
                 className="text-sm px-3 py-1 border rounded-md hover:bg-gray-100"
               >
@@ -758,6 +764,20 @@ const formatDate = (date?: any) => {
                     ))}
                 </SelectContent>
               </Select>
+              <Select
+                value={genderFilter}
+                onValueChange={setGenderFilter}
+              >
+                <SelectTrigger className="w-full h-10">
+                  <SelectValue placeholder="Gender" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="All">All Genders</SelectItem>
+                  <SelectItem value="male">Male</SelectItem>
+                  <SelectItem value="female">Female</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </CardHeader>
           <CardContent className="p-0">
@@ -791,9 +811,6 @@ const formatDate = (date?: any) => {
                       <h4 className="font-medium text-gray-900 truncate">
                         {candidate.name}
                       </h4>
-                      <p className="text-sm text-gray-600 truncate">
-                        {candidate.currentRole}
-                      </p>
                       <p className="text-sm text-gray-500 truncate">
                         {candidate.appliedFor}
                       </p>
@@ -835,12 +852,6 @@ const formatDate = (date?: any) => {
                     <h2 className="text-2xl font-bold text-gray-900">
                       {selectedCandidate.name}
                     </h2>
-                    <p className="text-purple-600 font-medium">
-                      {selectedCandidate.currentRole}
-                    </p>
-                    <p className="text-gray-600">
-                      {selectedCandidate.currentCompany}
-                    </p>
                     <div className="flex items-center space-x-4 mt-2 text-sm text-gray-600">
                       <div className="flex items-center">
                         <MapPin className="w-4 h-4 mr-1" />
@@ -849,6 +860,16 @@ const formatDate = (date?: any) => {
                       <div className="flex items-center">
                         <Briefcase className="w-4 h-4 mr-1" />
                         <span>{selectedCandidate.experience}</span>
+                      </div>
+                       <div className="flex items-center">
+                        <p className="text-gray-600">
+                       Gender: {
+                                selectedCandidate.gender
+                                  ? selectedCandidate.gender.charAt(0).toUpperCase() +
+                                     selectedCandidate.gender.slice(1)
+                                  : ""
+                                }
+                       </p>
                       </div>
                     </div>
                   </div>
@@ -1431,8 +1452,6 @@ const formatDate = (date?: any) => {
             {selectedCandidate && (
               <>
 
-                <Card className="h-full">
-                    <CardHeader>
                       <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                         <div className="flex items-start space-x-4">
                           <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-blue-100 rounded-full flex items-center justify-center">
@@ -1442,17 +1461,21 @@ const formatDate = (date?: any) => {
                             <h2 className="text-2xl font-bold text-gray-900">
                               {selectedCandidate.name}
                             </h2>
-                            <p className="text-purple-600 font-medium">
-                              {selectedCandidate.currentRole}
-                            </p>
                             <p className="text-gray-600">
-                              {selectedCandidate.currentCompany}
+                              Gender: {
+                                        selectedCandidate.gender
+                                          ? selectedCandidate.gender.charAt(0).toUpperCase() +
+                                            selectedCandidate.gender.slice(1)
+                                          : ""
+                                      }
                             </p>
                             <div className="flex items-center space-x-4 mt-2 text-sm text-gray-600">
                               <div className="flex items-center">
                                 <MapPin className="w-4 h-4 mr-1" />
                                 <span>{selectedCandidate.location}</span>
                               </div>
+                            </div>
+                              <div className="flex items-center space-x-4 mt-2 text-sm text-gray-600">
                               <div className="flex items-center">
                                 <Briefcase className="w-4 h-4 mr-1" />
                                 <span>{selectedCandidate.experience}</span>
@@ -1479,8 +1502,6 @@ const formatDate = (date?: any) => {
                           </Button>
                         </div>
                       </div>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
                       {/* Contact Information */}
                       <div>
                         <h3 className="font-semibold text-gray-900 mb-3">
@@ -2015,8 +2036,6 @@ const formatDate = (date?: any) => {
                           </Dialog>
                         )}
                       </div>
-                    </CardContent>
-                  </Card>
               </>
             )}
           <button
