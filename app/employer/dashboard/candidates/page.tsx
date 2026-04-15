@@ -88,6 +88,9 @@ const [interviewError, setInterviewError] = useState("");
       const [timeopen, setTimeopen] = useState(false);
 
     const [time, setTime] = useState<Dayjs | null>(dayjs());
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+
   interface Candidate {
     id: number;
     name: string;
@@ -146,14 +149,23 @@ const [interviewError, setInterviewError] = useState("");
     application_status: string;
     detail?: string;
   }
-  useEffect(() => {
-    const fetchApplications = async () => {
+  const fetchApplications = async ( page=1,search = "", status = "All", gender = "All", title = "All", location = "All", exp = "All", salary = "All" ) => {
       try {
         setLoading(true);
         const token = localStorage.getItem("auth_token");
         if (!token) return;
+            const query = new URLSearchParams({
+      page: page.toString(),
+      search: searchTerm,
+      status: statusFilter,
+      gender: genderFilter,
+      job_title: jobTitleFilter,
+      location: locationFilter,
+      experience: experienceFilter,
+      salary_range: salaryFilter,
+    });
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/employer/applications/`,
+          `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/employer/applications/?${query.toString()}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           },
@@ -163,9 +175,9 @@ const [interviewError, setInterviewError] = useState("");
           return;
         }
         const data = await res.json();
-        console.log("Employer applications:", data);
+        console.log("Employer applications:", data.results);
         // Map API to UI candidate shape
-        const mapped = (Array.isArray(data) ? data : []).map((app) => ({
+        const mapped = (Array.isArray(data.results) ? data.results : []).map((app: any) => ({
           id: app.id,
           name: app.profile?.full_name || app.user_email || "Unknown",
           email: app.profile?.email || app.user_email,
@@ -201,82 +213,37 @@ const [interviewError, setInterviewError] = useState("");
           qa: app.answers || [],
         }));
         setCandidates(mapped);
-        console.log("MAPPED:", mapped);
+        setCurrentPage(page);
+        setTotalPages(Math.ceil(data.count / 5));
+        console.log("MAPPED:", candidates);
       } catch (e) {
         console.error("Failed to fetch employer applications", e);
       } finally {
         setLoading(false);
       }
     };
+ useEffect(() => {
+  const delay = setTimeout(() => {
     fetchApplications();
-  }, []);
+  }, 400);
+
+  return () => clearTimeout(delay);
+}, [
+  
+  searchTerm,
+  statusFilter,
+  genderFilter,
+  jobTitleFilter,
+  locationFilter,
+  experienceFilter,
+  salaryFilter,
+]);
   useEffect(() => {
   const checkMobile = () => setIsMobile(window.innerWidth < 768);
   checkMobile();
   window.addEventListener("resize", checkMobile);
   return () => window.removeEventListener("resize", checkMobile);
 }, []);
-  const filteredCategories = candidates.filter((c) => {
-    const nameMatch =
-      c.name?.toLowerCase().startsWith(searchTerm.toLowerCase()) ||
-      c.gender?.toLowerCase().startsWith(searchTerm.toLowerCase()) ||
-      c.appliedFor?.toLowerCase().startsWith(searchTerm.toLowerCase()) ||
-      c.skills?.some((skill) =>
-        skill.toLowerCase().includes(searchTerm.toLowerCase()),
-      );
-
-    const statusMatch =
-      statusFilter === "All" ||
-      c.status?.toLowerCase() === statusFilter.toLowerCase();
-
-    const locationMatch =
-      locationFilter === "All" ||
-      c.location?.toLowerCase() === locationFilter.toLowerCase();
-
-    const jobTitleMatch =
-      jobTitleFilter === "All" ||
-      c.appliedFor?.toLowerCase() === jobTitleFilter.toLowerCase();
-
-    const genderMatch =
-      genderFilter === "All" ||
-      c.gender?.toLowerCase() === genderFilter.toLowerCase();
-
-    const salary = parseInt(c.expectedSalary ?? "0", 10);
-    const salaryMatch =
-      salaryFilter === "All" ||
-      (salaryFilter === "Below 20000" && salary < 20000) ||
-      (salaryFilter === "20000-50000" && salary >= 20000 && salary <= 50000) ||
-      (salaryFilter === "Above 50000" && salary > 50000);
-
-    const expMatch =
-      experienceFilter === "All" ||
-      (experienceFilter === "Fresher" &&
-        (c.experience?.toLowerCase().includes("fresher") ||
-          c.experience?.includes("0"))) ||
-      (experienceFilter === "1-3 Years" &&
-        (c.experience?.includes("1") ||
-          c.experience?.includes("2") ||
-          c.experience?.includes("3"))) ||
-      (experienceFilter === "3-5 Years" &&
-        (c.experience?.includes("3") ||
-          c.experience?.includes("4") ||
-          c.experience?.includes("5"))) ||
-      (experienceFilter === "5+ Years" &&
-        (c.experience?.includes("5") ||
-          c.experience?.includes("6") ||
-          c.experience?.includes("7")));
-
-    return (
-      nameMatch &&
-      statusMatch &&
-      locationMatch &&
-      salaryMatch &&
-      expMatch &&
-      jobTitleMatch &&
-      genderMatch
-    );
-  });
-
 const formatDate = (date?: any) => {
   if (!date) return "";
 
@@ -651,7 +618,7 @@ const formatDate = (date?: any) => {
               <div className="flex items-center gap-2">
                 <CardTitle className="text-lg">Applications</CardTitle>
 
-                <Badge variant="secondary">{filteredCategories.length}</Badge>
+                <Badge variant="secondary">{candidates.length}</Badge>
               </div>
 
               <button
@@ -789,8 +756,8 @@ const formatDate = (date?: any) => {
                   <div className="h-3 bg-gray-200 rounded w-full mb-2"></div>
                 </div>
               ))
-            ) : filteredCategories.length > 0 ? (
-              filteredCategories.map((candidate) => (
+            ) : candidates.length > 0 ? (
+              candidates.map((candidate:any) => (
                 <div
                   key={candidate.id}
                   onClick={() => {
@@ -833,6 +800,37 @@ const formatDate = (date?: any) => {
             ) : (
               <p className="text-gray-500 text-sm">No candidates found</p>
             )}
+            <div className="flex justify-center items-center gap-4 mt-6">
+        <button
+          disabled={currentPage === 1}
+          onClick={() => fetchApplications(currentPage - 1, searchTerm, statusFilter,
+          genderFilter,
+          jobTitleFilter,
+          locationFilter,
+          experienceFilter,
+          salaryFilter )}
+          className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
+        >
+          Previous
+        </button>
+
+        <span>
+          Page {currentPage} of {totalPages}
+        </span>
+
+        <button
+          disabled={currentPage === totalPages}
+          onClick={() => fetchApplications(currentPage + 1, searchTerm, statusFilter,
+          genderFilter,
+          jobTitleFilter,
+          locationFilter,
+          experienceFilter,
+          salaryFilter)}
+          className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
+        >
+          Next
+        </button>
+      </div>
             <div className="flex flex-wrap gap-3 mb-4 items-center"></div>
           </CardContent>
         </Card>
