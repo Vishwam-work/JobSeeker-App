@@ -1498,7 +1498,7 @@ const handleAddQuestion = () => {
                       currencyLabel: selectedOption?.label || "",
                     }));
                   }}
-                  isClearable
+                  // isClearable
                 />
                 <Input
                   type="text"

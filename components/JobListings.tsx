@@ -74,7 +74,7 @@ export default function JobListings() {
   const searchParams = useSearchParams();
   const searchFromUrl = searchParams.get("search");
   const router = useRouter();
-
+  const [showFilters, setShowFilters] = useState(false);
   // Filter states
   const [filters, setFilters] = useState({
     search: "",
@@ -737,7 +737,7 @@ useEffect(() => {
       url: shareUrl,
     });
   } else {
-    navigator.clipboard.writeText(shareUrl);
+    navigator.clipboard?.writeText(shareUrl);
     toast.success("Job link copied to clipboard");
   }
 };
@@ -1009,10 +1009,9 @@ setUserData({
             postings
           </p>
         </div>
-
         <div className="grid lg:grid-cols-4 gap-6">
           {/* Sidebar Filters */}
-          <div className="lg:col-span-1">
+          <div className="hidden lg:block lg:col-span-1">
             <Card className="sticky top-4">
               <div className="p-6">
                 <div className="flex items-center justify-between mb-6">
@@ -1434,20 +1433,473 @@ setUserData({
               </div>
             </Card>
           </div>
+          {/* mobile filters */}
+          <div
+            className={`fixed inset-0 z-50 md:hidden ${
+              showFilters ? "block" : "hidden"
+            }`}
+          >
+            {/* Overlay */}
+            <div
+              className="absolute inset-0 bg-black/40"
+              onClick={() => setShowFilters(false)}
+            />
 
+            {/* Drawer */}
+            <div
+              className={`absolute right-0 top-0 h-full w-3/4 max-w-sm bg-white overflow-y-auto transition-transform duration-300 ${
+                showFilters ? "translate-x-0" : "translate-x-full"
+              }`}
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-white z-10">
+                <h3 className="font-semibold">Filters</h3>
+
+                <button
+                  onClick={() => setShowFilters(false)}
+                  className="text-gray-500"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="p-6">
+                          <div className="flex items-center justify-between mb-6">
+                            <h3 className="text-lg font-semibold text-gray-900">
+                            </h3>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={clearAllFilters}
+                              className="text-purple-600 hover:text-purple-700"
+                            >
+                              Clear All
+                            </Button>
+                          </div>
+
+                          <div className="space-y-6">
+                            {/* Search */}
+                            <div>
+                              <Label className="text-sm font-medium text-gray-700 mb-2 block">
+                                Search Jobs
+                              </Label>
+                              <div className="relative">
+                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                <Input
+                                  placeholder="Job title, skills, company..."
+                                  value={filters.search}
+                                  onChange={(e) =>
+                                    handleFilterChange("search", e.target.value)
+                                  }
+                                  className="pl-10"
+                                />
+                              </div>
+                            </div>
+
+                            {/* Location */}
+                            <div>
+                              <Label className="text-sm font-medium text-gray-700 mb-2 block">
+                                Location
+                              </Label>
+
+                              <Select
+                                value={filters.location || undefined}
+                                onValueChange={(location) =>
+                                  setFilters((prev) => ({
+                                    ...prev,
+                                    location,
+                                  }))
+                                }
+                              >
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select location" />
+                                </SelectTrigger>
+
+                                <SelectContent className="max-h-60">
+                                  {/* Search input */}
+                                  <div className="sticky top-0 z-20 bg-white p-2 border-b">
+                                    <input
+                                      type="text"
+                                      placeholder="Search location..."
+                                      value={searchLocation}
+                                      onChange={(e) => setSearchLocation(e.target.value)}
+                                      onKeyDown={(e) => e.stopPropagation()}
+                                      className="w-full h-10 text-sm border rounded px-2 placeholder-gray-400 appearance-none focus:outline-none"
+                                    />
+                                  </div>
+
+                                  {/* Loading */}
+                                  {loading && (
+                                    <p className="text-sm text-gray-500 p-2">
+                                      Loading locations...
+                                    </p>
+                                  )}
+
+                                  {/* Location list */}
+                                  {locations
+                                    .filter(
+                                      (location) =>
+                                        typeof location.name === "string" &&
+                                        location.name
+                                          .toLowerCase()
+                                          .startsWith(searchLocation.toLowerCase()),
+                                    )
+                                    .map((location) => {
+                                      const isSelected =
+                                        filters.location === location.name;
+
+                                      return (
+                                        <SelectItem
+                                          key={location.id}
+                                          value={location.name}
+                                          className={`text-sm cursor-pointer
+                                          ${
+                                            isSelected
+                                              ? "bg-blue-100 text-blue-700 font-medium"
+                                              : "text-gray-700 hover:bg-gray-100"
+                                          }`}
+                                        >
+                                          {location.name}
+                                        </SelectItem>
+                                      );
+                                    })}
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            {/* Experience */}
+                            <div>
+                              <Label className="text-sm font-medium text-gray-700 mb-2 block">
+                                Experience
+                              </Label>
+
+                              {visibleExperience.map((exp) => (
+                                <div className="flex items-center space-x-2">
+                                  <Checkbox
+                                    id={exp}
+                                    checked={filters.experience.includes(exp)}
+                                    onCheckedChange={(checked) =>
+                                      handleExperienceFilter(exp, checked as boolean)
+                                    }
+                                  />
+                                  <label
+                                    htmlFor={exp}
+                                    className="text-sm text-gray-600 cursor-pointer"
+                                  >
+                                    {exp}
+                                  </label>
+                                </div>
+                              ))}
+
+                              {experienceList.length > 4 && (
+                                <button
+                                  onClick={() =>
+                                    setShowMoreExperience(!showMoreExperience)
+                                  }
+                                  className="text-purple-600 text-sm mt-2"
+                                >
+                                  {showMoreExperience ? "View Less" : "View More"}
+                                </button>
+                              )}
+                            </div>
+
+                            {/* Job Type */}
+                            <div>
+                              <Label className="text-sm font-medium text-gray-700 mb-2 block">
+                                Job Type
+                              </Label>
+
+                              {jobTypes
+                                .sort((a, b) => {
+                                  const aSelected = filters.jobType.includes(a);
+                                  const bSelected = filters.jobType.includes(b);
+                                  return aSelected === bSelected ? 0 : aSelected ? -1 : 1;
+                                })
+                                .slice(0, showMoreJobType ? jobTypes.length : 4)
+                                .map((type) => (
+                                  <div
+                                    key={type}
+                                    className="flex items-center space-x-2 mb-2"
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={filters.jobType.includes(type)}
+                                      onChange={(e) =>
+                                        handleJobTypeFilter(type, e.target.checked)
+                                      }
+                                    />
+                                    <label className="text-sm text-gray-600">
+                                      {type}
+                                    </label>
+                                  </div>
+                                ))}
+
+                              {jobTypes.length > 4 && (
+                                <button
+                                  onClick={() => setShowMoreJobType(!showMoreJobType)}
+                                  className="text-blue-600 text-sm mt-1"
+                                >
+                                  {showMoreJobType ? "Less" : "More"}
+                                </button>
+                              )}
+                            </div>
+
+                            {/* Work Mode */}
+                            <div>
+                              <Label className="text-sm font-medium text-gray-700 mb-2 block">
+                                Work Mode
+                              </Label>
+
+                              {workModes
+                                .sort((a, b) => {
+                                  const aSelected = filters.workMode.includes(a);
+                                  const bSelected = filters.workMode.includes(b);
+                                  return aSelected === bSelected ? 0 : aSelected ? -1 : 1;
+                                })
+                                .slice(0, showMoreWorkMode ? workModes.length : 4)
+                                .map((mode) => (
+                                  <div
+                                    key={mode}
+                                    className="flex items-center space-x-2 mb-2"
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={filters.workMode.includes(mode)}
+                                      onChange={(e) =>
+                                        handleWorkModeFilter(mode, e.target.checked)
+                                      }
+                                    />
+                                    <label className="text-sm text-gray-600">
+                                      {mode}
+                                    </label>
+                                  </div>
+                                ))}
+
+                              {workModes.length > 4 && (
+                                <button
+                                  onClick={() => setShowMoreWorkMode(!showMoreWorkMode)}
+                                  className="text-blue-600 text-sm mt-1"
+                                >
+                                  {showMoreWorkMode ? "Less" : "More"}
+                                </button>
+                              )}
+                            </div>
+
+                            {/* Salary Range */}
+                            <div>
+                              <Label className="text-sm font-medium text-gray-700 mb-2 block">
+                                Salary Range (Annual)
+                              </Label>
+                              <div className="px-2">
+                                <Slider
+                                  value={filters.salaryRange}
+                                  onValueChange={(value) =>
+                                    handleFilterChange("salaryRange", value)
+                                  }
+                                  max={50}
+                                  min={0}
+                                  step={1}
+                                  className="w-full"
+                                />
+                                <div className="flex justify-between text-xs text-gray-500 mt-1">
+                                  <span>{filters.salaryRange[0]} Annual</span>
+                                  <span>{filters.salaryRange[1]} Annual</span>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Posted Within */}
+                            <div>
+                              <Label className="text-sm font-medium text-gray-700 mb-2 block">
+                                Posted Within
+                              </Label>
+
+                              {postedOptions
+                                .sort((a, b) => {
+                                  const aSelected = filters.postedWithin.includes(
+                                    a.value,
+                                  );
+                                  const bSelected = filters.postedWithin.includes(
+                                    b.value,
+                                  );
+                                  return aSelected === bSelected ? 0 : aSelected ? -1 : 1;
+                                })
+                                .slice(0, showMorePosted ? postedOptions.length : 4)
+                                .map((option) => (
+                                  <div
+                                    key={option.value}
+                                    className="flex items-center space-x-2 mb-2"
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={filters.postedWithin.includes(
+                                        option.value,
+                                      )}
+                                      onChange={(e) =>
+                                        handlePostedFilter(option.value, e.target.checked)
+                                      }
+                                    />
+                                    <label className="text-sm text-gray-600">
+                                      {option.label}
+                                    </label>
+                                  </div>
+                                ))}
+
+                              {postedOptions.length > 4 && (
+                                <button
+                                  onClick={() => setShowMorePosted(!showMorePosted)}
+                                  className="text-blue-600 text-sm mt-1"
+                                >
+                                  {showMorePosted ? "Less" : "More"}
+                                </button>
+                              )}
+                            </div>
+
+                            {/* Companies */}
+                            <div>
+                              <Label className="text-sm font-medium text-gray-700 mb-2 block">
+                                Companies
+                              </Label>
+
+                              {/* Search */}
+                              <input
+                                type="text"
+                                placeholder="Search company..."
+                                value={searchCompany}
+                                onChange={(e) => setSearchCompany(e.target.value)}
+                                className="w-full h-9 text-sm border rounded px-2 mb-2"
+                              />
+
+                              {companies
+                                .filter((company) =>
+                                  company
+                                    .toLowerCase()
+                                    .includes(searchCompany.toLowerCase()),
+                                )
+                                .sort((a, b) => {
+                                  const aSelected = filters.companies.includes(a);
+                                  const bSelected = filters.companies.includes(b);
+                                  return aSelected === bSelected ? 0 : aSelected ? -1 : 1;
+                                })
+                                .slice(0, showMoreCompanies ? companies.length : 4)
+                                .map((company) => (
+                                  <div
+                                    key={company}
+                                    className="flex items-center space-x-2 mb-2"
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={filters.companies.includes(company)}
+                                      onChange={(e) =>
+                                        handleCompanyFilter(company, e.target.checked)
+                                      }
+                                    />
+                                    <label className="text-sm text-gray-600">
+                                      {company}
+                                    </label>
+                                  </div>
+                                ))}
+
+                              {companies.length > 4 && (
+                                <button
+                                  onClick={() => setShowMoreCompanies(!showMoreCompanies)}
+                                  className="text-blue-600 text-sm mt-1"
+                                >
+                                  {showMoreCompanies ? "Less" : "More"}
+                                </button>
+                              )}
+                            </div>
+
+                            {/* Skills */}
+                            {/* <div>
+                              <Label className="text-sm font-medium text-gray-700 mb-2 block">
+                                Skills
+                              </Label>
+
+                              <Select
+                                open={open} 
+                                onOpenChange={setOpen}
+                                value="" 
+                                onValueChange={() => {}}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue
+                                    placeholder={
+                                      filters.skills.length > 0
+                                        ? `${filters.skills.length} skills selected`
+                                        : "Select skills"
+                                    }
+                                  />
+                                </SelectTrigger>
+
+                                <SelectContent className="max-h-60">
+                                  <div className="sticky top-0 bg-white z-10 p-2 border-b">
+                                    <input
+                                      type="text"
+                                      placeholder="Search skills..."
+                                      value={searchSkill}
+                                      onChange={(e) => setSearchSkill(e.target.value)}
+                                      onKeyDown={(e) => e.stopPropagation()}
+                                      className="w-full h-8 text-sm border rounded px-2"
+                                    />
+                                  </div>
+
+                                  {skillsList
+                                    .filter((skill) =>
+                                      skill.toLowerCase().startsWith(searchSkill.toLowerCase())
+                                    )
+                                    .map((skill) => {
+                                      const isSelected = filters.skills.includes(skill);
+
+                                      return (
+                                        <div
+                                          key={skill}
+                                          className={`px-3 py-2 text-sm cursor-pointer flex justify-between items-center
+                                            ${
+                                              isSelected
+                                                ? "bg-blue-100 text-blue-700 font-medium"
+                                                : "text-gray-700 hover:bg-gray-100"
+                                            }`}
+                                          onClick={() => {
+                                            setFilters((prev) => ({
+                                              ...prev,
+                                              skills: isSelected
+                                                ? prev.skills.filter((s) => s !== skill)
+                                                : [...prev.skills, skill],
+                                            }));
+                                            setOpen(false);
+                                          }}
+                                        >
+                                          <span>{skill}</span>
+                                          {isSelected && <span>✓</span>}
+                                        </div>
+                                      );
+                                    })}
+                                </SelectContent>
+                              </Select>
+                            </div> */}
+                          </div>
+                        </div>
+            </div>
+          </div>
           {/* Job Listings */}
           <div className="lg:col-span-3">
             <div className="mb-4 flex items-center justify-between">
               <p className="text-gray-600">
                 Showing {filteredJobs.length} of {jobs.length} jobs
               </p>
-
               <div className="flex items-center space-x-2 text-sm relative">
-                <Filter className="w-4 h-4 text-gray-400" />
 
-                <span className="text-gray-500">Sort by:</span>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowFilters(true)}
+                  className="lg:hidden flex items-center gap-2"
+                >
+                  <Filter className="w-3 h-4" />
+                  Filters
+                </Button>
 
-                <button
+                {/* <button
                   onClick={() => setSortBy("relevance")}
                   className={`px-2 py-1 rounded ${
                     sortBy === "relevance"
@@ -1458,7 +1910,7 @@ setUserData({
                   Relevance
                 </button>
 
-                <span className="text-gray-400">|</span>
+                <span className="text-gray-400">|</span> */}
 
                 <button
                   onClick={() => {
@@ -1485,7 +1937,7 @@ setUserData({
                      >
                        Last 24 hours
                      </button>
-             
+
                      <button
                        onClick={() => {
                          setDateFilter("7d");
@@ -1495,7 +1947,7 @@ setUserData({
                      >
                       Last 7 days
                         </button>
-                
+
                         <button
                           onClick={() => {
                             setDateFilter("30d");
@@ -1505,7 +1957,7 @@ setUserData({
                         >
                           Last 30 days
                         </button>
-                
+
                         <button
                           onClick={() => {
                             setDateFilter("year");

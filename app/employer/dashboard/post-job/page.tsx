@@ -764,7 +764,7 @@ useEffect(() => {
                       currencyLabel: selectedOption?.label || "",
                     }));
                   }}
-                  isClearable
+                  // isClearable
                   menuPortalTarget={
                     typeof window !== "undefined" ? document.body : null
                   }

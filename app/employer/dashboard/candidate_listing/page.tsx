@@ -17,7 +17,7 @@ interface Candidate {
   phone_code?: string;
   current_role?: string;
   current_company?: string;
-
+   gender: string;
   experience: string;
   current_salary: string;
   expected_salary?: string;
@@ -173,6 +173,7 @@ const formatDate = (date?: any) => {
         matches(c.current_company) ||
         matches(c.experience) ||
         matches(c.current_salary) ||
+        matches(c.gender) ||
         matches(c.expected_salary) ||
         matches(c.notice_period) ||
         matches(c.city?.name) ||
@@ -1593,6 +1594,15 @@ const skills = candidate.skills ?? [];
         <p className="text-sm text-gray-500 mt-1">
           <HighlightText text={candidate.city?.name} />,{" "}
           <HighlightText text={candidate.state?.name} />
+        </p>
+        <p className="text-sm text-gray-500 mt-1">
+         Gender : <HighlightText
+                    text={
+                      candidate.gender
+                        ? candidate.gender.charAt(0).toUpperCase() + candidate.gender.slice(1)
+                        : ""
+                    }
+                  />
         </p>
       </div>
     </div>

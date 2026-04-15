@@ -325,9 +325,11 @@ if (!name) {
       }
 
   if (currentStep === 3) {
-    if (!formData.password)
-      newErrors.password = "Password is required";
-
+    if (!formData.password) {
+          newErrors.password = "password is required";
+        } else if (formData.password.length !== 8) {
+          newErrors.password = "Password must be 8 characters long";
+        }
     if (!formData.confirmPassword)
       newErrors.confirmPassword = "Confirm your password";
 
@@ -470,12 +472,14 @@ const handleResendOTP = async () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+    if (formData.password.length < 8) {
+      toast.warning("Password must be at least 8 characters long");
+      return;
+    }
     if (formData.password !== formData.confirmPassword) {
       toast.warning("Passwords do not match");
       return;
     }
-
     if (!formData.agreeTerms) {
       toast.warning("Please agree to the terms and conditions");
       return;

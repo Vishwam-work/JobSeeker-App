@@ -314,99 +314,97 @@ useEffect(() => {
             )}
           </div> */}
 
-{/* User Menu */}
-{isAuthenticated && (
-  <div className="relative">
-    <div
-      onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-      className="cursor-pointer"
-    >
-      <User className="w-6 h-6 text-gray-700 hover:text-purple-600" />
-    </div>
-
-  {isUserMenuOpen && (
-  <>
-    {/* Overlay */}
-    <div
-      className="fixed inset-0 bg-black/40 z-40"
-      onClick={() => setIsUserMenuOpen(false)}
-    />
-
-    {/* Side Panel */}
-    <div className="fixed right-0 top-0 h-screen w-[30%] min-w-[320px] bg-white shadow-2xl z-50 flex flex-col">
-
-      {/* Header */}
-      <div className="p-6 border-b flex justify-between items-center">
-        <div>
-
-          <h2 className="text-lg font-semibold">{localStorage.getItem("full_name") || "User"}</h2>
-
-          <Link
-            href="/profile"
-            className="text-blue-600 text-sm font-medium"
-          >
-            View & Update Profile
-          </Link>
-        </div>
-
-        <button
-          onClick={() => setIsUserMenuOpen(false)}
-          className="text-gray-400 hover:text-gray-600 text-xl"
-        >
-          ✕
-        </button>
-      </div>
-      {/* Menu */}
-      <div className="flex-1">
-
-  <Link href="/applied-jobs">
-    <div className="px-6 py-3 hover:bg-gray-100 cursor-pointer flex items-center gap-3">
-      <Briefcase size={18} />
-      Applied Jobs
-    </div>
-  </Link>
-
-  <Link href="/saved-jobs">
-    <div className="px-6 py-3 hover:bg-gray-100 cursor-pointer flex items-center gap-3">
-      <Bookmark size={18} />
-      Saved Jobs
-    </div>
-  </Link>
-
-  <Link href="">
-    <div className="px-6 py-3 hover:bg-gray-100 cursor-pointer flex items-center gap-3">
-      <Settings size={18} />
-      Settings
-    </div>
-  </Link>
-
-  <Link href="">
-    <div className="px-6 py-3 hover:bg-gray-100 cursor-pointer flex items-center gap-3">
-      <HelpCircle size={18} />
-      FAQs
-    </div>
-  </Link>
-
-  <div
-    onClick={handleLogout}
-    className="px-6 py-3 hover:bg-gray-100 cursor-pointer flex items-center gap-3"
-  >
-    <LogOut size={18} />
-    Logout
-  </div>
-
-</div>
-
-
-
-    </div>
-  </>
-)}
-  </div>
-)}
-
           </div>
+{/* User Menu */}
+            {isAuthenticated && (
+              <div className="relative">
+                <div
+                  onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                  className="cursor-pointer"
+                >
+                  <User className="w-6 h-6 text-gray-700 hover:text-purple-600" />
+                </div>
 
+              {isUserMenuOpen && (
+              <>
+                {/* Overlay */}
+                <div
+                  className="fixed inset-0 bg-black/40 z-40"
+                  onClick={() => setIsUserMenuOpen(false)}
+                />
+
+                {/* Side Panel */}
+                <div className="fixed right-0 top-0 h-screen w-[30%] min-w-[320px] bg-white shadow-2xl z-50 flex flex-col">
+
+                  {/* Header */}
+                  <div className="p-6 border-b flex justify-between items-center">
+                    <div>
+
+                      <h2 className="text-lg font-semibold">{localStorage.getItem("full_name") || "User"}</h2>
+
+                      <Link
+                        href="/profile"
+                        className="text-blue-600 text-sm font-medium"
+                      >
+                        View & Update Profile
+                      </Link>
+                    </div>
+
+                    <button
+                      onClick={() => setIsUserMenuOpen(false)}
+                      className="text-gray-400 hover:text-gray-600 text-xl"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  {/* Menu */}
+                  <div className="flex-1">
+
+              <Link href="/applied-jobs">
+                <div className="px-6 py-3 hover:bg-gray-100 cursor-pointer flex items-center gap-3">
+                  <Briefcase size={18} />
+                  Applied Jobs
+                </div>
+              </Link>
+
+              <Link href="/saved-jobs">
+                <div className="px-6 py-3 hover:bg-gray-100 cursor-pointer flex items-center gap-3">
+                  <Bookmark size={18} />
+                  Saved Jobs
+                </div>
+              </Link>
+
+              <Link href="">
+                <div className="px-6 py-3 hover:bg-gray-100 cursor-pointer flex items-center gap-3">
+                  <Settings size={18} />
+                  Settings
+                </div>
+              </Link>
+
+              <Link href="">
+                <div className="px-6 py-3 hover:bg-gray-100 cursor-pointer flex items-center gap-3">
+                  <HelpCircle size={18} />
+                  FAQs
+                </div>
+              </Link>
+
+              <div
+                onClick={handleLogout}
+                className="px-6 py-3 hover:bg-gray-100 cursor-pointer flex items-center gap-3"
+              >
+                <LogOut size={18} />
+                Logout
+              </div>
+
+            </div>
+
+
+
+                </div>
+              </>
+            )}
+              </div>
+            )}
           {/* Mobile Menu Button */}
           <button
             className="md:hidden p-2"
