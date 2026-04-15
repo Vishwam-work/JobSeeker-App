@@ -278,13 +278,21 @@ const ManageJobs = () => {
     label: string;
     value: string;
   }
-  const fetchPostedJobs = async () => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const fetchPostedJobs = async (page = 1, search = "", status = "all",date = "") => {
     try {
       setLoading(true);
       const token = localStorage.getItem("auth_token");
       if (!token) return;
+      const query = new URLSearchParams({
+      page: page.toString(),
+      search: searchTerm,
+      status: jobFilter,
+      date_filter: dateFilter,
+    });
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/job-list-view/`,
+        `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/job-list-view/?${query.toString()}`,
         {
           method: "GET",
           headers: {
@@ -298,9 +306,10 @@ const ManageJobs = () => {
         return;
       }
       const data = await response.json();
-      // console.log("Here is the Job-list-view-data:",data)
-      // console.log(data.category)
-      setPostedJobs(data); // Set jobs into stateq
+      console.log("Here is the Job-list-view-data:",data)
+      setPostedJobs(data.results);
+      setCurrentPage(page);
+      setTotalPages(Math.ceil(data.count / 3));
     } catch (error) {
       console.error("Error fetching jobs:", error);
     } finally {
@@ -310,36 +319,14 @@ const ManageJobs = () => {
 
   // Fetch data from APIs
   useEffect(() => {
-    fetchPostedJobs();
-  }, []);
-  console.log("Posted Jobs:", postedJobs);
-  const filteredJobs = postedJobs.filter((job) => {
-    const matchesFilter =
-      jobFilter === "all" ||
-      job.status.toLowerCase() === jobFilter.toLowerCase();
-    const matchesSearch =
-      job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      job.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      job.location?.toLowerCase().includes(searchTerm.toLowerCase());
-    let matchesDate = true;
-    if (dateFilter !== "all" && job.created_at) {
-      const jobDate = new Date(job.created_at);
-      const now = new Date();
+  const delayDebounce = setTimeout(() => {
+    fetchPostedJobs(1, searchTerm, jobFilter, dateFilter);
+  }, 500);
 
-      if (dateFilter === "today") {
-        matchesDate = jobDate.toDateString() === now.toDateString();
-      } else if (dateFilter === "week") {
-        const weekAgo = new Date();
-        weekAgo.setDate(now.getDate() - 7);
-        matchesDate = jobDate >= weekAgo;
-      } else if (dateFilter === "month") {
-        const monthAgo = new Date();
-        monthAgo.setMonth(now.getMonth() - 1);
-        matchesDate = jobDate >= monthAgo;
-      }
-    }
-    return matchesFilter && matchesSearch && matchesDate;
-  });
+  return () => clearTimeout(delayDebounce);
+}, [searchTerm, jobFilter, dateFilter]);
+
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "active":
@@ -1006,7 +993,7 @@ const handleAddQuestion = () => {
                   <div className="h-3 bg-gray-200 rounded w-full mb-2"></div>
                 </div>
               ))
-            ) : filteredJobs.length === 0 ? (
+            ) : postedJobs.length === 0 ? (
               <div className="text-center py-8">
                 <Briefcase className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">
@@ -1019,7 +1006,7 @@ const handleAddQuestion = () => {
                 </p>
               </div>
             ) : (
-              filteredJobs.map((job) => (
+              postedJobs.map((job) => (
                 <div
                   key={job.id}
                   className="border rounded-lg p-6 hover:shadow-md transition-shadow"
@@ -1969,6 +1956,27 @@ const handleAddQuestion = () => {
           </div>
         </DialogContent>
       </Dialog>
+      <div className="flex justify-center items-center gap-4 mt-6">
+        <button
+          disabled={currentPage === 1}
+          onClick={() => fetchPostedJobs(currentPage - 1, searchTerm, jobFilter, dateFilter)}
+          className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
+        >
+          Previous
+        </button>
+
+        <span>
+          Page {currentPage} of {totalPages}
+        </span>
+
+        <button
+          disabled={currentPage === totalPages}
+          onClick={() => fetchPostedJobs(currentPage + 1, searchTerm, jobFilter, dateFilter)}
+          className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
+        >
+          Next
+        </button>
+      </div>
     </>
   );
 };
