@@ -609,11 +609,8 @@ const formatDate = (date?: any) => {
     };
   }, []);
   return (
-    <div className="grid lg:grid-cols-3 gap-6">
-      {/* Candidates List */}
-      <div className="lg:col-span-1">
-        <Card className="h-full">
-          <CardHeader>
+    <>
+          <div>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <CardTitle className="text-lg">Applications</CardTitle>
@@ -664,7 +661,7 @@ const formatDate = (date?: any) => {
             </div>
 
             {/*  Filters */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+            <div className="grid grid-cols-1 sm:grid-cols-5 gap-3 mb-4">
               {/*  Status Filter */}
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-full h-10">
@@ -694,9 +691,7 @@ const formatDate = (date?: any) => {
                     ))}
                 </SelectContent>
               </Select>
-            </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
               {/* Experience Filter */}
               <Select
                 value={experienceFilter}
@@ -708,9 +703,26 @@ const formatDate = (date?: any) => {
                 <SelectContent>
                   <SelectItem value="All">All Experience</SelectItem>
                   <SelectItem value="Fresher">Fresher</SelectItem>
-                  <SelectItem value="1-3 Years">1–3 Years</SelectItem>
-                  <SelectItem value="3-5 Years">3–5 Years</SelectItem>
-                  <SelectItem value="5+ Years">5+ Years</SelectItem>
+                  <SelectItem value="1 Years">1 Years</SelectItem>
+                  <SelectItem value="2 Years">2 Years</SelectItem>
+                  <SelectItem value="3 Years">3 Years</SelectItem>
+                  <SelectItem value="4 Years">4 Years</SelectItem>
+                  <SelectItem value="5 Years">5 Years</SelectItem>
+                  <SelectItem value="6 Years">6 Years</SelectItem>
+                  <SelectItem value="7 Years">7 Years</SelectItem>
+                  <SelectItem value="8 Years">8 Years</SelectItem>
+                  <SelectItem value="9 Years">9 Years</SelectItem>
+                  <SelectItem value="10 Years">10 Years</SelectItem>
+                  <SelectItem value="11 Years">11 Years</SelectItem>
+                  <SelectItem value="12 Years">12 Years</SelectItem>
+                  <SelectItem value="13 Years">13 Years</SelectItem>
+                  <SelectItem value="14 Years">14 Years</SelectItem>
+                  <SelectItem value="15 Years">15 Years</SelectItem>
+                  <SelectItem value="16 Years">16 Years</SelectItem>
+                  <SelectItem value="17 Years">17 Years</SelectItem>
+                  <SelectItem value="18 Years">18 Years</SelectItem>
+                  <SelectItem value="19 Years">19 Years</SelectItem>
+                  <SelectItem value="20+ Years">20+ Years</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -746,7 +758,14 @@ const formatDate = (date?: any) => {
                 </SelectContent>
               </Select>
             </div>
-          </CardHeader>
+      </div>
+    <div className="h-[calc(100vh-100px)] overflow-y-hidden p-4">
+
+  <div className="grid lg:grid-cols-3 gap-6 h-full">
+      {/* Candidates List */}
+       <div className="lg:col-span-1 h-full overflow-auto">
+        <Card className="h-full flex flex-col overflow-auto">
+        
           <CardContent className="p-0">
             {loading ? (
               [...Array(2)].map((_, i) => (
@@ -837,9 +856,9 @@ const formatDate = (date?: any) => {
       </div>
 
       {/* Candidate Profile */}
-      <div className="lg:col-span-2">
+      <div className="lg:col-span-2 h-full overflow-auto">
         {selectedCandidate ? (
-          <Card className="h-full">
+          <Card className="h-full flex flex-col overflow-auto">
             <CardHeader>
               <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                 <div className="flex items-start space-x-4">
@@ -1449,6 +1468,8 @@ const formatDate = (date?: any) => {
           </Card>
         )}
       </div>
+
+      {/* moblie view */}
       {isMobile && (
         <Dialog open={!!selectedCandidate} onOpenChange={() => setSelectedCandidate(null)}>
           <DialogContent className="w-full h-full overflow-y-auto">
@@ -2057,6 +2078,9 @@ const formatDate = (date?: any) => {
           </DialogContent>
         </Dialog>
       )}
+      </div>
     </div>
+    </>
+
   );
 }
