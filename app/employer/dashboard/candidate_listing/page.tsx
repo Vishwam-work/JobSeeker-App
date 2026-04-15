@@ -18,6 +18,7 @@ interface Candidate {
   current_role?: string;
   current_company?: string;
    gender: string;
+   professional_summary: string;
   experience: string;
   current_salary: string;
   expected_salary?: string;
@@ -88,6 +89,7 @@ export default function CandidatesPage() {
     industry: [] as string[],
     noticePeriod: [] as string[],
     gender: "",
+    professional_summary: "",
     minAge: "",
     maxAge: "",
     degree: [] as string[],
@@ -111,6 +113,7 @@ export default function CandidatesPage() {
       industry: [],
       noticePeriod: [],
       gender: "",
+      professional_summary: "",
       minAge: "",
       maxAge: "",
       degree: [],
@@ -174,6 +177,7 @@ const formatDate = (date?: any) => {
         matches(c.experience) ||
         matches(c.current_salary) ||
         matches(c.gender) ||
+        matches(c.professional_summary) ||
         matches(c.expected_salary) ||
         matches(c.notice_period) ||
         matches(c.city?.name) ||
@@ -1608,6 +1612,22 @@ const skills = candidate.skills ?? [];
     </div>
 
     {/* Divider */}
+    <div className="border-t my-6" />
+
+    <div>
+       <h3 className="font-semibold text-gray-900 mb-3">
+        Professional Summary
+      </h3>
+      <div
+         className="text-gray-700 leading-relaxed prose max-w-none
+          [&_ul]:list-disc [&_ul]:pl-6
+           [&_ol]:list-decimal [&_ol]:pl-6
+          [&_li]:mb-1"
+        dangerouslySetInnerHTML={{ __html: candidate.professional_summary
+        || "" }}
+      />
+     </div>
+     {/* Divider */}
     <div className="border-t my-6" />
 
     {/* Compensation */}

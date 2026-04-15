@@ -953,9 +953,12 @@ const formatDate = (date?: any) => {
                   Professional Summary
                 </h3>
                 <div
-                  className="text-gray-700 leading-relaxed prose max-w-none"
+                  className="text-gray-700 leading-relaxed prose max-w-none
+                   [&_ul]:list-disc [&_ul]:pl-6
+                    [&_ol]:list-decimal [&_ol]:pl-6
+                    [&_li]:mb-1"
                   dangerouslySetInnerHTML={{ __html: selectedCandidate.professional_summary
- || "" }}
+                  || "" }}
                 />
               </div>
 
@@ -998,7 +1001,10 @@ const formatDate = (date?: any) => {
                         {exp.end_date ? formatDate(exp.end_date) : "Present"}
                       </p>
                       <div
-                        className="text-gray-700 leading-relaxed prose max-w-none"
+                        className="text-gray-700 leading-relaxed prose max-w-none
+                        [&_ul]:list-disc [&_ul]:pl-6
+                        [&_ol]:list-decimal [&_ol]:pl-6
+                        [&_li]:mb-1"
                         dangerouslySetInnerHTML={{ __html: exp.description || "" }}
                       />
                     </div>
@@ -1560,7 +1566,10 @@ const formatDate = (date?: any) => {
                           Professional Summary
                         </h3>
                         <div
-                          className="text-gray-700 leading-relaxed prose max-w-none"
+                          className="text-gray-700 leading-relaxed prose max-w-none
+                            [&_ul]:list-disc [&_ul]:pl-6
+                            [&_ol]:list-decimal [&_ol]:pl-6
+                            [&_li]:mb-1"
                           dangerouslySetInnerHTML={{ __html: selectedCandidate.professional_summary
                          || "" }}
                         />
@@ -1605,7 +1614,10 @@ const formatDate = (date?: any) => {
                                 {exp.end_date ? formatDate(exp.end_date) : "Present"}
                               </p>
                               <div
-                                className="text-gray-700 leading-relaxed prose max-w-none"
+                                className="text-gray-700 leading-relaxed prose max-w-none
+                                  [&_ul]:list-disc [&_ul]:pl-6
+                                  [&_ol]:list-decimal [&_ol]:pl-6
+                                  [&_li]:mb-1"
                                 dangerouslySetInnerHTML={{ __html: exp.description || "" }}
                               />
                             </div>
