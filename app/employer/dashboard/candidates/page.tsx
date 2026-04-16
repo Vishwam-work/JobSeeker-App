@@ -4,12 +4,13 @@ import { useEffect, useState, useRef } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Calendar } from "lucide-react";
+import { Calendar,User } from "lucide-react";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DateCalendar } from "@mui/x-date-pickers/DateCalendar";
-import { DigitalClock } from "@mui/x-date-pickers/DigitalClock";  
+import { DigitalClock } from "@mui/x-date-pickers/DigitalClock";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Image from "next/image";
 import {
   Select,
   SelectContent,
@@ -79,18 +80,16 @@ export default function Candidates() {
   const [loading, setLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   //date validation
-    const [deadlineInput, setDeadlineInput] = useState("");
-    const [deadlineError, setDeadlineError] = useState("");
-    const [deadlineDate, setDeadlineDate] = useState<Date | null>(null);
-    const [interviewInput, setInterviewInput] = useState("");
-const [interviewError, setInterviewError] = useState("");
-      const [open, setOpen] = useState(false);
-      const [timeopen, setTimeopen] = useState(false);
-
-    const [time, setTime] = useState<Dayjs | null>(dayjs());
-    const [currentPage, setCurrentPage] = useState(1);
-    const [totalPages, setTotalPages] = useState(1);
-
+  const [interviewInput, setInterviewInput] = useState("");
+  const [interviewError, setInterviewError] = useState("");
+  const [open, setOpen] = useState(false);
+  const [timeopen, setTimeopen] = useState(false);
+  const [time, setTime] = useState<Dayjs | null>(dayjs());
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [jobTitles, setJobTitles] = useState<string[]>([]);
+  const [totalCandidates, setTotalCandidates] = useState<number>(0);
+  const [locations, setLocations] = useState<string[]>([]);
   interface Candidate {
     id: number;
     name: string;
@@ -107,7 +106,7 @@ const [interviewError, setInterviewError] = useState("");
     status: string;
     expectedSalary?: string;
     resumeUrl?: string;
-    profileImage?: string | null;
+    profile_image?: string | null;
     professional_summary?: string;
     workExperience: {
       company: string;
@@ -149,6 +148,10 @@ const [interviewError, setInterviewError] = useState("");
     application_status: string;
     detail?: string;
   }
+  type Application = {
+  job_title?: string;
+};
+
   const fetchApplications = async ( page=1,search = "", status = "All", gender = "All", title = "All", location = "All", exp = "All", salary = "All" ) => {
       try {
         setLoading(true);
@@ -205,7 +208,7 @@ const [interviewError, setInterviewError] = useState("");
           resumeUrl: app.profile?.resume
             ? `${process.env.NEXT_PUBLIC_URL}${app.profile.resume}`
             : "#",
-          profileImage: null,
+          profile_image: app.profile?.profile_image ? process.env.NEXT_PUBLIC_URL + app.profile.profile_image : "",
           professional_summary: app.profile?.professional_summary || "",
           workExperience: app.profile?.experiences || [],
           educationDetails: app.profile?.educations || [],
@@ -222,6 +225,7 @@ const [interviewError, setInterviewError] = useState("");
         setLoading(false);
       }
     };
+
  useEffect(() => {
   const delay = setTimeout(() => {
     fetchApplications();
@@ -229,7 +233,7 @@ const [interviewError, setInterviewError] = useState("");
 
   return () => clearTimeout(delay);
 }, [
-  
+
   searchTerm,
   statusFilter,
   genderFilter,
@@ -238,6 +242,58 @@ const [interviewError, setInterviewError] = useState("");
   experienceFilter,
   salaryFilter,
 ]);
+
+ const fetchAllTitles = async () => {
+  const token = localStorage.getItem("auth_token");
+
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/employer/applications/?page=1`,
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    }
+  );
+
+  const data = await res.json();
+
+  if (!data || !Array.isArray(data.results)) {
+    console.error("Invalid API response:", data);
+    return;
+  }
+
+  // total count
+  setTotalCandidates(data.count || 0);
+
+  // Sets (unique values ke liye)
+  const titleSet = new Set<string>();
+ 
+  (data.results || []).forEach((item: any) => {
+    //  Job Title
+    if (item.job_title) {
+      titleSet.add(item.job_title);
+    }
+
+
+
+const locationSet = new Set<string>();
+
+(data.results || []).forEach((item: any) => {
+  const state = item?.profile?.state;
+
+  if (state) {
+    locationSet.add(state);
+  }
+   setLocations(Array.from(locationSet));
+});
+  });
+
+  // ✅ set states
+  setJobTitles(Array.from(titleSet));
+
+};
+
+useEffect(() => {
+  fetchAllTitles();
+}, []);
   useEffect(() => {
   const checkMobile = () => setIsMobile(window.innerWidth < 768);
   checkMobile();
@@ -257,25 +313,25 @@ const formatDate = (date?: any) => {
   return parsed.format("DD/MM/YYYY");
 };
   const getStatusColor = (status?: string) => {
-    const normalized = status?.toLowerCase();
+  const normalized = status?.toLowerCase();
 
-    switch (normalized) {
-      case "active":
-        return "bg-green-100 text-green-800";
-      case "closed":
-        return "bg-red-100 text-red-800";
-      case "Under Review":
-        return "bg-yellow-100 text-yellow-800";
-      case "shortlisted":
-        return "bg-blue-100 text-blue-800";
-      case "rejected":
-        return "bg-red-100 text-red-800";
-        case "Interview Scheduled":
-        return "bg-blue-100 text-blue-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
+  switch (normalized) {
+    case "under review":
+      return "bg-yellow-100 text-yellow-800";
+
+    case "shortlisted":
+      return "bg-blue-100 text-blue-800";
+
+    case "rejected":
+      return "bg-red-100 text-red-800";
+
+    case "interview scheduled":
+      return "bg-blue-100 text-blue-800";
+
+    default:
+      return "bg-gray-100 text-gray-800";
+  }
+};
   const formatStatus = (status?: string) => {
     if (!status) return "";
     return status
@@ -611,7 +667,7 @@ const formatDate = (date?: any) => {
   return (
     <>
           <div>
-            <div className="flex items-center justify-between">
+            {/* <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <CardTitle className="text-lg">Applications</CardTitle>
 
@@ -631,7 +687,7 @@ const formatDate = (date?: any) => {
               >
                 Clear Filters
               </button>
-            </div>
+            </div> */}
 
             {/*  Search Bar  */}
             <div className="mb-4">
@@ -672,6 +728,7 @@ const formatDate = (date?: any) => {
                   <SelectItem value="Under Review">Under Review</SelectItem>
                   <SelectItem value="Shortlisted">Shortlisted</SelectItem>
                   <SelectItem value="Rejected">Rejected</SelectItem>
+                  <SelectItem value="Interview Scheduled">Interview Scheduled </SelectItem>
                 </SelectContent>
               </Select>
 
@@ -682,13 +739,11 @@ const formatDate = (date?: any) => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="All">All Locations</SelectItem>
-                  {Array.from(new Set(candidates.map((c) => c.location)))
-                    .filter(Boolean)
-                    .map((loc, i) => (
-                      <SelectItem key={i} value={loc}>
-                        {loc}
-                      </SelectItem>
-                    ))}
+                  {locations.map((loc, i) => (
+                    <SelectItem key={i} value={loc}>
+                      {loc}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
 
@@ -726,6 +781,7 @@ const formatDate = (date?: any) => {
                 </SelectContent>
               </Select>
 
+              {/* Job Title Filter */}
               <Select value={jobTitleFilter} onValueChange={setJobTitleFilter}>
                 <SelectTrigger className="w-full h-10">
                   <SelectValue placeholder="Job Title" />
@@ -733,16 +789,15 @@ const formatDate = (date?: any) => {
 
                 <SelectContent>
                   <SelectItem value="All">All Job Titles</SelectItem>
-
-                  {Array.from(new Set(candidates.map((c) => c.appliedFor)))
-                    .filter(Boolean)
-                    .map((title, i) => (
+                    {jobTitles.map((title, i) => (
                       <SelectItem key={i} value={title}>
                         {title}
                       </SelectItem>
                     ))}
                 </SelectContent>
               </Select>
+
+              {/* Gender Filter */}
               <Select
                 value={genderFilter}
                 onValueChange={setGenderFilter}
@@ -765,7 +820,29 @@ const formatDate = (date?: any) => {
       {/* Candidates List */}
        <div className="lg:col-span-1 h-full overflow-auto">
         <Card className="h-full flex flex-col overflow-auto">
-        
+         <CardHeader  className=" sticky top-0 bg-white" >
+              <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <CardTitle className="text-lg">Applications</CardTitle>
+
+                <Badge variant="secondary">{totalCandidates}</Badge>
+              </div>
+
+              <button
+                onClick={() => {
+                  setStatusFilter("All");
+                  setLocationFilter("All");
+                  setSalaryFilter("All");
+                  setExperienceFilter("All");
+                  setJobTitleFilter("All");
+                  setGenderFilter("All");
+                }}
+                className="text-sm px-3 py-1 border rounded-md hover:bg-gray-100"
+              >
+                Clear Filters
+              </button>
+            </div>
+         </CardHeader>
           <CardContent className="p-0">
             {loading ? (
               [...Array(2)].map((_, i) => (
@@ -791,7 +868,17 @@ const formatDate = (date?: any) => {
                 >
                   <div className="flex items-start space-x-3">
                     <div className="w-10 h-10 bg-gradient-to-br from-purple-100 to-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                      <Users className="w-5 h-5 text-purple-600" />
+                      {candidate.profile_image ? (
+                         <Image
+                           src={candidate.profile_image}
+                           alt="profile image"
+                          width={32}
+                           height={25}
+                          className="w-10 h-10 rounded-full object-cover border"
+                        />
+                      ) : (
+                         <User className="w-6 h-6 text-gray-700 hover:text-purple-600" />
+                       )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <h4 className="font-medium text-gray-900 truncate">
@@ -817,39 +904,86 @@ const formatDate = (date?: any) => {
                 </div>
               ))
             ) : (
-              <p className="text-gray-500 text-sm">No candidates found</p>
+              <div className="flex flex-col items-center justify-center py-10">
+                <div className="bg-gray-100 p-4 rounded-full mb-3">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-6 w-6 text-gray-500"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 17v-6a2 2 0 012-2h4M7 7h10M5 21h14"
+                    />
+                  </svg>
+                </div>
+
+                <p className="text-gray-700 font-medium">
+                  No candidates found
+                </p>
+
+                <p className="text-gray-500 text-sm mt-1">
+                  Try adjusting your filters
+                </p>
+              </div>
             )}
-            <div className="flex justify-center items-center gap-4 mt-6">
-        <button
-          disabled={currentPage === 1}
-          onClick={() => fetchApplications(currentPage - 1, searchTerm, statusFilter,
-          genderFilter,
-          jobTitleFilter,
-          locationFilter,
-          experienceFilter,
-          salaryFilter )}
-          className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
-        >
-          Previous
-        </button>
+            <div className="flex items-center justify-between mt-8 px-4 py-3 border rounded-xl bg-white shadow-sm">
 
-        <span>
-          Page {currentPage} of {totalPages}
-        </span>
+              {/* Left Info */}
+              <p className="text-sm text-gray-500">
+                Page <span className="font-medium text-gray-900">{currentPage}</span> of{" "}
+                <span className="font-medium text-gray-900">{totalPages}</span>
+              </p>
 
-        <button
-          disabled={currentPage === totalPages}
-          onClick={() => fetchApplications(currentPage + 1, searchTerm, statusFilter,
-          genderFilter,
-          jobTitleFilter,
-          locationFilter,
-          experienceFilter,
-          salaryFilter)}
-          className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
-        >
-          Next
-        </button>
-      </div>
+              {/* Buttons */}
+              <div className="flex items-center gap-2">
+                <button
+                  disabled={currentPage === 1}
+                  onClick={() =>
+                    fetchApplications(
+                      currentPage - 1,
+                      searchTerm,
+                      statusFilter,
+                      genderFilter,
+                      jobTitleFilter,
+                      locationFilter,
+                      experienceFilter,
+                      salaryFilter
+                    )
+                  }
+                  className="px-4 py-2 text-sm border rounded-lg bg-white hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  ← Previous
+                </button>
+
+                <span className="px-3 py-1 text-sm font-medium bg-gray-100 rounded-lg">
+                  {currentPage}
+                </span>
+
+                <button
+                  disabled={currentPage === totalPages}
+                  onClick={() =>
+                    fetchApplications(
+                      currentPage + 1,
+                      searchTerm,
+                      statusFilter,
+                      genderFilter,
+                      jobTitleFilter,
+                      locationFilter,
+                      experienceFilter,
+                      salaryFilter
+                    )
+                  }
+                  className="px-4 py-2 text-sm border rounded-lg bg-white hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Next →
+                </button>
+              </div>
+            </div>
             <div className="flex flex-wrap gap-3 mb-4 items-center"></div>
           </CardContent>
         </Card>
@@ -859,11 +993,21 @@ const formatDate = (date?: any) => {
       <div className="lg:col-span-2 h-full overflow-auto">
         {selectedCandidate ? (
           <Card className="h-full flex flex-col overflow-auto">
-            <CardHeader>
+            <CardHeader className=" sticky top-0 bg-white ">
               <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                 <div className="flex items-start space-x-4">
                   <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-blue-100 rounded-full flex items-center justify-center">
-                    <Users className="w-8 h-8 text-purple-600" />
+                     {selectedCandidate.profile_image ? (
+                      <Image
+                        src={selectedCandidate.profile_image}
+                         alt="profile image"
+                         width={32}
+                         height={32}
+                        className="w-16 h-16 rounded-full object-cover border"
+                       />
+                     ) : (
+                      <User className="w-6 h-6 text-gray-700 hover:text-purple-600" />
+                    )}
                   </div>
                   <div>
                     <h2 className="text-2xl font-bold text-gray-900">
@@ -1455,17 +1599,32 @@ const formatDate = (date?: any) => {
             </CardContent>
           </Card>
         ) : (
-          <Card className="h-full flex items-center justify-center">
-            <CardContent className="text-center">
-              <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                Select a Candidate
-              </h3>
-              <p className="text-gray-600">
-                Choose a candidate from the list to view their detailed profile
-              </p>
-            </CardContent>
-          </Card>
+        <Card className="h-full flex items-center justify-center border-dashed border-2 bg-gray-50">
+          <CardContent className="text-center max-w-sm">
+
+            {/* Icon Circle */}
+            <div className="flex items-center justify-center w-20 h-20 mx-auto mb-4 rounded-full bg-white shadow-sm">
+              <Users className="w-10 h-10 text-gray-400" />
+            </div>
+
+            {/* Title */}
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              No Candidate Selected
+            </h3>
+
+            {/* Description */}
+            <p className="text-gray-500 text-sm mb-4">
+              Select a candidate from the list to view their profile details,
+              experience, and application status.
+            </p>
+
+            {/* Optional Hint */}
+            <span className="text-xs text-gray-400">
+              Tip: Use filters to quickly find the right candidate
+            </span>
+
+          </CardContent>
+        </Card>
         )}
       </div>
 
@@ -1480,7 +1639,17 @@ const formatDate = (date?: any) => {
                       <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                         <div className="flex items-start space-x-4">
                           <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-blue-100 rounded-full flex items-center justify-center">
-                            <Users className="w-8 h-8 text-purple-600" />
+                             {selectedCandidate.profile_image ? (
+                      <Image
+                        src={selectedCandidate.profile_image}
+                         alt="profile image"
+                         width={32}
+                         height={32}
+                        className="w-16 h-16 rounded-full object-cover border"
+                       />
+                     ) : (
+                      <User className="w-6 h-6 text-gray-700 hover:text-purple-600" />
+                    )}
                           </div>
                           <div>
                             <h2 className="text-2xl font-bold text-gray-900">
