@@ -2105,7 +2105,10 @@ setUserData({
 
                           {/* Job Description */}
                           <div
-                            className="text-gray-700 text-sm md:text-base leading-relaxed mb-4 line-clamp-2 overflow-hidden"
+                            className="text-gray-700 text-sm md:text-base leading-relaxed mb-4 line-clamp-2 overflow-hidden
+                             [&_ul]:list-disc [&_ul]:pl-6
+                             [&_ol]:list-decimal [&_ol]:pl-6
+                             [&_li]:mb-1"
                             dangerouslySetInnerHTML={{
                               __html: job.description || "",
                             }}
@@ -2351,7 +2354,10 @@ setUserData({
                       Job Description
                     </h4>
                      <div
-                      className="text-gray-700 leading-relaxed prose max-w-none"
+                      className="text-gray-700 leading-relaxed prose max-w-none
+                      [&_ul]:list-disc [&_ul]:pl-6
+                      [&_ol]:list-decimal [&_ol]:pl-6
+                      [&_li]:mb-1"
                       dangerouslySetInnerHTML={{ __html: selectedJob.description ?? "",}}
                     />
                   </div>
@@ -2362,7 +2368,10 @@ setUserData({
                       Requirements
                     </h4>
                     <div
-                      className="prose text-gray-700 max-w-none"
+                      className="prose text-gray-700 max-w-none
+                      [&_ul]:list-disc [&_ul]:pl-6
+                      [&_ol]:list-decimal [&_ol]:pl-6
+                      [&_li]:mb-1"
                       dangerouslySetInnerHTML={{
                         __html: Array.isArray(selectedJob.requirements)
                           ? selectedJob.requirements.join("<br/>")
@@ -2377,7 +2386,10 @@ setUserData({
                       Benefits
                     </h4>
                     <div
-                      className="prose text-gray-700 max-w-none"
+                      className="prose text-gray-700 max-w-none
+                      [&_ul]:list-disc [&_ul]:pl-6
+                      [&_ol]:list-decimal [&_ol]:pl-6
+                      [&_li]:mb-1"
                       dangerouslySetInnerHTML={{
                         __html: Array.isArray(selectedJob.benefits)
                           ? selectedJob.benefits.join("<br/>")
@@ -2532,9 +2544,78 @@ setUserData({
                   )}
                 </div>
                 <div>
-                  <h4 className="text-lg font-semibold text-gray-900 mb-3">
-                    Required Skills
-                  </h4>
+                   {/* Job Description */}
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-900 ">
+                      Job Description
+                    </h4>
+                     <div
+                      className="text-gray-700 leading-relaxed prose max-w-none
+                      [&_ul]:list-disc [&_ul]:pl-6
+                      [&_ol]:list-decimal [&_ol]:pl-6
+                      [&_li]:mb-1"
+                      dangerouslySetInnerHTML={{ __html: selectedJob.description ?? "",}}
+                    />
+                  </div>
+
+                  {/* Requirements */}
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-900 mt-3">
+                      Requirements
+                    </h4>
+                    <div
+                      className="prose text-gray-700 max-w-none
+                      [&_ul]:list-disc [&_ul]:pl-6
+                      [&_ol]:list-decimal [&_ol]:pl-6
+                      [&_li]:mb-1"
+                      dangerouslySetInnerHTML={{
+                        __html: Array.isArray(selectedJob.requirements)
+                          ? selectedJob.requirements.join("<br/>")
+                          : selectedJob.requirements || "",
+                      }}
+                    />
+                  </div>
+
+                  {/* Benefits */}
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-900 mt-3">
+                      Benefits
+                    </h4>
+                    <div
+                      className="prose text-gray-700 max-w-none
+                      [&_ul]:list-disc [&_ul]:pl-6
+                      [&_ol]:list-decimal [&_ol]:pl-6
+                      [&_li]:mb-1"
+                      dangerouslySetInnerHTML={{
+                        __html: Array.isArray(selectedJob.benefits)
+                          ? selectedJob.benefits.join("<br/>")
+                          : selectedJob.benefits || "",
+                      }}
+                    />
+                  </div>
+
+                  {/* Skills */}
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-900 mt-3">
+                      Required Skills
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {Array.isArray(selectedJob?.skills) &&
+                      selectedJob.skills.length > 0 ? (
+                        selectedJob.skills.map((req, index) => (
+                          <li key={index} className="flex items-start">
+                            <CheckCircle className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                            <span className="text-gray-700">{req}</span>
+                          </li>
+                        ))
+                      ) : (
+                        <p className="text-gray-500 italic">
+                          {selectedJob.skills}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
                   <div className="flex flex-wrap gap-2">
                     {Array.isArray(selectedJob?.questions) &&
                       selectedJob.questions.length > 0 && (

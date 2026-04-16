@@ -480,7 +480,10 @@ const handleAnswerChange = (questionIndex: number, value: string) => {
             <div>
               <h4 className="text-lg font-semibold mb-2">Job Description</h4>
                <div
-                  className="text-gray-700 leading-relaxed prose max-w-none"
+                  className="text-gray-700 leading-relaxed prose max-w-none
+                      [&_ul]:list-disc [&_ul]:pl-6
+                      [&_ol]:list-decimal [&_ol]:pl-6
+                      [&_li]:mb-1"
                   dangerouslySetInnerHTML={{ __html: selectedJob.description ??"" }}
                 />
             </div>
@@ -490,7 +493,10 @@ const handleAnswerChange = (questionIndex: number, value: string) => {
                 Requirements
               </h4>
                 <div
-                      className="prose text-gray-700 max-w-none"
+                      className="prose text-gray-700 max-w-none
+                       [&_ul]:list-disc [&_ul]:pl-6
+                      [&_ol]:list-decimal [&_ol]:pl-6
+                      [&_li]:mb-1"
                       dangerouslySetInnerHTML={{
                         __html: Array.isArray(selectedJob.requirements)
                           ? selectedJob.requirements.join("<br/>")
@@ -503,7 +509,10 @@ const handleAnswerChange = (questionIndex: number, value: string) => {
                 Benefits
               </h4>
              <div
-              className="prose text-gray-700 max-w-none"
+              className="prose text-gray-700 max-w-none
+               [&_ul]:list-disc [&_ul]:pl-6
+               [&_ol]:list-decimal [&_ol]:pl-6
+               [&_li]:mb-1"
               dangerouslySetInnerHTML={{
                 __html: Array.isArray(selectedJob.benefits)
                   ? selectedJob.benefits.join("<br/>")

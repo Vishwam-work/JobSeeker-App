@@ -88,6 +88,9 @@ const [interviewError, setInterviewError] = useState("");
       const [timeopen, setTimeopen] = useState(false);
 
     const [time, setTime] = useState<Dayjs | null>(dayjs());
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+
   interface Candidate {
     id: number;
     name: string;
@@ -146,14 +149,23 @@ const [interviewError, setInterviewError] = useState("");
     application_status: string;
     detail?: string;
   }
-  useEffect(() => {
-    const fetchApplications = async () => {
+  const fetchApplications = async ( page=1,search = "", status = "All", gender = "All", title = "All", location = "All", exp = "All", salary = "All" ) => {
       try {
         setLoading(true);
         const token = localStorage.getItem("auth_token");
         if (!token) return;
+            const query = new URLSearchParams({
+      page: page.toString(),
+      search: searchTerm,
+      status: statusFilter,
+      gender: genderFilter,
+      job_title: jobTitleFilter,
+      location: locationFilter,
+      experience: experienceFilter,
+      salary_range: salaryFilter,
+    });
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/employer/applications/`,
+          `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/employer/applications/?${query.toString()}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           },
@@ -163,9 +175,9 @@ const [interviewError, setInterviewError] = useState("");
           return;
         }
         const data = await res.json();
-        console.log("Employer applications:", data);
+        console.log("Employer applications:", data.results);
         // Map API to UI candidate shape
-        const mapped = (Array.isArray(data) ? data : []).map((app) => ({
+        const mapped = (Array.isArray(data.results) ? data.results : []).map((app: any) => ({
           id: app.id,
           name: app.profile?.full_name || app.user_email || "Unknown",
           email: app.profile?.email || app.user_email,
@@ -201,82 +213,37 @@ const [interviewError, setInterviewError] = useState("");
           qa: app.answers || [],
         }));
         setCandidates(mapped);
-        console.log("MAPPED:", mapped);
+        setCurrentPage(page);
+        setTotalPages(Math.ceil(data.count / 5));
+        console.log("MAPPED:", candidates);
       } catch (e) {
         console.error("Failed to fetch employer applications", e);
       } finally {
         setLoading(false);
       }
     };
+ useEffect(() => {
+  const delay = setTimeout(() => {
     fetchApplications();
-  }, []);
+  }, 400);
+
+  return () => clearTimeout(delay);
+}, [
+  
+  searchTerm,
+  statusFilter,
+  genderFilter,
+  jobTitleFilter,
+  locationFilter,
+  experienceFilter,
+  salaryFilter,
+]);
   useEffect(() => {
   const checkMobile = () => setIsMobile(window.innerWidth < 768);
   checkMobile();
   window.addEventListener("resize", checkMobile);
   return () => window.removeEventListener("resize", checkMobile);
 }, []);
-  const filteredCategories = candidates.filter((c) => {
-    const nameMatch =
-      c.name?.toLowerCase().startsWith(searchTerm.toLowerCase()) ||
-      c.gender?.toLowerCase().startsWith(searchTerm.toLowerCase()) ||
-      c.appliedFor?.toLowerCase().startsWith(searchTerm.toLowerCase()) ||
-      c.skills?.some((skill) =>
-        skill.toLowerCase().includes(searchTerm.toLowerCase()),
-      );
-
-    const statusMatch =
-      statusFilter === "All" ||
-      c.status?.toLowerCase() === statusFilter.toLowerCase();
-
-    const locationMatch =
-      locationFilter === "All" ||
-      c.location?.toLowerCase() === locationFilter.toLowerCase();
-
-    const jobTitleMatch =
-      jobTitleFilter === "All" ||
-      c.appliedFor?.toLowerCase() === jobTitleFilter.toLowerCase();
-
-    const genderMatch =
-      genderFilter === "All" ||
-      c.gender?.toLowerCase() === genderFilter.toLowerCase();
-
-    const salary = parseInt(c.expectedSalary ?? "0", 10);
-    const salaryMatch =
-      salaryFilter === "All" ||
-      (salaryFilter === "Below 20000" && salary < 20000) ||
-      (salaryFilter === "20000-50000" && salary >= 20000 && salary <= 50000) ||
-      (salaryFilter === "Above 50000" && salary > 50000);
-
-    const expMatch =
-      experienceFilter === "All" ||
-      (experienceFilter === "Fresher" &&
-        (c.experience?.toLowerCase().includes("fresher") ||
-          c.experience?.includes("0"))) ||
-      (experienceFilter === "1-3 Years" &&
-        (c.experience?.includes("1") ||
-          c.experience?.includes("2") ||
-          c.experience?.includes("3"))) ||
-      (experienceFilter === "3-5 Years" &&
-        (c.experience?.includes("3") ||
-          c.experience?.includes("4") ||
-          c.experience?.includes("5"))) ||
-      (experienceFilter === "5+ Years" &&
-        (c.experience?.includes("5") ||
-          c.experience?.includes("6") ||
-          c.experience?.includes("7")));
-
-    return (
-      nameMatch &&
-      statusMatch &&
-      locationMatch &&
-      salaryMatch &&
-      expMatch &&
-      jobTitleMatch &&
-      genderMatch
-    );
-  });
-
 const formatDate = (date?: any) => {
   if (!date) return "";
 
@@ -642,16 +609,13 @@ const formatDate = (date?: any) => {
     };
   }, []);
   return (
-    <div className="grid lg:grid-cols-3 gap-6">
-      {/* Candidates List */}
-      <div className="lg:col-span-1">
-        <Card className="h-full">
-          <CardHeader>
+    <>
+          <div>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <CardTitle className="text-lg">Applications</CardTitle>
 
-                <Badge variant="secondary">{filteredCategories.length}</Badge>
+                <Badge variant="secondary">{candidates.length}</Badge>
               </div>
 
               <button
@@ -697,7 +661,7 @@ const formatDate = (date?: any) => {
             </div>
 
             {/*  Filters */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+            <div className="grid grid-cols-1 sm:grid-cols-5 gap-3 mb-4">
               {/*  Status Filter */}
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-full h-10">
@@ -727,9 +691,7 @@ const formatDate = (date?: any) => {
                     ))}
                 </SelectContent>
               </Select>
-            </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
               {/* Experience Filter */}
               <Select
                 value={experienceFilter}
@@ -741,9 +703,26 @@ const formatDate = (date?: any) => {
                 <SelectContent>
                   <SelectItem value="All">All Experience</SelectItem>
                   <SelectItem value="Fresher">Fresher</SelectItem>
-                  <SelectItem value="1-3 Years">1–3 Years</SelectItem>
-                  <SelectItem value="3-5 Years">3–5 Years</SelectItem>
-                  <SelectItem value="5+ Years">5+ Years</SelectItem>
+                  <SelectItem value="1 Years">1 Years</SelectItem>
+                  <SelectItem value="2 Years">2 Years</SelectItem>
+                  <SelectItem value="3 Years">3 Years</SelectItem>
+                  <SelectItem value="4 Years">4 Years</SelectItem>
+                  <SelectItem value="5 Years">5 Years</SelectItem>
+                  <SelectItem value="6 Years">6 Years</SelectItem>
+                  <SelectItem value="7 Years">7 Years</SelectItem>
+                  <SelectItem value="8 Years">8 Years</SelectItem>
+                  <SelectItem value="9 Years">9 Years</SelectItem>
+                  <SelectItem value="10 Years">10 Years</SelectItem>
+                  <SelectItem value="11 Years">11 Years</SelectItem>
+                  <SelectItem value="12 Years">12 Years</SelectItem>
+                  <SelectItem value="13 Years">13 Years</SelectItem>
+                  <SelectItem value="14 Years">14 Years</SelectItem>
+                  <SelectItem value="15 Years">15 Years</SelectItem>
+                  <SelectItem value="16 Years">16 Years</SelectItem>
+                  <SelectItem value="17 Years">17 Years</SelectItem>
+                  <SelectItem value="18 Years">18 Years</SelectItem>
+                  <SelectItem value="19 Years">19 Years</SelectItem>
+                  <SelectItem value="20+ Years">20+ Years</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -779,7 +758,14 @@ const formatDate = (date?: any) => {
                 </SelectContent>
               </Select>
             </div>
-          </CardHeader>
+      </div>
+    <div className="h-[calc(100vh-100px)] overflow-y-hidden p-4">
+
+  <div className="grid lg:grid-cols-3 gap-6 h-full">
+      {/* Candidates List */}
+       <div className="lg:col-span-1 h-full overflow-auto">
+        <Card className="h-full flex flex-col overflow-auto">
+        
           <CardContent className="p-0">
             {loading ? (
               [...Array(2)].map((_, i) => (
@@ -789,8 +775,8 @@ const formatDate = (date?: any) => {
                   <div className="h-3 bg-gray-200 rounded w-full mb-2"></div>
                 </div>
               ))
-            ) : filteredCategories.length > 0 ? (
-              filteredCategories.map((candidate) => (
+            ) : candidates.length > 0 ? (
+              candidates.map((candidate:any) => (
                 <div
                   key={candidate.id}
                   onClick={() => {
@@ -833,15 +819,46 @@ const formatDate = (date?: any) => {
             ) : (
               <p className="text-gray-500 text-sm">No candidates found</p>
             )}
+            <div className="flex justify-center items-center gap-4 mt-6">
+        <button
+          disabled={currentPage === 1}
+          onClick={() => fetchApplications(currentPage - 1, searchTerm, statusFilter,
+          genderFilter,
+          jobTitleFilter,
+          locationFilter,
+          experienceFilter,
+          salaryFilter )}
+          className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
+        >
+          Previous
+        </button>
+
+        <span>
+          Page {currentPage} of {totalPages}
+        </span>
+
+        <button
+          disabled={currentPage === totalPages}
+          onClick={() => fetchApplications(currentPage + 1, searchTerm, statusFilter,
+          genderFilter,
+          jobTitleFilter,
+          locationFilter,
+          experienceFilter,
+          salaryFilter)}
+          className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
+        >
+          Next
+        </button>
+      </div>
             <div className="flex flex-wrap gap-3 mb-4 items-center"></div>
           </CardContent>
         </Card>
       </div>
 
       {/* Candidate Profile */}
-      <div className="lg:col-span-2">
+      <div className="lg:col-span-2 h-full overflow-auto">
         {selectedCandidate ? (
-          <Card className="h-full">
+          <Card className="h-full flex flex-col overflow-auto">
             <CardHeader>
               <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                 <div className="flex items-start space-x-4">
@@ -953,9 +970,12 @@ const formatDate = (date?: any) => {
                   Professional Summary
                 </h3>
                 <div
-                  className="text-gray-700 leading-relaxed prose max-w-none"
+                  className="text-gray-700 leading-relaxed prose max-w-none
+                   [&_ul]:list-disc [&_ul]:pl-6
+                    [&_ol]:list-decimal [&_ol]:pl-6
+                    [&_li]:mb-1"
                   dangerouslySetInnerHTML={{ __html: selectedCandidate.professional_summary
- || "" }}
+                  || "" }}
                 />
               </div>
 
@@ -998,7 +1018,10 @@ const formatDate = (date?: any) => {
                         {exp.end_date ? formatDate(exp.end_date) : "Present"}
                       </p>
                       <div
-                        className="text-gray-700 leading-relaxed prose max-w-none"
+                        className="text-gray-700 leading-relaxed prose max-w-none
+                        [&_ul]:list-disc [&_ul]:pl-6
+                        [&_ol]:list-decimal [&_ol]:pl-6
+                        [&_li]:mb-1"
                         dangerouslySetInnerHTML={{ __html: exp.description || "" }}
                       />
                     </div>
@@ -1445,6 +1468,8 @@ const formatDate = (date?: any) => {
           </Card>
         )}
       </div>
+
+      {/* moblie view */}
       {isMobile && (
         <Dialog open={!!selectedCandidate} onOpenChange={() => setSelectedCandidate(null)}>
           <DialogContent className="w-full h-full overflow-y-auto">
@@ -1560,7 +1585,10 @@ const formatDate = (date?: any) => {
                           Professional Summary
                         </h3>
                         <div
-                          className="text-gray-700 leading-relaxed prose max-w-none"
+                          className="text-gray-700 leading-relaxed prose max-w-none
+                            [&_ul]:list-disc [&_ul]:pl-6
+                            [&_ol]:list-decimal [&_ol]:pl-6
+                            [&_li]:mb-1"
                           dangerouslySetInnerHTML={{ __html: selectedCandidate.professional_summary
                          || "" }}
                         />
@@ -1605,7 +1633,10 @@ const formatDate = (date?: any) => {
                                 {exp.end_date ? formatDate(exp.end_date) : "Present"}
                               </p>
                               <div
-                                className="text-gray-700 leading-relaxed prose max-w-none"
+                                className="text-gray-700 leading-relaxed prose max-w-none
+                                  [&_ul]:list-disc [&_ul]:pl-6
+                                  [&_ol]:list-decimal [&_ol]:pl-6
+                                  [&_li]:mb-1"
                                 dangerouslySetInnerHTML={{ __html: exp.description || "" }}
                               />
                             </div>
@@ -2047,6 +2078,9 @@ const formatDate = (date?: any) => {
           </DialogContent>
         </Dialog>
       )}
+      </div>
     </div>
+    </>
+
   );
 }

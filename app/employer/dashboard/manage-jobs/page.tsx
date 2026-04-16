@@ -92,8 +92,8 @@ const ManageJobs = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [questions, setQuestions] = useState<string[]>([]);
   const [askQuestionEnabled, setAskQuestionEnabled] = useState(false);
-    const [newQuestion, setNewQuestion] = useState("");
-  
+  const [newQuestion, setNewQuestion] = useState("");
+  const [websiteUrl, setWebsiteUrl] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<OptionType | null>(
     null,
   );
@@ -130,7 +130,11 @@ const ManageJobs = () => {
     isUrgent: false,
     isRemote: false,
     questions: [],
+    website_apply: "",
   });
+  const [websiteEnabled, setWebsiteEnabled] = useState(
+  !!jobForm.website_apply
+  );
   interface JobForm {
     title: string;
     category: string;
@@ -154,6 +158,7 @@ const ManageJobs = () => {
     isUrgent: boolean;
     isRemote: boolean;
     questions: string[];
+    website_apply: string;
   }
   interface PostedJob {
     id: number;
@@ -186,6 +191,7 @@ const ManageJobs = () => {
     applicants?: number;
     apply_clicks?: number;
     questions?: string[];
+    website_apply?: string;
   }
   interface Candidate {
     id: number;
@@ -494,6 +500,7 @@ const ManageJobs = () => {
         isUrgent: data.is_urgent || false,
         isRemote: data.is_remote || false,
         questions: data.questions || [],
+        website_apply: data.website_apply || "",
       });
       setQuestions(data.questions || []);
       setAskQuestionEnabled(data.questions && data.questions.length > 0);
@@ -504,6 +511,13 @@ const ManageJobs = () => {
       console.error("Error fetching job details for edit", err);
     }
   };
+  useEffect(() => {
+  if (jobForm.website_apply) {
+    setWebsiteEnabled(true);
+  } else {
+    setWebsiteEnabled(false);
+  }
+}, [jobForm.website_apply]);
   const handleToggleJobStatus = async (job: any) => {
     const token = localStorage.getItem("auth_token");
 
@@ -624,11 +638,17 @@ const ManageJobs = () => {
   const handleUpdateJob = async () => {
      const minSalary = Number(jobForm.salary);
         const maxSalary = Number(jobForm.salary_max);
-    
+
         if (minSalary && maxSalary && minSalary > maxSalary) {
           toast.error("Minimum salary cannot be greater than maximum salary");
           return;
         }
+        if (websiteEnabled) {
+            if (!jobForm.website_apply?.trim()) {
+              toast.error("Website Checkbox Enabled but URL is empty.");
+              return;
+            }
+          }
     console.log("Updating job with data:", jobForm);
     if (!selectedJob?.id) {
       toast.error("No job selected for update", {
@@ -661,10 +681,20 @@ const ManageJobs = () => {
       if (!response.ok) {
         const errorData = await response.json();
         console.error("Failed to update job:", errorData);
-        toast.error(`Error: ${errorData.detail || "Unable to update job"}`, {
+        // toast.error(`Error: ${errorData.detail || "Unable to update job"}`, {
+        //   description: "Please try again or check your network connection.",
+        // });
+        if (errorData?.website_apply?.length > 0) {
+                  toast.error(errorData.website_apply[0]);
+                  return;
+                }
+                else{
+                  toast.error(`Error: ${errorData.detail || "Unable to update job"}`, {
           description: "Please try again or check your network connection.",
         });
-        return;
+                return;
+                }
+        // return;
       }
 
       const updatedJob = await response.json();
@@ -1256,7 +1286,10 @@ const handleAddQuestion = () => {
                   Job Description
                 </h4>
                <div
-                  className="text-gray-700 leading-relaxed prose max-w-none"
+                  className="prose max-w-none text-gray-700
+                            [&_ul]:list-disc [&_ul]:pl-6
+                            [&_ol]:list-decimal [&_ol]:pl-6
+                            [&_li]:mb-1"
                   dangerouslySetInnerHTML={{ __html: selectedJob.description }}
                 />
               </div>
@@ -1267,7 +1300,10 @@ const handleAddQuestion = () => {
                   Requirements
                 </h4>
                  <div
-                  className="prose text-gray-700 max-w-none"
+                  className="prose max-w-none text-gray-700
+                    [&_ul]:list-disc [&_ul]:pl-6
+                    [&_ol]:list-decimal [&_ol]:pl-6
+                    [&_li]:mb-1"
                   dangerouslySetInnerHTML={{ __html: selectedJob.requirements }}
                 />
               </div>
@@ -1278,7 +1314,10 @@ const handleAddQuestion = () => {
                   Benefits
                 </h4>
                 <div
-                  className="prose text-gray-700 max-w-none"
+                  className="prose max-w-none text-gray-700
+                    [&_ul]:list-disc [&_ul]:pl-6
+                    [&_ol]:list-decimal [&_ol]:pl-6
+                    [&_li]:mb-1"
                   dangerouslySetInnerHTML={{ __html: selectedJob.benefits }}
                 />
               </div>
@@ -1877,6 +1916,33 @@ const handleAddQuestion = () => {
               }
             />
           </div>
+          <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="add-website"
+                        checked={websiteEnabled}
+                        onCheckedChange={(checked) => {
+                          setWebsiteEnabled(!!checked);
+
+                          if (!checked) {
+                            setJobForm({ ...jobForm, website_apply: "" });
+                          }
+                        }}
+                      />
+                      <Label htmlFor="add-website" className="text-sm">
+                        Website URL
+                      </Label>
+                    </div>
+                    {websiteEnabled && (
+                      <div className="mt-4 w-full sm:w-3/5 lg:w-2/5">
+                        <Input
+                          value={jobForm.website_apply || ""}
+                          onChange={(e) =>
+                            setJobForm({ ...jobForm, website_apply: e.target.value })
+                          }
+                          placeholder="Enter website URL..."
+                        />
+                        </div>
+                      )}
           {/* Checkboxes */}
           <div className="flex items-center gap-4 mt-2">
             <div className="flex items-center space-x-2">
