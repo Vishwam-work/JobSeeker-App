@@ -1276,11 +1276,13 @@ const formatDate = (date?: any) => {
           <main className="col-span-12 md:col-span-9 space-y-4">
 
             {/* FIRST 1 CANDIDATE */}
-            {filteredCandidates.slice(0, 1).map((c) => (
-              <div
+               {filteredCandidates.length > 0 ? (
+            <>
+              {filteredCandidates.slice(0, 1).map((c) => (
+                <div
                 key={c.id}
                 className="bg-white rounded-xl shadow-sm p-4 flex flex-col md:flex-row gap-4"
-              >
+                >
                 {/* Checkbox */}
                 <input type="checkbox" className="mt-2 md:mt-0" />
 
@@ -1391,7 +1393,43 @@ const formatDate = (date?: any) => {
                 </div>
               </div>
               ))}
+            </>
+          ) : (
+            <div className="flex items-center justify-center w-full py-12">
+              <div className="bg-white border rounded-2xl shadow-sm p-10 text-center max-w-sm w-full">
+                
+                {/* Icon */}
+                <div className="w-14 h-14 mx-auto flex items-center justify-center rounded-full bg-gray-100 mb-4">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="w-6 h-6 text-gray-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 17v-6a2 2 0 012-2h4M7 7h10M5 21h14"
+                    />
+                  </svg>
+                </div>
 
+                {/* Title */}
+                <h3 className="text-lg font-semibold text-gray-900">
+                  No Candidates Found
+                </h3>
+
+                {/* Subtitle */}
+                <p className="text-sm text-gray-500 mt-2">
+                  Try adjusting your filters or search criteria
+                </p>
+
+              </div>
+            </div>
+          )}
+          <div className="h-16" />
           {/* BLURRED REST */}
           <div className="relative">
 
