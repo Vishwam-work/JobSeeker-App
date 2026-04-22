@@ -8,7 +8,8 @@ import Link from "next/link";
 import Header from "@/components/Header";
 import HeroCarousel from "@/components/Carousel";
 import Footer from "@/components/Footer";
-
+import Image from "next/image";
+import { User } from "lucide-react";  
 export default function CompaniesPage() {
   const [allCompanies, setAllCompanies] = useState<CompanyListItem[]>([]);
   const [page, setPage] = useState(1);
@@ -26,6 +27,7 @@ export default function CompaniesPage() {
     rating: number;
     reviews: number;
     founded: number | null;
+    company_logo: string;
   };
 
   useEffect(() => {
@@ -51,6 +53,7 @@ export default function CompaniesPage() {
         }
 
         const data = await res.json();
+        console.log("Fetched companies:", data);
 
         const mapped: CompanyListItem[] = (data.data || data).map(
         (item: any): CompanyListItem => ({
@@ -63,6 +66,7 @@ export default function CompaniesPage() {
           rating: Math.floor(Math.random() * 2) + 3,
           reviews: Math.floor(Math.random() * 200) + 10,
           founded: item.founded_year || null,
+           company_logo: item.company_logo ? process.env.NEXT_PUBLIC_URL + item.company_logo : "",
         })
       );
    
@@ -211,8 +215,18 @@ const totalPages = Math.ceil(filteredCompanies.length / itemsPerPage);
           <Card className="p-4 hover:shadow-md transition cursor-pointer">
             <CardContent className="flex items-center gap-4 p-0">
 
-              <div className="w-12 h-12 bg-gray-100 rounded flex items-center justify-center font-bold">
-                {company.name.charAt(0)}
+              <div  className="w-12 h-12 bg-gradient-to-br from-purple-100 to-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+               {company.company_logo ? (
+                <Image
+                  src={company.company_logo}
+                  alt="company logo"
+                  width={32}
+                  height={25}
+                  className="w-12 h-12 rounded-full object-cover border"
+                />
+             ) : (
+               <User className="w-6 h-6 text-gray-700 hover:text-purple-600" />
+             )}
               </div>
 
               <div>
@@ -290,7 +304,6 @@ const totalPages = Math.ceil(filteredCompanies.length / itemsPerPage);
   </div>
 
 </div>
-            
           </>
         )}
       </main>

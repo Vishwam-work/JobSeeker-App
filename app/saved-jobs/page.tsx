@@ -175,7 +175,15 @@ export default function SavedJobsPage() {
 
                   {/* Description */}
                   <p className="text-gray-600 text-sm mt-3 line-clamp-2">
-                    {job?.description}
+                    <div
+                            className="text-gray-700 text-sm md:text-base leading-relaxed mb-4 line-clamp-2 overflow-hidden
+                             [&_ul]:list-disc [&_ul]:pl-6
+                             [&_ol]:list-decimal [&_ol]:pl-6
+                             [&_li]:mb-1"
+                            dangerouslySetInnerHTML={{
+                              __html: job.description || "",
+                            }}
+                          />
                   </p>
 
                   {/* Skills */}

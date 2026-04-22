@@ -4,6 +4,8 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import Image from "next/image";
+import { User } from "lucide-react";
 
 export default function CompanyDetailPage({
   params,
@@ -28,6 +30,10 @@ export default function CompanyDetailPage({
     country?: string;
     website?: string;
     description?: string;
+    company_logo: string;
+    company_size?: string;
+     company_type?: string;
+     job_count?: number;
   };
   type Job = {
     id: string | number;
@@ -37,6 +43,7 @@ export default function CompanyDetailPage({
     salary: string;
     type: string;
     questions: any[];
+    job_count?: number;
   };
 
   useEffect(() => {
@@ -96,6 +103,8 @@ export default function CompanyDetailPage({
           country: companyData.country,
           website: companyData.website,
           description: companyData.description,
+           company_logo: companyData.company_logo ? process.env.NEXT_PUBLIC_URL + companyData.company_logo : "",
+
         };
 
         setCompany(mappedCompany);
@@ -113,6 +122,7 @@ export default function CompanyDetailPage({
                   salary: job.salary || "Not specified",
                   type: job.job_type || job.type || "Not specified",
                   questions: job.questions || [],
+                  job_count: job.job_count || 0,
                 }),
               )
             : [];
@@ -167,10 +177,24 @@ export default function CompanyDetailPage({
       <div className="px-4 sm:px-6 md:px-10 py-6 w-full max-w-7xl mx-auto">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 border-b pb-6 w-full">
           <div className="flex-1">
+            <div className="flex items-center gap-4 mb-2">
+            <div  className="w-12 h-12 bg-gradient-to-br from-purple-100 to-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                {company.company_logo ? (
+                 <Image
+                  src={company.company_logo}
+                  alt="company logo"
+                   width={32}
+                   height={25}
+                   className="w-12 h-12 rounded-full object-cover border"
+                 />
+              ) : (
+                <User className="w-6 h-6 text-gray-700 hover:text-purple-600" />
+              )}
+            </div>
             <h1 className="text-2xl sm:text-3xl font-bold">
               {company?.name || "Company name not available"}
             </h1>
-
+            </div>
             <p className="text-gray-600 text-sm sm:text-base">
               {company?.industry || "N/A"} • {company?.type || "N/A"}
             </p>
@@ -215,10 +239,52 @@ export default function CompanyDetailPage({
             Jobs ({jobs.length})
           </button>
         </div>
-        {activeTab === "about" && company.description && (
-          <div className="mt-6">
-            <h2 className="text-lg font-semibold mb-2">About Company</h2>
-            <p className="text-gray-700">{company.description}</p>
+        {activeTab === "about" && company && (
+          <div className="mt-6 space-y-4">
+            <h2 className="text-xl font-semibold">About Company</h2>
+
+            {/* Info Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-gray-800">
+
+              {company.industry && (
+                <p><span className="font-medium">Industry:</span> {company.industry}</p>
+              )}
+
+              {company.size && (
+                <p><span className="font-medium">Company Size:</span> {company.size}</p>
+              )}
+
+              {company.type && (
+                <p><span className="font-medium">Type:</span> {company.type}</p>
+              )}
+
+              {(company.city || company.state || company.country) && (
+                <p>
+                  <span className="font-medium">Location:</span>{" "}
+                  {[company.city, company.state, company.country]
+                    .filter(Boolean)
+                    .join(", ")}
+                </p>
+              )}
+
+              {company.website && (
+                <p>
+                  <span className="font-medium">Website:</span>{" "}
+                  <a
+                    href={company.website}
+                    target="_blank"
+                    className="text-blue-600 hover:underline"
+                  >
+                    Visit
+                  </a>
+                </p>
+              )}
+
+              {/* Description */}
+            {company.description && (
+              <p ><span className="font-medium">description:</span>{company.description}</p>
+            )}
+            </div>
           </div>
         )}
 

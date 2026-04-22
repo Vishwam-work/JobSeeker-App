@@ -212,14 +212,6 @@ useEffect(() => {
                     {localStorage.getItem("full_name")}
                   </span>
                 </div>
-
-                   <Button
-                  onClick={handleProfileNavigate}
-                  className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white"
-                >
-                  Make Profile
-                </Button>
-
               </div>
             ) : (
               <>
@@ -359,6 +351,30 @@ useEffect(() => {
                   </div>
                   {/* Menu */}
                   <div className="flex-1">
+              <Link href="/">
+                <div className="px-6 py-3 hover:bg-gray-100 cursor-pointer flex items-center gap-3">
+                  <Briefcase size={18} />
+                  <span>Jobs</span>
+                </div>
+              </Link>
+              <Link href="/companies">
+                <div className="px-6 py-3 hover:bg-gray-100 cursor-pointer flex items-center gap-3">
+                  <Building2 size={18} />
+                  <span>Companies</span>
+                </div>
+              </Link>
+              <Link href="/service">
+                <div className="px-6 py-3 hover:bg-gray-100 cursor-pointer flex items-center gap-3">
+                  <Users size={18} />
+                  <span>Services</span>
+                </div>
+              </Link>
+              <Link href="/contact">
+                <div className="px-6 py-3 hover:bg-gray-100 cursor-pointer flex items-center gap-3">
+                  <Phone size={18} />
+                  <span>Contact</span>
+                </div>
+              </Link>
 
               <Link href="/applied-jobs">
                 <div className="px-6 py-3 hover:bg-gray-100 cursor-pointer flex items-center gap-3">
@@ -405,17 +421,6 @@ useEffect(() => {
             )}
               </div>
             )}
-          {/* Mobile Menu Button */}
-          <button
-            className="md:hidden p-2"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          >
-            {isMobileMenuOpen ? (
-              <X className="w-6 h-6 text-gray-600" />
-            ) : (
-              <Menu className="w-6 h-6 text-gray-600" />
-            )}
-          </button>
         </div>
 
         {/* Mobile Menu */}

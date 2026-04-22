@@ -9,7 +9,7 @@ export default function AppliedJobsPage() {
   const [appliedJobs, setAppliedJobs] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedJob, setSelectedJob] = useState<any>(null);
-
+  const [showMobileDetails, setShowMobileDetails] = useState(false);
   const steps = ["Under Review", "Shortlisted", "Interview Scheduled"];
   const formatStatus = (status: string) => {
     switch (status?.toLowerCase()) {
@@ -93,7 +93,11 @@ export default function AppliedJobsPage() {
           {appliedJobs.map((job, index) => (
             <div
               key={job.id}
-              onClick={() => setSelectedJob(job)}
+              // onClick={() => setSelectedJob(job)}
+               onClick={() => {
+                setSelectedJob(job);
+                setShowMobileDetails(true);
+              }}
               className="p-3 border rounded-lg mb-3 cursor-pointer hover:bg-gray-50"
             >
               <h3 className="font-medium text-gray-900">{job.job_title}</h3>
@@ -126,7 +130,7 @@ export default function AppliedJobsPage() {
         </div>
 
         {/* RIGHT SIDE - JOB DETAILS */}
-        <div className="lg:col-span-2 bg-white border rounded-xl p-6">
+        <div className="hidden lg:block lg:col-span-2 bg-white border rounded-xl p-6">
           {selectedJob ? (
             <>
               {/* Title */}
@@ -258,6 +262,151 @@ export default function AppliedJobsPage() {
             </p>
           )}
         </div>
+
+        {/* Mobile Job Details Modal */}
+          {showMobileDetails && selectedJob && (
+            <div className="fixed inset-0 z-50 bg-white lg:hidden overflow-y-auto">
+              {/* Header */}
+              <div className="sticky top-0 bg-white border-b px-4 py-4 flex items-center justify-between">
+                <h2 className="text-lg font-semibold">Job Details</h2>
+
+                <button
+                  onClick={() => setShowMobileDetails(false)}
+                  className="text-gray-600 text-2xl"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Content */}
+              <div className="p-4">
+                {/* Title */}
+                <h2 className="text-xl font-semibold text-gray-900">
+                  {selectedJob.job_title}
+                </h2>
+
+                <p className="text-sm text-gray-500 mt-1">
+                  {selectedJob.job.company}
+                </p>
+
+                <p className="text-sm text-gray-500">
+                  {selectedJob.job.location?.name} • {selectedJob.job.job_type}
+                </p>
+
+                {/* Badge */}
+                <div className="mt-3">
+                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
+                    {selectedJob.job.work_mode}
+                  </span>
+                </div>
+
+                {/* Applied Date */}
+                <p className="text-xs text-gray-400 mt-4">
+                  Applied on:{" "}
+                  {new Date(selectedJob.applied_at).toLocaleDateString()}
+                </p>
+
+                {/* STATUS BAR */}
+                        {selectedJob?.application_status?.toLowerCase() !==
+                          "rejected" && (
+                          <div className="mt-6">
+                            <p className="text-sm font-medium mb-4">Application Status</p>
+
+                            {/* Progress line */}
+                            <div className="relative">
+                              <div className="w-full h-2 bg-gray-200 rounded-full"></div>
+
+                              <div
+                                className="absolute top-0 left-0 h-2 bg-green-500 rounded-full transition-all duration-500"
+                                style={{
+                                  width: getProgressWidth(
+                                    selectedJob?.application_status,
+                                  ),
+                                }}
+                              ></div>
+
+                              {/* Dots */}
+                              <div className="absolute -top-1.5 left-0 w-full flex justify-between">
+                                {steps.map((step, index) => {
+                                  const currentStep = getCurrentStep(
+                                    selectedJob?.application_status,
+                                  );
+
+                                  return (
+                                    <div
+                                      key={index}
+                                      className={`w-4 h-4 rounded-full border-2 ${
+                                        index + 1 <= currentStep
+                                          ? "bg-green-500 border-green-500"
+                                          : "bg-white border-gray-300"
+                                      }`}
+                                    ></div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+
+                            {/* Labels */}
+                            <div className="flex justify-between text-xs mt-4">
+                              {steps.map((step, index) => {
+                                const currentStep = getCurrentStep(
+                                  selectedJob?.application_status,
+                                );
+
+                                return (
+                                  <span
+                                    key={index}
+                                    className={`${
+                                      index + 1 <= currentStep
+                                        ? "text-green-600 font-medium"
+                                        : "text-gray-400"
+                                    }`}
+                                  >
+                                    {step}
+                                  </span>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+                        {selectedJob?.application_status?.toLowerCase() ===
+                          "rejected" && (
+                          <div className="mt-6 p-4 border rounded-lg bg-red-50">
+                            <p className="text-sm font-medium text-red-600">
+                              Application Rejected
+                            </p>
+                          </div>
+                        )}
+
+
+                {/* Stats */}
+                <div className="mt-6 border rounded-lg p-4">
+                  <p className="text-lg font-semibold">
+                    {selectedJob.job.applicants}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    Total Applications
+                  </p>
+                </div>
+
+                {/* Skills */}
+                <div className="mt-6">
+                  <p className="text-sm font-medium mb-3">Skills</p>
+
+                  <div className="flex flex-wrap gap-2">
+                    {selectedJob.job.skills.map((skill: string, i: number) => (
+                      <span
+                        key={i}
+                        className="text-xs bg-gray-100 px-3 py-1 rounded-full"
+                      >
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
       </div>
 
       <Footer />
