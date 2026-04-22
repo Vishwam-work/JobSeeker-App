@@ -36,15 +36,15 @@ interface SavedJob {
 
 export default function SavedJobsPage() {
   const [savedJobs, setSavedJobs] = useState<SavedJob[]>([]);
-
-  useEffect(() => {
-    const fetchSavedJobs = async () => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const fetchSavedJobs = async (page = 1) => {
       const token = localStorage.getItem("auth_token");
       if (!token) return;
 
       try {
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL_APP}/saved-jobs-all/`,
+          `${process.env.NEXT_PUBLIC_API_URL_APP}/saved-jobs-all/?page=${page}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -55,14 +55,17 @@ export default function SavedJobsPage() {
         if (res.ok) {
           const data = await res.json();
           console.log("Fetched saved jobs:", data);
-          setSavedJobs(data);
+          setSavedJobs(data.results || []);
+          setCurrentPage(page);
+          setTotalPages(Math.ceil(data.count / 3));
         }
       } catch (err) {
         console.error("Error fetching saved jobs:", err);
       }
     };
-
-    fetchSavedJobs();
+    
+  useEffect(() => {
+      fetchSavedJobs();
   }, []);
 
   const removeSavedJob = async (id: number) => {
@@ -217,6 +220,35 @@ export default function SavedJobsPage() {
           )}
         </CardContent>
       </Card>
+       <div className="flex items-center gap-2">
+                <button
+                  disabled={currentPage === 1}
+                  onClick={() =>
+                    fetchSavedJobs(
+                      currentPage - 1,
+                    )
+                  }
+                  className="px-4 py-2 text-sm border rounded-lg bg-white hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  ← Previous
+                </button>
+
+                <span className="px-3 py-1 text-sm font-medium bg-gray-100 rounded-lg">
+                  {currentPage}
+                </span>
+
+                <button
+                  disabled={currentPage === totalPages}
+                  onClick={() =>
+                    fetchSavedJobs(
+                      currentPage + 1,
+                    )
+                  }
+                  className="px-4 py-2 text-sm border rounded-lg bg-white hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Next →
+                </button>
+              </div>
 
     </div>
      <Footer />
