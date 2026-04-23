@@ -397,7 +397,7 @@ useEffect(() => {
                 </div>
               </Link>
 
-              <Link href="">
+              <Link href="/faq-support">
                 <div className="px-6 py-3 hover:bg-gray-100 cursor-pointer flex items-center gap-3">
                   <HelpCircle size={18} />
                   FAQs
