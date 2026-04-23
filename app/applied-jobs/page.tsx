@@ -10,6 +10,9 @@ export default function AppliedJobsPage() {
   const [loading, setLoading] = useState(false);
   const [selectedJob, setSelectedJob] = useState<any>(null);
   const [showMobileDetails, setShowMobileDetails] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
   const steps = ["Under Review", "Shortlisted", "Interview Scheduled"];
   const formatStatus = (status: string) => {
     switch (status?.toLowerCase()) {
@@ -36,7 +39,7 @@ export default function AppliedJobsPage() {
     return `${(currentStep / steps.length) * 100}%`;
   };
 
-  const fetchAppliedJobs = async () => {
+  const fetchAppliedJobs = async (page = 1) => {
     const token = localStorage.getItem("auth_token");
     if (!token) return;
 
@@ -44,7 +47,7 @@ export default function AppliedJobsPage() {
       setLoading(true);
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL_APP}/my-applied-jobs/`,
+        `${process.env.NEXT_PUBLIC_API_URL_APP}/my-applied-jobs/?page=${page}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -54,7 +57,9 @@ export default function AppliedJobsPage() {
 
       const data = await res.json();
       console.log(data);
-      setAppliedJobs(data || []);
+      setAppliedJobs(data.results || []);
+      setCurrentPage(page);
+      setTotalPages(Math.ceil(data.count / 5));
     } catch (error) {
       console.error("Error fetching applied jobs:", error);
     } finally {
@@ -127,6 +132,34 @@ export default function AppliedJobsPage() {
               </p>
             </div>
           ))}
+           <div className="flex items-center gap-2">
+                <button
+                  disabled={currentPage === 1}
+                  onClick={() =>
+                    fetchAppliedJobs(
+                      currentPage - 1,
+                    )
+                  }
+                  className="px-4 py-2 text-sm border rounded-lg bg-white hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  ← Previous
+                </button>
+
+                <span className="px-3 py-1 text-sm font-medium bg-gray-100 rounded-lg">
+                  {currentPage}
+                </span>
+                <button
+                  disabled={currentPage === totalPages}
+                  onClick={() =>
+                    fetchAppliedJobs(
+                      currentPage + 1,
+                    )
+                  }
+                  className="px-4 py-2 text-sm border rounded-lg bg-white hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Next →
+                </button>
+              </div>
         </div>
 
         {/* RIGHT SIDE - JOB DETAILS */}
