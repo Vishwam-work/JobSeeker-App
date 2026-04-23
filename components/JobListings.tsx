@@ -78,6 +78,8 @@ export default function JobListings() {
   const searchFromUrl = searchParams.get("search");
   const router = useRouter();
   const [showFilters, setShowFilters] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   // Filter states
   const [filters, setFilters] = useState({
     search: "",
@@ -110,9 +112,9 @@ export default function JobListings() {
   const [showMorePosted, setShowMorePosted] = useState(false);
   const [showMoreCompanies, setShowMoreCompanies] = useState(false);
   const [sortBy, setSortBy] = useState("relevance");
-const [dateFilter, setDateFilter] = useState("all");
-const [showDateDropdown, setShowDateDropdown] = useState(false);
-  const experienceList = ["0-1", "2-4", "3-5", "5-8", "8+"];
+  const [dateFilter, setDateFilter] = useState("all");
+  const [showDateDropdown, setShowDateDropdown] = useState(false);
+  const experienceList = ["fresher","1-2", "3-5", "6-10", "10+"];
 
   const jobTypes = ["Full Time", "Part Time", "Contract", "Internship"];
   const workModes = ["Remote", "Hybrid", "Office"];
@@ -356,14 +358,38 @@ const sortedJobs = [...filteredJobs]
 
   useEffect(() => {
     fetchJobs(page);
-  }, [page]);
+  }, [page, filters]);
 
-  const fetchJobs = async (pageNumber: number) => {
+  const fetchJobs = async (page : number) => {
     try {
       setLoading(true);
+      console.log("Fetching jobs with filters:", filters);
+      const params = new URLSearchParams();
+
+      params.append("page", page.toString());
+
+      if (filters.search && searchFromUrl) params.append("search", searchFromUrl);
+      if (filters.location) params.append("location", filters.location);
+
+      filters.jobType.forEach(j => params.append("job_type", j));
+      filters.workMode.forEach(w => params.append("work_mode", w.toLowerCase()));
+      if (filters.salaryRange[0] !== 0) {
+        params.append("salary_min", filters.salaryRange[0].toString());
+        params.append("salary_max", filters.salaryRange[1].toString());
+      }
+      if (filters.postedWithin.length > 0) {
+        filters.postedWithin.forEach(p => params.append("posted_within", p));
+      }
+
+      if (filters.companies.length > 0) {
+        filters.companies.forEach(company => params.append("company", company));
+      }
+      if (filters.experience.length > 0) {
+        filters.experience.forEach(exp => params.append("experience", exp));
+      }
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/all-jobs/?page=${pageNumber}`,
+        `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/all-jobs/?${params.toString()}`,
       );
 
       const data = await response.json();
@@ -397,6 +423,8 @@ const sortedJobs = [...filteredJobs]
       setNextPage(data.next);
       setPreviousPage(data.previous);
       setTotalCount(data.count || 0);
+      setCurrentPage(page);
+      setTotalPages(Math.ceil(data.count / 3));
     } catch (error) {
       console.error("Error fetching jobs:", error);
       setJobs([]);
@@ -1043,24 +1071,6 @@ setUserData({
                 </div>
 
                 <div className="space-y-6">
-                  {/* Search */}
-                  <div>
-                    <Label className="text-sm font-medium text-gray-700 mb-2 block">
-                      Search Jobs
-                    </Label>
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                      <Input
-                        placeholder="Job title, skills, company..."
-                        value={filters.search}
-                        onChange={(e) =>
-                          handleFilterChange("search", e.target.value)
-                        }
-                        className="pl-10"
-                      />
-                    </div>
-                  </div>
-
                   {/* Location */}
                   <div>
                     <Label className="text-sm font-medium text-gray-700 mb-2 block">
@@ -1900,7 +1910,7 @@ setUserData({
           <div className="lg:col-span-3">
             <div className="mb-4 flex items-center justify-between">
               <p className="text-gray-600">
-                Showing {filteredJobs.length} of {jobs.length} jobs
+                Showing {filteredJobs.length} jobs
               </p>
               <div className="flex items-center space-x-2 text-sm relative">
 
@@ -1912,79 +1922,8 @@ setUserData({
                   <Filter className="w-3 h-4" />
                   Filters
                 </Button>
-
-                {/* <button
-                  onClick={() => setSortBy("relevance")}
-                  className={`px-2 py-1 rounded ${
-                    sortBy === "relevance"
-                      ? "text-blue-600 font-semibold"
-                      : "text-gray-600"
-                  }`}
-                >
-                  Relevance
-                </button>
-
-                <span className="text-gray-400">|</span> */}
-
-                <button
-                  onClick={() => {
-                    setSortBy("date");
-                    setShowDateDropdown(!showDateDropdown);
-                 }}
-                  className={`px-2 py-1 rounded ${
-                    sortBy === "date"
-                      ? "text-blue-600 font-semibold"
-                      : "text-gray-600"
-                  }`}
-                >
-                  Date
-                </button>
-
-                 {showDateDropdown && (
-                   <div className="absolute top-8 right-0 bg-white border rounded-lg shadow-lg w-40 z-50">
-                     <button
-                       onClick={() => {
-                         setDateFilter("24h");
-                         setShowDateDropdown(false);
-                       }}
-                       className="block w-full text-left px-3 py-2 hover:bg-gray-100"
-                     >
-                       Last 24 hours
-                     </button>
-
-                     <button
-                       onClick={() => {
-                         setDateFilter("7d");
-                         setShowDateDropdown(false);
-                       }}
-                       className="block w-full text-left px-3 py-2 hover:bg-gray-100"
-                     >
-                      Last 7 days
-                        </button>
-
-                        <button
-                          onClick={() => {
-                            setDateFilter("30d");
-                            setShowDateDropdown(false);
-                          }}
-                          className="block w-full text-left px-3 py-2 hover:bg-gray-100"
-                        >
-                          Last 30 days
-                        </button>
-
-                        <button
-                          onClick={() => {
-                            setDateFilter("year");
-                            setShowDateDropdown(false);
-                          }}
-                          className="block w-full text-left px-3 py-2 hover:bg-gray-100"
-                        >
-                          This Year
-                        </button>
-                      </div>
-                    )}
-                  </div>
                 </div>
+            </div>
 
             <div className="space-y-4 md:space-y-6">
               {sortedJobs.length === 0 ? (
@@ -2209,15 +2148,6 @@ setUserData({
                                 {savedJobIds.includes(Number(job.id)) ? "Saved" : "Save"}
                               </span>
                             </Button>
-
-                            {/* <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleShare(job)}
-                              className="text-gray-400 hover:text-gray-600"
-                            >
-                              <Share2 className="w-4 h-4" />
-                            </Button> */}
                           </div>
                         </div>
                       </div>
@@ -2227,61 +2157,34 @@ setUserData({
               )}
             </div>
 
-            {/* Pagination Controls */}
-            {totalCount > 0 && (
-              <div className="flex flex-col sm:flex-row items-center justify-between mt-8 gap-4 border-t pt-6">
-                <div className="text-sm text-gray-500 order-2 sm:order-1">
-                  Showing{" "}
-                  <span className="font-medium">
-                    {Math.min((page - 1) * 5 + 1, totalCount)}
-                  </span>{" "}
-                  to{" "}
-                  <span className="font-medium">
-                    {Math.min(page * 5, totalCount)}
-                  </span>{" "}
-                  of <span className="font-medium">{totalCount}</span> results
-                </div>
+              <div className="flex items-center gap-2">
+                <button
+                  disabled={currentPage === 1}
+                  onClick={() =>
+                    fetchJobs(
+                      currentPage - 1,
+                    )
+                  }
+                  className="px-4 py-2 text-sm border rounded-lg bg-white hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  ← Previous
+                </button>
 
-                <div className="flex items-center space-x-2 order-1 sm:order-2">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => {
-                      const newPage = page - 1;
-                      if (newPage >= 1) {
-                        setPage(newPage);
-                        window.scrollTo({ top: 0, behavior: "smooth" });
-                      }
-                    }}
-                    disabled={!previousPage || loading}
-                    className="h-9 w-9"
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-
-                  <span className="text-sm font-medium text-gray-700 min-w-[80px] text-center">
-                    Page {page} of {Math.ceil(totalCount / 5)}
-                  </span>
-
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => {
-                      const newPage = page + 1;
-                      const totalPages = Math.ceil(totalCount / 5);
-                      if (newPage <= totalPages) {
-                        setPage(newPage);
-                        window.scrollTo({ top: 0, behavior: "smooth" });
-                      }
-                    }}
-                    disabled={!nextPage || loading}
-                    className="h-9 w-9"
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </div>
+                <span className="px-3 py-1 text-sm font-medium bg-gray-100 rounded-lg">
+                  {currentPage}
+                </span>
+                <button
+                  disabled={currentPage === totalPages}
+                  onClick={() =>
+                    fetchJobs(
+                      currentPage + 1,
+                    )
+                  }
+                  className="px-4 py-2 text-sm border rounded-lg bg-white hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Next →
+                </button>
               </div>
-            )}
           </div>
         </div>
 
