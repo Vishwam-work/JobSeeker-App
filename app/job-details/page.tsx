@@ -22,7 +22,8 @@ import {
   Share2,
   Eye,
   ExternalLink,
-  Send
+  Send,
+  User
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -30,6 +31,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import Image from "next/image";
 export default function JobDetailsPage() {
   const searchParams = useSearchParams();
   const jobId = searchParams.get("id");
@@ -62,6 +64,9 @@ export default function JobDetailsPage() {
     requirements?: string[];
     benefits?: string[];
     skills?: string[];
+    company_user?: {
+      company_logo?: string;
+    };
     // Add other fields as needed
   }
 interface Application {
@@ -385,9 +390,19 @@ const handleAnswerChange = (questionIndex: number, value: string) => {
           <div className="space-y-6">
             {/* Company Info */}
             <div className="flex items-start space-x-4 p-4 bg-gray-50 rounded-lg">
-              <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-blue-100 rounded-lg flex items-center justify-center">
-                <Building2 className="w-8 h-8 text-purple-600" />
-              </div>
+              <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                     {selectedJob.company_user?.company_logo ? (
+                                      <Image
+                                         src={selectedJob.company_user.company_logo}
+                                        alt="company logo"
+                                         width={32}
+                                        height={25}
+                                         className="w-12 h-12 rounded-full object-cover border"
+                                       />
+                                     ) : (
+                                       <User className="w-6 h-6 text-gray-700 hover:text-purple-600" />
+                                     )}
+                                   </div>
               <div className="flex-1">
                 <h3 className="text-xl font-semibold text-purple-600 mb-1">
                   {selectedJob.company}

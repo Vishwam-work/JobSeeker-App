@@ -13,6 +13,8 @@ import { useSavedJobs } from "@/context/SavedJobsContext";
 import { toast } from "sonner";
 import { v4 as uuidv4 } from "uuid";
 import TiptapEditor from "@/components/TiptapEditor";
+import Image from "next/image";
+
 import {
   Select,
   SelectContent,
@@ -51,6 +53,7 @@ import {
   Send,
   ChevronLeft,
   ChevronRight,
+  User
 } from "lucide-react";
 
 export default function JobListings() {
@@ -232,6 +235,9 @@ const sortedJobs = [...filteredJobs]
     currency?:{
       code: string;
       symbol_native: string;
+    }
+    company_user?: {
+      company_logo: string;
     }
   }
   interface Filters {
@@ -425,7 +431,6 @@ const sortedJobs = [...filteredJobs]
   useEffect(() => {
     setPage(1);
   }, [filters]);
-
   useEffect(() => {
     let filtered = jobs;
 
@@ -498,15 +503,24 @@ const sortedJobs = [...filteredJobs]
     }
 
     // Job Type filter
-    if (filters.jobType && filters.jobType.length > 0) {
-      filtered = filtered.filter(
-        (job) =>
-          job.job_type &&
-          filters.jobType.some((type) =>
-            (job.job_type as string).toLowerCase().includes(type.toLowerCase()),
-          ),
-      );
-    }
+    const normalize = (str: string) =>
+  str.toLowerCase().replace(/[\s-]+/g, "");
+
+if (filters.jobType && filters.jobType.length > 0) {
+  filtered = filtered.filter((job) => {
+    if (!job.job_type) return false;
+
+    const jobTypes = Array.isArray(job.job_type)
+      ? job.job_type
+      : [job.job_type];
+
+    return jobTypes.some((jt) =>
+      filters.jobType.some(
+        (type) => normalize(jt) === normalize(type)
+      )
+    );
+  });
+}
 
     // Skills filter
     if (filters.skills && filters.skills.length > 0) {
@@ -1996,9 +2010,19 @@ setUserData({
                         <div className="flex-1">
                           <div className="flex items-start justify-between mb-3">
                             <div className="flex items-start space-x-3">
-                              <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                <Building2 className="w-6 h-6 text-purple-600" />
-                              </div>
+                              <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                  {job.company_user?.company_logo ? (
+                                    <Image
+                                      src={job.company_user.company_logo}
+                                      alt="company logo"
+                                      width={32}
+                                      height={25}
+                                      className="w-12 h-12 rounded-full object-cover border"
+                                    />
+                                  ) : (
+                                    <User className="w-6 h-6 text-gray-700 hover:text-purple-600" />
+                                  )}
+                                </div>
                               <div className="min-w-0 flex-1">
                                 <div className="flex items-center gap-2 mb-1">
                                   <h3 className="text-lg md:text-xl font-semibold text-gray-900 hover:text-purple-600 transition-colors">
@@ -2069,39 +2093,6 @@ setUserData({
                               </div>
                             </div>
                           </div>
-                          <div className="flex items-center space-x-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() =>
-                                savedJobIds.includes(Number(job.id))
-                                  ? unsaveJob(Number(job.id))
-                                  : saveJob(Number(job.id))
-                              }
-                              className={`${
-                                savedJobIds.includes(Number(job.id))
-                                  ? "text-green-600"
-                                  : "text-gray-400 hover:text-green-500"
-                              }`}
-                            >
-                              <Bookmark
-                                className={`w-4 h-4 transition-all duration-300 ${
-                                  savedJobIds.includes(Number(job.id))
-                                    ? "fill-green-500 drop-shadow-[0_0_6px_rgba(34,197,94,0.8)]"
-                                    : ""
-                                }`}
-                              />
-                            </Button>
-
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleShare(job)}
-                              className="text-gray-400 hover:text-gray-600"
-                            >
-                              <Share2 className="w-4 h-4" />
-                            </Button>
-                          </div>
 
                           {/* Job Description */}
                           <div
@@ -2153,7 +2144,7 @@ setUserData({
                         </div>
 
                         {/* Action Buttons */}
-                        <div className="flex flex-col sm:flex-row lg:flex-col gap-2 lg:w-32">
+                        <div className="flex flex-col gap-2 lg:w-32 min-h-[260px]">
                           {(() => {
                             const token = localStorage.getItem("auth_token");
                             const jobIdNum = Number(job.id);
@@ -2191,6 +2182,43 @@ setUserData({
                               Apply on Website
                             </a>
                           )}
+                           <div className="mt-auto flex items-end justify-end pt-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() =>
+                                savedJobIds.includes(Number(job.id))
+                                  ? unsaveJob(Number(job.id))
+                                  : saveJob(Number(job.id))
+                              }
+                              className={`flex items-center gap-2 ${
+                                savedJobIds.includes(Number(job.id))
+                                  ? "text-green-600"
+                                  : "text-gray-400 hover:text-green-500"
+                              }`}
+                            >
+                              <Bookmark
+                                className={`w-4 h-4 transition-all duration-300 ${
+                                  savedJobIds.includes(Number(job.id))
+                                    ? "fill-green-500 drop-shadow-[0_0_6px_rgba(34,197,94,0.8)]"
+                                    : ""
+                                }`}
+                              />
+
+                              <span className="text-sm font-medium">
+                                {savedJobIds.includes(Number(job.id)) ? "Saved" : "Save"}
+                              </span>
+                            </Button>
+
+                            {/* <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleShare(job)}
+                              className="text-gray-400 hover:text-gray-600"
+                            >
+                              <Share2 className="w-4 h-4" />
+                            </Button> */}
+                          </div>
                         </div>
                       </div>
                     </CardContent>
@@ -2270,9 +2298,19 @@ setUserData({
                 <div className="space-y-6">
                   {/* Company Info */}
                   <div className="flex items-start space-x-4 p-4 bg-gray-50 rounded-lg">
-                    <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-blue-100 rounded-lg flex items-center justify-center">
-                      <Building2 className="w-8 h-8 text-purple-600" />
-                    </div>
+                     <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                       {selectedJob.company_user?.company_logo ? (
+                        <Image
+                           src={selectedJob.company_user.company_logo}
+                          alt="company logo"
+                           width={32}
+                          height={25}
+                           className="w-12 h-12 rounded-full object-cover border"
+                         />
+                       ) : (
+                         <User className="w-6 h-6 text-gray-700 hover:text-purple-600" />
+                       )}
+                     </div>
                     <div className="flex-1">
                       <h3 className="text-xl font-semibold text-purple-600 mb-1">
                         {selectedJob.company}
