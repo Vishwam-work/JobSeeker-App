@@ -52,11 +52,19 @@ interface ProfileExperience {
 
 interface Education {
   id: string | number;
-  degree: string;
-  field: string;
+  education: string;
+  course: string;
+  course_name?: string;
+  education_name?: string;
+  // optional fields used during data mapping
+  course_id?: string | number;
   institution: string;
-  year: string | number;
+  start_year: string | number;
+  end_year: string | number;
   percentage: string;
+  score_type?: string;
+  course_type?: string;
+  courseType?: string;
 }
 
 interface Certification {
@@ -76,7 +84,9 @@ interface ProfileData {
     experience: string;
     currentSalary: string;
     currentCurrency: string;
+    currentCurrencySymbol?: string;
     expectedCurrency: string;
+    expectedCurrencySymbol?: string;
     expectedSalary: string;
     noticePeriod: string;
   };
@@ -93,8 +103,24 @@ interface Certification {
   year: string | number;
 }
 
+const formatNumber = (
+  value: any,
+  currency?: string,
+  symbol?: string
+) => {
+  if (!value) return "-";
+
+  const curr = currency?.toUpperCase();
+
+  const locale = curr === "INR" ? "en-IN" : "en-US";
+
+  const formatted = new Intl.NumberFormat(locale).format(Number(value));
+
+  return symbol ? `${symbol} ${formatted}` : formatted;
+};
+
     useEffect(() => {
-      fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_title/")
+      fetch(`${process.env.NEXT_PUBLIC_API_URL_MASTER}/jobs_title/`)
         .then((res) => res.json())
         .then((data) => {
           setJobTitles(data);
@@ -103,7 +129,7 @@ interface Certification {
     }, []);
 
     useEffect(() => {
-      fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/jobs_category/")
+      fetch(`${process.env.NEXT_PUBLIC_API_URL_MASTER}/jobs_category/`)
         .then((res) => res.json())
         .then((data) => {
           setJobCategories(data);
@@ -112,30 +138,23 @@ interface Certification {
     }, []);
 
 
-    const getCategoryName = (id: number | string) =>
-    jobCategories.find((c) => c.id === id)?.name || "";
-
-  const getJobTitleName = (id: number | string) => {
-    // console.log("jobTitles", jobTitles);
-    return jobTitles.find((t) => t.id === id)?.title || "";
-  };
   useEffect(() => {
     const loadProfile = async () => {
-      const res = await fetch("https://jobseeker-backend-jy1y.onrender.com/api/profile/", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL_APP}/profile/`, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
         },
       });
 
-    
+
 
 
       if (res.ok) {
         const data = await res.json();
-        // console.log("Profile Data: before", data);
+        console.log("Profile Data: before", data);
 
- 
+
 
         setProfileData({
           personalInfo: {
@@ -147,28 +166,34 @@ interface Certification {
             location: `${data.city?.name || ""}, ${data.state?.name || ""}`,
             experience: data.experience,
             currentSalary: data.current_salary,
-            currentCurrency: data?.current_currency?.symbol ?? "",
-            expectedCurrency: data?.expected_currency?.symbol ?? "",
-
+            currentCurrency: data?.current_currency?.code ?? "",
+            currentCurrencySymbol: data?.current_currency?.symbol_native ?? "",
+            expectedCurrency: data?.expected_currency?.code ?? "",
+            expectedCurrencySymbol: data?.expected_currency?.symbol_native ?? "",
             expectedSalary: data.expected_salary,
             noticePeriod: data.notice_period,
           },
           experience: data.experiences.map((exp: any) => ({
             id: exp.id,
             company: exp.company,
-            position: exp.job_title?.title || "N/A",  
-            category: exp.category?.name || "N/A",
+            position: exp.job_title|| "N/A",
+            category: exp.category|| "N/A",
             duration: `${exp.start_date} - ${exp.end_date || "Present"}`,
-            location: exp.location?.name || "N/A",
+            location: exp.location || "N/A",
             description: exp.description,
           })),
-          education: data.educations.map((edu: any) => ({
-            id: edu.id,
-            degree: edu.degree,
-            field: edu.field_of_study,
-            institution: edu.institution,
-            year: edu.year,
-            percentage: edu.percentage,
+          education: data.educations.map((e: any) => ({
+            id: e.id,
+            education: e.education,
+            course: e.course || "",
+            institution: e.institution,
+            start_year: e.start_year,
+            end_year: e.end_year,
+            percentage: e.percentage,
+            score_type: e.score_type?.toLowerCase() || "cgpa",
+            course_type: e.course_type,
+            education_name: e.education_detail?.name || "N/A",
+            course_name: e.course_detail?.name || "N/A",
           })),
           certifications: data.certifications.map((cert: any) => ({
             name : cert.name,
@@ -232,16 +257,15 @@ interface Certification {
                 </Button>
               </Link>
             </div>
-            <div className="flex flex-col sm:flex-row gap-2">            
+            <div className="flex flex-col sm:flex-row gap-2">
              <DownloadProfilePDF
-              onStart={() => setIsPDF(true)}
-              onEnd={() => setIsPDF(false)}
-             />
+              setIsPDF={setIsPDF}
+            />
             </div>
           </div>
         </div>
 
-        <div>    
+        <div>
           <div  className="space-y-6 bg-white px-6 pb-6 pt-10" >
             <div
               id="profile-review-ui"
@@ -305,31 +329,47 @@ interface Certification {
                     </div>
                     <div className="flex items-center space-x-2 text-gray-600">
                       {isPDF ? '💼' : <Briefcase className="w-4 h-4" />}
-                      <span>{profileData.personalInfo.experience} Experience</span>
+                      <span>Experience: {profileData.personalInfo.experience}</span>
                     </div>
-                    <div className="flex items-center space-x-2 text-gray-600">
-                       {isPDF ? (
-                         <span>{profileData.personalInfo.currentCurrency}</span>
-                       ) : (
-                         <span className="text-sm font-medium">
-                           {profileData.personalInfo.currentCurrency}
-                         </span>
-                       )}
-                       <span>
-                         Current: {profileData.personalInfo.currentSalary}
-                       </span>
+                    <div className="flex flex-col text-gray-600">
+                      <div className="flex items-center space-x-2">
+                        <span>Current:</span>
+                        {isPDF ? (
+                          <span>{profileData.personalInfo.currentCurrencySymbol}</span>
+                        ) : (
+                          <span className="text-sm font-medium">
+                            {profileData.personalInfo.currentCurrencySymbol}
+                          </span>
+                        )}
+
+                        <span>
+                          {formatNumber(
+                            profileData.personalInfo.currentSalary,
+                            profileData.personalInfo.currentCurrency,
+                          )}
+                        </span>
+                      </div>
                     </div>
-                    <div className="flex items-center space-x-2 text-gray-600">
-                       {isPDF ? (
-                         <span>{profileData.personalInfo.expectedCurrency}</span>
-                       ) : (
-                         <span className="text-sm font-medium">
-                           {profileData.personalInfo.expectedCurrency}
-                         </span>
-                       )}
-                       <span>
-                         Expected: {profileData.personalInfo.expectedSalary}
-                       </span>
+
+                    <div className="flex flex-col text-gray-600 ">
+
+                      <div className="flex items-center space-x-2">
+                        <span>Expected:</span>
+                        {isPDF ? (
+                          <span>{profileData.personalInfo.expectedCurrencySymbol}</span>
+                        ) : (
+                          <span className="text-sm font-medium">
+                            {profileData.personalInfo.expectedCurrencySymbol}
+                          </span>
+                        )}
+
+                        <span>
+                          {formatNumber(
+                            profileData.personalInfo.expectedSalary,
+                            profileData.personalInfo.expectedCurrency,
+                          )}
+                        </span>
+                      </div>
                     </div>
                     <div className="flex items-center space-x-2 text-gray-600">
                       {isPDF ? '🕒' : <Clock className="w-4 h-4" />}
@@ -375,9 +415,9 @@ interface Certification {
                         <Building2 className="w-6 h-6 text-purple-600" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-lg text-gray-900">{getJobTitleName(exp.position)}</h3>
+                        <h3 className="font-semibold text-lg text-gray-900">{exp.position}</h3>
                         <p className="text-purple-600 font-medium">{exp.company}</p>
-                        <h2 className='text-gray-400 font-semibold'>{getCategoryName(exp.category)}</h2>
+                        <h2 className='text-gray-400 font-semibold'>{exp.category}</h2>
                         <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 text-sm text-gray-600 mt-1 gap-1 sm:gap-0">
                           <div className="flex items-center">
                             {isPDF ? '🕒' : <Clock className="w-4 h-4" />}
@@ -419,17 +459,26 @@ interface Certification {
                         <GraduationCap className="w-6 h-6 text-green-600" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-lg text-gray-900">{edu.degree}</h3>
-                        <p className="text-green-600 font-medium">{edu.field}</p>
-                        <p className="text-gray-600">{edu.institution}</p>
+                        <h3 className="font-semibold text-lg text-gray-900">{edu.education_name}</h3>
+                        <p className="text-green-600 font-medium">{edu.course_name}</p>
+                        <p className="text-gray-600">University:{edu.institution}</p>
+                        <p className="text-gray-600">Course Type:{edu.course_type}</p>
                         <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 text-sm text-gray-600 mt-1 gap-1 sm:gap-0">
-                          <div className="flex items-center">
+                          <div className="flex items-center gap-2">
                             {isPDF ? '📅' : <Calendar className="w-4 h-4 mr-1" />}
-                            <span>Graduated: {edu.year}</span>
+                            <span>Year: {edu.start_year}-{edu.end_year}</span>
                           </div>
                           <div className="flex items-center">
                             {isPDF ? '🎖  ' : <Award className="w-5 h-5 text-purple-600" />}
-                            <span>Score: {edu.percentage}</span>
+                            <span>Score: {edu.percentage}
+                              {edu.score_type === "percentage"
+                                    ? "(Percentage)"
+                                    : edu.score_type === "cgpa"
+                                    ? "(CGPA)"
+                                    : edu.score_type === "grade"
+                                    ? "(Grade)"
+                                    : ""}
+                            </span>
                           </div>
                         </div>
                       </div>
@@ -492,7 +541,7 @@ interface Certification {
               </div>
             </CardContent>
           </Card>
-       
+
           </div>
           </div>
           {/* Action Buttons */}
@@ -503,13 +552,15 @@ interface Certification {
                 Edit Profile
               </Button>
             </Link>
-            <Link href={profileData.resume}>
-            <Button className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-12">
-             Preview Resume
-            </Button>
-           </Link>
+            {profileData?.resume && (
+              <Link href={profileData.resume} target="_blank">
+                <Button className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-12">
+                  Preview Resume
+                </Button>
+              </Link>
+            )}
           </div>
-          
+
         </div>
       </div>
     </div>

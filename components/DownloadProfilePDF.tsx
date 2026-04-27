@@ -5,19 +5,16 @@ import { Button } from '@/components/ui/button';
 import { Download } from 'lucide-react';
 import { toast } from 'sonner';
 
-export default function DownloadProfilePDF(
-  {
-  onStart,
-  onEnd,
+export default function DownloadProfilePDF({
+  setIsPDF,
 }: {
-  onStart: () => void;
-  onEnd: () => void;
-}
-) {
+  setIsPDF: React.Dispatch<React.SetStateAction<boolean>>;
+}) {
   const [loading, setLoading] = useState(false);
 
   const waitForImages = async (container: HTMLElement) => {
     const images = Array.from(container.querySelectorAll('img'));
+
     await Promise.all(
       images.map(
         (img) =>
@@ -32,56 +29,46 @@ export default function DownloadProfilePDF(
     );
   };
 
-  const downloadPDF = async () => {
-    try {
-      setLoading(true);
-      onStart(); 
-      await new Promise((r) => setTimeout(r, 300));
-      const html2canvas = (await import('html2canvas')).default;
-      const jsPDF = (await import('jspdf')).default;
+ const downloadPDF = async () => {
+  try {
+    setLoading(true);
+    setIsPDF(true);
 
-      const container = document.getElementById('profile-review-ui');
-      if (!container) return;
+    await new Promise((r) => setTimeout(r, 800));
 
-      await waitForImages(container);
+    const html2pdf = (await import('html2pdf.js')).default;
 
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const width = pdf.internal.pageSize.getWidth();
+    const element = document.getElementById('profile-review-ui');
 
-      const pages = ['pdf-page-1', 'pdf-page-2'];
+    if (!element) return;
 
-      for (let i = 0; i < pages.length; i++) {
-        const page = document.getElementById(pages[i]);
-        if (!page) continue;
+    const opt = {
+      margin: 10,
+      filename: 'profile.pdf',
+      image: {
+        type: 'jpeg' as 'jpeg',
+        quality: 1,
+      },
+      html2canvas: {
+        scale: 2,
+        useCORS: true,
+      },
+      jsPDF: {
+        unit: 'mm' as 'mm',
+        format: 'a4' as 'a4',
+        orientation: 'portrait' as 'portrait',
+      },
+    };
 
-        const canvas = await html2canvas(page, {
-          scale: 2,
-          backgroundColor: '#ffffff',
-        });
-
-        const imgData = canvas.toDataURL('image/png');
-        const height = (canvas.height * width) / canvas.width;
-
-        if (i > 0) pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, 0, width, height);
-      }
-
-      pdf.save('profile.pdf');
-    } catch (err) {
-      console.error(err);
-      toast.warning('PDF download failed');
-    } finally {
-      onEnd(); 
-      setLoading(false);
-    }
-  };
+    await html2pdf().set(opt).from(element).save();
+  } finally {
+    setIsPDF(false);
+    setLoading(false);
+  }
+};
 
   return (
-    <Button
-      variant="outline"
-      onClick={downloadPDF}
-      disabled={loading}
-    >
+    <Button variant="outline" onClick={downloadPDF} disabled={loading}>
       <Download className="w-4 h-4 mr-2" />
       {loading ? 'Preparing PDF...' : 'Download PDF'}
     </Button>

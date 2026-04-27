@@ -58,6 +58,7 @@ import {
 } from "@/components/ui/input-otp";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { result } from "lodash";
 
 
 
@@ -78,13 +79,24 @@ export default function EmployerRegister() {
   const [stateOpen, setStateOpen] = useState(false);
   const [cityOpen, setCityOpen] = useState(false);
   const [citySearch, setCitySearch] = useState("");
-  const [isOtpOpen,setIsOtpOpen] =useState(false);
-  const [otp,setOtp] = useState("");
-  const [IsOtpVerified,setIsOtpVerified] =useState(false);
-  const isRegDisabled = currentStep === 2 && !IsOtpVerified;
+  const [isOtpOpen, setIsOtpOpen] = useState(false);
+  const [otp, setOtp] = useState("");
+  const [IsOtpVerified, setIsOtpVerified] = useState(false);
+  // const isRegDisabled = currentStep === 2 && !IsOtpVerified;
   const router = useRouter();
-  const [email,setemail] = useState("");
-  const [showText,setShowText] =useState(false)
+  const [email, setemail] = useState("");
+  const [showText, setShowText] = useState(false)
+  const [agreeTerms, setAgreeTerms] = useState(false);
+  // Error states
+  const [descriptionError, setDescriptionError] = useState<string>("");
+  const [phoneError, setPhoneError] = useState<string>("");
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [otpError, setOtpError] = useState("");
+  const [showErrors, setShowErrors] = useState(false);
+  const [selectedCountry, setSelectedCountry] = useState("");
+
+  const [timer, setTimer] = useState(60);
+  const [canResend, setCanResend] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     // Company Information
     companyName: "",
@@ -183,105 +195,246 @@ export default function EmployerRegister() {
   // );
 
   interface FormData {
-  // Company Information
-  companyName: string;
-  companyType: string;
-  industry: string;
-  companySize: string;
-  website: string;
-  description: string;
+    // Company Information
+    companyName: string;
+    companyType: string;
+    industry: string;
+    companySize: string;
+    website: string;
+    description: string;
 
-  // Contact Information
-  contactPersonName: string;
-  designation: string;
-  email: string;
-  phone: string;
-  phoneCode: string;
+    // Contact Information
+    contactPersonName: string;
+    designation: string;
+    email: string;
+    phone: string;
+    phoneCode: string;
 
-  // Address Information
-  address: string;
-  countryId: string;
-  stateId: string;
-  cityId: string;
-  pincode: string;
+    // Address Information
+    address: string;
+    countryId: string;
+    stateId: string;
+    cityId: string;
+    pincode: string;
 
-  // Account Information
-  password: string;
-  confirmPassword: string;
+    // Account Information
+    password: string;
+    confirmPassword: string;
 
-  // Agreements
-  agreeTerms: boolean;
-  agreeMarketing: boolean;
+    // Agreements
+    agreeTerms: boolean;
+    agreeMarketing: boolean;
+  }
+
+  interface Country {
+    id: string; // or number, depending on your API
+    name: string;
+    phonecode: string;
+  }
+  interface State {
+    id: string; // or number, depending on your API
+    name: string;
+  }
+  interface City {
+    id: string; // or number, depending on your API
+    name: string;
+  }
+  type FormErrors = {
+  companyName?: string;
+  companyType?: string;
+  industry?: string;
+  companySize?: string;
+  description?: string;
+
+  contactPersonName?: string;
+  designation?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  countryId?: string;
+  stateId?: string;
+  cityId?: string;
+  pincode?: string;
+
+  password?: string;
+  confirmPassword?: string;
+  agreeTerms?: string;
+};
+const validateStep = () => {
+  let newErrors: any = {};
+
+  if (currentStep === 1) {
+   const companyName = formData.companyName?.trim();
+
+    if (!companyName) {
+      newErrors.companyName = "Company name is required";
+    } else if (companyName.length < 3) {
+      newErrors.companyName = "Minimum 3 characters required";
+    }
+
+    if (!formData.companyType)
+      newErrors.companyType = "Select company type";
+
+    if (!formData.industry)
+      newErrors.industry = "Select industry";
+
+    if (!formData.companySize)
+      newErrors.companySize = "Select company size";
+
+    if (!formData.description?.trim())
+      newErrors.description = "Description is required";
+  }
+
+  if (currentStep === 2) {
+   const name = formData.contactPersonName?.trim();
+
+if (!name) {
+  newErrors.contactPersonName = "Contact person name is required";
+} else if (name.length < 3) {
+  newErrors.contactPersonName = "Minimum 3 characters required";
 }
+    if (!formData.designation?.trim())
+      newErrors.designation = "Designation is required";
 
-interface Country {
-  id: string; // or number, depending on your API
-  name: string;
-  phonecode: string;
-}
-interface State {
-  id: string; // or number, depending on your API
-  name: string;
-}
-interface City {
-  id: string; // or number, depending on your API
-  name: string;
-}
+    if (!email?.trim())
+      newErrors.email = "Email is required";
 
-  const handleResendOTP = async() => {
-    const response =  await handlesendotp()
-    setTimeLeft(OTP_EXPIRY_SECONDS);
-  };
+    if (!IsOtpVerified)
+      newErrors.email = "Please verify OTP";
 
-  const [timeLeft, setTimeLeft] = useState(OTP_EXPIRY_SECONDS);
+    if (!formData.phone || formData.phone.length !== 10)
+      newErrors.phone = "Enter valid 10 digit phone";
 
-  useEffect(() => {
-    if (!isOtpOpen) return;
-  
-    setTimeLeft(OTP_EXPIRY_SECONDS);
-  
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          return 0;
+    if (!formData.address?.trim())
+      newErrors.address = "Address is required";
+
+    if (!formData.countryId)
+      newErrors.countryId = "Select country";
+
+    if (!formData.stateId)
+      newErrors.stateId = "Select state";
+
+    if (!formData.cityId)
+      newErrors.cityId = "Select city";
+
+      if (!formData.pincode) {
+      newErrors.pincode = "Pincode is required";
+    } else if (formData.pincode.length !== 6) {
+      newErrors.pincode = "Enter valid 6 digit pincode";
+    }
+      }
+
+  if (currentStep === 3) {
+    if (!formData.password) {
+          newErrors.password = "password is required";
+        } else if (formData.password.length !== 8) {
+          newErrors.password = "Password must be 8 characters long";
         }
-        return prev - 1;
-      });
+    if (!formData.confirmPassword)
+      newErrors.confirmPassword = "Confirm your password";
+
+    if (
+      formData.password &&
+      formData.confirmPassword &&
+      formData.password !== formData.confirmPassword
+    )
+      newErrors.confirmPassword = "Passwords do not match";
+
+    if (!formData.agreeTerms)
+      newErrors.agreeTerms = "You must accept terms";
+  }
+
+  setErrors(newErrors);
+  return Object.keys(newErrors).length === 0;
+};
+const validateEmail = (value: string) => {
+  if (!value) return "Email is required";
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+    return "Enter valid email";
+  }
+  return "";
+};
+
+
+// OTP Timer
+useEffect(() => {
+  let interval: NodeJS.Timeout;
+
+  if (isOtpOpen && timer > 0) {
+    interval = setInterval(() => {
+      setTimer((prev) => prev - 1);
     }, 1000);
-  
-    return () => clearInterval(timer);
-  }, [isOtpOpen]);
-  
+  }
+
+  if (timer === 0) {
+    setCanResend(true);
+  }
+
+  return () => clearInterval(interval);
+}, [isOtpOpen, timer]);
+const handleResendOTP = async () => {
+   console.log("Resend OTP clicked");
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL_APP}/send_otp/`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      }
+    );
+
+    console.log("API Status:", res.status);
+
+    const data = await res.json();
+    console.log("API Response:", data);
+
+    if (!res.ok) {
+      toast.error(data.error || "Failed to resend OTP");
+      return;
+    }
+
+    toast.success("OTP Resent Successfully");
+    setOtp("");
+    setOtpError("");
+    setTimer(60);
+    setCanResend(false);
+
+  } catch (error) {
+    console.error(error);
+    toast.error("Something went wrong");
+  }
+};
+
   // Fetch the Data from the MASTER DB
   useEffect(() => {
-    fetch("https://jobseeker-backend-jy1y.onrender.com/master/api/countries/")
+    fetch(`${process.env.NEXT_PUBLIC_API_URL_MASTER}/countries/`)
       .then((res) => res.json())
       .then((data) => {
         setCountries(data);
       })
-      .catch((err) => console.error(err));
+      .catch((err) => console.error("Country fetch error"));
   }, []);
 
   useEffect(() => {
     if (formData.countryId) {
       fetch(
-        `https://jobseeker-backend-jy1y.onrender.com/master/api/states/?country_id=${formData.countryId}`
+        `${process.env.NEXT_PUBLIC_API_URL_MASTER}/states/?country_id=${formData.countryId}`
       )
         .then((res) => res.json())
         .then(setStates)
-        .catch(console.error);
+        .catch((err) => console.error("State fetch error"));
     }
   }, [formData.countryId]);
 
   useEffect(() => {
     if (formData.stateId) {
       fetch(
-        `https://jobseeker-backend-jy1y.onrender.com/master/api/cities/?state=${formData.stateId}`
+        `${process.env.NEXT_PUBLIC_API_URL_MASTER}/cities/?state=${formData.stateId}`
       )
         .then((res) => res.json())
         .then(setCities)
-        .catch(console.error);
+        .catch((err) => console.error("City fetch error"));
     }
   }, [formData.stateId]);
 
@@ -294,36 +447,39 @@ interface City {
   };
 
   const handleEmailChange = (value:string) => {
-    setemail(value);
-    // console.log("Form Data:", formData);
+    setemail(value)
   };
 
-  const handleNext = () => {
-    
-      setCurrentStep(prev => Math.min(prev + 1, 3));
+ const handleNext = () => {
+  const isValid = validateStep(); // 🔥 validation call
 
-  };
+  if (!isValid) {
+    setShowErrors(true); // errors show karo
+    return;
+  }
+
+  setShowErrors(false);
+  setCurrentStep((prev) => Math.min(prev + 1, 3));
+};
 
   const handlePrevious = () => {
-    console.log("Current step before prev click : ",currentStep)
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
-      console.log("Current step after prev click with 1 : ",currentStep)
     }
     if(currentStep!=1){
-     
-      console.log("Current step after prev click with 2 : ",currentStep)
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+    if (formData.password.length < 8) {
+      toast.warning("Password must be at least 8 characters long");
+      return;
+    }
     if (formData.password !== formData.confirmPassword) {
       toast.warning("Passwords do not match");
       return;
     }
-
     if (!formData.agreeTerms) {
       toast.warning("Please agree to the terms and conditions");
       return;
@@ -338,7 +494,8 @@ interface City {
       description: formData.description,
       contact_person_name: formData.contactPersonName,
       designation: formData.designation,
-      phone: `${formData.phoneCode}${formData.phone}`,
+      phone: formData.phone,
+      phone_code: formData.phoneCode,
       address: formData.address,
       country: formData.countryId,
       state: formData.stateId,
@@ -349,12 +506,12 @@ interface City {
       password: formData.password,
       confirm_password: formData.confirmPassword,
       email: email,
-      is_verified : true,
+      is_verified: true,
     };
-    // console.log("Payload:", payload);
+
     try {
       const response = await fetch(
-        "https://jobseeker-backend-jy1y.onrender.com/employeer/api/employeer_register/",
+        `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/employeer_register/`,
         {
           method: "POST",
           headers: {
@@ -369,10 +526,18 @@ interface City {
       }
 
       const result = await response.json();
-      // console.log("Registration successful:", result);
-      router.push("/employer/login");
+      // if(!result.ok()){
+      //   toast.error(result.error);
+      // }  
+      toast.success("Registration successful ");
+
+        setTimeout(() => {
+          router.push("/employer/login");
+        }, 1500);
+
     } catch (error) {
       console.error("Registration error:", error);
+        toast.error("Registration failed");
     }
   };
 
@@ -381,19 +546,17 @@ interface City {
       {[1, 2, 3].map((step) => (
         <div key={step} className="flex items-center">
           <div
-            className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-              currentStep >= step
+            className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${currentStep >= step
                 ? "bg-purple-600 text-white"
                 : "bg-gray-200 text-gray-600"
-            }`}
+              }`}
           >
             {step}
           </div>
           {step < 3 && (
             <div
-              className={`w-16 h-1 mx-2 ${
-                currentStep > step ? "bg-purple-600" : "bg-gray-200"
-              }`}
+              className={`w-16 h-1 mx-2 ${currentStep > step ? "bg-purple-600" : "bg-gray-200"
+                }`}
             />
           )}
         </div>
@@ -404,7 +567,7 @@ interface City {
   const handlesendotp = async () => {
     try {
       const res = await fetch(
-        "https://jobseeker-backend-jy1y.onrender.com/api/send_otp/",
+        `${process.env.NEXT_PUBLIC_API_URL_APP}/send_otp/`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -429,7 +592,7 @@ interface City {
   const handleVerifyOTP = async () => {
     try {
       const res = await fetch(
-        "https://jobseeker-backend-jy1y.onrender.com/employeer/api/verify-otp/",
+        `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/verify-otp/`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -438,7 +601,6 @@ interface City {
       );
 
       const data = await res.json();
-      // console.log(data)
       if (!res.ok) {
         toast.error(data.error || "Invalid OTP");
         return;
@@ -448,7 +610,7 @@ interface City {
       setIsOtpOpen(false);
       toast.success("OTP Verified Successfully!");
     } catch (err) {
-      console.error(err);
+      console.error("OTP Verification error");
     }
   };
 
@@ -578,6 +740,11 @@ interface City {
                           className="mt-1 h-12"
                           required
                         />
+                          {showErrors && errors.companyName && (
+                            <p className="text-red-500 text-sm mt-1">
+                              {errors.companyName}
+                            </p>
+                          )}
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -589,8 +756,10 @@ interface City {
                             value={formData.companyType}
                             onValueChange={(value) =>
                               handleInputChange("companyType", value)
+
                             }
                           >
+
                             <SelectTrigger className="mt-1 h-12">
                               <SelectValue placeholder="Select company type" />
                             </SelectTrigger>
@@ -602,6 +771,11 @@ interface City {
                               ))}
                             </SelectContent>
                           </Select>
+                          {showErrors && errors.companyType  && (
+                          <p className="text-red-500 text-sm mt-1">
+                            {errors.companyType }
+                          </p>
+                        )}
                         </div>
 
                         <div>
@@ -625,6 +799,11 @@ interface City {
                               ))}
                             </SelectContent>
                           </Select>
+                          {showErrors && errors.industry   && (
+                          <p className="text-red-500 text-sm mt-1">
+                            {errors.industry  }
+                          </p>
+                        )}
                         </div>
                       </div>
 
@@ -650,6 +829,11 @@ interface City {
                               ))}
                             </SelectContent>
                           </Select>
+                          {showErrors && errors.companySize   && (
+                          <p className="text-red-500 text-sm mt-1">
+                            {errors.companySize  }
+                          </p>
+                        )}
                         </div>
 
                         <div>
@@ -659,12 +843,14 @@ interface City {
                           >
                             Website
                           </Label>
+
                           <Input
                             id="website"
-                            value={formData.website}
-                            onChange={(e) =>
-                              handleInputChange("website", e.target.value)
-                            }
+                            value={formData.website || ""}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              handleInputChange("website", value);
+                            }}
                             placeholder="https://www.company.com"
                             className="mt-1 h-12"
                           />
@@ -676,18 +862,36 @@ interface City {
                           htmlFor="description"
                           className="text-sm font-medium text-gray-700"
                         >
-                          Company Description
+                          Company Description <span className="text-red-500">*</span>
                         </Label>
+
                         <Textarea
                           id="description"
-                          value={formData.description}
-                          onChange={(e) =>
-                            handleInputChange("description", e.target.value)
-                          }
+                          value={formData.description || ""}
+                          onChange={(e) => {
+                            const value = e.target.value;
+
+                            handleInputChange("description", value);
+
+                            if (!value.trim()) {
+                              setDescriptionError("Company description is required");
+                            } else {
+                              setDescriptionError("");
+                            }
+                          }}
                           rows={4}
                           placeholder="Tell us about your company..."
                           className="mt-1"
+                          required
                         />
+                         {showErrors && errors.description   && (
+                          <p className="text-red-500 text-sm mt-1">
+                            {errors.description  }
+                          </p>
+                         )}
+                        {descriptionError && (
+                          <p className="text-red-500 text-xs mt-1">{descriptionError}</p>
+                        )}
                       </div>
                     </div>
                   )}
@@ -720,6 +924,11 @@ interface City {
                             className="mt-1 h-12"
                             required
                           />
+                            {showErrors && errors.contactPersonName  && (
+                            <p className="text-red-500 text-sm mt-1">
+                              {errors.contactPersonName }
+                            </p>
+                          )}
                         </div>
 
                         <div>
@@ -739,10 +948,223 @@ interface City {
                             className="mt-1 h-12"
                             required
                           />
+                            {showErrors && errors.designation   && (
+                            <p className="text-red-500 text-sm mt-1">
+                              {errors.designation  }
+                            </p>
+                          )}
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label>Email *</Label>
+
+                          <div className="relative mt-1">
+                            <Input
+                              type="email"
+                              disabled={IsOtpVerified}
+                              value={email}
+                              placeholder="Enter your email"
+                              className={`h-12 pr-10 ${
+                                errors.email
+                                  ? "border-red-500 focus:ring-red-500"
+                                  : IsOtpVerified
+                                  ? "border-green-500 focus:ring-green-500"
+                                  : ""
+                              }`}
+                              onChange={(e) => {
+                                const value = e.target.value;
+
+                                setemail(value);
+                                setIsOtpVerified(false);
+                                setIsOtpOpen(false);
+                                setErrors((prev) => ({
+                                  ...prev,
+                                  email: validateEmail(value),
+                                }));
+
+                              }}
+                            />
+
+                            {/* Error */}
+                            {errors.email && (
+                              <p className="text-sm text-red-500 mt-1">{errors.email}</p>
+                            )}
+
+                            {/* Helper text */}
+                            {!errors.email && !email && (
+                              <p className="text-xs text-gray-500 mt-1">
+                                Verify your email before continuing
+                              </p>
+                            )}
+
+                            {!errors.email && email && (
+                              <p className="text-xs text-gray-500 mt-1">
+                                We'll send updates to this email
+                              </p>
+                            )}
+
+                            {/* Verified icon */}
+                            {IsOtpVerified && (
+                              <CheckCircle className="absolute right-3 top-6 -translate-y-1/2 text-green-600 w-5 h-5" />
+                            )}
+                          </div>
+
+                          {/* Verify Button */}
+                          {!IsOtpVerified && !isOtpOpen && (
+                            <Button
+                              type="button"
+                              className="mt-2"
+                              disabled={!email || !!validateEmail(email)}
+                              onClick={handlesendotp}
+                            >
+                              Verify Email OTP
+                            </Button>
+                          )}
+
+                          {/* OTP Section */}
+                          {isOtpOpen && !IsOtpVerified && (
+                            <div className="mt-3">
+                              <InputOTP
+                                maxLength={6}
+                                value={otp}
+                                onChange={(value) => {
+                                  setOtp(value);
+                                  setOtpError("");
+                                }}
+                              >
+                                <InputOTPGroup className="gap-3">
+                                  {[0, 1, 2, 3, 4, 5].map((i) => (
+                                    <InputOTPSlot
+                                      key={i}
+                                      index={i}
+                                      className="w-10 h-10 text-lg border"
+                                    />
+                                  ))}
+                                </InputOTPGroup>
+                              </InputOTP>
+                              <div className="flex items-center gap-2 mt-2 text-sm">
+                                {!canResend ? (
+                                  <span className="text-gray-500">
+                                    Expired OTP in <span className="font-medium">{timer}s</span>
+                                  </span>
+                                ) : (
+                                  <>
+                                    <span className="text-gray-500">Didn't receive OTP?</span>
+                                    <button
+                                      type="button"
+                                      onClick={handleResendOTP}
+                                      className="text-blue-600 font-medium hover:underline"
+                                    >
+                                      Resend
+                                    </button>
+                                  </>
+                                )}
+                              </div>
+                              {otpError && (
+                                <p className="text-sm text-red-500 mt-1">{otpError}</p>
+                              )}
+
+                              <Button
+                                type="button"
+                                className="mt-3 bg-blue-600 text-white w-full"
+                                onClick={handleVerifyOTP}
+                              >
+                                Verify OTP
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                        <div>
+                          <div>
+                            <Label
+                              htmlFor="phone"
+                              className="text-sm font-medium text-gray-700"
+                            >
+                              Phone Number *
+                            </Label>
+
+                            <div className="flex gap-2 mt-1">
+
+                              <input
+                                className="w-20 h-10 lg:h-11 border rounded px-3 bg-gray-100 text-gray-700"
+                                value={
+                                  formData.phoneCode
+                                    ? `+${formData.phoneCode}`
+                                    : ""
+                                }
+                                readOnly
+
+                              />
+
+                              <Input
+                                id="phone"
+                                type="tel"
+                                inputMode="numeric"
+                                pattern="[0-9]*"
+                                value={formData.phone}
+                                onChange={(e) => {
+                                  const value = e.target.value;
+
+                                  if (!/^\d*$/.test(value)) return;
+
+                                  if (value.length > 10) return;
+
+                                  handleInputChange("phone", value);
+                                  if (value.length > 0 && value.length < 10) {
+                                    setPhoneError("Phone number must be 10 digits");
+                                  } else {
+                                    setPhoneError("");
+                                  }
+                                }}
+                                className="flex-1 h-10 lg:h-11"
+                                placeholder="Enter phone number"
+                                maxLength={10}
+                                required
+                              />
+
+                            </div>
+                            {phoneError ? (
+                                <p className="text-red-500 text-xs mt-1">{phoneError}</p>
+                              ) : showErrors && errors.phone ? (
+                                <p className="text-red-500 text-sm mt-1">{errors.phone}</p>
+                              ) : showErrors && !formData.countryId ? (
+                                <p className="text-red-500 text-sm mt-1">
+                                  Please select country
+                                </p>
+                              ) : (
+                                <p className="text-xs text-gray-500 mt-1">
+                                </p>
+                              )}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div>
+                        <Label
+                          htmlFor="address"
+                          className="text-sm font-medium text-gray-700"
+                        >
+                          Company Address *
+                        </Label>
+                        <Textarea
+                          id="address"
+                          value={formData.address}
+                          onChange={(e) =>
+                            handleInputChange("address", e.target.value)
+                          }
+                          rows={3}
+                          placeholder="Enter complete address"
+                          className="mt-1"
+                          required
+                        />
+                          {showErrors && errors.address   && (
+                            <p className="text-red-500 text-sm mt-1">
+                              {errors.address  }
+                            </p>
+                          )}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
                         {/* Country Dropdown */}
                         <div>
                           <Label className="text-sm font-medium text-gray-700">
@@ -759,13 +1181,13 @@ interface City {
                                 className="w-full mt-1 h-10 lg:h-11 border rounded px-3 flex items-center justify-between"
                               >
                                 <span>
-                                {formData.countryId
-                                  ? countries.find(
+                                  {formData.countryId
+                                    ? countries.find(
                                       (c) => c.id == formData.countryId
                                     )?.name
-                                  : "Select country"}
-                                  </span>
-                                  <ChevronDown className="h-4 w-4 opacity-60" />
+                                    : "Select country"}
+                                </span>
+                                <ChevronDown className="h-4 w-4 opacity-60" />
                               </Button>
                             </PopoverTrigger>
 
@@ -791,7 +1213,7 @@ interface City {
                                             .toLowerCase()
                                             .startsWith(
                                               countrySearch.toLowerCase()
-                                            ) 
+                                            )
                                       )
                                       .map((country) => (
                                         <CommandItem
@@ -805,7 +1227,7 @@ interface City {
                                             handleInputChange(
                                               "phoneCode",
                                               country.phonecode
-                                            ); 
+                                            );
                                             setCountryOpen(false);
                                           }}
                                         >
@@ -817,6 +1239,11 @@ interface City {
                               </Command>
                             </PopoverContent>
                           </Popover>
+                            {showErrors && errors.countryId   && (
+                            <p className="text-red-500 text-sm mt-1">
+                              {errors.countryId  }
+                            </p>
+                          )}
                         </div>
 
                         {/* State Dropdown */}
@@ -832,12 +1259,12 @@ interface City {
                                 className="w-full mt-1 h-10 lg:h-11 border rounded px-3 flex items-center justify-between"
                               >
                                 <span>
-                                {formData.stateId
-                                  ? states.find((s) => s.id == formData.stateId)
+                                  {formData.stateId
+                                    ? states.find((s) => s.id == formData.stateId)
                                       ?.name
-                                  : "Select state"}
-                                  </span>
-                                  <ChevronDown className="h-4 w-4 opacity-60" />
+                                    : "Select state"}
+                                </span>
+                                <ChevronDown className="h-4 w-4 opacity-60" />
                               </Button>
                             </PopoverTrigger>
 
@@ -882,6 +1309,11 @@ interface City {
                               </Command>
                             </PopoverContent>
                           </Popover>
+                            {showErrors && errors.stateId  && (
+                            <p className="text-red-500 text-sm mt-1">
+                              {errors.stateId }
+                            </p>
+                          )}
                         </div>
 
                         {/* City Dropdown */}
@@ -897,12 +1329,12 @@ interface City {
                                 className="w-full mt-1 h-10 lg:h-11 border rounded px-3 flex items-center justify-between"
                               >
                                 <span>
-                                {formData.cityId
-                                  ? cities.find((c) => c.id == formData.cityId)
+                                  {formData.cityId
+                                    ? cities.find((c) => c.id == formData.cityId)
                                       ?.name
-                                  : "Select city"}
-                                  </span>
-                                  <ChevronDown className="h-4 w-4 opacity-60" />
+                                    : "Select city"}
+                                </span>
+                                <ChevronDown className="h-4 w-4 opacity-60" />
                               </Button>
                             </PopoverTrigger>
 
@@ -947,94 +1379,14 @@ interface City {
                               </Command>
                             </PopoverContent>
                           </Popover>
+                            {showErrors && errors.cityId  && (
+                            <p className="text-red-500 text-sm mt-1">
+                              {errors.cityId }
+                            </p>
+                          )}
                         </div>
                       </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <Label
-                            htmlFor="email"
-                            className="text-sm font-medium text-gray-700"
-                          >
-                            Email Address *
-                          </Label>
-                          <Input
-                            id="email"
-                            type="email"
-                            value={email}
-                            onChange={(e) =>
-                              handleEmailChange(e.target.value)
-                            }
-                            placeholder="Enter email address"
-                            className="mt-1 h-12"
-                            required
-                          />
-
-                          <Button
-                            type="button"
-                            className="mt-2"
-                            disabled={!email.includes("@")}
-                            onClick={handlesendotp}
-                          >
-                            Verify Email OTP
-                          </Button>
-                        </div>
-                        <div>
-                          <div>
-                            <Label
-                              htmlFor="phone"
-                              className="text-sm font-medium text-gray-700"
-                            >
-                              Phone Number *
-                            </Label>
-
-                            <div className="flex gap-2 mt-1">
-                             
-                              <input
-                                className="w-20 h-10 lg:h-11 border rounded px-3 bg-gray-100 text-gray-700"
-                                value={
-                                  formData.phoneCode
-                                    ? `+${formData.phoneCode}`
-                                    : ""
-                                }
-                                readOnly
-                               
-                              />
-
-                              <Input
-                                id="phone"
-                                value={formData.phone}
-                                onChange={(e) =>
-                                  handleInputChange("phone", e.target.value)
-                                }
-                                className="flex-1 h-10 lg:h-11"
-                                placeholder="Enter phone number"
-                                required
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div>
-                        <Label
-                          htmlFor="address"
-                          className="text-sm font-medium text-gray-700"
-                        >
-                          Company Address *
-                        </Label>
-                        <Textarea
-                          id="address"
-                          value={formData.address}
-                          onChange={(e) =>
-                            handleInputChange("address", e.target.value)
-                          }
-                          rows={3}
-                          placeholder="Enter complete address"
-                          className="mt-1"
-                          required
-                        />
-                        <div>
+                        <div className="mt-4">
                           <Label
                             htmlFor="pincode"
                             className="text-sm font-medium text-gray-700"
@@ -1044,36 +1396,22 @@ interface City {
                           <Input
                             id="pincode"
                             value={formData.pincode}
-                            onChange={(e) =>
-                              handleInputChange("pincode", e.target.value)
-                            }
+                            onChange={(e) => {
+                              const value = e.target.value.replace(/\D/g, "");
+                              handleInputChange("pincode", value);
+                            }}
                             placeholder="Enter pincode"
+                             maxLength={6}
                             className="mt-1 h-12"
                             required
                           />
                         </div>
                       </div>
-                      {/*
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <Label
-                            htmlFor="city"
-                            className="text-sm font-medium text-gray-700"
-                          >
-                            City *
-                          </Label>
-                          <Input
-                            id="city"
-                            value={formData.city}
-                            onChange={(e) =>
-                              handleInputChange("city", e.target.value)
-                            }
-                            placeholder="Enter city"
-                            className="mt-1 h-12"
-                            required
-                          />
-                        </div>
-                      </div> */}
+                        {showErrors && errors.pincode   && (
+                            <p className="text-red-500 text-sm mt-1">
+                              {errors.pincode  }
+                            </p>
+                          )}
                     </div>
                   )}
 
@@ -1171,14 +1509,16 @@ interface City {
                           >
                             I agree to the{" "}
                             <Link
-                              href="#"
+                              href="/terms-and-conditions"
+                              target="_blank"
                               className="text-blue-600 hover:underline"
                             >
                               Terms and Conditions
                             </Link>{" "}
                             and{" "}
                             <Link
-                              href="#"
+                              href="/privacy-policy"
+                              target="_blank"
                               className="text-blue-600 hover:underline"
                             >
                               Privacy Policy
@@ -1221,19 +1561,20 @@ interface City {
                     )}
 
                     {currentStep < 3 ? (
-                      
+
                       <Button
                         type="button"
                         onClick={handleNext}
-                        disabled={isRegDisabled}
+                        // disabled={!isStepValid()}
                         className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 h-12 px-6 ml-auto"
                       >
                         Next
-                      
+
                       </Button>
-                    
+
                     ) : (
                       <Button
+                        // disabled={!isStepValid()}
                         type="submit"
                         className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 h-12 px-6 ml-auto"
                       >
@@ -1242,7 +1583,7 @@ interface City {
                     )}
                   </div>
                 </form>
-                  
+
                 <div className="mt-8 pt-6 border-t border-gray-200">
                   <div className="flex items-center justify-center space-x-2 text-sm text-gray-600">
                     <CheckCircle className="w-4 h-4 text-green-500" />
@@ -1254,49 +1595,6 @@ interface City {
           </div>
         </div>
       </div>
-      
-
-<Dialog open={isOtpOpen} onOpenChange={setIsOtpOpen}>
-  <DialogContent>
-    <div className="text-center">
-      <h1 className="text-xl font-bold mb-4">Enter OTP</h1>
-
-      <InputOTP maxLength={6} value={otp} onChange={setOtp}>
-        <InputOTPGroup>
-          {[0, 1, 2, 3, 4, 5].map((i) => (
-            <InputOTPSlot key={i} index={i} />
-          ))}
-        </InputOTPGroup>
-      </InputOTP>
-
-      <Button
-        className="w-full mt-4 bg-indigo-600 text-white"
-        onClick={handleVerifyOTP}
-      >
-        Verify
-      </Button>
-
-      {/* Footer */}
-      <div className="mt-4 text-sm text-gray-600">
-        {timeLeft > 0 ? (
-          <p>
-            Resend OTP in{" "}
-            <span className="font-semibold text-indigo-600">
-              {timeLeft}s
-            </span>
-          </p>
-        ) : (
-          <button
-            onClick={handleResendOTP}
-            className="text-indigo-600 font-semibold hover:underline"
-          >
-            Resend OTP
-          </button>
-        )}
-      </div>
-    </div>
-  </DialogContent>
-</Dialog>
 
     </div>
   );

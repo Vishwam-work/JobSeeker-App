@@ -4,67 +4,54 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { CheckCircle, ExternalLink, Send } from "lucide-react";
+import Image from "next/image";
+import { User } from "lucide-react";
 
-export default function CompanyDetailPage(
-  {
+export default function CompanyDetailPage({
   params,
 }: {
   params: { id: string };
-}
-) { 
-    const id = Number(params.id);
-  // const searchParams = useSearchParams();
-  // const id = searchParams.get("id");
-  const router = useRouter(); 
+}) {
+  const id = Number(params.id);
+  console.log("Company ID:", id);
+  const router = useRouter();
   const [company, setCompany] = useState<Company | null>(null);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
-
-  const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
-  const [selectedJob, setSelectedJob] = useState(null);
-  const [userData, setUserData] = useState(null);
-  const [loadingUserData, setLoadingUserData] = useState(false);
-  const [answers, setAnswers] = useState([]);
-
- type Company = {
-  id: string | number;
-  name: string;
-  type?: string;
-  industry?: string;
-  size?: string;
-  city?: string;
-  state?: string;
-  country?: string;
-  website?: string;
-  description?: string;
-};
-type Job = {
-  id: string | number;
-  title: string;
-  description: string;
-  location: string;
-  salary: string;
-  type: string;
-  questions: any[];
-};
+  const [activeTab, setActiveTab] = useState("jobs");
+  type Company = {
+    id: string | number;
+    name: string;
+    type?: string;
+    industry?: string;
+    size?: string;
+    city?: string;
+    state?: string;
+    country?: string;
+    website?: string;
+    description?: string;
+    company_logo: string;
+    company_size?: string;
+     company_type?: string;
+     job_count?: number;
+  };
+  type Job = {
+    id: string | number;
+    title: string;
+    description: string;
+    location: string;
+    salary: string;
+    type: string;
+    questions: any[];
+    job_count?: number;
+  };
 
   useEffect(() => {
-     if (!id) return;
+    if (!id) return;
 
-  
-  setCompany(null);
-  setJobs([]);
-  setLoading(true);
+    setCompany(null);
+    setJobs([]);
+    setLoading(true);
     const fetchCompanyDetails = async () => {
       try {
         const token = localStorage.getItem("auth_token");
@@ -75,51 +62,52 @@ type Job = {
 
         const [companyRes, jobsRes] = await Promise.all([
           fetch(
-            `https://jobseeker-backend-jy1y.onrender.com/employeer/api/companies/`,
-            { headers }
+            `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/companies/`,
+            { headers },
           ),
           fetch(
-            `https://jobseeker-backend-jy1y.onrender.com/employeer/api/companies/${id}/jobs/`,
-            { headers }
+            `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/companies/${id}/jobs/`,
+            { headers },
           ),
         ]);
 
-      const rawCompanyData = await companyRes.json();
+        const rawCompanyData = await companyRes.json();
+        console.log("API Response:", rawCompanyData);
 
-const companies =
-  rawCompanyData?.data ??
-  rawCompanyData?.results ??
-  (Array.isArray(rawCompanyData) ? rawCompanyData : []);
+        const companyData = rawCompanyData.find(
+          (c: any) => String(c.id) === String(id),
+        );
 
-const companyData = companies.find(
-  (c: any) => String(c.id) === String(id)
-);
+        if (!companyData) {
+          setCompany(null);
+          setJobs([]);
+          return;
+        }
 
-if (!companyData) {
-  setCompany(null);
-  setJobs([]);
-  return;
-}
+        if (!companyData) {
+          setCompany(null);
+          setJobs([]);
+          return;
+        }
         const jobsData = await jobsRes.json();
         console.log("Company Data:", companyData);
-        
-        const mappedCompany: Company = {
-  id: companyData.id,
-  name:
-    companyData.company_name ||
-    companyData.name ||
-    "Company name not available",
-  type: companyData.company_type,
-  industry: companyData.industry,
-  size: companyData.company_size,
-  city: companyData.city,
-  state: companyData.state,
-  country: companyData.country,
-  website: companyData.website,
-  description: companyData.description,
-};
 
-setCompany(mappedCompany);
+        const mappedCompany: Company = {
+          id: companyData.id,
+          name: companyData.company_name,
+          type: companyData.company_type,
+          industry: companyData.industry,
+          size: companyData.company_size,
+          city: companyData.city,
+          state: companyData.state,
+          country: companyData.country,
+          website: companyData.website,
+          description: companyData.description,
+           company_logo: companyData.company_logo ? process.env.NEXT_PUBLIC_URL + companyData.company_logo : "",
+
+        };
+
+        setCompany(mappedCompany);
 
         const jobList: Job[] =
           Array.isArray(jobsData) ||
@@ -134,12 +122,14 @@ setCompany(mappedCompany);
                   salary: job.salary || "Not specified",
                   type: job.job_type || job.type || "Not specified",
                   questions: job.questions || [],
-                }))
+                  job_count: job.job_count || 0,
+                }),
+              )
             : [];
 
         setJobs(jobList);
       } catch (error) {
-        console.error("Error fetching details:", error);
+        console.error("Error fetching details");
       } finally {
         setLoading(false);
       }
@@ -148,50 +138,10 @@ setCompany(mappedCompany);
     if (id) fetchCompanyDetails();
   }, [id]);
 
-
-const redirectToHomeWithSearch = (jobTitle?: string) => {
-  if (!jobTitle) return;
-  router.push(`/?search=${encodeURIComponent(jobTitle)}`);
-};
-
-
-  // const handleApply = async (job) => {
-  //   setSelectedJob(job);
-  //   setIsApplyModalOpen(true);
-  //   setLoadingUserData(true);
-
-  //   try {
-  //     const token = localStorage.getItem("auth_token");
-  //     if (!token) return;
-
-  //     const response = await fetch(
-  //       "https://jobseeker-backend-jy1y.onrender.com/jobseeker/api/profile/",
-  //       {
-  //         headers: {
-  //           "Content-Type": "application/json",
-  //           Authorization: `Bearer ${token}`,
-  //         },
-  //       }
-  //     );
-  //     const data = await response.json();
-  //     setUserData(data);
-  //   } catch (error) {
-  //     console.error("Error fetching user data:", error);
-  //   } finally {
-  //     setLoadingUserData(false);
-  //   }
-  // };
-
-  // const handleAnswerChange = (index, value) => {
-  //   const updatedAnswers = [...answers];
-  //   updatedAnswers[index] = value;
-  //   setAnswers(updatedAnswers);
-  // };
-
-  // const submitApplication = async () => {
-  //   alert(`Application submitted for: ${selectedJob.title}`);
-  //   setIsApplyModalOpen(false);
-  // };
+  const redirectToHomeWithSearch = (jobTitle?: string) => {
+    if (!jobTitle) return;
+    router.push(`/?search=${encodeURIComponent(jobTitle)}`);
+  };
 
   if (loading)
     return (
@@ -221,22 +171,38 @@ const redirectToHomeWithSearch = (jobTitle?: string) => {
   if (!company) return <p className="p-6">Company not found.</p>;
 
   return (
-   <div key={id} className="w-full min-h-screen bg-gray-50">
-
+    <div key={id} className="w-full min-h-screen bg-gray-50">
       <Header />
 
       <div className="px-4 sm:px-6 md:px-10 py-6 w-full max-w-7xl mx-auto">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 border-b pb-6 w-full">
           <div className="flex-1">
+            <div className="flex items-center gap-4 mb-2">
+            <div  className="w-12 h-12 bg-gradient-to-br from-purple-100 to-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                {company.company_logo ? (
+                 <Image
+                  src={company.company_logo}
+                  alt="company logo"
+                   width={32}
+                   height={25}
+                   className="w-12 h-12 rounded-full object-cover border"
+                 />
+              ) : (
+                <User className="w-6 h-6 text-gray-700 hover:text-purple-600" />
+              )}
+            </div>
             <h1 className="text-2xl sm:text-3xl font-bold">
-             {company?.name || "Company name not available"}
+              {company?.name || "Company name not available"}
             </h1>
-
+            </div>
             <p className="text-gray-600 text-sm sm:text-base">
-              {company.industry} • {company.type}
+              {company?.industry || "N/A"} • {company?.type || "N/A"}
             </p>
+
             <p className="text-sm text-gray-500 mt-1">
-              {company.city}, {company.state}, {company.country}
+              {[company?.city, company?.state, company?.country]
+                .filter(Boolean)
+                .join(", ")}
             </p>
             {company.website && (
               <a
@@ -250,174 +216,122 @@ const redirectToHomeWithSearch = (jobTitle?: string) => {
             )}
           </div>
         </div>
+        <div className="flex gap-6 border-b mt-6">
+          <button
+            onClick={() => setActiveTab("about")}
+            className={`pb-2 text-sm font-semibold ${
+              activeTab === "about"
+                ? "border-b-2 border-blue-600 text-blue-600"
+                : "text-gray-500"
+            }`}
+          >
+            About Company
+          </button>
 
-        {company.description && (
-          <div className="mt-6">
-            <h2 className="text-lg font-semibold mb-2">About Company</h2>
-            <p className="text-gray-700">{company.description}</p>
+          <button
+            onClick={() => setActiveTab("jobs")}
+            className={`pb-2 text-sm font-semibold ${
+              activeTab === "jobs"
+                ? "border-b-2 border-blue-600 text-blue-600"
+                : "text-gray-500"
+            }`}
+          >
+            Jobs ({jobs.length})
+          </button>
+        </div>
+        {activeTab === "about" && company && (
+          <div className="mt-6 space-y-4">
+            <h2 className="text-xl font-semibold">About Company</h2>
+
+            {/* Info Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-gray-800">
+
+              {company.industry && (
+                <p><span className="font-medium">Industry:</span> {company.industry}</p>
+              )}
+
+              {company.size && (
+                <p><span className="font-medium">Company Size:</span> {company.size}</p>
+              )}
+
+              {company.type && (
+                <p><span className="font-medium">Type:</span> {company.type}</p>
+              )}
+
+              {(company.city || company.state || company.country) && (
+                <p>
+                  <span className="font-medium">Location:</span>{" "}
+                  {[company.city, company.state, company.country]
+                    .filter(Boolean)
+                    .join(", ")}
+                </p>
+              )}
+
+              {company.website && (
+                <p>
+                  <span className="font-medium">Website:</span>{" "}
+                  <a
+                    href={company.website}
+                    target="_blank"
+                    className="text-blue-600 hover:underline"
+                  >
+                    Visit
+                  </a>
+                </p>
+              )}
+
+              {/* Description */}
+            {company.description && (
+              <p ><span className="font-medium">description:</span>{company.description}</p>
+            )}
+            </div>
           </div>
         )}
 
-        <div className="mt-8">
-          <h2 className="text-lg sm:text-xl font-semibold mb-3">
-            {jobs.length} Job openings at {company.name}
-          </h2>
+        {activeTab === "jobs" && (
+          <div className="mt-8">
+            <h2 className="text-lg sm:text-xl font-semibold mb-3">
+              {jobs.length} Job openings at {company.name}
+            </h2>
 
-          {Array.isArray(jobs) && jobs.length > 0 ? (
-            jobs.map((job) => (
-              <div
-                
-                className="bg-white border rounded-lg p-4 shadow-sm hover:shadow-md transition mb-3 flex flex-col sm:flex-row sm:items-center sm:justify-between"
-              >
-                <div className="flex-1">
-                  <h3 className="font-semibold text-base">{job.title}</h3>
-                  <p className="text-sm text-gray-600 mt-1">
-                    {job.description}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-2">
-                    📍 {job.location} | 💰 {job.salary} | 🕒 {job.type}
-                  </p>
-                </div>
+            {Array.isArray(jobs) && jobs.length > 0 ? (
+              jobs.map((job) => (
+                <div
+                  key={job.id}
+                  className="bg-white border rounded-lg p-4 shadow-sm hover:shadow-md transition mb-3 flex flex-col sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-base">{job.title}</h3>
+                    <div
+                     className="text-gray-700 text-sm md:text-base leading-relaxed mb-4 line-clamp-2 overflow-hidden"
+                     dangerouslySetInnerHTML={{
+                     __html: job.description || "",
+                     }}
+                     />
 
-                <div className="mt-3 sm:mt-0 sm:ml-4">
-                  <button
-                    onClick={() => redirectToHomeWithSearch(job.title)}
-                    className="bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded-md hover:bg-blue-700 transition w-full sm:w-auto"
-                  >
-                    Apply Now
-                  </button>
-                </div>
-              </div>
-            ))
-          ) : (
-            <p className="text-gray-500">No jobs available for this company.</p>
-          )}
-        </div>
-      </div>
-
-      {/* ✅ Apply Modal */}
-      {/* <Dialog open={isApplyModalOpen} onOpenChange={setIsApplyModalOpen}>
-        <DialogContent className="max-w-2xl w-full max-h-[85vh] overflow-y-auto p-6">
-          {selectedJob && (
-            <>
-              <DialogHeader>
-                <DialogTitle className="text-xl font-bold text-gray-900">
-                  Apply for {selectedJob.title}
-                </DialogTitle>
-              </DialogHeader>
-
-              <div className="space-y-4 max-h-[70vh] overflow-y-auto">
-                <div className="space-y-3">
-                  <p className="text-sm text-gray-700">
-                    Your profile and resume will be sent to the employer.
-                  </p>
-                  <div className="flex items-center space-x-2 text-sm text-gray-600">
-                    <CheckCircle className="w-4 h-4 text-green-500" />
-                    <span>Profile information</span>
+                    <p className="text-xs text-gray-500 mt-2">
+                      📍 {job.location} | 💰 {job.salary} | 🕒 {job.type}
+                    </p>
                   </div>
 
-                  <div className="p-4 bg-gray-50 rounded-lg">
-                    {loadingUserData ? (
-                      <div className="flex items-center justify-center py-4">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
-                      </div>
-                    ) : userData ? (
-                      <div className="space-y-2">
-                        <h4 className="font-semibold text-gray-900">
-                          Your Application Details
-                        </h4>
-                        <div className="text-sm text-gray-600 space-y-1">
-                          <p>
-                            <span className="font-medium">Name:</span>{" "}
-                            {userData.name || userData.full_name}
-                          </p>
-                          <p>
-                            <span className="font-medium">Email:</span>{" "}
-                            {userData.email}
-                          </p>
-                          <p>
-                            <span className="font-medium">Phone:</span>{" "}
-                            {userData.phone || "Not provided"}
-                          </p>
-                        </div>
-                      </div>
-                    ) : (
-                      <p className="text-gray-400 italic">
-                        Unable to load profile.
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="flex items-center space-x-2 text-sm text-gray-600">
-                    <CheckCircle className="w-4 h-4 text-green-500" />
-                    <span>Resume/CV</span>
-                  </div>
-
-                  {userData?.resume ? (
-                    <a
-                      href={userData.resume}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-purple-600 hover:text-purple-800 underline flex items-center gap-1"
+                  <div className="mt-3 sm:mt-0 sm:ml-4">
+                    <button
+                      onClick={() => redirectToHomeWithSearch(job.title)}
+                      className="bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded-md hover:bg-blue-700 transition w-full sm:w-auto"
                     >
-                      View Resume <ExternalLink className="w-3 h-3" />
-                    </a>
-                  ) : (
-                    <span className="text-gray-400 italic">
-                      No resume uploaded
-                    </span>
-                  )}
+                      Apply Now
+                    </button>
+                  </div>
                 </div>
-
-                {Array.isArray(selectedJob?.questions) &&
-                  selectedJob.questions.length > 0 && (
-                    <div className="space-y-4">
-                      <h4 className="text-lg font-semibold text-gray-900">
-                        Additional Questions
-                      </h4>
-                      {selectedJob.questions.map((q, index) => (
-                        <div key={index} className="space-y-2">
-                          <Label
-                            htmlFor={`question-${index}`}
-                            className="font-medium text-gray-800"
-                          >
-                            {index + 1}. {q}
-                          </Label>
-                          <Input
-                            id={`question-${index}`}
-                            placeholder="Type your answer here..."
-                            value={answers[index] || ""}
-                            onChange={(e) =>
-                              handleAnswerChange(index, e.target.value)
-                            }
-                            className="w-full"
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                <div className="flex flex-col sm:flex-row gap-3 pt-4">
-                  <Button
-                    onClick={submitApplication}
-                    className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 flex-1"
-                  >
-                    <Send className="w-4 h-4 mr-2" />
-                    Submit Application
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => setIsApplyModalOpen(false)}
-                    className="flex-1"
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </div>
-            </>
-          )}
-        </DialogContent>
-      </Dialog> */}
+              ))
+            ) : (
+              <p className="text-gray-500">
+                No jobs available for this company.
+              </p>
+            )}
+          </div>
+        )}
+      </div>
 
       <Footer />
     </div>
