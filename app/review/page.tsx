@@ -259,9 +259,8 @@ const formatNumber = (
             </div>
             <div className="flex flex-col sm:flex-row gap-2">
              <DownloadProfilePDF
-              onStart={() => setIsPDF(true)}
-              onEnd={() => setIsPDF(false)}
-             />
+              setIsPDF={setIsPDF}
+            />
             </div>
           </div>
         </div>
