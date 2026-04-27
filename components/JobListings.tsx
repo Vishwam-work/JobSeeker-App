@@ -79,7 +79,7 @@ export default function JobListings() {
     experience: [] as string[],
     jobType: [] as string[],
     workMode: [] as string[],
-    salaryRange: [0, 50],
+    salaryRange: [] as string[],
     companies: [] as string[],
     skills: [] as string[],
     postedWithin: [] as string[],
@@ -88,6 +88,7 @@ export default function JobListings() {
   // Sample job data - in real app, this would come from API
   const [companies, setCompanies] = useState<string[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
+  const [allLocations, setAllLocations] = useState<Location[]>([]);
   const [skillsList, setSkillsList] = useState<string[]>([]);
 
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
@@ -107,9 +108,17 @@ export default function JobListings() {
   const [dateFilter, setDateFilter] = useState("all");
   const [showDateDropdown, setShowDateDropdown] = useState(false);
   const experienceList = ["fresher","1-2", "3-5", "6-10", "10+"];
-
+  const [showMoreSalary, setShowMoreSalary] = useState(false);
   const jobTypes = ["Full Time", "Part Time", "Contract", "Internship"];
   const workModes = ["Remote", "Hybrid", "Office"];
+  const salaryRanges = [
+  "0-3 LPA",
+  "3-6 LPA",
+  "6-10 LPA",
+  "10-15 LPA",
+  "15-20 LPA",
+  "20+ LPA",
+];
   const postedOptions = [
     { label: "Last 24 hours", value: "1" },
     { label: "Last 3 days", value: "3" },
@@ -175,6 +184,14 @@ const sortedJobs = [...filteredJobs]
         : prev.workMode.filter((m) => m !== mode),
     }));
   };
+  const handleSalaryFilter = (range: string, checked: boolean) => {
+  setFilters((prev) => ({
+    ...prev,
+    salaryRange: checked
+      ? [...prev.salaryRange, range]
+      : prev.salaryRange.filter((r: string) => r !== range),
+  }));
+};
   const handlePostedFilter = (value: string, checked: boolean) => {
     setFilters((prev) => ({
       ...prev,
@@ -365,10 +382,7 @@ const sortedJobs = [...filteredJobs]
 
       filters.jobType.forEach(j => params.append("job_type", j));
       filters.workMode.forEach(w => params.append("work_mode", w.toLowerCase()));
-      if (filters.salaryRange[0] !== 0) {
-        params.append("salary_min", filters.salaryRange[0].toString());
-        params.append("salary_max", filters.salaryRange[1].toString());
-      }
+      filters.salaryRange.forEach(s => params.append("salary_range", s.split(" ")[0]));
       if (filters.postedWithin.length > 0) {
         filters.postedWithin.forEach(p => params.append("posted_within", p));
       }
@@ -401,17 +415,25 @@ const sortedJobs = [...filteredJobs]
           return typeof loc === "string" && loc.trim() !== "";
         });
 
-      const uniqueLocations: Location[] = Array.from<string>(
-        new Set<string>(locationNames),
-      ).map((name: string) => ({
-        id: name,
-        name: name,
-      }));
+       const uniqueLocations: Location[] = Array.from(
+          new Set(locationNames)
+        ).map((name) => ({
+          id: name,
+          name,
+        }));
 
       console.log("Jobs data:", results);
       setJobs(results);
       setFilteredJobs(results);
-      setLocations(uniqueLocations);
+      setAllLocations((prev) => {
+        const merged = [...prev, ...uniqueLocations];
+
+        const unique = Array.from(
+          new Map(merged.map((item) => [item.name, item])).values()
+        );
+
+        return unique;
+      });
       setNextPage(data.next);
       setPreviousPage(data.previous);
       setTotalCount(data.count || 0);
@@ -565,18 +587,18 @@ if (filters.jobType && filters.jobType.length > 0) {
       });
     }
 
-    // Salary range filter
-    const [minSalary, maxSalary] = filters.salaryRange;
-    filtered = filtered.filter((job) => {
-      if (!job.salary) return true;
-      const salaryMatch = job.salary.match(/(\d+)-(\d+)/);
-      if (salaryMatch) {
-        const jobMinSalary = parseInt(salaryMatch[1]);
-        const jobMaxSalary = parseInt(salaryMatch[2]);
-        return jobMaxSalary >= minSalary && jobMinSalary <= maxSalary;
-      }
-      return true;
-    });
+    // // Salary range filter
+    // const [minSalary, maxSalary] = filters.salaryRange;
+    // filtered = filtered.filter((job) => {
+    //   if (!job.salary) return true;
+    //   const salaryMatch = job.salary.match(/(\d+)-(\d+)/);
+    //   if (salaryMatch) {
+    //     const jobMinSalary = parseInt(salaryMatch[1]);
+    //     const jobMaxSalary = parseInt(salaryMatch[2]);
+    //     return jobMaxSalary >= minSalary && jobMinSalary <= maxSalary;
+    //   }
+    //   return true;
+    // });
 
     // Posted within filter
     if (filters.postedWithin && filters.postedWithin.length > 0) {
@@ -630,7 +652,7 @@ useEffect(() => {
       experience: [] as string[],
       jobType: [] as string[],
       workMode: [] as string[],
-      salaryRange: [0, 50],
+      salaryRange: [] as string[],
       companies: [],
       skills: [],
       postedWithin: [] as string[],
@@ -1103,7 +1125,7 @@ setUserData({
                         )}
 
                         {/* Location list */}
-                        {locations
+                        {allLocations
                           .filter(
                             (location) =>
                               typeof location.name === "string" &&
@@ -1254,26 +1276,44 @@ setUserData({
 
                   {/* Salary Range */}
                   <div>
-                    <Label className="text-sm font-medium text-gray-700 mb-2 block">
-                      Salary Range (Annual)
-                    </Label>
-                    <div className="px-2">
-                      <Slider
-                        value={filters.salaryRange}
-                        onValueChange={(value) =>
-                          handleFilterChange("salaryRange", value)
-                        }
-                        max={50}
-                        min={0}
-                        step={1}
-                        className="w-full"
-                      />
-                      <div className="flex justify-between text-xs text-gray-500 mt-1">
-                        <span>{filters.salaryRange[0]} Annual</span>
-                        <span>{filters.salaryRange[1]} Annual</span>
-                      </div>
-                    </div>
-                  </div>
+  <Label className="text-sm font-medium text-gray-700 mb-2 block">
+    Salary Range
+  </Label>
+
+  {salaryRanges
+    .sort((a, b) => {
+      const aSelected = filters.salaryRange.includes(a);
+      const bSelected = filters.salaryRange.includes(b);
+      return aSelected === bSelected ? 0 : aSelected ? -1 : 1;
+    })
+    .slice(0, showMoreSalary ? salaryRanges.length : 4)
+    .map((range) => (
+      <div
+        key={range}
+        className="flex items-center space-x-2 mb-2"
+      >
+        <input
+          type="checkbox"
+          checked={filters.salaryRange.includes(range)}
+          onChange={(e) =>
+            handleSalaryFilter(range, e.target.checked)
+          }
+        />
+        <label className="text-sm text-gray-600">
+          {range}
+        </label>
+      </div>
+    ))}
+
+  {salaryRanges.length > 4 && (
+    <button
+      onClick={() => setShowMoreSalary(!showMoreSalary)}
+      className="text-blue-600 text-sm mt-1"
+    >
+      {showMoreSalary ? "Less" : "More"}
+    </button>
+  )}
+</div>
 
                   {/* Posted Within */}
                   <div>
@@ -1552,7 +1592,7 @@ setUserData({
                                   )}
 
                                   {/* Location list */}
-                                  {locations
+                                  {allLocations
                                     .filter(
                                       (location) =>
                                         typeof location.name === "string" &&
@@ -1704,24 +1744,42 @@ setUserData({
                             {/* Salary Range */}
                             <div>
                               <Label className="text-sm font-medium text-gray-700 mb-2 block">
-                                Salary Range (Annual)
+                                Salary Range
                               </Label>
-                              <div className="px-2">
-                                <Slider
-                                  value={filters.salaryRange}
-                                  onValueChange={(value) =>
-                                    handleFilterChange("salaryRange", value)
-                                  }
-                                  max={50}
-                                  min={0}
-                                  step={1}
-                                  className="w-full"
-                                />
-                                <div className="flex justify-between text-xs text-gray-500 mt-1">
-                                  <span>{filters.salaryRange[0]} Annual</span>
-                                  <span>{filters.salaryRange[1]} Annual</span>
-                                </div>
-                              </div>
+
+                              {salaryRanges
+                                .sort((a, b) => {
+                                  const aSelected = filters.salaryRange.includes(a);
+                                  const bSelected = filters.salaryRange.includes(b);
+                                  return aSelected === bSelected ? 0 : aSelected ? -1 : 1;
+                                })
+                                .slice(0, showMoreSalary ? salaryRanges.length : 4)
+                                .map((range) => (
+                                  <div
+                                    key={range}
+                                    className="flex items-center space-x-2 mb-2"
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={filters.salaryRange.includes(range)}
+                                      onChange={(e) =>
+                                        handleSalaryFilter(range, e.target.checked)
+                                      }
+                                    />
+                                    <label className="text-sm text-gray-600">
+                                      {range}
+                                    </label>
+                                  </div>
+                                ))}
+
+                              {salaryRanges.length > 4 && (
+                                <button
+                                  onClick={() => setShowMoreSalary(!showMoreSalary)}
+                                  className="text-blue-600 text-sm mt-1"
+                                >
+                                  {showMoreSalary ? "Less" : "More"}
+                                </button>
+                              )}
                             </div>
 
                             {/* Posted Within */}
@@ -1997,21 +2055,22 @@ setUserData({
                                         : `${job.experience} ${Number(job.experience) === 1 ? "Year" : "Years"}`}
                                     </span>
                                   </div>
-                                  <div className="flex items-center">
-                                    <span className="w-3 h-5">{job.currency?.symbol_native}</span>
-                                  <span>
-                                   {job.salary
-                                    ? new Intl.NumberFormat(
-                                        job.currencyCode === "INR" ? "en-IN" : "en-US"
-                                      ).format(Number(job.salary))
-                                    : ""}
-                                  -
-                                  {job.salary_max
-                                    ? new Intl.NumberFormat(
-                                        job.currencyCode === "INR" ? "en-IN" : "en-US"
-                                      ).format(Number(job.salary_max))
-                                    : ""}
-                                  </span>
+                                 <div className="flex items-center gap-1">
+                                    <span>{job.currency?.symbol_native}</span>
+
+                                    <span>
+                                      {job.salary
+                                        ? new Intl.NumberFormat(
+                                            job.currency?.code === "INR" ? "en-IN" : "en-US"
+                                          ).format(Number(job.salary))
+                                        : ""}
+                                      {" - "}
+                                      {job.salary_max
+                                        ? new Intl.NumberFormat(
+                                            job.currency?.code === "INR" ? "en-IN" : "en-US"
+                                          ).format(Number(job.salary_max))
+                                        : ""}
+                                    </span>
                                   </div>
                                   <Badge
                                     className={getWorkModeColor(
@@ -2149,34 +2208,48 @@ setUserData({
               )}
             </div>
 
-              <div className="flex items-center gap-2">
-                <button
-                  disabled={currentPage === 1}
-                  onClick={() =>
-                    fetchJobs(
-                      currentPage - 1,
-                    )
-                  }
-                  className="px-4 py-2 text-sm border rounded-lg bg-white hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  ← Previous
-                </button>
+           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-8 border-t pt-6">
 
-                <span className="px-3 py-1 text-sm font-medium bg-gray-100 rounded-lg">
-                  {currentPage}
-                </span>
-                <button
-                  disabled={currentPage === totalPages}
-                  onClick={() =>
-                    fetchJobs(
-                      currentPage + 1,
-                    )
-                  }
-                  className="px-4 py-2 text-sm border rounded-lg bg-white hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Next →
-                </button>
-              </div>
+  {/* Showing Results */}
+  {/* <div className="text-sm text-gray-500">
+    Showing{" "}
+    <span className="font-medium">
+    </span>{" "}
+    to{" "}
+    <span className="font-medium">
+    </span>{" "}
+    of{" "}
+  </div> */}
+
+  {/* Pagination */}
+  <div className="flex items-center gap-2">
+
+    {/* Previous */}
+    <button
+      disabled={currentPage === 1}
+      onClick={() => fetchJobs(currentPage - 1)}
+      className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-700 shadow-sm hover:bg-gray-50 transition disabled:opacity-40 disabled:cursor-not-allowed"
+    >
+      ‹
+    </button>
+
+    {/* Page Info */}
+    <div className="px-4 py-2 text-sm font-medium rounded-lg bg-gray-100 text-gray-700">
+      Page {currentPage} of {totalPages}
+    </div>
+
+    {/* Next */}
+    <button
+      disabled={currentPage === totalPages}
+      onClick={() => fetchJobs(currentPage + 1)}
+      className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-700 shadow-sm hover:bg-gray-50 transition disabled:opacity-40 disabled:cursor-not-allowed"
+    >
+      ›
+    </button>
+
+  </div>
+
+</div>
           </div>
         </div>
 
@@ -2239,15 +2312,15 @@ setUserData({
                         <span className="w-4 h-6 ">{selectedJob.currency?.symbol_native}</span>
                         <span>
                           {selectedJob.salary
-                            ? new Intl.NumberFormat("en-IN").format(
-                                Number(selectedJob.salary),
-                              )
+                            ? new Intl.NumberFormat(
+                                selectedJob.currency?.code === "INR" ? "en-IN" : "en-US"
+                              ).format(Number(selectedJob.salary))
                             : ""}
-                          -
+                          {" - "}
                           {selectedJob.salary_max
-                            ? new Intl.NumberFormat("en-IN").format(
-                                Number(selectedJob.salary_max),
-                              )
+                            ? new Intl.NumberFormat(
+                                selectedJob.currency?.code === "INR" ? "en-IN" : "en-US"
+                              ).format(Number(selectedJob.salary_max))
                             : ""}
                         </span>
                       </div>
