@@ -7,7 +7,6 @@ import {
   Users,
   Phone,
   Briefcase,
-  ChevronDown,
   User,
   Bookmark,
   Settings,
@@ -24,10 +23,8 @@ import Loader from "./Loader";
 
 export default function Header() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isEmployerDropdownOpen, setIsEmployerDropdownOpen] = useState(false);
   const [pageLoading, setPageLoading] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
-  const [keyword, setKeyword] = useState("");
   const [search, setSearch] = useState("");
   const [isAboutOpen, setIsAboutOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
@@ -211,81 +208,6 @@ export default function Header() {
                   </Link>
                 </>
               )}
-
-              {/* For Employers Dropdown */}
-              <div className="relative">
-                <button
-                  className="flex items-center space-x-1 text-gray-700 hover:text-purple-600 cursor-pointer transition-colors"
-                  onClick={() =>
-                    setIsEmployerDropdownOpen(!isEmployerDropdownOpen)
-                  }
-                  onBlur={() =>
-                    setTimeout(() => setIsEmployerDropdownOpen(false), 200)
-                  }
-                >
-                  <span className="text-sm font-medium">For employers</span>
-                  <ChevronDown className="w-4 h-4" />
-                </button>
-                {isEmployerDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
-                    <Link
-                      href="/employer/home"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-colors"
-                    >
-                      Employer Login
-                    </Link>
-                    <Link
-                      href="/employer/home"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-colors"
-                    >
-                      Register as Employer
-                    </Link>
-                  </div>
-                )}
-              </div>
-
-              {/* Notification Bell  */}
-              {/* <div className="relative">
-           <div
-             onClick={() => setIsNotificationOpen(!isNotificationOpen)}
-             className="cursor-pointer relative"
-           >
-             <Bell className="w-5 h-5 text-gray-700 hover:text-purple-600" />
-             <span className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full" />
-           </div>
-          
-           {isNotificationOpen && (
-             <>
-               <div
-                 className="fixed inset-0 z-40"
-                 onClick={() => setIsNotificationOpen(false)}
-               />
-          
-               <div className="absolute right-0 mt-2 w-80 bg-white border shadow-lg rounded-lg z-50">
-                 <div className="p-3 border-b font-semibold text-gray-700">
-                   Notifications
-                 </div>
-          
-                 <div className="max-h-64 overflow-y-auto">
-                   <div className="px-4 py-3 hover:bg-gray-50 cursor-pointer">
-                     <p className="text-sm font-medium text-gray-800">
-                       New job matched your profile
-                     </p>
-                     <p className="text-xs text-gray-500">2 minutes ago</p>
-                   </div>
-          
-                   <div className="px-4 py-3 hover:bg-gray-50 cursor-pointer">
-                     <p className="text-sm font-medium text-gray-800">
-                       Employer viewed your profile
-                     </p>
-                     <p className="text-xs text-gray-500">1 hour ago</p>
-                   </div>
-                 </div>
-               </div>
-              </>
-            )}
-          </div> */}
-            </div>
             {/* User Menu */}
             {isAuthenticated && (
               <div className="relative">
@@ -401,6 +323,48 @@ export default function Header() {
                 )}
               </div>
             )}
+              {/* Notification Bell  */}
+              {/* <div className="relative">
+           <div
+             onClick={() => setIsNotificationOpen(!isNotificationOpen)}
+             className="cursor-pointer relative"
+           >
+             <Bell className="w-5 h-5 text-gray-700 hover:text-purple-600" />
+             <span className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full" />
+           </div>
+          
+           {isNotificationOpen && (
+             <>
+               <div
+                 className="fixed inset-0 z-40"
+                 onClick={() => setIsNotificationOpen(false)}
+               />
+          
+               <div className="absolute right-0 mt-2 w-80 bg-white border shadow-lg rounded-lg z-50">
+                 <div className="p-3 border-b font-semibold text-gray-700">
+                   Notifications
+                 </div>
+          
+                 <div className="max-h-64 overflow-y-auto">
+                   <div className="px-4 py-3 hover:bg-gray-50 cursor-pointer">
+                     <p className="text-sm font-medium text-gray-800">
+                       New job matched your profile
+                     </p>
+                     <p className="text-xs text-gray-500">2 minutes ago</p>
+                   </div>
+          
+                   <div className="px-4 py-3 hover:bg-gray-50 cursor-pointer">
+                     <p className="text-sm font-medium text-gray-800">
+                       Employer viewed your profile
+                     </p>
+                     <p className="text-xs text-gray-500">1 hour ago</p>
+                   </div>
+                 </div>
+               </div>
+              </>
+            )}
+          </div> */}
+            </div>
           </div>
         </div>
       </header>

@@ -32,6 +32,7 @@ export default function ProfileReview() {
   const [jobTitles, setJobTitles] = useState<JobTitle[]>([]);
   const [jobCategories, setJobCategories] = useState<JobCategory[]>([]);
   const [isPDF, setIsPDF] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
   interface JobCategory {
   id: number | string;
   name: string;
@@ -260,6 +261,7 @@ const formatNumber = (
             <div className="flex flex-col sm:flex-row gap-2">
              <DownloadProfilePDF
               setIsPDF={setIsPDF}
+               setIsDownloading={setIsDownloading}
             />
             </div>
           </div>
@@ -267,6 +269,26 @@ const formatNumber = (
 
         <div>
           <div  className="space-y-6 bg-white px-6 pb-6 pt-10" >
+            <div className="relative">
+              {isDownloading && (
+                <div className="absolute inset-0 z-50 bg-white/90 p-6 rounded-lg">
+                  <div className="space-y-4 animate-pulse">
+                    <div className="h-8 bg-gray-300 rounded w-1/3"></div>
+                    <div className="h-32 bg-gray-200 rounded"></div>
+                    <div className="h-24 bg-gray-200 rounded"></div>
+                    <div className="h-24 bg-gray-200 rounded"></div>
+                    <div className="h-20 bg-gray-200 rounded"></div>
+                  </div>
+
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="bg-white shadow-lg rounded-xl px-6 py-4">
+                      <p className="font-medium text-gray-700">
+                        Preparing PDF...
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
             <div
               id="profile-review-ui"
               className={isPDF ? 'pdf-mode' : ''}
@@ -544,6 +566,8 @@ const formatNumber = (
 
           </div>
           </div>
+          </div>
+
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 pt-6">
             <Link href="/profile" className="flex-1">
