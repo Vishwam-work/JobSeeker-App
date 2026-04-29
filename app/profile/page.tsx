@@ -631,7 +631,7 @@ const validateDates = (start: Dayjs | null, end: Dayjs | null) => {
 
   const token =
   typeof window !== "undefined"
-    ? localStorage.getItem("auth_token")
+    ? localStorage.getItem("user_token")
     : null;
 
 const getUserKey = () => {
@@ -1149,7 +1149,7 @@ const getSelectedExpectedCurrency = () => {
     : null;
 };
 const loadCategories = async (inputValue: string) => {
-  const token = localStorage.getItem("auth_token");
+  const token = localStorage.getItem("user_token");
 
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL_MASTER}/categories/?q=${inputValue}`,
@@ -1168,7 +1168,7 @@ const loadCategories = async (inputValue: string) => {
 const loadMajors = async (inputValue: string) => {
   if (!selectedCategory) return [];
 
-  const token = localStorage.getItem("auth_token");
+  const token = localStorage.getItem("user_token");
 
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL_MASTER}/majors/category/${selectedCategory}/?q=${inputValue}`,
@@ -1419,7 +1419,7 @@ const getSelectedJobTitle = () => {
   // Fetch Profile Data
   useEffect(() => {
     const fetchProfile = async () => {
-      const token = localStorage.getItem("auth_token");
+      const token = localStorage.getItem("user_token");
       if (!token) return;
 
       try {
@@ -1617,7 +1617,7 @@ const parseNumber = (value: string): string => {
         {
           method: "PATCH",
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
+            Authorization: `Bearer ${localStorage.getItem("user_token")}`,
           },
           body: formData,
         }
@@ -1801,14 +1801,14 @@ if (!dob) {
 })),
     };
     console.log("Payload:", payload);
-    console.log("Token:", localStorage.getItem("auth_token"));
+    console.log("Token:", localStorage.getItem("user_token"));
     const res = await fetch(
       `${process.env.NEXT_PUBLIC_API_URL_APP}/profile/`,
       {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
+          Authorization: `Bearer ${localStorage.getItem("user_token")}`,
         },
         body: JSON.stringify(payload),
       }
@@ -1891,7 +1891,7 @@ if (!dob) {
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        const token = localStorage.getItem("auth_token");
+        const token = localStorage.getItem("user_token");
         if (!token) {
           console.warn("No auth token found");
           return;
@@ -2129,7 +2129,7 @@ const resumeUrl = profileData?.personalInfo?.resume
                         {
                           method: "PATCH",
                           headers: {
-                            Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
+                            Authorization: `Bearer ${localStorage.getItem("user_token")}`,
                           },
                           body: formData,
                         }

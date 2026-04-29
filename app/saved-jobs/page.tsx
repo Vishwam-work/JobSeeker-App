@@ -39,7 +39,7 @@ export default function SavedJobsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const fetchSavedJobs = async (page = 1) => {
-      const token = localStorage.getItem("auth_token");
+      const token = localStorage.getItem("user_token");
       if (!token) return;
 
       try {
@@ -69,7 +69,7 @@ export default function SavedJobsPage() {
   }, []);
 
   const removeSavedJob = async (id: number) => {
-    const token = localStorage.getItem("auth_token");
+    const token = localStorage.getItem("user_token");
     if (!token) return;
 
     try {
