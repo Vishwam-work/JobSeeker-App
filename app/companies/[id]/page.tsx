@@ -54,7 +54,7 @@ export default function CompanyDetailPage({
     setLoading(true);
     const fetchCompanyDetails = async () => {
       try {
-        const token = localStorage.getItem("auth_token");
+        const token = localStorage.getItem("user_token");
         const headers = {
           "Content-Type": "application/json",
           ...(token ? { Authorization: `Bearer ${token}` } : {}),

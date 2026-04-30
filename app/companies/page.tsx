@@ -35,7 +35,7 @@ export default function CompaniesPage() {
       try {
          const token =
            typeof window !== "undefined"
-             ? localStorage.getItem("auth_token")
+             ? localStorage.getItem("user_token")
              : null;
 
         const res = await fetch(

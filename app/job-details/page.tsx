@@ -143,7 +143,7 @@ interface Application {
    const fetchUserProfile = async () => {
     setLoadingUserData(true);
     try {
-      const token = localStorage.getItem("auth_token");
+      const token = localStorage.getItem("user_token");
 
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL_APP}/profile/`,
@@ -181,7 +181,7 @@ setUserData({
   const fetchUserData = async () => {
     setLoadingUserData(true);
     try {
-      const token = localStorage.getItem("auth_token");
+      const token = localStorage.getItem("user_token");
       const email = localStorage.getItem("user_email");
 
       const response = await fetch(
@@ -225,7 +225,7 @@ setUserData({
   };
 const submitApplication = async () => {
     try {
-      const token = localStorage.getItem("auth_token");
+      const token = localStorage.getItem("user_token");
 
       if (!token) {
         toast("Login required", {
@@ -315,7 +315,7 @@ const submitApplication = async () => {
     }
   };
    const handleApply = (job: Job) => {
-    const token = localStorage.getItem("auth_token");
+    const token = localStorage.getItem("user_token");
     if (!token) {
       setShowLoginPopup(true);
       return;

@@ -40,7 +40,7 @@ export default function AppliedJobsPage() {
   };
 
   const fetchAppliedJobs = async (page = 1) => {
-    const token = localStorage.getItem("auth_token");
+    const token = localStorage.getItem("user_token");
     if (!token) return;
 
     try {
