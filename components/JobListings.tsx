@@ -414,7 +414,13 @@ const sortedJobs = [...filteredJobs]
         .filter((loc: string | undefined): loc is string => {
           return typeof loc === "string" && loc.trim() !== "";
         });
+      const companyNames: string[] = results
+        .map((job: any): string | undefined => job?.company)
+        .filter((company: string | undefined): company is string => {
+          return typeof company === "string" && company.trim() !== "";
+        });
 
+      const uniqueCompanies: string[] = Array.from(new Set(companyNames));
        const uniqueLocations: Location[] = Array.from(
           new Set(locationNames)
         ).map((name) => ({
@@ -433,6 +439,10 @@ const sortedJobs = [...filteredJobs]
         );
 
         return unique;
+      });
+      setCompanies((prev) => {
+        const merged = [...prev, ...uniqueCompanies];
+        return Array.from(new Set(merged));
       });
       setNextPage(data.next);
       setPreviousPage(data.previous);
@@ -1363,7 +1373,7 @@ setUserData({
                   </div>
 
                   {/* Companies */}
-                  <div>
+                  <div className="mb-4">
                     <Label className="text-sm font-medium text-gray-700 mb-2 block">
                       Companies
                     </Label>
