@@ -50,6 +50,15 @@ export default function Login() {
   // Email/Password login
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!email) {
+      setEmailError("Email is required");
+      return;
+    }
+
+    if (!password) {
+      setPasswordError("Password is required");
+      return;
+    }
     try {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL_APP}/login/`,
@@ -119,7 +128,7 @@ export default function Login() {
       }
     } catch (error) {
       setAlertType("error");
-      setAlertMessage("Invalid details. Please check the Email ID,Password combination.");
+      setAlertMessage("Invalid details. Please check the Email ID or Password combination.");
       setAlertOpen(true);
     }
   };
