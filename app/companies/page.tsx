@@ -58,18 +58,18 @@ export default function CompaniesPage() {
         const mapped: CompanyListItem[] = (data.data || data).map(
         (item: any): CompanyListItem => ({
           id: item.id,
-          name: item.company_name,
-          type: item.company_type || "N/A",
-          industry: item.industry || "Not specified",
-          employees: item.company_size || "N/A",
-          locations: [item.city, item.state].filter(Boolean),
-          rating: Math.floor(Math.random() * 2) + 3,
-          reviews: Math.floor(Math.random() * 200) + 10,
-          founded: item.founded_year || null,
-           company_logo: item.company_logo ? process.env.NEXT_PUBLIC_URL + item.company_logo : "",
+          name: item.company?.company_name,
+          type: item.company?.company_type || "N/A",
+          industry: item.company?.industry || "Not specified",
+          employees: item.company?.company_size || "N/A",
+          locations: [item.company?.city, item.company?.state].filter(Boolean),
+          rating: item.company?.rating || 3,
+          reviews: item.company?.reviews || 10,
+          founded: item.company?.founded_year || null,
+           company_logo: item.company?.company_logo ? process.env.NEXT_PUBLIC_URL + item.company?.company_logo : "",
         })
       );
-   
+
         setAllCompanies(mapped);
       } catch (error) {
 
