@@ -2,18 +2,19 @@
 
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { useRouter } from "next/navigation";
+import {  useParams,useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { User } from "lucide-react";
 
-export default function CompanyDetailPage({
-  params,
-}: {
-  params: { id: string };
-}) {
-  const id = Number(params.id);
-  console.log("Company ID:", id);
+export default function CompanyDetailPage() {
+  const params = useParams();
+
+  const rawId = Array.isArray(params?.id)
+    ? params.id[0]
+    : params?.id;
+
+  const id = rawId ? Number(rawId) : null;
   const router = useRouter();
   const [company, setCompany] = useState<Company | null>(null);
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -72,11 +73,14 @@ export default function CompanyDetailPage({
         ]);
 
         const rawCompanyData = await companyRes.json();
-        console.log("API Response:", rawCompanyData);
 
-        const companyData = rawCompanyData.find(
-          (c: any) => String(c.id) === String(id),
+        const companies = rawCompanyData.data || rawCompanyData;
+
+        const companyData = companies.find(
+          (c: any) => String(c.id) === String(id)
         );
+
+        // console.log("Matched Company:", companyData);
 
         if (!companyData) {
           setCompany(null);
@@ -91,20 +95,61 @@ export default function CompanyDetailPage({
         }
         const jobsData = await jobsRes.json();
         console.log("Company Data:", companyData);
+        // Country API
+        const countryRes = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL_MASTER}/countries/`
+        );
+
+        const countryData = await countryRes.json();
+
+        const countries = countryData.data || countryData;
+
+        const matchedCountry = countries.find(
+          (c: any) => Number(c.id) === Number(companyData.company?.country)
+        );
+
+        // State API
+        const stateRes = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL_MASTER}/states/`
+        );
+
+        const stateData = await stateRes.json();
+
+        const states = stateData.data || stateData;
+
+        const matchedState = states.find(
+          (s: any) => Number(s.id) === Number(companyData.company?.state)
+        );
+
+        const cityRes = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL_MASTER}/cities/?state=${companyData.company?.state}`
+        );
+
+        const cityData = await cityRes.json();
+
+        const cities =
+          cityData.data || cityData.results || cityData;
+
+        const matchedCity = cities.find(
+          (c: any) =>
+            String(c.id) ===
+            String(companyData.company?.city)
+        );
 
         const mappedCompany: Company = {
-          id: companyData.id,
-          name: companyData.company_name,
-          type: companyData.company_type,
-          industry: companyData.industry,
-          size: companyData.company_size,
-          city: companyData.city,
-          state: companyData.state,
-          country: companyData.country,
-          website: companyData.website,
-          description: companyData.description,
-           company_logo: companyData.company_logo ? process.env.NEXT_PUBLIC_URL + companyData.company_logo : "",
-
+          id: companyData.company?.id,
+          name: companyData.company?.company_name,
+          type: companyData.company?.company_type,
+          industry: companyData.company?.industry,
+          size: companyData.company?.company_size,
+          city: matchedCity?.name || "",
+          state: matchedState?.name || "",
+          country: matchedCountry?.name || "",
+          website: companyData.company?.website,
+          description: companyData.company?.description,
+          company_logo: companyData.company?.company_logo
+            ? process.env.NEXT_PUBLIC_URL + companyData.company.company_logo
+            : "",
         };
 
         setCompany(mappedCompany);

@@ -132,34 +132,33 @@ export default function AppliedJobsPage() {
               </p>
             </div>
           ))}
-           <div className="flex items-center justify-center mt-6">
-              <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-2xl shadow-sm px-3 py-2">
-                
-                <button
-                  disabled={currentPage === 1}
-                  onClick={() => fetchAppliedJobs(currentPage - 1)}
-                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-xl border border-gray-200 bg-white hover:bg-gray-50 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  <span className="text-base">←</span>
-                </button>
+           {/* Pagination */}
+        <div className="flex items-center justify-center gap-2">
 
-                <div className="flex items-center gap-1 px-2">
-                  <span className="text-sm text-gray-500">Page</span>
-                  <span className="min-w-[36px] h-9 flex items-center justify-center rounded-xl   text-sm font-semibold shadow">
-                    {currentPage}
-                  </span>
-                  <span className="text-sm text-gray-500">of {totalPages}</span>
-                </div>
+          {/* Previous */}
+          <button
+            disabled={currentPage === 1}
+            onClick={() => fetchAppliedJobs(currentPage - 1)}
+            className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-700 shadow-sm hover:bg-gray-50 transition disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            ‹
+          </button>
 
-                <button
-                  disabled={currentPage === totalPages}
-                  onClick={() => fetchAppliedJobs(currentPage + 1)}
-                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-xl border border-gray-200 bg-white hover:bg-gray-50 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  <span className="text-base">→</span>
-                </button>
-              </div>
-           </div>
+          {/* Page Info */}
+          <div className="px-4 py-2 text-sm font-medium rounded-lg bg-gray-100 text-gray-700">
+            Page {currentPage} of {totalPages}
+          </div>
+
+          {/* Next */}
+          <button
+            disabled={currentPage === totalPages}
+            onClick={() => fetchAppliedJobs(currentPage + 1)}
+            className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-700 shadow-sm hover:bg-gray-50 transition disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            ›
+          </button>
+
+        </div>
         </div>
 
         {/* RIGHT SIDE - JOB DETAILS */}

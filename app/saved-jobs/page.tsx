@@ -92,7 +92,7 @@ export default function SavedJobsPage() {
   };
 
   return (
-    <div className="bg-gray-100">
+    <div>
          <Header />
     <div className=" max-w-4xl  py-10 px-4">
       <div className=" rounded-xl  mb-6">
@@ -220,40 +220,33 @@ export default function SavedJobsPage() {
           )}
         </CardContent>
       </Card>
-      <div className="flex items-center justify-center mt-6">
-  <div className="flex items-center gap-3 bg-white border border-gray-200 rounded-2xl shadow-md px-4 py-3">
+      {/* Pagination */}
+        <div className="flex items-center justify-center gap-2">
 
-    <button
-      disabled={currentPage === 1}
-      onClick={() => fetchSavedJobs(currentPage - 1)}
-      className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-xl border border-gray-200 bg-white hover:bg-gray-50 hover:shadow-sm transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
-    >
-      <span className="text-base">←</span>
-    </button>
+          {/* Previous */}
+          <button
+            disabled={currentPage === 1}
+            onClick={() => fetchSavedJobs(currentPage - 1)}
+            className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-700 shadow-sm hover:bg-gray-50 transition disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            ‹
+          </button>
 
-    <div className="flex items-center gap-2 px-3">
-      <span className="text-sm text-gray-500">Page</span>
+          {/* Page Info */}
+          <div className="px-4 py-2 text-sm font-medium rounded-lg bg-gray-100 text-gray-700">
+            Page {currentPage} of {totalPages}
+          </div>
 
-      <div className="min-w-[40px] h-10 flex items-center justify-center rounded-xl  font-semibold text-sm shadow">
-        {currentPage}
-      </div>
+          {/* Next */}
+          <button
+            disabled={currentPage === totalPages}
+            onClick={() => fetchSavedJobs(currentPage + 1)}
+            className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-700 shadow-sm hover:bg-gray-50 transition disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            ›
+          </button>
 
-      <span className="text-sm text-gray-500">
-        of {totalPages}
-      </span>
-    </div>
-
-    <button
-      disabled={currentPage === totalPages}
-      onClick={() => fetchSavedJobs(currentPage + 1)}
-      className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-xl border border-gray-200 bg-white hover:bg-gray-50 hover:shadow-sm transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
-    >
-      <span className="text-base">→</span>
-    </button>
-
-  </div>
-</div>
-
+        </div>
     </div>
      <Footer />
     </div>
