@@ -5,8 +5,25 @@ import Footer from "@/components/Footer";
 import {  useParams,useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { User } from "lucide-react";
-
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Send,
+  ExternalLink,
+  CheckCircle,
+  User,
+  MapPin,
+  IndianRupee,
+  Clock3
+} from "lucide-react";
 export default function CompanyDetailPage() {
   const params = useParams();
 
@@ -20,6 +37,13 @@ export default function CompanyDetailPage() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("jobs");
+  const [showLoginPopup, setShowLoginPopup] = useState(false);
+  const [userData, setUserData] = useState<any>(null);
+  const [loadingUserData, setLoadingUserData] = useState(false);
+  const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
+  const [selectedJob, setSelectedJob] = useState<any>(null);
+  const [answers, setAnswers] = useState<Record<number, string>>({});
+  const [appliedJobs, setAppliedJobs] = useState<number[]>([]);
   type Company = {
     id: string | number;
     name: string;
@@ -33,8 +57,8 @@ export default function CompanyDetailPage() {
     description?: string;
     company_logo: string;
     company_size?: string;
-     company_type?: string;
-     job_count?: number;
+    company_type?: string;
+    job_count?: number;
   };
   type Job = {
     id: string | number;
@@ -45,7 +69,198 @@ export default function CompanyDetailPage() {
     type: string;
     questions: any[];
     job_count?: number;
+    website_apply?: string;
   };
+
+ const REQUIRED_PROFILE_FIELDS = [
+  "full_name",
+  "phone",
+  "resume",
+  "skills",
+  "country",
+  "state",
+  "city",
+  "experiences",
+];
+
+const isProfileComplete = (profile: Record<string, any>) => {
+  return REQUIRED_PROFILE_FIELDS.every((field) => {
+    const value = profile?.[field];
+
+    if (Array.isArray(value)) {
+      return value.length > 0;
+    }
+
+    if (typeof value === "object") {
+      return value !== null && Object.keys(value).length > 0;
+    }
+
+    return value !== null && value !== undefined && value !== "";
+  });
+};
+
+const fetchUserProfile = async () => {
+  setLoadingUserData(true);
+
+  try {
+    const token = localStorage.getItem("user_token");
+
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL_APP}/profile/`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (!response.ok) return;
+
+    const profile = await response.json();
+
+    const resumePath = profile.resume;
+
+    const resumeUrl = resumePath
+      ? resumePath.startsWith("http")
+        ? resumePath
+        : `${process.env.NEXT_PUBLIC_URL}${resumePath}`
+      : null;
+
+    setUserData({
+      ...profile,
+      resume: resumeUrl,
+    });
+  } catch (error) {
+    console.error(error);
+  } finally {
+    setLoadingUserData(false);
+  }
+};
+
+const fetchUserData = async () => {
+  try {
+    const token = localStorage.getItem("user_token");
+    const email = localStorage.getItem("user_email");
+
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/employer/applications/all/`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    if (!response.ok) return;
+
+    const data = await response.json();
+
+    const myApplications = data.filter(
+      (app: any) => app.user_email === email
+    );
+
+    const appliedIDs = myApplications.map((app: any) =>
+      Number(app.job)
+    );
+
+    setAppliedJobs(appliedIDs);
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+useEffect(() => {
+  fetchUserProfile();
+  fetchUserData();
+}, []);
+
+const handleApply = (job: any) => {
+  const token = localStorage.getItem("user_token");
+
+  if (!token) {
+    setShowLoginPopup(true);
+    return;
+  }
+
+  if (!userData || !isProfileComplete(userData)) {
+    toast.warning(
+      "Please complete your profile before applying."
+    );
+
+    router.push("/profile");
+    return;
+  }
+
+  setSelectedJob(job);
+  setAnswers({});
+  setIsApplyModalOpen(true);
+};
+
+const handleAnswerChange = (
+  questionIndex: number,
+  value: string
+) => {
+  setAnswers((prev) => ({
+    ...prev,
+    [questionIndex]: value,
+  }));
+};
+
+const submitApplication = async () => {
+  try {
+    const token = localStorage.getItem("user_token");
+
+    if (!token) {
+      toast.error("Login required");
+      return;
+    }
+
+    if (!selectedJob) return;
+
+    const applicationData = {
+      job_id: selectedJob.id,
+      answers:
+        selectedJob.questions?.map(
+          (question: string, index: number) => ({
+            question,
+            answer: answers[index] || "",
+          })
+        ) || [],
+    };
+
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/applications/submit/`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(applicationData),
+      }
+    );
+
+    const result = await response.json();
+
+    if (response.ok) {
+      toast.success("Application Submitted");
+
+      setIsApplyModalOpen(false);
+
+      setAppliedJobs((prev) => [
+        ...prev,
+        Number(selectedJob.id),
+      ]);
+    } else {
+      toast.error(
+        result?.error || "Something went wrong"
+      );
+    }
+  } catch (error) {
+    console.error(error);
+  }
+};
 
   useEffect(() => {
     if (!id) return;
@@ -61,16 +276,11 @@ export default function CompanyDetailPage() {
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         };
 
-        const [companyRes, jobsRes] = await Promise.all([
-          fetch(
-            `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/companies/`,
-            { headers },
-          ),
-          fetch(
-            `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/companies/${id}/jobs/`,
-            { headers },
-          ),
-        ]);
+        // Fetch company first
+        const companyRes = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/companies/`,
+          { headers }
+        );
 
         const rawCompanyData = await companyRes.json();
 
@@ -79,6 +289,30 @@ export default function CompanyDetailPage() {
         const companyData = companies.find(
           (c: any) => String(c.id) === String(id)
         );
+
+        if (!companyData) {
+          setCompany(null);
+          setJobs([]);
+  return;
+}
+
+// Fetch jobs using company name
+const jobsRes = await fetch(
+  `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/companies/${id}/${encodeURIComponent(
+    companyData.company?.company_name
+  )}/jobs/`,
+  { headers }
+);
+
+const jobsData = await jobsRes.json();
+
+        // const rawCompanyData = await companyRes.json();
+
+        // const companies = rawCompanyData.data || rawCompanyData;
+
+        // const companyData = companies.find(
+        //   (c: any) => String(c.id) === String(id)
+        // );
 
         // console.log("Matched Company:", companyData);
 
@@ -93,7 +327,7 @@ export default function CompanyDetailPage() {
           setJobs([]);
           return;
         }
-        const jobsData = await jobsRes.json();
+        // const jobsData = await jobsRes.json();
         console.log("Company Data:", companyData);
         // Country API
         const countryRes = await fetch(
@@ -164,6 +398,7 @@ export default function CompanyDetailPage() {
                   title: job.title || job.job_title || "Untitled Job",
                   description: job.description || "No description provided.",
                   location: job.location?.name || job.city?.name || "N/A",
+                  website_apply: job.website_apply || "",
                   salary: job.salary || "Not specified",
                   type: job.job_type || job.type || "Not specified",
                   questions: job.questions || [],
@@ -354,19 +589,64 @@ export default function CompanyDetailPage() {
                      }}
                      />
 
-                    <p className="text-xs text-gray-500 mt-2">
-                      📍 {job.location} | 💰 {job.salary} | 🕒 {job.type}
-                    </p>
+                    <div className="flex flex-wrap items-center gap-4 text-xs text-gray-500 mt-2">
+                      <div className="flex items-center gap-1">
+                        <MapPin className="w-4 h-4" />
+                        <span>{job.location}</span>
+                      </div>
+
+                      <div className="flex items-center gap-1">
+                        <IndianRupee className="w-4 h-4" />
+                        <span>{job.salary}</span>
+                      </div>
+
+                      <div className="flex items-center gap-1">
+                        <Clock3 className="w-4 h-4" />
+                        <span>{job.type}</span>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="mt-3 sm:mt-0 sm:ml-4">
-                    <button
-                      onClick={() => redirectToHomeWithSearch(job.title)}
-                      className="bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded-md hover:bg-blue-700 transition w-full sm:w-auto"
-                    >
-                      Apply Now
-                    </button>
-                  </div>
+                <div className="mt-3 sm:mt-0 sm:ml-4 flex flex-col sm:flex-row gap-2">
+                  {/* View Details */}
+                  <button
+                    onClick={() => router.push(`/job-details?id=${job.id}`)}
+                    className="border border-gray-300 bg-white text-gray-700 text-sm font-medium px-4 py-2 rounded-md hover:bg-gray-100 transition w-full sm:w-auto"
+                  >
+                    View Details
+                  </button>
+
+                  {/* Apply */}
+                  <button
+                    onClick={() => {
+                      if (appliedJobs.includes(Number(job?.id))) {
+                        toast.info("You have already applied for this job");
+                        return;
+                      }
+
+                      // External website apply
+                      if (job?.website_apply) {
+                        window.open(job.website_apply, "_blank");
+                        return;
+                      }
+
+                      // Internal apply modal
+                      handleApply(job);
+                    }}
+                    className={`text-sm font-medium px-4 py-2 rounded-md transition w-full sm:w-auto
+                      ${
+                        appliedJobs.includes(Number(job?.id))
+                          ? "bg-green-500 text-white"
+                          : "bg-blue-600 hover:bg-blue-700 text-white"
+                      }`}
+                  >
+                    {appliedJobs.includes(Number(job?.id))
+                      ? "Applied"
+                      : job?.website_apply
+                      ? "Apply Now"
+                      : "Apply Now"}
+                  </button>
+                </div>
                 </div>
               ))
             ) : (
@@ -377,7 +657,156 @@ export default function CompanyDetailPage() {
           </div>
         )}
       </div>
+      <Dialog
+        open={isApplyModalOpen}
+        onOpenChange={setIsApplyModalOpen}
+      >
+        <DialogContent className="max-w-2xl w-full h-[90vh] overflow-y-auto p-6">
+          {selectedJob && (
+            <>
+              <DialogHeader>
+                <DialogTitle>
+                  Apply for {selectedJob.title}
+                </DialogTitle>
+              </DialogHeader>
 
+              <div className="space-y-4">
+                <p className="text-sm text-gray-600">
+                  Your profile and resume will be sent
+                  to employer.
+                </p>
+
+                {loadingUserData ? (
+                  <div className="flex justify-center py-6">
+                    Loading...
+                  </div>
+                ) : (
+                  <>
+                    <div className="p-4 rounded-lg bg-gray-50 space-y-2">
+                      <div>
+                        <strong>Name:</strong>{" "}
+                        {userData?.full_name}
+                      </div>
+
+                      <div>
+                        <strong>Email:</strong>{" "}
+                        {userData?.email}
+                      </div>
+
+                      <div>
+                        <strong>Phone:</strong> +
+                        {userData?.phone_code}{" "}
+                        {userData?.phone}
+                      </div>
+                    </div>
+
+                    {userData?.resume ? (
+                      <a
+                        href={userData.resume}
+                        target="_blank"
+                        className="text-blue-600 underline flex items-center gap-1"
+                      >
+                        View Resume
+                        <ExternalLink className="w-4 h-4" />
+                      </a>
+                    ) : (
+                      <p>No Resume Uploaded</p>
+                    )}
+                  </>
+                )}
+
+                {selectedJob.questions &&
+                  selectedJob.questions.length > 0 && (
+                    <div className="space-y-4">
+                      <h4 className="font-semibold">
+                        Additional Questions
+                      </h4>
+
+                      {selectedJob.questions.map(
+                        (question: string, index: number) => (
+                          <div key={index}>
+                            <Label>
+                              {index + 1}. {question}
+                            </Label>
+
+                            <Input
+                              value={answers[index] || ""}
+                              onChange={(e) =>
+                                handleAnswerChange(
+                                  index,
+                                  e.target.value
+                                )
+                              }
+                              placeholder="Type your answer..."
+                            />
+                          </div>
+                        )
+                      )}
+                    </div>
+                  )}
+
+                <div className="flex gap-3 pt-4">
+                  <Button
+                    onClick={submitApplication}
+                    className="flex-1"
+                  >
+                    <Send className="w-4 h-4 mr-2" />
+                    Submit Application
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() =>
+                      setIsApplyModalOpen(false)
+                    }
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+      <Dialog
+        open={showLoginPopup}
+        onOpenChange={setShowLoginPopup}
+      >
+        <DialogContent className="max-w-md">
+          <div className="space-y-4">
+            <h2 className="text-xl font-semibold">
+              Login Required
+            </h2>
+
+            <p className="text-sm text-gray-600">
+              Please login before applying.
+            </p>
+
+            <div className="flex gap-3">
+              <Button
+                className="flex-1"
+                onClick={() => {
+                  setShowLoginPopup(false);
+                  window.open("/login", "_blank");
+                }}
+              >
+                Login
+              </Button>
+
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() =>
+                  setShowLoginPopup(false)
+                }
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
       <Footer />
     </div>
   );

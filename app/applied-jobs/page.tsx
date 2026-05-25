@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Briefcase } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 export default function AppliedJobsPage() {
+  const router = useRouter();
   const [appliedJobs, setAppliedJobs] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedJob, setSelectedJob] = useState<any>(null);
@@ -166,9 +168,25 @@ export default function AppliedJobsPage() {
           {selectedJob ? (
             <>
               {/* Title */}
-              <h2 className="text-xl font-semibold text-gray-900">
-                {selectedJob.job_title}
-              </h2>
+             <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900">
+                    {selectedJob.job_title}
+                  </h2>
+                </div>
+
+                <button
+                  onClick={() =>
+                    window.open(
+                      `/job-details?id=${selectedJob.job.id}`,
+                      "_blank"
+                    )
+                  }
+                  className="shrink-0 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition"
+                >
+                  View Job Details
+                </button>
+              </div>
 
               <p className="text-sm text-gray-500 mt-1">
                 {selectedJob.job.company}
@@ -266,13 +284,6 @@ export default function AppliedJobsPage() {
                   </p>
                   <p className="text-xs text-gray-500">Total applications</p>
                 </div>
-
-                {/* <div>
-                  <p className="text-lg font-semibold">
-                    {selectedJob.job.apply_clicks}
-                  </p>
-                  <p className="text-xs text-gray-500">Viewed by recruiter</p>
-                </div> */}
               </div>
               <div className="mt-4">
                 <p className="text-sm font-medium mb-2">Skills</p>
