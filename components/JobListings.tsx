@@ -390,8 +390,12 @@ const sortedJobs = [...filteredJobs]
       if (filters.companies.length > 0) {
         filters.companies.forEach(company => params.append("company", company));
       }
-      if (filters.experience.length > 0) {
-        filters.experience.forEach(exp => params.append("experience", exp));
+      if (filters.experience?.[0]) {
+        params.append("min_experience", filters.experience[0]);
+      }
+
+      if (filters.experience?.[1]) {
+        params.append("max_experience", filters.experience[1]);
       }
 
       const response = await fetch(
@@ -508,38 +512,38 @@ const sortedJobs = [...filteredJobs]
       );
     }
 
-    // Experience filter
-    if (filters.experience && filters.experience.length > 0) {
-      filtered = filtered.filter((job) => {
-        if (!job.experience) return false;
-        const [minJobExp, maxJobExp] = job.experience.split("-").map(Number);
+    // // Experience filter
+    // if (filters.experience && filters.experience.length > 0) {
+    //   filtered = filtered.filter((job) => {
+    //     if (!job.experience) return false;
+    //     const [minJobExp, maxJobExp] = job.experience.split("-").map(Number);
 
-        return filters.experience.some((expFilter) => {
-          let minFilterExp = 0;
-          let maxFilterExp = 100;
+    //     return filters.experience.some((expFilter) => {
+    //       let minFilterExp = 0;
+    //       let maxFilterExp = 100;
 
-          switch (expFilter) {
-            case "0-1":
-              [minFilterExp, maxFilterExp] = [0, 1];
-              break;
-            case "2-4":
-              [minFilterExp, maxFilterExp] = [2, 4];
-              break;
-            case "3-5":
-              [minFilterExp, maxFilterExp] = [3, 5];
-              break;
-            case "5-8":
-              [minFilterExp, maxFilterExp] = [5, 8];
-              break;
-            case "8+":
-              [minFilterExp, maxFilterExp] = [8, 100];
-              break;
-          }
+    //       switch (expFilter) {
+    //         case "0-1":
+    //           [minFilterExp, maxFilterExp] = [0, 1];
+    //           break;
+    //         case "2-4":
+    //           [minFilterExp, maxFilterExp] = [2, 4];
+    //           break;
+    //         case "3-5":
+    //           [minFilterExp, maxFilterExp] = [3, 5];
+    //           break;
+    //         case "5-8":
+    //           [minFilterExp, maxFilterExp] = [5, 8];
+    //           break;
+    //         case "8+":
+    //           [minFilterExp, maxFilterExp] = [8, 100];
+    //           break;
+    //       }
 
-          return maxJobExp >= minFilterExp && minJobExp <= maxFilterExp;
-        });
-      });
-    }
+    //       return maxJobExp >= minFilterExp && minJobExp <= maxFilterExp;
+    //     });
+    //   });
+    // }
 
     // Work Mode filter
     if (filters.workMode && filters.workMode.length > 0) {
@@ -1172,34 +1176,65 @@ setUserData({
                       Experience
                     </Label>
 
-                    {visibleExperience.map((exp) => (
-                      <div className="flex items-center space-x-2">
-                        <Checkbox
-                          id={exp}
-                          checked={filters.experience.includes(exp)}
-                          onCheckedChange={(checked) =>
-                            handleExperienceFilter(exp, checked as boolean)
-                          }
-                        />
-                        <label
-                          htmlFor={exp}
-                          className="text-sm text-gray-600 cursor-pointer"
-                        >
-                          {exp}
-                        </label>
-                      </div>
-                    ))}
+                    <div className="flex items-center gap-2">
+                      {/* Min Experience */}
+                      <select
+                        value={filters.experience?.[0] || ""}
+                        onChange={(e) => {
+                          const min = e.target.value;
+                          const max = filters.experience?.[1] || "";
 
-                    {experienceList.length > 4 && (
-                      <button
-                        onClick={() =>
-                          setShowMoreExperience(!showMoreExperience)
-                        }
-                        className="text-purple-600 text-sm mt-2"
+                          setFilters((prev) => ({
+                            ...prev,
+                            experience: [min, max],
+                          }));
+                        }}
+                        className="w-full border rounded-lg px-3 py-2 text-sm"
                       >
-                        {showMoreExperience ? "View Less" : "View More"}
-                      </button>
-                    )}
+                        <option value="">Min Exp</option>
+
+                        {[...Array(21)].map((_, i) => (
+                          <option key={i} value={i}>
+                            {i} Year{i !== 1 ? "s" : ""}
+                          </option>
+                        ))}
+                      </select>
+
+                      <span>-</span>
+
+                      {/* Max Experience */}
+                      <select
+                        value={filters.experience?.[1] || ""}
+                        onChange={(e) => {
+                          const min = filters.experience?.[0] || "";
+                          const max = e.target.value;
+
+                          setFilters((prev) => ({
+                            ...prev,
+                            experience: [min, max],
+                          }));
+                        }}
+                        className="w-full border rounded-lg px-3 py-2 text-sm"
+                      >
+                        <option value="">Max Exp</option>
+
+                        {[...Array(21)].map((_, i) => (
+                          <option key={i} value={i}>
+                            {i} Year{i !== 1 ? "s" : ""}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Validation */}
+                    {filters.experience?.[0] &&
+                      filters.experience?.[1] &&
+                      Number(filters.experience[0]) >
+                        Number(filters.experience[1]) && (
+                        <p className="text-red-500 text-xs mt-1">
+                          Min experience cannot be greater than max experience
+                        </p>
+                      )}
                   </div>
 
                   {/* Job Type */}
