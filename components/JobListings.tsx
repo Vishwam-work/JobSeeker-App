@@ -2144,11 +2144,30 @@ setUserData({
                         </div>
 
                         {/* Action Buttons */}
-                        <div className="flex flex-col gap-2 lg:w-32 min-h-[260px]">
+                        <div className="flex flex-col sm:flex-row lg:flex-col gap-3 w-full lg:w-44 min-h-auto lg:min-h-[260px]">
+
                           {(() => {
                             const token = localStorage.getItem("user_token");
                             const jobIdNum = Number(job.id);
                             const appliedList = appliedJobs.map(Number);
+
+                            const buttonClass =
+                              "w-full h-11 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200";
+
+                            if (job.website_apply) {
+                              return (
+                                <a
+                                  href={job.website_apply}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="w-full"
+                                >
+                                  <Button className={buttonClass}>
+                                    Apply Now
+                                  </Button>
+                                </a>
+                              );
+                            }
 
                             if (token && appliedList.includes(jobIdNum)) {
                               return null;
@@ -2157,32 +2176,25 @@ setUserData({
                             return (
                               <Button
                                 onClick={() => handleApply(job)}
-                                className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
+                                className={buttonClass}
                               >
                                 Apply Now
                               </Button>
                             );
                           })()}
 
+                          {/* View Details */}
                           <Button
                             variant="outline"
-                            className="border-purple-200 text-purple-600 hover:bg-purple-50"
+                            className="w-full h-11 border-purple-200 text-purple-600 hover:bg-purple-50"
                             onClick={() => handleViewDetails(job)}
                           >
                             <Eye className="w-4 h-4 mr-2" />
                             View Details
                           </Button>
-                          {job.website_apply && (
-                            <a
-                              href={job.website_apply}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-purple-600 hover:text-purple-800 underline font-medium whitespace-nowrap"
-                            >
-                              Apply on Website
-                            </a>
-                          )}
-                           <div className="mt-auto flex items-end justify-end pt-2">
+
+                          {/* Save Button */}
+                          <div className="lg:mt-auto flex items-center lg:justify-end">
                             <Button
                               variant="ghost"
                               size="sm"
@@ -2191,7 +2203,7 @@ setUserData({
                                   ? unsaveJob(Number(job.id))
                                   : saveJob(Number(job.id))
                               }
-                              className={`flex items-center gap-2 ${
+                              className={`w-full sm:w-auto flex items-center justify-center gap-2 ${
                                 savedJobIds.includes(Number(job.id))
                                   ? "text-green-600"
                                   : "text-gray-400 hover:text-green-500"
@@ -2206,7 +2218,9 @@ setUserData({
                               />
 
                               <span className="text-sm font-medium">
-                                {savedJobIds.includes(Number(job.id)) ? "Saved" : "Save"}
+                                {savedJobIds.includes(Number(job.id))
+                                  ? "Saved"
+                                  : "Save"}
                               </span>
                             </Button>
                           </div>
@@ -2220,46 +2234,35 @@ setUserData({
 
            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-8 border-t pt-6">
 
-  {/* Showing Results */}
-  {/* <div className="text-sm text-gray-500">
-    Showing{" "}
-    <span className="font-medium">
-    </span>{" "}
-    to{" "}
-    <span className="font-medium">
-    </span>{" "}
-    of{" "}
-  </div> */}
+            {/* Pagination */}
+            <div className="flex items-center gap-2">
 
-  {/* Pagination */}
-  <div className="flex items-center gap-2">
+              {/* Previous */}
+              <button
+                disabled={currentPage === 1}
+                onClick={() => fetchJobs(currentPage - 1)}
+                className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-700 shadow-sm hover:bg-gray-50 transition disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                ‹
+              </button>
 
-    {/* Previous */}
-    <button
-      disabled={currentPage === 1}
-      onClick={() => fetchJobs(currentPage - 1)}
-      className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-700 shadow-sm hover:bg-gray-50 transition disabled:opacity-40 disabled:cursor-not-allowed"
-    >
-      ‹
-    </button>
+              {/* Page Info */}
+              <div className="px-4 py-2 text-sm font-medium rounded-lg bg-gray-100 text-gray-700">
+                Page {currentPage} of {totalPages}
+              </div>
 
-    {/* Page Info */}
-    <div className="px-4 py-2 text-sm font-medium rounded-lg bg-gray-100 text-gray-700">
-      Page {currentPage} of {totalPages}
-    </div>
+              {/* Next */}
+              <button
+                disabled={currentPage === totalPages}
+                onClick={() => fetchJobs(currentPage + 1)}
+                className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-700 shadow-sm hover:bg-gray-50 transition disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                ›
+              </button>
 
-    {/* Next */}
-    <button
-      disabled={currentPage === totalPages}
-      onClick={() => fetchJobs(currentPage + 1)}
-      className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-700 shadow-sm hover:bg-gray-50 transition disabled:opacity-40 disabled:cursor-not-allowed"
-    >
-      ›
-    </button>
+            </div>
 
-  </div>
-
-</div>
+          </div>
           </div>
         </div>
 

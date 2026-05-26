@@ -139,14 +139,14 @@ export default function Profile() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [dobError, setDobError] = useState("");
   const [startInput, setStartInput] = useState("");
- const [endInput, setEndInput] = useState("");
- const [dateError, setDateError] = useState<string | null>(null);
- const [scoreError, setScoreError] = useState<string | null>(null);
- const [yearError, setYearError] = useState("");
- const [value, setValue] = useState(dayjs());
- const [endOpen, setEndOpen] = useState(false);
- const [endYearOpen, setEndYearOpen] = useState(false);
- const [yearOpen, setYearOpen] = useState(false);
+  const [endInput, setEndInput] = useState("");
+  const [dateError, setDateError] = useState<string | null>(null);
+  const [scoreError, setScoreError] = useState<string | null>(null);
+  const [yearError, setYearError] = useState("");
+  const [value, setValue] = useState(dayjs());
+  const [endOpen, setEndOpen] = useState(false);
+  const [endYearOpen, setEndYearOpen] = useState(false);
+  const [yearOpen, setYearOpen] = useState(false);
   // States for inline forms
   const [showAddExperience, setShowAddExperience] = useState(false);
   const [showAddEducation, setShowAddEducation] = useState(false);
@@ -3446,22 +3446,35 @@ const resumeUrl = profileData?.personalInfo?.resume
                             </div>
                              <div>
                               <Label htmlFor="description">
-                                 Job Description
+                                Job Description
                               </Label>
+
                               <Textarea
-                                 id="description"
-                                 value={experienceForm.description}
-                                 onChange={(e) =>
-                                   setExperienceForm((prev) => ({
-                                    ...prev,
-                                    description: e.target.value,
-                                   }))
-                                }
+                                id="description"
+                                value={experienceForm.description}
+                                onChange={(e) => {
+                                  const words = e.target.value.trim().split(/\s+/);
+                                  if (words.length <= 50 || e.target.value === "") {
+                                    setExperienceForm((prev) => ({
+                                      ...prev,
+                                      description: e.target.value,
+                                    }));
+                                  }
+                                }}
                                 rows={4}
-                                 placeholder="Describe your role and achievements..."
+                                placeholder="Describe your role and achievements..."
                                 className="mt-1"
                               />
-                             </div>
+
+                              <p className="text-xs text-gray-500 mt-1">
+                                {
+                                  experienceForm.description.trim()
+                                    ? experienceForm.description.trim().split(/\s+/).length
+                                    : 0
+                                }
+                                /50 words
+                              </p>
+                            </div>
                             <div className="flex justify-end space-x-2">
                               <Button
                                 variant="outline"

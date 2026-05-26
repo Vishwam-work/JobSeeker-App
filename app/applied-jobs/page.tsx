@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Briefcase } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 export default function AppliedJobsPage() {
+  const router = useRouter();
   const [appliedJobs, setAppliedJobs] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedJob, setSelectedJob] = useState<any>(null);
@@ -132,34 +134,33 @@ export default function AppliedJobsPage() {
               </p>
             </div>
           ))}
-           <div className="flex items-center justify-center mt-6">
-              <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-2xl shadow-sm px-3 py-2">
-                
-                <button
-                  disabled={currentPage === 1}
-                  onClick={() => fetchAppliedJobs(currentPage - 1)}
-                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-xl border border-gray-200 bg-white hover:bg-gray-50 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  <span className="text-base">←</span>
-                </button>
+           {/* Pagination */}
+        <div className="flex items-center justify-center gap-2">
 
-                <div className="flex items-center gap-1 px-2">
-                  <span className="text-sm text-gray-500">Page</span>
-                  <span className="min-w-[36px] h-9 flex items-center justify-center rounded-xl   text-sm font-semibold shadow">
-                    {currentPage}
-                  </span>
-                  <span className="text-sm text-gray-500">of {totalPages}</span>
-                </div>
+          {/* Previous */}
+          <button
+            disabled={currentPage === 1}
+            onClick={() => fetchAppliedJobs(currentPage - 1)}
+            className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-700 shadow-sm hover:bg-gray-50 transition disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            ‹
+          </button>
 
-                <button
-                  disabled={currentPage === totalPages}
-                  onClick={() => fetchAppliedJobs(currentPage + 1)}
-                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-xl border border-gray-200 bg-white hover:bg-gray-50 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  <span className="text-base">→</span>
-                </button>
-              </div>
-           </div>
+          {/* Page Info */}
+          <div className="px-4 py-2 text-sm font-medium rounded-lg bg-gray-100 text-gray-700">
+            Page {currentPage} of {totalPages}
+          </div>
+
+          {/* Next */}
+          <button
+            disabled={currentPage === totalPages}
+            onClick={() => fetchAppliedJobs(currentPage + 1)}
+            className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-700 shadow-sm hover:bg-gray-50 transition disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            ›
+          </button>
+
+        </div>
         </div>
 
         {/* RIGHT SIDE - JOB DETAILS */}
@@ -167,9 +168,25 @@ export default function AppliedJobsPage() {
           {selectedJob ? (
             <>
               {/* Title */}
-              <h2 className="text-xl font-semibold text-gray-900">
-                {selectedJob.job_title}
-              </h2>
+             <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900">
+                    {selectedJob.job_title}
+                  </h2>
+                </div>
+
+                <button
+                  onClick={() =>
+                    window.open(
+                      `/job-details?id=${selectedJob.job.id}`,
+                      "_blank"
+                    )
+                  }
+                  className="shrink-0 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition"
+                >
+                  View Job Details
+                </button>
+              </div>
 
               <p className="text-sm text-gray-500 mt-1">
                 {selectedJob.job.company}
@@ -267,13 +284,6 @@ export default function AppliedJobsPage() {
                   </p>
                   <p className="text-xs text-gray-500">Total applications</p>
                 </div>
-
-                {/* <div>
-                  <p className="text-lg font-semibold">
-                    {selectedJob.job.apply_clicks}
-                  </p>
-                  <p className="text-xs text-gray-500">Viewed by recruiter</p>
-                </div> */}
               </div>
               <div className="mt-4">
                 <p className="text-sm font-medium mb-2">Skills</p>

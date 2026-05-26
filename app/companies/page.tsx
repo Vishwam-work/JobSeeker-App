@@ -30,58 +30,169 @@ export default function CompaniesPage() {
     company_logo: string;
   };
 
-  useEffect(() => {
-    const fetchCompanies = async () => {
-      try {
-         const token =
-           typeof window !== "undefined"
-             ? localStorage.getItem("user_token")
-             : null;
+    useEffect(() => {
+      const fetchCompanies = async () => {
+        try {
+          const token =
+            typeof window !== "undefined"
+              ? localStorage.getItem("user_token")
+              : null;
 
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/companies/`,
-          {
-            headers: {
-               "Content-Type": "application/json",
-              ...(token && { Authorization: `Bearer ${token}` }),
-            },
-           }
-        );
-   
-        if (!res.ok) {
-          throw new Error("Failed to fetch companies");
+          const headers = {
+            "Content-Type": "application/json",
+            ...(token && { Authorization: `Bearer ${token}` }),
+          };
+
+          // Companies API
+          const companyRes = await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/companies/`,
+            { headers }
+          );
+
+          const companyData = await companyRes.json();
+
+          const companies =
+            companyData.data || companyData;
+
+          // Country API
+          const countryRes = await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL_MASTER}/countries/`
+          );
+
+          const countryData = await countryRes.json();
+
+          const countries =
+            countryData.data || countryData;
+
+          // State API
+          const stateRes = await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL_MASTER}/states/`
+          );
+
+          const stateData = await stateRes.json();
+
+          const states =
+            stateData.data || stateData;
+
+          // Mapping
+          const mapped: CompanyListItem[] =
+            await Promise.all(
+              companies.map(
+                async (
+                  item: any
+                ): Promise<CompanyListItem> => {
+                  // Country Match
+                  const matchedCountry =
+                    countries.find(
+                      (c: any) =>
+                        Number(c.id) ===
+                        Number(
+                          item.company?.country
+                        )
+                    );
+
+                  // State Match
+                  const matchedState =
+                    states.find(
+                      (s: any) =>
+                        Number(s.id) ===
+                        Number(
+                          item.company?.state
+                        )
+                    );
+
+                  // City API by state
+                  const cityRes = await fetch(
+                    `${process.env.NEXT_PUBLIC_API_URL_MASTER}/cities/?state=${item.company?.state}`
+                  );
+
+                  const cityData =
+                    await cityRes.json();
+
+                  const cities =
+                    cityData.data ||
+                    cityData.results ||
+                    cityData;
+
+                  // City Match
+                  const matchedCity =
+                    cities.find(
+                      (c: any) =>
+                        String(c.id) ===
+                        String(
+                          item.company?.city
+                        )
+                    );
+
+                  return {
+                    id: item.id,
+
+                    name:
+                      item.company
+                        ?.company_name ||
+                      "N/A",
+
+                    type:
+                      item.company
+                        ?.company_type ||
+                      "N/A",
+
+                    industry:
+                      item.company
+                        ?.industry ||
+                      "Not specified",
+
+                    employees:
+                      item.company
+                        ?.company_size ||
+                      "N/A",
+
+                    locations: [
+                      matchedCity?.name,
+                      matchedState?.name,
+                      matchedCountry?.name,
+                    ].filter(Boolean),
+
+                    rating:
+                      item.company?.rating ||
+                      3,
+
+                    reviews:
+                      item.company?.reviews ||
+                      10,
+
+                    founded:
+                      item.company
+                        ?.founded_year ||
+                      null,
+
+                    company_logo:
+                      item.company
+                        ?.company_logo
+                        ? process.env
+                            .NEXT_PUBLIC_URL +
+                          item.company
+                            ?.company_logo
+                        : "",
+                  };
+                }
+              )
+            );
+
+          setAllCompanies(mapped);
+        } catch (error) {
+          console.error(
+            "Fetch Error:",
+            error
+          );
+          setAllCompanies([]);
+        } finally {
+          setLoading(false);
         }
+      };
 
-        const data = await res.json();
-        console.log("Fetched companies:", data);
-
-        const mapped: CompanyListItem[] = (data.data || data).map(
-        (item: any): CompanyListItem => ({
-          id: item.id,
-          name: item.company_name,
-          type: item.company_type || "N/A",
-          industry: item.industry || "Not specified",
-          employees: item.company_size || "N/A",
-          locations: [item.city, item.state].filter(Boolean),
-          rating: Math.floor(Math.random() * 2) + 3,
-          reviews: Math.floor(Math.random() * 200) + 10,
-          founded: item.founded_year || null,
-           company_logo: item.company_logo ? process.env.NEXT_PUBLIC_URL + item.company_logo : "",
-        })
-      );
-   
-        setAllCompanies(mapped);
-      } catch (error) {
-
-        setAllCompanies([]);
-      } finally {
-        setLoading(false);
-      }
-     };
-
-     fetchCompanies();
-   }, []);
-
+      fetchCompanies();
+    }, []);
 
   //  Search filter
   const filteredCompanies = allCompanies.filter((company) => {
@@ -207,8 +318,12 @@ const totalPages = Math.ceil(filteredCompanies.length / itemsPerPage);
       {paginatedCompanies.map((company) => (
 
         <Link
-          key={company.id}
-          href={`/companies/${company.id}`}
+          key={company.id || Math.random()}
+          href={
+            company.id
+              ? `/companies/${company.id}`
+              : "#"
+          }
           target="_blank"
         >
 
@@ -232,8 +347,8 @@ const totalPages = Math.ceil(filteredCompanies.length / itemsPerPage);
               <div>
                 <h3 className="font-semibold">{company.name}</h3>
 
-                <p className="text-sm text-gray-500">
-                  ⭐ {company.rating} ({company.reviews} reviews)
+                <p className="text-xs text-gray-500">
+                  {company.type}
                 </p>
 
                 <p className="text-xs text-gray-500">
