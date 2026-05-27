@@ -1289,13 +1289,16 @@ const getSelectedCity = () => {
 };
 const experienceOptions = [
   { label: "Fresher", value: "fresher" },
+
   ...Array.from({ length: 19 }, (_, i) => {
     const year = i + 1;
+
     return {
       label: `${year} ${year === 1 ? "year" : "years"}`,
-      value: `${year} year`,
+      value: `${year} ${year === 1 ? "year" : "years"}`,
     };
   }),
+
   { label: "20+ years", value: "20+ years" },
 ];
 const loadExperienceOptions = async (inputValue: string) => {

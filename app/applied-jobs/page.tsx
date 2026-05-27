@@ -6,6 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Briefcase } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import dayjs, { Dayjs } from "dayjs";
+import customParseFormat from "dayjs/plugin/customParseFormat";
+
+dayjs.extend(customParseFormat);
 export default function AppliedJobsPage() {
   const router = useRouter();
   const [appliedJobs, setAppliedJobs] = useState<any[]>([]);
@@ -30,6 +34,18 @@ export default function AppliedJobsPage() {
         return status;
     }
   };
+  const formatDate = (date?: any) => {
+  if (!date) return "";
+
+  const parsed = dayjs(date);
+
+  // ❗ future date check
+  if (!parsed.isValid() || parsed.year() > dayjs().year()) {
+    return "Invalid Date";
+  }
+
+  return parsed.format("DD/MM/YYYY");
+};
   const getCurrentStep = (status: string) => {
     const index = steps.findIndex(
       (s) => s.toLowerCase() === status?.toLowerCase(),
@@ -126,11 +142,7 @@ export default function AppliedJobsPage() {
               </span>
               <p className="text-xs text-gray-400 mt-1">
                 Applied on:{" "}
-                {new Date(job.applied_at).toLocaleDateString("en-IN", {
-                  day: "2-digit",
-                  month: "short",
-                  year: "numeric",
-                })}
+                {formatDate(selectedJob.applied_at)}
               </p>
             </div>
           ))}
@@ -192,7 +204,23 @@ export default function AppliedJobsPage() {
                 {selectedJob.job.company}
               </p>
               <p className="text-sm text-gray-500">
-                {selectedJob.job.location?.name} • {selectedJob.job.job_type}
+                {selectedJob.job.location?.name} •{" "}
+                
+                {Array.isArray(selectedJob.job.job_type)
+                  ? selectedJob.job.job_type
+                      .map(
+                        (type: string) =>
+                          type
+                            .split("-")
+                            .map(
+                              (word) =>
+                                word.charAt(0).toUpperCase() +
+                                word.slice(1).toLowerCase()
+                            )
+                            .join(" ")
+                      )
+                      .join(", ")
+                  : ""}
               </p>
               <div className="mt-2">
                 <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded ml-2">
@@ -200,7 +228,7 @@ export default function AppliedJobsPage() {
                 </span>
                 <p className="text-xs text-gray-400 mt-3">
                   Applied on:{" "}
-                  {new Date(selectedJob.applied_at).toLocaleDateString()}
+                  {formatDate(selectedJob.applied_at)}
                 </p>
               </div>
 
@@ -346,7 +374,8 @@ export default function AppliedJobsPage() {
                 {/* Applied Date */}
                 <p className="text-xs text-gray-400 mt-4">
                   Applied on:{" "}
-                  {new Date(selectedJob.applied_at).toLocaleDateString()}
+                  {/* {new Date(selectedJob.applied_at).toLocaleDateString()} */}
+                   {formatDate(selectedJob.applied_at)}
                 </p>
 
                 {/* STATUS BAR */}
