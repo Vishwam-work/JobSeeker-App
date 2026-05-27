@@ -393,9 +393,18 @@ const formatNumber = (
                         </span>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-2 text-gray-600">
-                      {isPDF ? '🕒' : <Clock className="w-4 h-4" />}
-                      <span>Notice Period: {profileData.personalInfo.noticePeriod}</span>
+                    <div className="flex items-center gap-2 text-gray-600 whitespace-nowrap">
+                      {isPDF ? (
+                        <span className="inline-flex items-center justify-center w-4 h-4 text-[12px]">
+                          🕒
+                        </span>
+                      ) : (
+                        <Clock className="w-4 h-4 flex-shrink-0" />
+                      )}
+
+                      <span className="whitespace-nowrap">
+                        Notice Period: {profileData.personalInfo.noticePeriod}
+                      </span>
                     </div>
                   </div>
                 </div>

@@ -21,7 +21,7 @@ import {
   CheckCircle,
   User,
   MapPin,
-  IndianRupee,
+  Banknote    ,
   Clock3
 } from "lucide-react";
 export default function CompanyDetailPage() {
@@ -64,7 +64,11 @@ export default function CompanyDetailPage() {
     id: string | number;
     title: string;
     description: string;
-    location: string;
+    location: string ;
+    currency: {
+      code?: string;
+      symbol_native: string;
+    };
     salary: string;
     type: string;
     questions: any[];
@@ -305,6 +309,7 @@ const jobsRes = await fetch(
 );
 
 const jobsData = await jobsRes.json();
+console.log("Jobs Data:", jobsData);
 
         // const rawCompanyData = await companyRes.json();
 
@@ -397,8 +402,13 @@ const jobsData = await jobsRes.json();
                   id: job.id,
                   title: job.title || job.job_title || "Untitled Job",
                   description: job.description || "No description provided.",
-                  location: job.location?.name || job.city?.name || "N/A",
+                  location: job.location ,
                   website_apply: job.website_apply || "",
+                  currency: {
+                    symbol_native:
+                      job.currency?.symbol_native || "",
+                      code: job.currency?.code || "",
+                  },
                   salary: job.salary || "Not specified",
                   type: job.job_type || job.type || "Not specified",
                   questions: job.questions || [],
@@ -562,7 +572,7 @@ const jobsData = await jobsRes.json();
 
               {/* Description */}
             {company.description && (
-              <p ><span className="font-medium">description:</span>{company.description}</p>
+              <p ><span className="font-medium">Description:</span>{company.description}</p>
             )}
             </div>
           </div>
@@ -596,13 +606,34 @@ const jobsData = await jobsRes.json();
                       </div>
 
                       <div className="flex items-center gap-1">
-                        <IndianRupee className="w-4 h-4" />
-                        <span>{job.salary}</span>
+                      <span>
+                        {job.currency?.symbol_native}{" "}
+                        {Number(job.salary).toLocaleString(
+                          job.currency?.code === "INR" ? "en-IN" : "en-US"
+                        )}
+                      </span>
                       </div>
 
                       <div className="flex items-center gap-1">
                         <Clock3 className="w-4 h-4" />
-                        <span>{job.type}</span>
+
+                        <span>
+                          {Array.isArray(job.type)
+                            ? job.type
+                                .map(
+                                  (type: string) =>
+                                    type
+                                      .split("-")
+                                      .map(
+                                        (word) =>
+                                          word.charAt(0).toUpperCase() +
+                                          word.slice(1).toLowerCase()
+                                      )
+                                      .join(" ")
+                                )
+                                .join(", ")
+                            : ""}
+                        </span>
                       </div>
                     </div>
                   </div>

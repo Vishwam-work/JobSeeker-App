@@ -773,25 +773,38 @@ useEffect(() => {
     setIsApplyModalOpen(true);
   };
 
-  const handleViewDetails = async (job: Job) => {
-    setSelectedJob(job);
-    setIsJobDetailOpen(true);
+  const handleViewDetails = async (
+    job: Job,
+    openModal = true
+  ) => {
+
+    if (openModal) {
+      setSelectedJob(job);
+      setIsJobDetailOpen(true);
+    }
+
+    const storageKey = `job_request_id_${job.id}`;
+
+    let requestId = localStorage.getItem(storageKey);
+
+    if (!requestId) {
+      requestId = uuidv4();
+      localStorage.setItem(storageKey, requestId);
+    }
+
     try {
-      const requestId = uuidv4();
-      const res = await fetch(
+      await fetch(
         `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/${job.id}/click/`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            // Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ request_id: requestId }),
-        },
+          body: JSON.stringify({
+            request_id: requestId,
+          }),
+        }
       );
-
-      const response = await res.json();
-      console.log(response);
     } catch (err) {
       console.error("Error incrementing job views:", err);
     }
@@ -2196,6 +2209,7 @@ setUserData({
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="w-full"
+                                  // onClick={() => handleViewDetails(job)}
                                 >
                                   <Button className={buttonClass}>
                                     Apply Now
@@ -2210,7 +2224,10 @@ setUserData({
 
                             return (
                               <Button
-                                onClick={() => handleApply(job)}
+                                onClick={() => {
+                                  handleViewDetails(job, false);
+                                  handleApply(job);
+                                }}
                                 className={buttonClass}
                               >
                                 Apply Now
