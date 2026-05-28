@@ -1054,16 +1054,18 @@ setUserData({
     }
   };
 
-  const getTimeSincePosted = (postedDate: string | Date) => {
+  const getTimeSincePosted = (dateString: string) => {
+    const postedDate = new Date(dateString);
     const now = new Date();
-    const posted = new Date(postedDate);
-    const diffTime = Math.abs(now.getTime() - posted.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-    if (diffDays === 1) return "1 day ago";
-    if (diffDays < 7) return `${diffDays} days ago`;
-    if (diffDays < 30) return `${Math.ceil(diffDays / 7)} weeks ago`;
-    return `${Math.ceil(diffDays / 30)} months ago`;
+    const diffMs = now.getTime() - postedDate.getTime();
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffDays > 0) return `${diffDays} day${diffDays > 1 ? "s" : ""} ago`;
+    if (diffHours > 0)
+      return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
+    return "Just now";
   };
 
   if (loading) {
@@ -2075,6 +2077,9 @@ setUserData({
                                   <h3 className="text-lg md:text-xl font-semibold text-gray-900 hover:text-purple-600 transition-colors">
                                     <a
                                       href={`/job-details?id=${job.id}`}
+                                      onClick={() => {
+                                        handleViewDetails(job, false);
+                                      }}
                                       target="_blank"
                                       rel="noopener noreferrer"
                                       className="hover:underline"
@@ -2127,15 +2132,16 @@ setUserData({
                                         ? new Intl.NumberFormat(
                                             job.currency?.code === "INR" ? "en-IN" : "en-US"
                                           ).format(Number(job.salary_max))
-                                        : ""}
+                                        : ""} / yr
                                     </span>
                                   </div>
                                   <Badge
-                                    className={getWorkModeColor(
-                                      job.work_mode ?? "",
-                                    )}
+                                    className={getWorkModeColor(job.work_mode ?? "")}
                                   >
-                                    {job.work_mode}
+                                    {job.work_mode
+                                      ? job.work_mode.charAt(0).toUpperCase() +
+                                        job.work_mode.slice(1).toLowerCase()
+                                      : ""}
                                   </Badge>
                                 </div>
                               </div>
@@ -2209,7 +2215,9 @@ setUserData({
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="w-full"
-                                  // onClick={() => handleViewDetails(job)}
+                                  onClick={() => {
+                                  handleViewDetails(job, false);
+                                }}
                                 >
                                   <Button className={buttonClass}>
                                     Apply Now
@@ -2386,27 +2394,48 @@ setUserData({
                             ? new Intl.NumberFormat(
                                 selectedJob.currency?.code === "INR" ? "en-IN" : "en-US"
                               ).format(Number(selectedJob.salary_max))
-                            : ""}
+                            : ""} / yr
                         </span>
                       </div>
                     </div>
                     <div className="space-y-2">
                       <div className="flex items-center text-gray-600">
                         <Clock className="w-4 h-4 mr-2" />
+
                         <span>
                           {Array.isArray(selectedJob.job_type)
-                            ? selectedJob.job_type.join(", ")
-                            : selectedJob.job_type}
+                            ? selectedJob.job_type
+                                .map(
+                                  (type: string) =>
+                                    type
+                                      .split("-")
+                                      .map(
+                                        (word) =>
+                                          word.charAt(0).toUpperCase() +
+                                          word.slice(1).toLowerCase()
+                                      )
+                                      .join(" ")
+                                )
+                                .join(", ")
+                            : selectedJob.job_type
+                                ?.split("-")
+                                .map(
+                                  (word: string) =>
+                                    word.charAt(0).toUpperCase() +
+                                    word.slice(1).toLowerCase()
+                                )
+                                .join(" ")}
                         </span>
                       </div>
                       <div className="flex items-center text-gray-600">
                         <Building2 className="w-4 h-4 mr-2" />
                         <Badge
-                          className={getWorkModeColor(
-                            selectedJob.work_mode ?? "",
-                          )}
+                          className={getWorkModeColor(selectedJob.work_mode ?? "")}
                         >
-                          {selectedJob.work_mode}
+                          {selectedJob.work_mode
+                            ? selectedJob.work_mode.charAt(0).toUpperCase() +
+                              selectedJob.work_mode.slice(1).toLowerCase()
+                            : ""}
                         </Badge>
                       </div>
                       <div className="flex items-center text-gray-600">

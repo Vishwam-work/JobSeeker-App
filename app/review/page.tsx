@@ -368,7 +368,7 @@ const formatNumber = (
                           {formatNumber(
                             profileData.personalInfo.currentSalary,
                             profileData.personalInfo.currentCurrency,
-                          )}
+                          )} / yr
                         </span>
                       </div>
                     </div>
@@ -389,7 +389,7 @@ const formatNumber = (
                           {formatNumber(
                             profileData.personalInfo.expectedSalary,
                             profileData.personalInfo.expectedCurrency,
-                          )}
+                          )} / yr
                         </span>
                       </div>
                     </div>
