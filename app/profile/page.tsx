@@ -3922,7 +3922,7 @@ const resumeUrl = profileData?.personalInfo?.resume
                                                 setEndYearOpen(false); 
                                               }}
 
-                                              maxDate={dayjs()}
+                                              maxDate={dayjs().add(5, 'year')}
                                             />
                                           </LocalizationProvider>
                                         </div>
