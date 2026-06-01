@@ -95,6 +95,47 @@
   padding-left: 1.2rem;
 }
 
+.pdf-mode {
+  background: white;
+  padding: 20px;
+}
+
+.pdf-mode .card,
+.pdf-mode .pdf-section {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.pdf-mode img {
+  page-break-inside: avoid;
+}
+
+.pdf-mode h1,
+.pdf-mode h2,
+.pdf-mode h3 {
+  break-after: avoid;
+}
+
+.pdf-mode .profile-image-box {
+  overflow: hidden;
+}
+
+.pdf-mode {
+  padding-top: 30px;
+}
+
+.pdf-mode .shadow,
+.pdf-mode .shadow-lg,
+.pdf-mode .rounded-lg,
+.pdf-mode .rounded-xl {
+  box-shadow: none !important;
+}
+.pdf-section {
+  page-break-inside: avoid !important;
+  break-inside: avoid !important;
+}
+
+
 @layer base {
   * {
     @apply border-border;

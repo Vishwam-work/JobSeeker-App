@@ -291,17 +291,23 @@ const formatNumber = (
               )}
             <div
               id="profile-review-ui"
-              className={isPDF ? 'pdf-mode' : ''}
+              className={isPDF ? 'pdf-mode pt-8' : ''}
             >
       <div id="pdf-page-1">
         {/* COMPLETE REVIEW UI */}
           {/* Personal Information */}
-          <Card>
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center space-x-2">
-                {isPDF ? '👤' : <User className="w-5 h-5 text-purple-600" />}
-                <span>Personal Information</span>
-              </CardTitle>
+          <Card className="pdf-section">
+            <CardHeader
+              className={isPDF ? "pb-6 mb-4" : "pb-4"}
+            >
+                        <CardTitle className="flex items-center gap-2 mb-4">
+              {isPDF ? (
+                <span>👤</span>
+              ) : (
+                <User className="w-5 h-5 text-purple-600 space-x-2" />
+              )}
+              <span>Personal Information</span>
+            </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex flex-col lg:flex-row gap-6">
@@ -412,7 +418,7 @@ const formatNumber = (
             </CardContent>
           </Card>
 
-          {/* <Card>
+          {/* <Card className="pdf-section">
             <CardHeader className="pb-4">
               <CardTitle className="flex items-center space-x-2">
                 <Edit className="w-5 h-5 text-purple-600" />
@@ -427,9 +433,9 @@ const formatNumber = (
           </Card> */}
 
           {/* Work Experience */}
-          <Card>
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center space-x-2">
+          <Card className="pdf-section">
+            <CardHeader className={isPDF ? "pb-6 mb-4" : "pb-4"}>
+              <CardTitle className="flex items-center gap-2 mb-4">
                 {isPDF ? '💼' : <Briefcase className="w-4 h-4 text-purple-600" />}
                 <span>Work Experience</span>
               </CardTitle>
@@ -437,7 +443,7 @@ const formatNumber = (
             <CardContent>
               <div  className="space-y-6">
                 {profileData.experience.map((exp, index) => (
-                  <div key={exp.id} className="relative">
+                  <div key={exp.id} className="relative  pdf-section">
                     {index !== profileData.experience.length - 1 && (
                       <div className="absolute left-6 top-12 w-0.5 h-full bg-gray-200"></div>
                     )}
@@ -471,9 +477,9 @@ const formatNumber = (
           </Card>
 
           {/* Education */}
-          <Card>
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center space-x-2">
+          <Card className="pdf-section">
+            <CardHeader className={isPDF ? "pb-6 mb-4" : "pb-4"}>
+              <CardTitle className="flex items-center gap-2 mb-4">
                 {isPDF ? '🎓' : <GraduationCap className="w-5 h-5 text-purple-600" />}
                 <span>Education</span>
               </CardTitle>
@@ -521,9 +527,9 @@ const formatNumber = (
           </Card>
 
           {/* Skills */}
-          <Card>
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center space-x-2">
+          <Card className="pdf-section">
+            <CardHeader className={isPDF ? "pb-6 mb-4" : "pb-4"}>
+              <CardTitle className="flex items-center gap-2 mb-4">
                 {isPDF ? '🎖  ' : <Award className="w-5 h-5 text-purple-600" />}
                 <span>Skills</span>
               </CardTitle>
@@ -545,9 +551,9 @@ const formatNumber = (
 
 
           {/* Certifications */}
-          <Card>
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center space-x-2">
+          <Card className="pdf-section">
+            <CardHeader className={isPDF ? "pb-6 mb-4" : "pb-4"}>
+              <CardTitle className="flex items-center gap-2 mb-4">
                 {isPDF ? '🎖  ' : <Award className="w-5 h-5 text-purple-600" />}
                 <span>Certifications</span>
               </CardTitle>
