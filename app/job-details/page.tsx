@@ -463,7 +463,7 @@ const handleAnswerChange = (questionIndex: number, value: string) => {
                         ? new Intl.NumberFormat(
                             selectedJob.currencyCode === "INR" ? "en-IN" : "en-US"
                           ).format(Number(selectedJob.salary_max))
-                        : ""}
+                        : ""} / yr
                     </span>
                 </div>
               </div>

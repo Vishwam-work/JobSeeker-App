@@ -2629,7 +2629,7 @@ const resumeUrl = profileData?.personalInfo?.resume
                                   },
                                 }));
                               }}
-                              className={`w-full h-[44px] px-3 pr-10 text-sm border rounded-md outline-none
+                              className={`w-full h-[44px] px-3 pr-12 text-sm border rounded-md outline-none
                                 ${dobError ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:ring-blue-500"}
                               `}
                             />
@@ -2637,9 +2637,13 @@ const resumeUrl = profileData?.personalInfo?.resume
                             {/*  CALENDAR ICON */}
                            <div
                            ref={calendarRef}
-                           className="absolute right-2 top-1/2">
-                             <button type="button" onClick={() => setOpen((prev) => !prev)}>
-                                      <Calendar size={18} />
+                           className="absolute right-2 inset-y-0 flex items-center">
+                             <button 
+                             type="button" 
+                             onClick={() => setOpen((prev) => !prev)}
+                             className="flex items-center justify-center h-5 w-5 text-gray-500"
+                             >
+                                  <Calendar size={18} />
                               </button>
 
                             {/* Calendar (ON/OFF) */}
@@ -3267,11 +3271,16 @@ const resumeUrl = profileData?.personalInfo?.resume
 
                                       setDateError(validateDates(parsed, experienceForm.endDate));
                                     }}
-                                    className="w-full h-[44px] px-3 pr-10 border rounded-md"
+                                    className="w-full h-[44px] px-3 pr-12 border rounded-md"
                                   />
 
-                                 <div  ref={startCalendarRef} onClick={() => setEndOpen(false)} className="absolute right-2 top-1/2 -translate-y-1/2">
-                                    <button type="button" onClick={() => setOpen((prev) => !prev)}>
+                                 <div  
+                                  ref={startCalendarRef} 
+                                  onClick={() => setEndOpen(false)} 
+                                  className="absolute right-2 inset-y-0 flex items-center"
+                                  >
+                                    <button type="button" onClick={() => setOpen((prev) => !prev)}
+                                     className="flex items-center justify-center h-5 w-5 text-gray-500">
                                       <Calendar size={18} />
                                     </button>
 
@@ -3351,13 +3360,16 @@ const resumeUrl = profileData?.personalInfo?.resume
 
                                         setDateError(validateDates(experienceForm.startDate, parsed));
                                       }}
-                                      className="w-full h-[44px] px-3 pr-10 border rounded-md"
+                                      className="w-full h-[44px] px-3 pr-12 border rounded-md"
                                     />
 
-                                  <div  ref={endCalendarRef} onClick={() => setOpen(false)} className="absolute right-2 top-1/2 -translate-y-1/2">
+                                  <div  ref={endCalendarRef} onClick={() => setOpen(false)} 
+                                       className="absolute right-2 inset-y-0 flex items-center">
 
                                     {/* ICON */}
-                                    <button type="button" onClick={() => setEndOpen((prev) => !prev)}>
+                                    <button type="button" onClick={() => setEndOpen((prev) => !prev)}
+                                      className="flex items-center justify-center h-5 w-5 text-gray-500"
+                                      >
                                       <Calendar size={18} />
                                     </button>
 
@@ -3798,12 +3810,16 @@ const resumeUrl = profileData?.personalInfo?.resume
 
                                         setYearError("");
                                       }}
-                                      className="w-full h-[44px] px-3 pr-10 border rounded-md"
+                                      className="w-full h-[44px] px-3 pr-12 border rounded-md"
                                     />
 
-                                    <div ref={startCalendarRef} onClick={() => setEndYearOpen(false)} className="absolute right-2 top-1/2 -translate-y-1/2 opacity-100">
+                                    <div ref={startCalendarRef} onClick={() => setEndYearOpen(false)} 
+                                    className="absolute right-2 inset-y-0 flex items-center">
+
                                      {/* Calendar toggle button */}
-                                      <button type="button" onClick={() => setOpen((prev) => !prev)}>
+                                      <button type="button" onClick={() => setOpen((prev) => !prev)}
+                                        className="flex items-center justify-center h-5 w-5 text-gray-500"
+                                        >
                                         <Calendar size={18} />
                                       </button>
 
@@ -3872,15 +3888,18 @@ const resumeUrl = profileData?.personalInfo?.resume
 
                                         setYearError("");
                                       }}
-                                      className="w-full h-[44px] px-3 pr-10 border rounded-md"
+                                      className="w-full h-[44px] px-3 pr-12 border rounded-md"
                                     />
 
-                                    <div  ref={endCalendarRef} onClick={() => setOpen(false)} className="absolute right-2 top-1/2 -translate-y-1/2">
+                                    <div  ref={endCalendarRef} onClick={() => setOpen(false)}
+                                     className="absolute right-2 inset-y-0 flex items-center"
+                                     >
+
                                       {/* ICON */}
                                       <button
                                         type="button"
                                         onClick={() => setEndYearOpen((prev) => !prev)}
-                                        className="p-1 rounded hover:bg-gray-100 cursor-pointer"
+                                        className="flex items-center justify-center h-5 w-5 text-gray-500"
                                       >
                                         <Calendar size={18} />
                                       </button>
@@ -3922,7 +3941,7 @@ const resumeUrl = profileData?.personalInfo?.resume
                                                 setEndYearOpen(false); 
                                               }}
 
-                                              maxDate={dayjs()}
+                                              maxDate={dayjs().add(5, 'year')}
                                             />
                                           </LocalizationProvider>
                                         </div>
@@ -4231,17 +4250,20 @@ const resumeUrl = profileData?.personalInfo?.resume
                                       year: value,
                                     }));
                                   }}
-                                  className="w-full h-[44px] px-3 pr-10 text-sm border rounded-md outline-none"
+                                  className="w-full h-[44px] px-3 pr-12 text-sm border rounded-md outline-none"
                                 />
 
                                 {/*  YEAR PICKER ICON */}
-                              <div  ref={calendarRef}  className="absolute right-2 top-1/2 -translate-y-1/2">
+                              <div  ref={calendarRef}
+                              className="absolute right-2 inset-y-0 flex items-center"
+                              >
+
 
                                 {/* ICON */}
                                 <button
                                   type="button"
                                   onClick={() => setYearOpen((prev) => !prev)}
-                                  className="p-1 rounded hover:bg-gray-100 cursor-pointer"
+                                  className="flex items-center justify-center h-5 w-5 text-gray-500"
                                 >
                                   <Calendar size={18} />
                                 </button>

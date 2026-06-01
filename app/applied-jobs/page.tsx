@@ -142,7 +142,7 @@ export default function AppliedJobsPage() {
               </span>
               <p className="text-xs text-gray-400 mt-1">
                 Applied on:{" "}
-                {formatDate(selectedJob.applied_at)}
+                {formatDate(selectedJob?.applied_at || "")}
               </p>
             </div>
           ))}
@@ -228,7 +228,7 @@ export default function AppliedJobsPage() {
                 </span>
                 <p className="text-xs text-gray-400 mt-3">
                   Applied on:{" "}
-                  {formatDate(selectedJob.applied_at)}
+                  {formatDate(selectedJob?.applied_at || "")}
                 </p>
               </div>
 
@@ -375,7 +375,7 @@ export default function AppliedJobsPage() {
                 <p className="text-xs text-gray-400 mt-4">
                   Applied on:{" "}
                   {/* {new Date(selectedJob.applied_at).toLocaleDateString()} */}
-                   {formatDate(selectedJob.applied_at)}
+                   {formatDate(selectedJob?.applied_at || "")}
                 </p>
 
                 {/* STATUS BAR */}

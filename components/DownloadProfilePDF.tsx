@@ -47,23 +47,34 @@ export default function DownloadProfilePDF({
 
     const opt = {
       margin: 10,
-      filename: 'profile.pdf',
+      filename: "profile.pdf",
+
       image: {
-        type: 'jpeg' as 'jpeg',
+        type: "jpeg" as const,
         quality: 1,
       },
+
       html2canvas: {
         scale: 2,
         useCORS: true,
       },
+
+      pagebreak: {
+        mode: ["avoid-all", "css", "legacy"],
+      } as any,
+
       jsPDF: {
-        unit: 'mm' as 'mm',
-        format: 'a4' as 'a4',
-        orientation: 'portrait' as 'portrait',
+        unit: "mm" as const,
+        format: "a4" as const,
+        orientation: "portrait" as const,
       },
     };
+   await waitForImages(element);
 
-    await html2pdf().set(opt).from(element).save();
+    await html2pdf()
+      .set(opt as any)
+      .from(element)
+      .save();
   } finally {
     setIsPDF(false);
     setIsDownloading(false);
