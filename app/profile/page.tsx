@@ -2888,7 +2888,8 @@ const resumeUrl = profileData?.personalInfo?.resume
                           <AsyncSelect
                             cacheOptions
                             defaultOptions
-                            placeholder="INR"
+                            isSearchable={false}
+                            // placeholder=""
                             loadOptions={getCurrencyOptions}
                             value={getSelectedCurrency()}
                             onChange={(selectedOption: any) => {
@@ -2943,7 +2944,8 @@ const resumeUrl = profileData?.personalInfo?.resume
                           <AsyncSelect
                             cacheOptions
                             defaultOptions
-                            placeholder="INR"
+                            isSearchable={false}
+                            // placeholder=""
                             loadOptions={getCurrencyOptions}
                             value={getSelectedExpectedCurrency()}
                             isDisabled

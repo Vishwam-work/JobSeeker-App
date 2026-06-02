@@ -224,7 +224,10 @@ export default function AppliedJobsPage() {
               </p>
               <div className="mt-2">
                 <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded ml-2">
-                  {selectedJob.job.work_mode}
+                  {selectedJob.job.work_mode
+                    ? selectedJob.job.work_mode.charAt(0).toUpperCase() +
+                      selectedJob.job.work_mode.slice(1).toLowerCase()
+                    : ""}
                 </span>
                 <p className="text-xs text-gray-400 mt-3">
                   Applied on:{" "}
