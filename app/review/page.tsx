@@ -458,11 +458,11 @@ const formatNumber = (
                         <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 text-sm text-gray-600 mt-1 gap-1 sm:gap-0">
                           <div className="flex items-center">
                             {isPDF ? '🕒' : <Clock className="w-4 h-4" />}
-                            <span>{exp.duration}</span>
+                            <span>&nbsp;{exp.duration}</span>
                           </div>
                           <div className="flex items-center">
                             {isPDF ? '📍' : <MapPin className="w-4 h-4" />}
-                            <span>{exp.location}</span>
+                            <span>&nbsp;{exp.location}</span>
                           </div>
                         </div>
                         <p className="text-gray-700 mt-2 leading-relaxed text-sm lg:text-base">

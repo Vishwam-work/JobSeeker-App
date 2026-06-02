@@ -18,6 +18,8 @@ export default function AppliedJobsPage() {
   const [showMobileDetails, setShowMobileDetails] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [appliedjobCount, setAppliedJobCount] = useState(1);
+
 
   const steps = ["Under Review", "Shortlisted", "Interview Scheduled"];
   const formatStatus = (status: string) => {
@@ -76,6 +78,7 @@ export default function AppliedJobsPage() {
       const data = await res.json();
       console.log(data);
       setAppliedJobs(data.results || []);
+      setAppliedJobCount(data.count || 0);
       setCurrentPage(page);
       setTotalPages(Math.ceil(data.count / 5));
     } catch (error) {
@@ -102,7 +105,7 @@ export default function AppliedJobsPage() {
         <div className="flex items-center gap-8">
           <div className="text-right">
             <p className="text-3xl font-semibold text-gray-900">
-              {appliedJobs.length.toString().padStart(2, "0")}
+              {appliedjobCount.toString().padStart(2, "0")}
             </p>
             <p className="text-xs text-gray-500">Total applies</p>
           </div>

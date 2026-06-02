@@ -452,7 +452,7 @@ const sortedJobs = [...filteredJobs]
       setPreviousPage(data.previous);
       setTotalCount(data.count || 0);
       setCurrentPage(page);
-      setTotalPages(Math.ceil(data.count / 3));
+      setTotalPages(Math.ceil(data.count / 7));
     } catch (error) {
       console.error("Error fetching jobs:", error);
       setJobs([]);

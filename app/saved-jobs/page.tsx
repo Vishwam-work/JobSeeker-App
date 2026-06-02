@@ -67,6 +67,8 @@ export default function SavedJobsPage() {
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [appliedJobs, setAppliedJobs] = useState<number[]>([]);
   const [isJobDetailOpen, setIsJobDetailOpen] = useState(false);
+  const [saveJobCount, setSaveJobCount] = useState(1);
+
 
   const REQUIRED_PROFILE_FIELDS = [
   "full_name",
@@ -183,6 +185,7 @@ export default function SavedJobsPage() {
           const data = await res.json();
           console.log("Fetched saved jobs:", data);
           setSavedJobs(data.results || []);
+          setSaveJobCount(data.count || 0);
           setCurrentPage(page);
           setTotalPages(Math.ceil(data.count / 3));
         }
@@ -334,7 +337,7 @@ const handleViewDetails = (job: any) => {
       </div>
      <div className=" bg-white rounded-xl p-6 mb-6">
         <h2 className=" text-3xl font-bold">
-          {savedJobs.length.toString().padStart(2, "0")}
+          {saveJobCount.toString().padStart(2, "0")}
         </h2>
         <p className="text-gray-500">Saved Job(s)</p>
       </div>
