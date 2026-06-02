@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Link from "next/link";
 import {
   Bookmark,
   Briefcase,
@@ -42,6 +43,7 @@ interface SavedJob {
     salary_max: string | null;
     currency: {
       symbol_native: string;
+      code: string;
     } | null;
      currencyCode: string | null;
     location:string | null;
@@ -325,6 +327,17 @@ const handleViewDetails = (job: any) => {
   setSelectedJob(job);
   setIsJobDetailOpen(true);
 };
+
+ const formatNumber = (
+  value: string | number,
+  currency: string = "INR"
+): string => {
+  if (!value) return "";
+
+  return new Intl.NumberFormat(
+    currency === "INR" ? "en-IN" : "en-US"
+  ).format(Number(String(value).replace(/,/g, "")));
+};
   return (
     <div>
          <Header />
@@ -356,11 +369,13 @@ const handleViewDetails = (job: any) => {
                   {/* Top Section */}
                   <div className="flex justify-between items-start">
                     <div>
-                      <h3
-                        onClick={() => handleViewDetails(job)}
-                        className="text-lg font-semibold text-blue-600 hover:underline cursor-pointer"
-                      >
-                        {job?.title}
+                      <h3 className="text-lg font-semibold">
+                        <Link
+                          href={`/job-details?id=${job.id}`}
+                          className="text-blue-600 hover:underline"
+                        >
+                          {job?.title}
+                        </Link>
                       </h3>
 
                       <p className="text-gray-600 text-sm mt-1">
@@ -391,19 +406,23 @@ const handleViewDetails = (job: any) => {
 
                     <span className="flex items-center gap-1">
                       <span className="w-3 h-5">{job.currency?.symbol_native}</span>
-                        <span>
-                          {job.salary
-                           ? new Intl.NumberFormat(
-                               job.currencyCode === "INR" ? "en-IN" : "en-US"
-                            ).format(Number(job.salary))
-                           : ""}
-                        -
-                         {job.salary_max
-                           ? new Intl.NumberFormat(
-                               job.currencyCode === "INR" ? "en-IN" : "en-US"
-                            ).format(Number(job.salary_max))
-                           : ""}
-                         </span>
+                         {job.salary && (
+                      <span className="flex items-center gap-1">
+                         {`${formatNumber(
+                            job.salary,
+                            job.currency?.code
+                          )}`} -
+                      </span>
+                    )}
+
+                      {job.salary_max && (
+                      <span className="flex items-center gap-1">
+                          {`${formatNumber(
+                            job.salary_max,
+                            job.currency?.code
+                          )}`} / yr
+                      </span>
+                    )}
                     </span>
 
                     <span className="flex items-center gap-1">
@@ -568,6 +587,41 @@ const handleViewDetails = (job: any) => {
                   )}
                 </>
               )}
+
+             {
+                selectedJob.description && (
+                  <div className="space-y-2">
+                    <h4 className="font-semibold">Job Description</h4>
+
+                    <div
+                      dangerouslySetInnerHTML={{
+                        __html: selectedJob.description,
+                      }}
+                    />
+                  </div>
+                )
+              }
+
+             {
+                selectedJob.skills && selectedJob.skills.length > 0 && (
+                  <div className="space-y-4">
+                    <h4 className="font-semibold">Required Skills</h4>
+
+                    <div className="flex flex-wrap gap-2">
+                      {selectedJob.skills.map(
+                        (skill: string, index: number) => (
+                          <span
+                            key={index}
+                            className="text-xs bg-gray-100 px-2 py-1 rounded"
+                          >
+                            {skill}
+                          </span>
+                        )
+                      )}
+                    </div>
+                  </div>
+                )
+             }
 
               {selectedJob.questions &&
                 selectedJob.questions.length > 0 && (

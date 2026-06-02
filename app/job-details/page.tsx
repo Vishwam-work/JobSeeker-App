@@ -57,6 +57,7 @@ export default function JobDetailsPage() {
     currencyCode?: string;
      currency?: {
       symbol_native: string;
+      code: string; 
     };
     job_type: string;
     created_at: string;
@@ -101,6 +102,18 @@ interface Application {
       return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
     return "Just now";
   };
+
+ const formatNumber = (
+  value: string | number,
+  currency: string = "INR"
+): string => {
+  if (!value) return "";
+
+  return new Intl.NumberFormat(
+    currency === "INR" ? "en-IN" : "en-US"
+  ).format(Number(String(value).replace(/,/g, "")));
+};
+
 
   const handleShare = (job: any) => {
     if (navigator.share) {
@@ -452,19 +465,23 @@ const handleAnswerChange = (questionIndex: number, value: string) => {
                 </div>
                 <div className="flex items-center text-gray-600">
                   <span className="w-4 h-6 ">{selectedJob.currency?.symbol_native}</span>
-                    <span>
-                      {selectedJob.salary
-                        ? new Intl.NumberFormat(
-                            selectedJob.currencyCode === "INR" ? "en-IN" : "en-US"
-                          ).format(Number(selectedJob.salary))
-                        : ""}
-                      -
-                      {selectedJob.salary_max
-                        ? new Intl.NumberFormat(
-                            selectedJob.currencyCode === "INR" ? "en-IN" : "en-US"
-                          ).format(Number(selectedJob.salary_max))
-                        : ""} / yr
-                    </span>
+                    {selectedJob.salary && (
+                      <span className="flex items-center gap-1">
+                         {`${formatNumber(
+                            selectedJob.salary,
+                            selectedJob.currency?.code
+                          )}`}
+                      </span>
+                    )}
+                    -
+                      {selectedJob.salary_max && (
+                      <span className="flex items-center gap-1">
+                          {`${formatNumber(
+                            selectedJob.salary_max,
+                            selectedJob.currency?.code
+                          )}`} /yr
+                      </span>
+                    )}
                 </div>
               </div>
 

@@ -70,6 +70,7 @@ export default function CompanyDetailPage() {
       symbol_native: string;
     };
     salary: string;
+    salary_max?: string;
     type: string;
     questions: any[];
     job_count?: number;
@@ -101,6 +102,17 @@ const isProfileComplete = (profile: Record<string, any>) => {
 
     return value !== null && value !== undefined && value !== "";
   });
+};
+
+const formatNumber = (
+  value: string | number,
+  currency: string = "INR"
+): string => {
+  if (!value) return "";
+
+  return new Intl.NumberFormat(
+    currency === "INR" ? "en-IN" : "en-US"
+  ).format(Number(String(value).replace(/,/g, "")));
 };
 
 const fetchUserProfile = async () => {
@@ -409,7 +421,8 @@ console.log("Jobs Data:", jobsData);
                       job.currency?.symbol_native || "",
                       code: job.currency?.code || "",
                   },
-                  salary: job.salary || "Not specified",
+                  salary: job.salary || "Not disclosed",
+                  salary_max : job.salary_max || "Not disclosed",
                   type: job.job_type || job.type || "Not specified",
                   questions: job.questions || [],
                   job_count: job.job_count || 0,
@@ -563,13 +576,13 @@ console.log("Jobs Data:", jobsData);
                   <a
                     href={company.website}
                     target="_blank"
-                    className="text-blue-600 hover:underline"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline break-all"
                   >
-                    Visit
+                    {company.website}
                   </a>
                 </p>
               )}
-
               {/* Description */}
             {company.description && (
               <p ><span className="font-medium">Description:</span>{company.description}</p>
@@ -606,12 +619,25 @@ console.log("Jobs Data:", jobsData);
                       </div>
 
                       <div className="flex items-center gap-1">
-                      <span>
+
                         {job.currency?.symbol_native}{" "}
-                        {Number(job.salary).toLocaleString(
-                          job.currency?.code === "INR" ? "en-IN" : "en-US"
-                        )}
+                          {job.salary && (
+                      <span className="flex items-center gap-1">
+                         {`${formatNumber(
+                            job.salary,
+                            job.currency?.code
+                          )}`} -
                       </span>
+                    )}
+
+                      {job.salary_max && (
+                      <span className="flex items-center gap-1">
+                          {`${formatNumber(
+                            job.salary_max,
+                            job.currency?.code
+                          )}`} / yr
+                      </span>
+                    )}
                       </div>
 
                       <div className="flex items-center gap-1">
