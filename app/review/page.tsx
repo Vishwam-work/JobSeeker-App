@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import ProfilePDFTemplate from "@/components/ProfilePDFTemplate";
 import { Badge } from '@/components/ui/badge';
 import { 
   User, 
@@ -90,6 +91,7 @@ interface ProfileData {
     expectedCurrencySymbol?: string;
     expectedSalary: string;
     noticePeriod: string;
+    professional_summary: string;
   };
   experience: ProfileExperience[];
   education: Education[];
@@ -173,6 +175,7 @@ const formatNumber = (
             expectedCurrencySymbol: data?.expected_currency?.symbol_native ?? "",
             expectedSalary: data.expected_salary,
             noticePeriod: data.notice_period,
+            professional_summary: data.professional_summary,
           },
           experience: data.experiences.map((exp: any) => ({
             id: exp.id,
@@ -204,6 +207,7 @@ const formatNumber = (
           skills: data.skills.map((s: any) => s.name),
           resume: data.resume || "",
         });
+        console.log("Profile Data: after mapping", profileData);
       } else {
         console.error("Failed to fetch profile");
       }
@@ -293,6 +297,12 @@ const formatNumber = (
               id="profile-review-ui"
               className={isPDF ? 'pdf-mode pt-8' : ''}
             >
+                {isPDF ? (
+    <ProfilePDFTemplate
+      profileData={profileData}
+    />
+  ) : (
+    <>
       <div id="pdf-page-1">
         {/* COMPLETE REVIEW UI */}
           {/* Personal Information */}
@@ -580,6 +590,8 @@ const formatNumber = (
           </Card>
 
           </div>
+           </>
+  )}
           </div>
           </div>
 
