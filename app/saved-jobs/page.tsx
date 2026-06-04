@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import {
   Bookmark,
@@ -70,7 +71,8 @@ export default function SavedJobsPage() {
   const [appliedJobs, setAppliedJobs] = useState<number[]>([]);
   const [isJobDetailOpen, setIsJobDetailOpen] = useState(false);
   const [saveJobCount, setSaveJobCount] = useState(1);
-
+  const [applicationsLoaded, setApplicationsLoaded] = useState(false);
+  const [pageLoading, setPageLoading] = useState(true);
 
   const REQUIRED_PROFILE_FIELDS = [
   "full_name",
@@ -167,7 +169,9 @@ export default function SavedJobsPage() {
       setAppliedJobs(appliedIDs);
     } catch (error) {
       console.error(error);
-    }
+    } finally {
+    setApplicationsLoaded(true);
+  }
   };
   const fetchSavedJobs = async (page = 1) => {
       const token = localStorage.getItem("user_token");
@@ -196,10 +200,20 @@ export default function SavedJobsPage() {
       }
     };
   useEffect(() => {
-    fetchSavedJobs();
-    fetchUserProfile();
-    fetchUserData();
-  }, []);
+  const loadData = async () => {
+    setPageLoading(true);
+
+    await Promise.all([
+      fetchSavedJobs(),
+      fetchUserProfile(),
+      fetchUserData(),
+    ]);
+
+    setPageLoading(false);
+  };
+
+  loadData();
+}, []);
 
   const handleApply = (job: any) => {
   const token = localStorage.getItem("user_token");
@@ -348,162 +362,220 @@ const handleViewDetails = (job: any) => {
       <div className=" rounded-xl  mb-6">
         <p className="text-3xl font-bold text-black-500">Jobs saved by you</p>
       </div>
-     <div className=" bg-white rounded-xl p-6 mb-6">
-        <h2 className=" text-3xl font-bold">
-          {saveJobCount.toString().padStart(2, "0")}
-        </h2>
-        <p className="text-gray-500">Saved Job(s)</p>
-      </div>
+    <div className="bg-white rounded-xl p-6 mb-6 shadow-sm border">
+      {pageLoading ? (
+        <div className="space-y-3">
+          <div className="h-10 w-20 bg-gray-200 rounded-lg animate-pulse" />
+          <div className="h-4 w-28 bg-gray-100 rounded animate-pulse" />
+        </div>
+      ) : (
+        <>
+          <h2 className="text-3xl font-bold">
+            {saveJobCount.toString().padStart(2, "0")}
+          </h2>
+          <p className="text-gray-500">Saved Job(s)</p>
+        </>
+      )}
+    </div>
 
       <Card>
         <CardHeader>
           <CardTitle>Saved Jobs</CardTitle>
         </CardHeader>
         <CardContent>
-         {savedJobs.length > 0 ? (
-            savedJobs.map((savedJob) => {
-              const job = savedJob.job;
-
-              return (
+          {pageLoading ? (
+            <div className="space-y-5">
+              {[1, 2, 3].map((i) => (
                 <div
-                  key={savedJob.id}
-                  className="border rounded-xl p-5 mb-5 bg-white hover:shadow-md transition"
+                  key={i}
+                  className="border rounded-xl p-5 bg-white shadow-sm"
                 >
-                  {/* Top Section */}
+                  {/* Header */}
                   <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="text-lg font-semibold">
-                        <Link
-                          href={`/job-details?id=${job.id}`}
-                          className="text-blue-600 hover:underline"
-                        >
-                          {job?.title}
-                        </Link>
-                      </h3>
-
-                      <p className="text-gray-600 text-sm mt-1">
-                        {job?.company}
-                      </p>
+                    <div className="space-y-3 flex-1">
+                      <div className="h-5 w-56 bg-gray-200 rounded animate-pulse" />
+                      <div className="h-4 w-32 bg-gray-100 rounded animate-pulse" />
                     </div>
 
-                    <button
-                      onClick={() => removeSavedJob(savedJob.id)}
-                      className="text-gray-500 "
-                    >
-                      <Bookmark className="w-5 h-5 fill-green-500" />
-                    </button>
+                    <div className="h-8 w-8 bg-gray-200 rounded-full animate-pulse" />
                   </div>
 
                   {/* Info Row */}
-                  <div className="flex flex-wrap gap-4 text-sm text-gray-500 mt-3">
-
-                    <span className="flex items-center gap-1">
-                      <Briefcase className="w-4 h-4" />
-                     <span>
-                      {job.experience?.toString().trim().toLowerCase() === "fresher" ||
-                      Number(job.experience) === 0
-                         ? "Fresher"
-                         : `${job.experience} ${Number(job.experience) === 1 ? "Year" : "Years"}`}
-                     </span>
-                    </span>
-
-                    <span className="flex items-center gap-1">
-                      <span className="w-3 h-5">{job.currency?.symbol_native}</span>
-                         {job.salary && (
-                      <span className="flex items-center gap-1">
-                         {`${formatNumber(
-                            job.salary,
-                            job.currency?.code
-                          )}`} -
-                      </span>
-                    )}
-
-                      {job.salary_max && (
-                      <span className="flex items-center gap-1">
-                          {`${formatNumber(
-                            job.salary_max,
-                            job.currency?.code
-                          )}`} / yr
-                      </span>
-                    )}
-                    </span>
-
-                    <span className="flex items-center gap-1">
-                      <MapPin className="w-4 h-4" />
-                      {job?.location || ""}
-                    </span>
-
+                  <div className="flex flex-wrap gap-4 mt-4">
+                    <div className="h-4 w-24 bg-gray-100 rounded animate-pulse" />
+                    <div className="h-4 w-32 bg-gray-100 rounded animate-pulse" />
+                    <div className="h-4 w-28 bg-gray-100 rounded animate-pulse" />
                   </div>
 
                   {/* Description */}
-                  <p className="text-gray-600 text-sm mt-3 line-clamp-2">
-                    <div
-                            className="text-gray-700 text-sm md:text-base leading-relaxed mb-4 line-clamp-2 overflow-hidden
-                             [&_ul]:list-disc [&_ul]:pl-6
-                             [&_ol]:list-decimal [&_ol]:pl-6
-                             [&_li]:mb-1"
-                            dangerouslySetInnerHTML={{
-                              __html: job.description || "",
-                            }}
-                          />
-                  </p>
+                  <div className="mt-4 space-y-2">
+                    <div className="h-3 w-full bg-gray-100 rounded animate-pulse" />
+                    <div className="h-3 w-5/6 bg-gray-100 rounded animate-pulse" />
+                  </div>
 
                   {/* Skills */}
-                  <div className="flex flex-wrap gap-2 mt-3">
-                    {job?.skills?.map((skill: string, i: number) => (
-                      <span
-                        key={i}
-                        className="text-xs bg-gray-100 px-2 py-1 rounded"
-                      >
-                        {skill}
-                      </span>
-                    ))}
+                  <div className="flex gap-2 mt-4">
+                    <div className="h-7 w-20 bg-gray-100 rounded-full animate-pulse" />
+                    <div className="h-7 w-24 bg-gray-100 rounded-full animate-pulse" />
+                    <div className="h-7 w-16 bg-gray-100 rounded-full animate-pulse" />
                   </div>
 
-                  {/* Bottom Row */}
-                    <div className="flex justify-between items-center mt-4">
-                        <span className="text-sm text-gray-400">
-                          Posted {new Date(job?.created_at).toLocaleDateString()}
-                        </span>
+                  {/* Footer */}
+                  <div className="flex justify-between items-center mt-5">
+                    <div className="h-4 w-24 bg-gray-100 rounded animate-pulse" />
 
-                        <button
-                          onClick={() => {
-                            if (appliedJobs.includes(Number(job?.id))) {
-                              toast.info("You have already applied for this job");
-                              return;
-                            }
-
-                            if (job?.website_apply) {
-                              window.open(job.website_apply, "_blank");
-                              return;
-                            }
-
-                            handleApply(job);
-                          }}
-                          className={`px-4 py-2 rounded-lg text-sm font-medium transition
-                            ${
-                              appliedJobs.includes(Number(job?.id))
-                                ? "bg-green-500 text-white"
-                                : "bg-blue-600 hover:bg-blue-700 text-white"
-                            }`}
-                        >
-                         {appliedJobs.includes(Number(job?.id))
-                          ? "Applied"
-                          : job?.website_apply
-                          ? "Apply Now"
-                          : "Apply Now"}
-                        </button>
-
+                    <div className="h-10 w-32 bg-gray-200 rounded-lg animate-pulse" />
                   </div>
                 </div>
-              );
-            })
+              ))}
+            </div>
           ) : (
-            <p className="text-gray-500 text-center">
-              No saved jobs yet.
-            </p>
-          )}
-        </CardContent>
+            <>
+              {savedJobs.length > 0 ? (
+                savedJobs.map((savedJob) => {
+                  const job = savedJob.job;
+
+                  return (
+                    <div
+                      key={savedJob.id}
+                      className="border rounded-xl p-5 mb-5 bg-white hover:shadow-md transition"
+                    >
+                      {/* Top Section */}
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="text-lg font-semibold">
+                            <Link
+                              href={`/job-details?id=${job.id}`}
+                              className="text-blue-600 hover:underline"
+                            >
+                              {job?.title}
+                            </Link>
+                          </h3>
+
+                          <p className="text-gray-600 text-sm mt-1">
+                            {job?.company}
+                          </p>
+                        </div>
+
+                        <button
+                          onClick={() => removeSavedJob(savedJob.id)}
+                          className="text-gray-500 "
+                        >
+                          <Bookmark className="w-5 h-5 fill-green-500" />
+                        </button>
+                      </div>
+
+                      {/* Info Row */}
+                      <div className="flex flex-wrap gap-4 text-sm text-gray-500 mt-3">
+
+                        <span className="flex items-center gap-1">
+                          <Briefcase className="w-4 h-4" />
+                        <span>
+                          {job.experience?.toString().trim().toLowerCase() === "fresher" ||
+                          Number(job.experience) === 0
+                            ? "Fresher"
+                            : `${job.experience} ${Number(job.experience) === 1 ? "Year" : "Years"}`}
+                        </span>
+                        </span>
+
+                        <span className="flex items-center gap-1">
+                          <span className="w-3 h-5">{job.currency?.symbol_native}</span>
+                            {job.salary && (
+                          <span className="flex items-center gap-1">
+                            {`${formatNumber(
+                                job.salary,
+                                job.currency?.code
+                              )}`} -
+                          </span>
+                        )}
+
+                          {job.salary_max && (
+                          <span className="flex items-center gap-1">
+                              {`${formatNumber(
+                                job.salary_max,
+                                job.currency?.code
+                              )}`} / yr
+                          </span>
+                        )}
+                        </span>
+
+                        <span className="flex items-center gap-1">
+                          <MapPin className="w-4 h-4" />
+                          {job?.location || ""}
+                        </span>
+
+                      </div>
+
+                      {/* Description */}
+                      <p className="text-gray-600 text-sm mt-3 line-clamp-2">
+                        <div
+                                className="text-gray-700 text-sm md:text-base leading-relaxed mb-4 line-clamp-2 overflow-hidden
+                                [&_ul]:list-disc [&_ul]:pl-6
+                                [&_ol]:list-decimal [&_ol]:pl-6
+                                [&_li]:mb-1"
+                                dangerouslySetInnerHTML={{
+                                  __html: job.description || "",
+                                }}
+                              />
+                      </p>
+
+                      {/* Skills */}
+                      <div className="flex flex-wrap gap-2 mt-3">
+                        {job?.skills?.map((skill: string, i: number) => (
+                          <span
+                            key={i}
+                            className="text-xs bg-gray-100 px-2 py-1 rounded"
+                          >
+                            {skill}
+                          </span>
+                        ))}
+                      </div>
+
+                      {/* Bottom Row */}
+                        <div className="flex justify-between items-center mt-4">
+                            <span className="text-sm text-gray-400">
+                              Posted {new Date(job?.created_at).toLocaleDateString()}
+                            </span>
+                            <button
+                              onClick={() => {
+                                if (appliedJobs.includes(Number(job?.id))) {
+                                  toast.info("You have already applied for this job");
+                                  return;
+                                }
+
+                                if (job?.website_apply) {
+                                  window.open(job.website_apply, "_blank");
+                                  return;
+                                }
+
+                                handleApply(job);
+                              }}
+                              className={`px-4 py-2 rounded-lg text-sm font-medium transition
+                                ${
+                                  appliedJobs.includes(Number(job?.id))
+                                    ? "bg-green-600 hover:bg-green-700 text-white"
+                                    : "bg-blue-600 hover:bg-blue-700 text-white"
+                                }`}
+                            >
+                            {appliedJobs.includes(Number(job?.id))
+                              ? " Applied"
+                              : job?.website_apply
+                              ? "Apply Now"
+                              : "Apply Now"}
+                            </button>
+
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+              <p className="text-gray-500 text-center">
+                No saved jobs yet.
+              </p>
+            )}
+          </>
+        )}
+      </CardContent>
       </Card>
       {/* Pagination */}
         <div className="flex items-center justify-center gap-2">
@@ -540,103 +612,184 @@ const handleViewDetails = (job: any) => {
       <DialogContent className="max-w-2xl w-full h-[90vh] overflow-y-auto p-6">
         {selectedJob && (
           <>
-            <DialogHeader>
-              <DialogTitle>
+            <DialogHeader className="sticky top-0 bg-white border-b px-6 py-4 z-10">
+              <DialogTitle className="text-xl font-bold text-gray-900">
                 Apply for {selectedJob.title}
               </DialogTitle>
+
+              <p className="text-sm text-gray-500">
+                Review your profile and submit your application
+              </p>
             </DialogHeader>
 
-            <div className="space-y-4">
-              <p className="text-sm text-gray-600">
-                Your profile and resume will be sent
-                to employer.
-              </p>
+            <div className="p-6 space-y-6">
 
-              {loadingUserData ? (
-                <div className="flex justify-center py-6">
-                  Loading...
+              {/* Applicant Information */}
+              <div className="rounded-xl border bg-gray-50 p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <CheckCircle className="w-4 h-4 text-green-500" />
+                  <h3 className="font-semibold">
+                    Applicant Information
+                  </h3>
                 </div>
-              ) : (
-                <>
-                  <div className="p-4 rounded-lg bg-gray-50 space-y-2">
-                    <div>
-                      <strong>Name:</strong>{" "}
-                      {userData?.full_name}
-                    </div>
 
-                    <div>
-                      <strong>Email:</strong>{" "}
-                      {userData?.email}
-                    </div>
-
-                    <div>
-                      <strong>Phone:</strong> +
-                      {userData?.phone_code}{" "}
-                      {userData?.phone}
-                    </div>
+                {loadingUserData ? (
+                  <div className="animate-pulse space-y-3">
+                    <div className="h-4 bg-gray-200 rounded w-1/2" />
+                    <div className="h-4 bg-gray-200 rounded w-2/3" />
+                    <div className="h-4 bg-gray-200 rounded w-1/3" />
                   </div>
+                ) : (
+                  <>
+                    <div className="space-y-3 text-sm">
 
-                  {userData?.resume ? (
-                    <a
-                      href={userData.resume}
-                      target="_blank"
-                      className="text-blue-600 underline flex items-center gap-1"
-                    >
-                      View Resume
-                      <ExternalLink className="w-4 h-4" />
-                    </a>
-                  ) : (
-                    <p>No Resume Uploaded</p>
-                  )}
-                </>
-              )}
+                      <div className="flex flex-col sm:flex-row sm:items-center">
+                        <span className="sm:w-28 text-gray-500">
+                          Name:
+                        </span>
+                        <span className="font-medium text-gray-900">
+                          {userData?.full_name || "-"}
+                        </span>
+                      </div>
 
-             {
-                selectedJob.description && (
-                  <div className="space-y-2">
-                    <h4 className="font-semibold">Job Description</h4>
+                      <div className="flex flex-col sm:flex-row sm:items-center">
+                        <span className="sm:w-28 text-gray-500">
+                          Email:
+                        </span>
+                        <span className="font-medium text-gray-900 break-all">
+                          {userData?.email || "-"}
+                        </span>
+                      </div>
 
-                    <div
-                      dangerouslySetInnerHTML={{
-                        __html: selectedJob.description,
-                      }}
-                    />
-                  </div>
-                )
-              }
+                      <div className="flex flex-col sm:flex-row sm:items-center">
+                        <span className="sm:w-28 text-gray-500">
+                          Phone:
+                        </span>
+                        <span className="font-medium text-gray-900">
+                          +{userData?.phone_code || ""}{" "}
+                          {userData?.phone || "-"}
+                        </span>
+                      </div>
 
-             {
-                selectedJob.skills && selectedJob.skills.length > 0 && (
-                  <div className="space-y-4">
-                    <h4 className="font-semibold">Required Skills</h4>
+                    </div>
 
-                    <div className="flex flex-wrap gap-2">
-                      {selectedJob.skills.map(
-                        (skill: string, index: number) => (
-                          <span
-                            key={index}
-                            className="text-xs bg-gray-100 px-2 py-1 rounded"
-                          >
-                            {skill}
-                          </span>
-                        )
+                    <div className="mt-4 pt-4 border-t">
+                      <h4 className="font-medium mb-2">
+                        Resume / CV
+                      </h4>
+
+                      {userData?.resume ? (
+                        <a
+                          href={userData.resume}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700"
+                        >
+                          View Resume
+                          <ExternalLink className="w-4 h-4" />
+                        </a>
+                      ) : (
+                        <p className="text-sm text-gray-500">
+                          No resume uploaded
+                        </p>
                       )}
                     </div>
+                  </>
+                )}
+              </div>
+
+              {/* Job Description */}
+              {selectedJob.description && (
+                <div className="rounded-xl border p-4">
+                  <h3 className="font-semibold mb-3">
+                    Job Description
+                  </h3>
+
+                  <div
+                    className="prose max-w-none text-sm
+                    [&_ul]:list-disc [&_ul]:pl-5
+                    [&_ol]:list-decimal [&_ol]:pl-5"
+                    dangerouslySetInnerHTML={{
+                      __html: selectedJob.description,
+                    }}
+                  />
+                </div>
+              )}
+
+              {/* Requirements */}
+              {selectedJob.requirements && (
+                <div className="rounded-xl border p-4">
+                  <h3 className="font-semibold mb-3">
+                    Requirements
+                  </h3>
+
+                  <div
+                    className="prose max-w-none text-sm
+                    [&_ul]:list-disc [&_ul]:pl-5
+                    [&_ol]:list-decimal [&_ol]:pl-5"
+                    dangerouslySetInnerHTML={{
+                      __html: Array.isArray(selectedJob.requirements)
+                        ? selectedJob.requirements.join("<br/>")
+                        : selectedJob.requirements,
+                    }}
+                  />
+                </div>
+              )}
+
+              {/* Benefits */}
+              {selectedJob.benefits && (
+                <div className="rounded-xl border p-4">
+                  <h3 className="font-semibold mb-3">
+                    Benefits
+                  </h3>
+
+                  <div
+                    className="prose max-w-none text-sm
+                    [&_ul]:list-disc [&_ul]:pl-5
+                    [&_ol]:list-decimal [&_ol]:pl-5"
+                    dangerouslySetInnerHTML={{
+                      __html: Array.isArray(selectedJob.benefits)
+                        ? selectedJob.benefits.join("<br/>")
+                        : selectedJob.benefits,
+                    }}
+                  />
+                </div>
+              )}
+
+              {/* Skills */}
+              {selectedJob.skills?.length > 0 && (
+                <div className="rounded-xl border p-4">
+                  <h3 className="font-semibold mb-3">
+                    Required Skills
+                  </h3>
+
+                  <div className="flex flex-wrap gap-2">
+                    {selectedJob.skills.map(
+                      (skill: string, index: number) => (
+                        <Badge
+                          key={index}
+                          className="bg-purple-100 text-purple-700 hover:bg-purple-100"
+                        >
+                          {skill}
+                        </Badge>
+                      )
+                    )}
                   </div>
-                )
-             }
+                </div>
+              )}
 
-              {selectedJob.questions &&
-                selectedJob.questions.length > 0 && (
+              {/* Questions */}
+              {selectedJob.questions?.length > 0 && (
+                <div className="rounded-xl border p-4">
+                  <h3 className="font-semibold mb-4">
+                    Additional Questions
+                  </h3>
+
                   <div className="space-y-4">
-                    <h4 className="font-semibold">
-                      Additional Questions
-                    </h4>
-
                     {selectedJob.questions.map(
                       (question: string, index: number) => (
                         <div key={index}>
-                          <Label>
+                          <Label className="mb-2 block font-medium">
                             {index + 1}. {question}
                           </Label>
 
@@ -648,18 +801,20 @@ const handleViewDetails = (job: any) => {
                                 e.target.value
                               )
                             }
-                            placeholder="Type your answer..."
+                            placeholder="Type your answer here..."
                           />
                         </div>
                       )
                     )}
                   </div>
-                )}
+                </div>
+              )}
 
-              <div className="flex gap-3 pt-4">
+              {/* Footer */}
+              <div className="sticky bottom-0 bg-white border-t pt-4 flex flex-col sm:flex-row gap-3">
                 <Button
                   onClick={submitApplication}
-                  className="flex-1"
+                  className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
                 >
                   <Send className="w-4 h-4 mr-2" />
                   Submit Application
@@ -668,13 +823,12 @@ const handleViewDetails = (job: any) => {
                 <Button
                   variant="outline"
                   className="flex-1"
-                  onClick={() =>
-                    setIsApplyModalOpen(false)
-                  }
+                  onClick={() => setIsApplyModalOpen(false)}
                 >
                   Cancel
                 </Button>
               </div>
+
             </div>
           </>
         )}
