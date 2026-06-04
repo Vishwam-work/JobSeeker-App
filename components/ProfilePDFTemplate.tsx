@@ -20,9 +20,11 @@ export default function ProfilePDFTemplate({
     >
       {/* Header */}
       <div className="bg-slate-700 text-white px-10 py-8">
+        {" "}
         <h1 className="text-4xl font-bold uppercase tracking-wide text-center">
-          {profileData.personalInfo.fullName}
-        </h1>
+          {" "}
+          {profileData.personalInfo.fullName}{" "}
+        </h1>{" "}
       </div>
 
       <div className="flex">
@@ -144,10 +146,10 @@ export default function ProfilePDFTemplate({
                 {profileData.experience.map((exp: any) => (
                   <div key={exp.id}>
                     <h3 className="font-bold text-lg text-slate-800">
-                      {exp.company}
+                      {exp.position}
                     </h3>
 
-                    <p className="text-sm text-gray-500">{exp.category}</p>
+                    <p className="text-sm text-gray-500">{exp.company}</p>
 
                     <p className="text-sm text-gray-500 mb-2">{exp.duration}</p>
 
