@@ -76,6 +76,8 @@ export default function JobListings() {
   const [filters, setFilters] = useState({
     search: "",
     location: "",
+    max_experience: "",
+    min_experience: "",
     experience: [] as string[],
     jobType: [] as string[],
     workMode: [] as string[],
@@ -230,6 +232,8 @@ const sortedJobs = [...filteredJobs]
     skills: string[];
     location?: string;
     experience?: string;
+    max_experience: string;
+    min_experience: string;
     work_mode?: string;
     job_type?: string;
     salary?: string;
@@ -390,12 +394,19 @@ const sortedJobs = [...filteredJobs]
       if (filters.companies.length > 0) {
         filters.companies.forEach(company => params.append("company", company));
       }
-      if (filters.experience?.[0]) {
-        params.append("min_experience", filters.experience[0]);
+      // if (filters.experience?.[0]) {
+      //   params.append("min_experience", filters.experience[0]);
+      // }
+
+      // if (filters.experience?.[1]) {
+      //   params.append("max_experience", filters.experience[1]);
+      // }
+      if (filters.min_experience) {
+        params.append("min_experience", filters.min_experience);
       }
 
-      if (filters.experience?.[1]) {
-        params.append("max_experience", filters.experience[1]);
+      if (filters.max_experience) {
+        params.append("max_experience", filters.max_experience);
       }
 
       const response = await fetch(
@@ -663,6 +674,8 @@ useEffect(() => {
     setFilters({
       search: "",
       location: "",
+      min_experience: "",
+      max_experience: "",
       experience: [] as string[],
       jobType: [] as string[],
       workMode: [] as string[],
@@ -1186,13 +1199,12 @@ setUserData({
                   </div>
 
                   {/* Experience */}
-                  <div>
+                  {/* <div>
                     <Label className="text-sm font-medium text-gray-700 mb-2 block">
                       Experience
                     </Label>
 
                     <div className="flex items-center gap-2">
-                      {/* Min Experience */}
                       <select
                         value={filters.experience?.[0] || ""}
                         onChange={(e) => {
@@ -1216,8 +1228,6 @@ setUserData({
                       </select>
 
                       <span>-</span>
-
-                      {/* Max Experience */}
                       <select
                         value={filters.experience?.[1] || ""}
                         onChange={(e) => {
@@ -1240,12 +1250,97 @@ setUserData({
                         ))}
                       </select>
                     </div>
-
-                    {/* Validation */}
                     {filters.experience?.[0] &&
                       filters.experience?.[1] &&
                       Number(filters.experience[0]) >
                         Number(filters.experience[1]) && (
+                        <p className="text-red-500 text-xs mt-1">
+                          Min experience cannot be greater than max experience
+                        </p>
+                      )}
+                  </div> */}
+                  {/* Experience */}
+                  <div>
+                    <Label className="text-sm font-medium text-gray-700 mb-2 block">
+                      Experience
+                    </Label>
+
+                    <div className="flex items-center gap-2">
+                      {/* Min Experience */}
+                      <select
+                        value={filters.min_experience || ""}
+                        onChange={(e) => {
+                          setFilters((prev) => ({
+                            ...prev,
+                            min_experience: e.target.value,
+                            max_experience: "", // reset max when min changes
+                          }));
+                        }}
+                        className="w-full border rounded-lg px-3 py-2 text-sm"
+                      >
+                        <option value="">Min Exp</option>
+
+                        {[...Array(21)].map((_, i) => (
+                          <option key={i} value={i}>
+                            {i === 0 ? "Fresher" : `${i} Year${i !== 1 ? "s" : ""}`}
+                          </option>
+                        ))}
+
+                        <option value="20+">20+ Years</option>
+                      </select>
+
+                      <span>-</span>
+
+                      {/* Max Experience */}
+                      <select
+                        value={filters.max_experience || ""}
+                        onChange={(e) => {
+                          setFilters((prev) => ({
+                            ...prev,
+                            max_experience: e.target.value,
+                          }));
+                        }}
+                        className="w-full border rounded-lg px-3 py-2 text-sm"
+                        disabled={!filters.min_experience}
+                      >
+                        <option value="">Max Exp</option>
+
+                        {[
+                          ...Array(21)
+                            .fill(0)
+                            .map((_, i) => i.toString()),
+                          "20+",
+                        ]
+                          .filter((exp) => {
+                            if (!filters.min_experience) return true;
+
+                            if (filters.min_experience === "20+") {
+                              return exp === "20+";
+                            }
+
+                            if (exp === "20+") return true;
+
+                            return Number(exp) >= Number(filters.min_experience);
+                          })
+                          .map((exp) => (
+                            <option key={exp} value={exp}>
+                              {exp === "0"
+                                ? "Fresher"
+                                : exp === "20+"
+                                ? "20+ Years"
+                                : `${exp} Year${Number(exp) !== 1 ? "s" : ""}`}
+                            </option>
+                          ))}
+                      </select>
+                    </div>
+
+                    {/* Validation */}
+                    {filters.min_experience &&
+                      filters.max_experience &&
+                      filters.min_experience !== "20+" &&
+                      filters.max_experience !== "20+" &&
+                      Number(filters.min_experience) >
+                        Number(filters.max_experience) && (
                         <p className="text-red-500 text-xs mt-1">
                           Min experience cannot be greater than max experience
                         </p>
@@ -2112,10 +2207,14 @@ setUserData({
                                   <div className="flex items-center">
                                     <Briefcase className="w-4 h-4 mr-1 flex-shrink-0" />
                                     <span>
-                                      {job.experience?.toString().trim().toLowerCase() === "fresher" ||
-                                      Number(job.experience) === 0
+                                      {job.min_experience === "0" && job.max_experience === "0"
                                         ? "Fresher"
-                                        : `${job.experience} ${Number(job.experience) === 1 ? "Year" : "Years"}`}
+                                        : `${job.min_experience} - ${job.max_experience} ${
+                                            job.min_experience === job.max_experience &&
+                                            job.min_experience === "1"
+                                              ? "Year"
+                                              : "Years"
+                                          }`}
                                     </span>
                                   </div>
                                  <div className="flex items-center gap-1">
@@ -2372,14 +2471,18 @@ setUserData({
                         <MapPin className="w-4 h-4 mr-2" />
                         <span>{selectedJob.location ?? "N/A"}</span>
                       </div>
-                      <div className="flex items-center text-gray-600">
-                        <Briefcase className="w-4 h-4 mr-2" />
-                         <span>
-                          {selectedJob.experience?.toString().trim().toLowerCase() === "fresher" ||
-                          Number(selectedJob.experience) === 0
+                         <div className="flex items-center text-gray-600">
+                        <Briefcase className="w-4 h-4 mr-1" />
+                        <span>
+                          {selectedJob.min_experience === "0" && selectedJob.max_experience === "0"
                             ? "Fresher"
-                            : `${selectedJob.experience} ${Number(selectedJob.experience) === 1 ? "Year" : "Years"}`}
-                          </span>
+                            : `${selectedJob.min_experience} - ${selectedJob.max_experience} ${
+                                selectedJob.min_experience === selectedJob.max_experience &&
+                                selectedJob.min_experience === "1"
+                                  ? "Year"
+                                  : "Years"
+                              }`}
+                        </span>
                       </div>
                       <div className="flex items-center text-gray-600">
                         <span className="w-4 h-6 ">{selectedJob.currency?.symbol_native}</span>

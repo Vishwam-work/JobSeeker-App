@@ -40,6 +40,8 @@ interface SavedJob {
     company: string;
     description: string;
     experience: string;
+    max_experience: string;
+    min_experience: string;
     salary: string | null;
     salary_max: string | null;
     currency: {
@@ -470,11 +472,15 @@ const handleViewDetails = (job: any) => {
 
                         <span className="flex items-center gap-1">
                           <Briefcase className="w-4 h-4" />
-                        <span>
-                          {job.experience?.toString().trim().toLowerCase() === "fresher" ||
-                          Number(job.experience) === 0
+                       <span>
+                          {job.min_experience === "0" && job.max_experience === "0"
                             ? "Fresher"
-                            : `${job.experience} ${Number(job.experience) === 1 ? "Year" : "Years"}`}
+                            : `${job.min_experience} - ${job.max_experience} ${
+                                job.min_experience === job.max_experience &&
+                                job.min_experience === "1"
+                                  ? "Year"
+                                  : "Years"
+                              }`}
                         </span>
                         </span>
 
@@ -905,18 +911,15 @@ const handleViewDetails = (job: any) => {
                       <Briefcase className="w-4 h-4 mr-2" />
 
                       <span>
-                        {selectedJob.experience
-                          ?.toString()
-                          .trim()
-                          .toLowerCase() === "fresher" ||
-                        Number(selectedJob.experience) === 0
-                          ? "Fresher"
-                          : `${selectedJob.experience} ${
-                              Number(selectedJob.experience) === 1
-                                ? "Year"
-                                : "Years"
-                            }`}
-                      </span>
+                          {selectedJob.min_experience === "0" && selectedJob.max_experience === "0"
+                            ? "Fresher"
+                            : `${selectedJob.min_experience} - ${selectedJob.max_experience} ${
+                                selectedJob.min_experience === selectedJob.max_experience &&
+                                selectedJob.min_experience === "1"
+                                  ? "Year"
+                                  : "Years"
+                              }`}
+                        </span>
                     </div>
 
                     {/* Salary */}
