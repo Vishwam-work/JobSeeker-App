@@ -52,6 +52,8 @@ export default function JobDetailsPage() {
     vacancies: number;
     location?: string;
     experience: string;
+    max_experience: string;
+    min_experience: string;
     salary: string;
     salary_max?: string;
     currencyCode?: string;
@@ -454,15 +456,19 @@ const handleAnswerChange = (questionIndex: number, value: string) => {
                   <MapPin className="w-4 h-4 mr-2" />
                   <span>{selectedJob.location ?? ""}</span>
                 </div>
-                <div className="flex items-center text-gray-600">
-                  <Briefcase className="w-4 h-4 mr-2" />
-                   <span>
-                     {selectedJob.experience?.toString().trim().toLowerCase() === "fresher" ||
-                     Number(selectedJob.experience) === 0
-                      ? "Fresher"
-                      : `${selectedJob.experience} ${Number(selectedJob.experience) === 1 ? "Year" : "Years"}`}
-                    </span>
-                </div>
+                 <div className="flex items-center text-gray-600">
+                        <Briefcase className="w-4 h-4 mr-2" />
+                        <span>
+                          {selectedJob.min_experience === "0" && selectedJob.max_experience === "0"
+                            ? "Fresher"
+                            : `${selectedJob.min_experience} - ${selectedJob.max_experience} ${
+                                selectedJob.min_experience === selectedJob.max_experience &&
+                                selectedJob.min_experience === "1"
+                                  ? "Year"
+                                  : "Years"
+                              }`}
+                        </span>
+                      </div>
                 <div className="flex items-center text-gray-600">
                   <span className="w-4 h-6 ">{selectedJob.currency?.symbol_native}</span>
                     {selectedJob.salary && (
