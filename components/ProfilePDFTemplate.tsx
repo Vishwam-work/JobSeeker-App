@@ -129,9 +129,16 @@ export default function ProfilePDFTemplate({
                 Professional Summary
               </h2>
 
-              <p className="text-sm leading-7 text-gray-700 text-justify">
-                {profileData.personalInfo.professional_summary}
-              </p>
+              <p
+                 className="text-sm leading-7 text-gray-700 text-justify
+                 [&_ul]:list-disc [&_ul]:pl-6
+                 [&_ol]:list-decimal [&_ol]:pl-6
+                 [&_li]:mb-1"
+                 dangerouslySetInnerHTML={{
+                  __html: profileData.personalInfo.professional_summary || "",
+                 }}
+              />
+
             </section>
           )}
 
