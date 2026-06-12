@@ -2218,15 +2218,16 @@ setUserData({
                                     </span>
                                   </div>
                                  <div className="flex items-center gap-1">
-                                    <span>{job.currency?.symbol_native}</span>
 
                                     <span>
+                                      {job.currency?.symbol_native}
                                       {job.salary
                                         ? new Intl.NumberFormat(
                                             job.currency?.code === "INR" ? "en-IN" : "en-US"
                                           ).format(Number(job.salary))
                                         : ""}
                                       {" - "}
+                                      {job.currency?.symbol_native}
                                       {job.salary_max
                                         ? new Intl.NumberFormat(
                                             job.currency?.code === "INR" ? "en-IN" : "en-US"
@@ -2493,6 +2494,7 @@ setUserData({
                               ).format(Number(selectedJob.salary))
                             : ""}
                           {" - "}
+                          {/* {selectedJob.currency?.symbol_native} */}
                           {selectedJob.salary_max
                             ? new Intl.NumberFormat(
                                 selectedJob.currency?.code === "INR" ? "en-IN" : "en-US"

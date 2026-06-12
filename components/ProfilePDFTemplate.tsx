@@ -153,10 +153,10 @@ export default function ProfilePDFTemplate({
                 {profileData.experience.map((exp: any) => (
                   <div key={exp.id}>
                     <h3 className="font-bold text-lg text-slate-800">
-                      {exp.position}
+                      {exp.company}
                     </h3>
 
-                    <p className="text-sm text-gray-500">{exp.company}</p>
+                    <p className="text-sm text-gray-500">{exp.position}</p>
 
                     <p className="text-sm text-gray-500 mb-2">{exp.duration}</p>
 
@@ -180,7 +180,7 @@ export default function ProfilePDFTemplate({
                 <div key={edu.id}>
                   <h3 className="font-semibold text-lg">{edu.course_name}</h3>
 
-                  <p className="text-sm text-gray-600">{edu.institution}</p>
+                  <p className="text-sm text-gray-600">{edu.institution}({edu.start_year} - {edu.end_year})</p>
 
                   <p className="text-sm text-gray-600">
                     {edu.start_year} - {edu.end_year}

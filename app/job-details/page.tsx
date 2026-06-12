@@ -43,7 +43,8 @@ export default function JobDetailsPage() {
   const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [appliedJobs, setAppliedJobs] = useState<number[]>([]);
-  
+  const [jobLoading, setJobLoading] = useState(true);
+  const [loadingAppliedJobs, setLoadingAppliedJobs] = useState(true);
   interface Job {
     id: number;
     title: string;
@@ -80,14 +81,20 @@ interface Application {
   useEffect(() => {
     if (!jobId) return;
 
+    setJobLoading(true);
     fetch(`${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/all-jobs/`)
       .then((res) => res.json())
       .then((data) => {
+        const job = data.results.find(
+          (j: any) => String(j.id) === String(jobId)
+        );
 
-        const job = data.results.find((j: any) => String(j.id) === String(jobId));
         setSelectedJob(job);
       })
-      .catch(console.error);
+      .catch(console.error)
+      .finally(() => {
+        setJobLoading(false);
+      });
   }, [jobId]);
 
  
@@ -195,6 +202,7 @@ setUserData({
   };
   const fetchUserData = async () => {
     setLoadingUserData(true);
+      setLoadingAppliedJobs(true);
     try {
       const token = localStorage.getItem("user_token");
       const email = localStorage.getItem("user_email");
@@ -236,6 +244,7 @@ setUserData({
       console.error("Fetch user data error:", error);
     } finally {
       setLoadingUserData(false);
+      setLoadingAppliedJobs(false);
     }
   };
 const submitApplication = async () => {
@@ -357,7 +366,7 @@ const handleAnswerChange = (questionIndex: number, value: string) => {
       [questionIndex]: value,
     }));
   };
-    if (!selectedJob) {
+   if (jobLoading || loadingAppliedJobs) {
   return (
     <div>
       <Header />
@@ -387,6 +396,17 @@ const handleAnswerChange = (questionIndex: number, value: string) => {
         </div>
       </div>
 
+      <Footer />
+    </div>
+  );
+}
+if (!selectedJob) {
+  return (
+    <div>
+      <Header />
+      <div className="max-w-4xl mx-auto p-10 text-center">
+        Job not found
+      </div>
       <Footer />
     </div>
   );
@@ -429,6 +449,9 @@ const handleAnswerChange = (questionIndex: number, value: string) => {
 
               </div>
                    <div className="mt-4 sm:mt-0 sm:ml-4  ">
+                    {loadingAppliedJobs ? (
+                      <div className="h-10 w-28 bg-gray-200 animate-pulse rounded-md" />
+                    ) : (
                    <button
                     onClick={() => {
                       if (appliedJobs.includes(Number(selectedJob?.id))) {
@@ -446,6 +469,7 @@ const handleAnswerChange = (questionIndex: number, value: string) => {
                   >
                     {appliedJobs.includes(Number(selectedJob?.id)) ? "Applied" : "Apply Now"}
                   </button>
+                  )}
                   </div>
             </div>
 

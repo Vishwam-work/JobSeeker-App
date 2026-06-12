@@ -3009,11 +3009,11 @@ const resumeUrl = profileData?.personalInfo?.resume
                         placeholder="Example: Senior Oracle Fusion Cloud ERP Consultant with 5+ years’ experience in Financials, SQL and Reporting"
                       />
                     {/* Footer */}
-                    <div className="flex justify-between items-center mt-2 text-xs text-gray-400">
+                    {/* <div className="flex justify-between items-center mt-2 text-xs text-gray-400">
                       <span>
                         {(profileData.personalInfo.professional_summary || "").length}/250
                       </span>
-                    </div>
+                    </div> */}
 
                   </div>
                   <div className="flex flex-col sm:flex-row justify-end gap-3 mt-6">
