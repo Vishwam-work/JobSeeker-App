@@ -9,22 +9,29 @@ interface ProfilePDFTemplateProps {
 export default function ProfilePDFTemplate({
   profileData,
 }: ProfilePDFTemplateProps) {
+  const summaryText = profileData.personalInfo.professional_summary || "";
+
+  const limitedSummary = summaryText.split(" ").slice(0, 150).join(" ");
   return (
     <div
-      className="w-full bg-white text-gray-800"
+      className="bg-white text-gray-800 mx-auto"
       style={{
-        width: "210mm",
-        // minHeight: "297mm",
-        // overflow: "hidden",
+        width: "190mm",
+        margin: "0 auto",
       }}
     >
       {/* Header */}
-      <div className="bg-slate-700 text-white px-10 py-8">
-        {" "}
-        <h1 className="text-4xl font-bold uppercase tracking-wide text-center">
-          {" "}
-          {profileData.personalInfo.fullName}{" "}
-        </h1>{" "}
+      <div className="bg-slate-700 text-white h-[110px] flex items-center justify-center">
+        <h1
+          className="font-bold uppercase text-center"
+          style={{
+            fontSize: "28px",
+            letterSpacing: "1px",
+            width: "100%",
+          }}
+        >
+          {profileData.personalInfo.fullName}
+        </h1>
       </div>
 
       <div className="flex">
@@ -121,7 +128,7 @@ export default function ProfilePDFTemplate({
         </div>
 
         {/* Main Content */}
-        <div className="w-[68%] p-8">
+        <div className="w-[68%] p-8 overflow-hidden">
           {/* Professional Summary */}
           {profileData.personalInfo.professional_summary && (
             <section className="mb-8">
@@ -129,29 +136,41 @@ export default function ProfilePDFTemplate({
                 Professional Summary
               </h2>
 
-              <p
-                 className="text-sm leading-7 text-gray-700 text-justify
-                 [&_ul]:list-disc [&_ul]:pl-6
-                 [&_ol]:list-decimal [&_ol]:pl-6
-                 [&_li]:mb-1"
-                 dangerouslySetInnerHTML={{
-                  __html: profileData.personalInfo.professional_summary || "",
-                 }}
+              <div
+                className="..."
+                dangerouslySetInnerHTML={{
+                  __html: limitedSummary,
+                }}
               />
-
             </section>
           )}
 
           {/* Experience */}
           {profileData.experience?.length > 0 && (
-            <section className="mb-8">
+            <section
+              className="mb-8"
+              style={{
+                pageBreakInside: "auto",
+              }}
+            >
               <h2 className="text-2xl font-bold uppercase border-b-2 border-slate-600 pb-2 mb-4">
                 Experience
               </h2>
 
-              <div className="space-y-6">
+              <div
+                className="space-y-6"
+                style={{
+                  breakInside: "auto",
+                }}
+              >
                 {profileData.experience.map((exp: any) => (
-                  <div key={exp.id}>
+                  <div
+                    key={exp.id}
+                    style={{
+                      pageBreakInside: "avoid",
+                      breakInside: "avoid",
+                    }}
+                  >
                     <h3 className="font-bold text-lg text-slate-800">
                       {exp.company}
                     </h3>
@@ -180,10 +199,8 @@ export default function ProfilePDFTemplate({
                 <div key={edu.id}>
                   <h3 className="font-semibold text-lg">{edu.course_name}</h3>
 
-                  <p className="text-sm text-gray-600">{edu.institution}({edu.start_year} - {edu.end_year})</p>
-
                   <p className="text-sm text-gray-600">
-                    {edu.start_year} - {edu.end_year}
+                    {edu.institution} ({edu.start_year}-{edu.end_year})
                   </p>
 
                   <p className="text-sm">
