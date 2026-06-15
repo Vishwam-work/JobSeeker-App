@@ -13,10 +13,11 @@ import {
 type Props = {
   value: string;
   onChange: (value: string) => void;
+  onBlur?: () => void;
   placeholder?: string;
 };
 
-export default function TiptapEditor({ value, onChange }: Props) {
+export default function TiptapEditor({ value, onChange, onBlur, }: Props) {
   const editor = useEditor({
     extensions: [StarterKit],
     content: value,
@@ -24,6 +25,9 @@ export default function TiptapEditor({ value, onChange }: Props) {
     onUpdate: ({ editor }: { editor: Editor }) => {
       onChange(editor.getHTML());
     },
+     onBlur: () => {
+    onBlur?.();
+  },
   });
  useEffect(() => {
     if (editor && value !== editor.getHTML()) {
