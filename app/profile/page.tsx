@@ -511,9 +511,6 @@ const updateProfile = async (payload: any) => {
   }
 };
 
-
-
-
 const saveField = (field: string, value: any) => {
    // REQUIRED FIELD VALIDATION
   if (!profileData.personalInfo.fullName?.trim()) {
@@ -543,20 +540,6 @@ if (phone) {
     return false;
   }
 
-  // if (!profileData.personalInfo.countryId) {
-  //    toast.error("Country is required");
-  //    return false;
-  // }
-
-  // if (!profileData.personalInfo.stateId) {
-  //    toast.error("State is required");
-  //     return false;
-  // }
-
-  // if (!profileData.personalInfo.cityId) {
-  //    toast.error("City is required");
-  //     return false;
-  // }
   if (!profileData.personalInfo.currentSalary) {
      toast.error("Current salary is required");
       return false;
@@ -589,7 +572,10 @@ if (!dob) {
     toast.error("Date of Birth is required");
     return false;
   }
-
+    if (field === "full_name") {
+    localStorage.setItem("full_name", value || "");
+    window.dispatchEvent(new Event("fullNameUpdated"));
+  }
   updateProfile({
     [field]: value,
   });
@@ -917,43 +903,25 @@ const getUserKey = () => {
   };
   console.log("New Experience to Save:", newExperience);
 
-    // if (editingExperience) {
-    //   console.log("Updating experience with ID:", editingExperience.id);
-    //   setProfileData((prev) => ({
-    //     ...prev,
-    //     experience: prev.experience.map((exp) =>
-    //       exp.id === editingExperience.id ? newExperience : exp
-    //     ),
-    //   }));
-    //    toast.info("Experience updated successfully ");
-    // } else {
-    //   console.log("Adding new experience");
-    //   setProfileData((prev) => ({
-    //     ...prev,
-    //     experience: [...prev.experience, newExperience],
-    //   }));
-    //    toast.info("Experience saved successfully ");
-    // }
 
+    const updatedExperiences = editingExperience
+      ? profileData.experience.map((exp) =>
+          exp.id === editingExperience.id ? newExperience : exp
+        )
+      : [...profileData.experience, newExperience];
 
-      const updatedExperiences = editingExperience
-    ? profileData.experience.map((exp) =>
-        exp.id === editingExperience.id ? newExperience : exp
-      )
-    : [...profileData.experience, newExperience];
+        setProfileData((prev) => ({
+          ...prev,
+          experience: updatedExperiences,
+        }));
 
-      setProfileData((prev) => ({
-        ...prev,
-        experience: updatedExperiences,
-      }));
+        saveField("experiences", updatedExperiences);
 
-      saveField("experiences", updatedExperiences);
-
-      toast.info(
-        editingExperience
-          ? "Experience updated successfully"
-          : "Experience saved successfully"
-      );
+        toast.info(
+          editingExperience
+            ? "Experience updated successfully"
+            : "Experience saved successfully"
+        );
 
     setShowAddExperience(false);
     setEditingExperience(null);
@@ -1138,24 +1106,24 @@ const handleSaveEducation = () => {
       : null
     };
 
-    const updatedCertifications = editingCertification
-      ? profileData.certifications.map((cert) =>
-          cert.id === editingCertification.id ? newCertification : cert
-        )
-      : [...profileData.certifications, newCertification];
+      const updatedCertifications = editingCertification
+        ? profileData.certifications.map((cert) =>
+            cert.id === editingCertification.id ? newCertification : cert
+          )
+        : [...profileData.certifications, newCertification];
 
-    setProfileData((prev) => ({
-      ...prev,
-      certifications: updatedCertifications,
-    }));
+      setProfileData((prev) => ({
+        ...prev,
+        certifications: updatedCertifications,
+      }));
 
-    saveField("certifications", updatedCertifications);
+      saveField("certifications", updatedCertifications);
 
-    toast.info(
-      editingCertification
-        ? "Certification updated successfully"
-        : "Certification saved successfully"
-    );
+      toast.info(
+        editingCertification
+          ? "Certification updated successfully"
+          : "Certification saved successfully"
+      );
 
     setShowAddCertification(false);
     setEditingCertification(null);
@@ -1213,36 +1181,32 @@ const handleRemoveSkill = (skillToRemove: Skill) => {
   saveField("skills", updatedSkills);
 };
 
- const handleDeleteItem = (
-  type: DeletableSection,
-  id: string | number
-) => {
-  const updatedItems = (profileData[type] as WithId[]).filter(
-    (item) => item.id !== id
-  );
+  const handleDeleteItem = (
+    type: DeletableSection,
+    id: string | number
+  ) => {
+    const updatedItems = (profileData[type] as WithId[]).filter(
+      (item) => item.id !== id
+    );
 
-  setProfileData((prev) => ({
-    ...prev,
-    [type]: updatedItems,
-  }));
+    setProfileData((prev) => ({
+      ...prev,
+      [type]: updatedItems,
+    }));
 
-  // Auto Save
-  if (type === "experience") {
-    saveField("experiences", updatedItems);
-  }
+    // Auto Save
+    if (type === "experience") {
+      saveField("experiences", updatedItems);
+    }
 
-  if (type === "education") {
-    saveField("educations", updatedItems);
-  }
+    if (type === "education") {
+      saveField("educations", updatedItems);
+    }
 
-  if (type === "certifications") {
-    saveField("certifications", updatedItems);
-  }
-
-  if (type === "skills") {
-    saveField("skills", updatedItems);
-  }
-};
+    if (type === "certifications") {
+      saveField("certifications", updatedItems);
+    }
+  };
 
 
  const handleResumeUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -3764,12 +3728,11 @@ const resumeUrl = profileData?.personalInfo?.resume
 
                      <Button
                       onClick={async () => {
-                        await handleSaveProfile();
                             handleNext();
                       }}
                       className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-10 lg:h-11"
                     >
-                      Save & Next
+                      Next
                     </Button>
 
                   </div>
@@ -4267,12 +4230,11 @@ const resumeUrl = profileData?.personalInfo?.resume
 
                      <Button
                       onClick={async () => {
-                        await handleSaveProfile();
                             handleNext();
                       }}
                       className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-10 lg:h-11"
                     >
-                      Save & Next
+                      Next
                     </Button>
 
                   </div>
@@ -4342,12 +4304,11 @@ const resumeUrl = profileData?.personalInfo?.resume
 
                        <Button
                       onClick={async () => {
-                          await handleSaveProfile();
                             handleNext();
                       }}
                       className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-10 lg:h-11"
                     >
-                        Save & Next
+                        Next
                       </Button>
 
                     </div>
@@ -4571,14 +4532,14 @@ const resumeUrl = profileData?.personalInfo?.resume
                        </Dialog>
                       {/* )} */}
                     </div>
-                   <div className="flex justify-end">
+                   {/* <div className="flex justify-end">
                     <Button
                       onClick={() => handleSaveProfile("submit")}
                       className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-10 lg:h-11 mt-6"
                     >
                       SUBMIT
                     </Button>
-                  </div>
+                  </div> */}
                   </CardContent>
                 </Card>
               )}

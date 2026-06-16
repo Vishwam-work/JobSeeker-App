@@ -41,8 +41,18 @@ export default function Header() {
 
   // Page load par localStorage se naam set karo
   useEffect(() => {
-    const fullName = localStorage.getItem("full_name");
-    if (fullName) setUserName(fullName);
+    const updateName = () => {
+      const fullName = localStorage.getItem("full_name");
+      if (fullName) setUserName(fullName);
+    };
+
+    updateName();
+
+    window.addEventListener("fullNameUpdated", updateName);
+
+    return () => {
+      window.removeEventListener("fullNameUpdated", updateName);
+    };
   }, []);
   useEffect(() => {
     const checkAuth = () => {
