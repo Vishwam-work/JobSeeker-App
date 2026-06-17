@@ -185,7 +185,7 @@ export default function CompaniesPage() {
         Math.ceil(
           (Array.isArray(companyData)
             ? companyData.length
-            : companyData.count || 0) / 1
+            : companyData.count || 0) / 8
         )
       );
 

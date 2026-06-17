@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import { Editor } from "@tiptap/react";
 import {
   List,
   ListOrdered,
@@ -18,22 +17,83 @@ type Props = {
 };
 
 export default function TiptapEditor({ value, onChange, onBlur, }: Props) {
+  const MAX_WORDS = 250;
+const lastValidContent = useRef(value || "<p></p>");
   const editor = useEditor({
-    extensions: [StarterKit],
+      extensions: [
+        StarterKit,
+      ],
+      editorProps: {
+  handlePaste: (view, event) => {
+    const pastedText =
+      event.clipboardData?.getData("text/plain") || "";
+
+    const currentText = view.state.doc.textContent;
+
+    const totalWords = (currentText + " " + pastedText)
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean).length;
+
+    if (totalWords > 250) {
+      event.preventDefault();
+      return true;
+    }
+
+    return false;
+  },
+
+  handleTextInput: (view, from, to, text) => {
+    const currentWords = view.state.doc.textContent
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean);
+
+    if (
+      currentWords.length >= 250 &&
+      text.includes(" ")
+    ) {
+      return true;
+    }
+
+    return false;
+  },
+},
     content: value,
     immediatelyRender: false, // ✅ Fix SSR issue
-    onUpdate: ({ editor }: { editor: Editor }) => {
-      onChange(editor.getHTML());
-    },
+  onUpdate: ({ editor }) => {
+  const text = editor.getText().trim();
+  const words = text ? text.split(/\s+/).filter(Boolean) : [];
+
+  if (words.length > MAX_WORDS) {
+    editor.commands.setContent(lastValidContent.current);
+    return;
+  }
+
+  const html = editor.getHTML();
+
+  lastValidContent.current = html;
+  onChange(html);
+},
      onBlur: () => {
-    onBlur?.();
-  },
+      onBlur?.();
+    },
   });
- useEffect(() => {
-    if (editor && value !== editor.getHTML()) {
-      editor.commands.setContent(value || "");
-    }
-  }, [value, editor]);
+useEffect(() => {
+  if (!editor) return;
+
+  if (value !== editor.getHTML()) {
+    lastValidContent.current = value || "<p></p>";
+    editor.commands.setContent(value || "");
+  }
+}, [value, editor]);
+const wordCount = editor
+  ? editor
+      .getText()
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean).length
+  : 0;
   if (!editor) return null;
 
   return (
@@ -111,6 +171,9 @@ export default function TiptapEditor({ value, onChange, onBlur, }: Props) {
 
       {/* Editor */}
       <EditorContent editor={editor} />
+      <div className="flex justify-end mt-2 text-xs text-gray-500">
+  {wordCount}/250 words
+</div>
     </div>
   );
 }

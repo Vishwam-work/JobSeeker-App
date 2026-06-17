@@ -24,21 +24,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogFooter,
 } from "@/components/ui/dialog";
-import {
-  Command,
-  CommandInput,
-  CommandList,
-  CommandEmpty,
-  CommandItem,
-  CommandGroup,
-} from "@/components/ui/command";
-import {
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-} from "@/components/ui/popover";
 import {
   User,
   Mail,
@@ -88,8 +74,7 @@ dayjs.extend(customParseFormat);
 
 
 export default function Profile() {
-  // Form states, data, and functions, etc.
-  // const { savedJobs, removeSavedJob } = useSavedJobs();
+
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const [profileData, setProfileData] = useState<ProfileData>({
@@ -124,9 +109,7 @@ export default function Profile() {
   const [isImageDialogOpen, setIsImageDialogOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("personal");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isDialogOpen, setIsDialogOpen] = useState({
-    resume: false,
-  });
+  const [isDialogOpen, setIsDialogOpen] = useState({resume: false,});
   const [open, setOpen] = useState(false);
   const [countryOpen, setCountryOpen] = useState(false);
   const [stateOpen, setStateOpen] = useState(false);
@@ -147,7 +130,6 @@ export default function Profile() {
   const [endOpen, setEndOpen] = useState(false);
   const [endYearOpen, setEndYearOpen] = useState(false);
   const [yearOpen, setYearOpen] = useState(false);
-  // States for inline forms
   const [showAddExperience, setShowAddExperience] = useState(false);
   const [showAddEducation, setShowAddEducation] = useState(false);
   const [showAddCertification, setShowAddCertification] = useState(false);
@@ -178,18 +160,6 @@ export default function Profile() {
     score_type: "",
     course_type: "",
   });
-  const [courseSuggestions, setCourseSuggestions] = useState<CourseSuggestion[]>([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-
-  const [companySuggestions, setCompanySuggestions] = useState<any[]>([]);
-  const [showCompanySuggestions, setShowCompanySuggestions] = useState(false);
-
-  const [jobCategorySuggestions, setJobCategorySuggestions] = useState<any[]>([]);
-  const [showJobCategorySuggestions, setShowJobCategorySuggestions] = useState(false);
-
-  const [jobTitleSuggestions, setJobTitleSuggestions] = useState<any[]>([]);
-  const [showJobTitleSuggestions, setShowJobTitleSuggestions] = useState(false);
-
   const [certificationForm, setCertificationForm] = useState<CertificationForm>({
     name: "",
     issuer: "",
@@ -251,13 +221,6 @@ useEffect(() => {
   };
 }, []);
 const handleSummaryChange = (value: string) => {
-  const words = value.trim().split(/\s+/).filter(Boolean);
-
-  // if (words.length > 0 && words.length < 5) {
-  //   setSummaryError("Profile summary must contain at least 5 words");
-  // } else {
-  //   setSummaryError("");
-  // }
 
   setProfileData((prev) => ({
     ...prev,
@@ -3217,12 +3180,6 @@ const resumeUrl = profileData?.personalInfo?.resume
                           }
                         placeholder="Example: Senior Oracle Fusion Cloud ERP Consultant with 5+ years’ experience in Financials, SQL and Reporting"
                       />
-                    {/* Footer */}
-                    {/* <div className="flex justify-between items-center mt-2 text-xs text-gray-400">
-                      <span>
-                        {(profileData.personalInfo.professional_summary || "").length}/250
-                      </span>
-                    </div> */}
 
                   </div>
                   <div className="flex flex-col sm:flex-row justify-end gap-3 mt-6">
@@ -4532,14 +4489,6 @@ const resumeUrl = profileData?.personalInfo?.resume
                        </Dialog>
                       {/* )} */}
                     </div>
-                   {/* <div className="flex justify-end">
-                    <Button
-                      onClick={() => handleSaveProfile("submit")}
-                      className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-10 lg:h-11 mt-6"
-                    >
-                      SUBMIT
-                    </Button>
-                  </div> */}
                   </CardContent>
                 </Card>
               )}
