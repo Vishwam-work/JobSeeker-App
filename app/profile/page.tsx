@@ -24,21 +24,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogFooter,
 } from "@/components/ui/dialog";
-import {
-  Command,
-  CommandInput,
-  CommandList,
-  CommandEmpty,
-  CommandItem,
-  CommandGroup,
-} from "@/components/ui/command";
-import {
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-} from "@/components/ui/popover";
 import {
   User,
   Mail,
@@ -88,8 +74,7 @@ dayjs.extend(customParseFormat);
 
 
 export default function Profile() {
-  // Form states, data, and functions, etc.
-  // const { savedJobs, removeSavedJob } = useSavedJobs();
+
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const [profileData, setProfileData] = useState<ProfileData>({
@@ -124,9 +109,7 @@ export default function Profile() {
   const [isImageDialogOpen, setIsImageDialogOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("personal");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isDialogOpen, setIsDialogOpen] = useState({
-    resume: false,
-  });
+  const [isDialogOpen, setIsDialogOpen] = useState({resume: false,});
   const [open, setOpen] = useState(false);
   const [countryOpen, setCountryOpen] = useState(false);
   const [stateOpen, setStateOpen] = useState(false);
@@ -147,7 +130,6 @@ export default function Profile() {
   const [endOpen, setEndOpen] = useState(false);
   const [endYearOpen, setEndYearOpen] = useState(false);
   const [yearOpen, setYearOpen] = useState(false);
-  // States for inline forms
   const [showAddExperience, setShowAddExperience] = useState(false);
   const [showAddEducation, setShowAddEducation] = useState(false);
   const [showAddCertification, setShowAddCertification] = useState(false);
@@ -178,18 +160,6 @@ export default function Profile() {
     score_type: "",
     course_type: "",
   });
-  const [courseSuggestions, setCourseSuggestions] = useState<CourseSuggestion[]>([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-
-  const [companySuggestions, setCompanySuggestions] = useState<any[]>([]);
-  const [showCompanySuggestions, setShowCompanySuggestions] = useState(false);
-
-  const [jobCategorySuggestions, setJobCategorySuggestions] = useState<any[]>([]);
-  const [showJobCategorySuggestions, setShowJobCategorySuggestions] = useState(false);
-
-  const [jobTitleSuggestions, setJobTitleSuggestions] = useState<any[]>([]);
-  const [showJobTitleSuggestions, setShowJobTitleSuggestions] = useState(false);
-
   const [certificationForm, setCertificationForm] = useState<CertificationForm>({
     name: "",
     issuer: "",
@@ -212,6 +182,7 @@ export default function Profile() {
   const [jobCategories, setJobCategories] = useState<JobCategory[]>([]);
   const [currency, setCurrency] = useState<Currency[]>([]);
   const [isProfileSubmitted, setIsProfileSubmitted] = useState(false);
+  const [initialLoad, setInitialLoad] = useState(false);
 
   const [noticeRanges] = useState([
     "Immediate Joiner",
@@ -250,13 +221,6 @@ useEffect(() => {
   };
 }, []);
 const handleSummaryChange = (value: string) => {
-  const words = value.trim().split(/\s+/).filter(Boolean);
-
-  // if (words.length > 0 && words.length < 5) {
-  //   setSummaryError("Profile summary must contain at least 5 words");
-  // } else {
-  //   setSummaryError("");
-  // }
 
   setProfileData((prev) => ({
     ...prev,
@@ -483,6 +447,103 @@ const containerRef = useRef<HTMLDivElement>(null); // <-- ref declared here
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+const updateProfile = async (payload: any) => {
+   console.log("AUTO SAVE CALLED", payload);
+  const token = localStorage.getItem("user_token");
+  if (!token) return;
+
+  try {
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL_APP}/profile/`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      }
+    );
+
+    if (!response.ok) {
+      console.error("Failed to auto-save");
+    }
+  } catch (error) {
+    console.error("Auto-save error:", error);
+  }
+};
+
+const saveField = (field: string, value: any) => {
+   // REQUIRED FIELD VALIDATION
+  if (!profileData.personalInfo.fullName?.trim()) {
+    toast.error("Full Name is required");
+     return false;
+  }
+ const phone = profileData.personalInfo.phone?.trim();
+
+if (phone) {
+  if (!/^\d+$/.test(phone)) {
+    toast.error("Phone number must contain only digits");
+    return false;
+  }
+  if (phone.length !== 10) {
+    toast.error("Phone number must be 10 digits");
+    return false;
+  }
+}
+
+  if (!profileData.personalInfo.email?.trim()) {
+     toast.error("Email is required");
+      return false;
+  }
+
+  if (!profileData.personalInfo.phone?.trim()) {
+    toast.error("Phone number is required");
+    return false;
+  }
+
+  if (!profileData.personalInfo.currentSalary) {
+     toast.error("Current salary is required");
+      return false;
+  }
+  if(!profileData.personalInfo.expectedSalary) {
+     toast.error("Expected salary is required");
+      return false;
+  }
+
+
+  // DOB validation
+    const dob = profileData.personalInfo.date_of_birth;
+  if (!dob) {
+    toast.error("Date of Birth is required");
+    return false;
+  }
+
+  const dobCheck = formatDOB(dob);
+
+  if (dobCheck.error || !dobCheck.parsed.isValid()) {
+    toast.error(dobCheck.error || "Invalid Date of Birth");
+    return false;
+  }
+
+  if (dobCheck.parsed.isAfter(dayjs())) {
+    toast.error("Future date not allowed");
+    return false;
+  }
+if (!dob) {
+    toast.error("Date of Birth is required");
+    return false;
+  }
+    if (field === "full_name") {
+    localStorage.setItem("full_name", value || "");
+    window.dispatchEvent(new Event("fullNameUpdated"));
+  }
+  updateProfile({
+    [field]: value,
+  });
+};
+
 useEffect(() => {
   if (profileData?.personalInfo?.date_of_birth) {
     const d = dayjs(
@@ -805,23 +866,25 @@ const getUserKey = () => {
   };
   console.log("New Experience to Save:", newExperience);
 
-    if (editingExperience) {
-      console.log("Updating experience with ID:", editingExperience.id);
-      setProfileData((prev) => ({
-        ...prev,
-        experience: prev.experience.map((exp) =>
+
+    const updatedExperiences = editingExperience
+      ? profileData.experience.map((exp) =>
           exp.id === editingExperience.id ? newExperience : exp
-        ),
-      }));
-       toast.info("Experience updated successfully ");
-    } else {
-      console.log("Adding new experience");
-      setProfileData((prev) => ({
-        ...prev,
-        experience: [...prev.experience, newExperience],
-      }));
-       toast.info("Experience saved successfully ");
-    }
+        )
+      : [...profileData.experience, newExperience];
+
+        setProfileData((prev) => ({
+          ...prev,
+          experience: updatedExperiences,
+        }));
+
+        saveField("experiences", updatedExperiences);
+
+        toast.info(
+          editingExperience
+            ? "Experience updated successfully"
+            : "Experience saved successfully"
+        );
 
     setShowAddExperience(false);
     setEditingExperience(null);
@@ -916,21 +979,24 @@ const handleSaveEducation = () => {
       course_type : educationForm.course_type,
   };
 
-  if (editingEducation) {
-    setProfileData((prev) => ({
-      ...prev,
-      education: prev.education.map((edu) =>
+  const updatedEducations = editingEducation
+    ? profileData.education.map((edu) =>
         edu.id === editingEducation.id ? newEducation : edu
-      ),
-    }));
-      toast.info("Education updated successfully ");
-  } else {
-    setProfileData((prev) => ({
-      ...prev,
-      education: [...prev.education, newEducation],
-    }));
-      toast.info("Education saved successfully ");
-  }
+      )
+    : [...profileData.education, newEducation];
+
+  setProfileData((prev) => ({
+    ...prev,
+    education: updatedEducations,
+  }));
+
+  saveField("educations", updatedEducations);
+
+  toast.info(
+    editingEducation
+      ? "Education updated successfully"
+      : "Education saved successfully"
+  );
 
   setShowAddEducation(false);
   setEditingEducation(null);
@@ -961,7 +1027,7 @@ const handleSaveEducation = () => {
 
   const handleSaveCertification = () => {
     if (!certificationForm.name || !certificationForm.issuer || !certificationForm.year) {
-      
+
       toast("Incomplete form", {
       description: "Please fill in all required fields before continuing.",
       });
@@ -1003,21 +1069,24 @@ const handleSaveEducation = () => {
       : null
     };
 
-    if (editingCertification) {
+      const updatedCertifications = editingCertification
+        ? profileData.certifications.map((cert) =>
+            cert.id === editingCertification.id ? newCertification : cert
+          )
+        : [...profileData.certifications, newCertification];
+
       setProfileData((prev) => ({
         ...prev,
-        certifications: prev.certifications.map((cert) =>
-          cert.id === editingCertification.id ? newCertification : cert
-        ),
+        certifications: updatedCertifications,
       }));
-        toast.info("Certification updated successfully ");
-    } else {
-      setProfileData((prev) => ({
-        ...prev,
-        certifications: [...prev.certifications, newCertification],
-      }));
-        toast.info("Certification saved successfully ");
-    }
+
+      saveField("certifications", updatedCertifications);
+
+      toast.info(
+        editingCertification
+          ? "Certification updated successfully"
+          : "Certification saved successfully"
+      );
 
     setShowAddCertification(false);
     setEditingCertification(null);
@@ -1047,36 +1116,60 @@ const handleAddSkill = () => {
   if (!skillName) return;
 
   if (!profileData.skills.some((s) => s.name === skillName)) {
+    const updatedSkills = [
+      ...profileData.skills,
+      { name: skillName },
+    ];
+
     setProfileData((prev) => ({
       ...prev,
-      skills: [...prev.skills, { name: skillName }],
+      skills: updatedSkills,
     }));
+
+    saveField("skills", updatedSkills);
+
     setNewSkill("");
   }
 };
-  
 const handleRemoveSkill = (skillToRemove: Skill) => {
+  const updatedSkills = profileData.skills.filter(
+    (s) => s.name !== skillToRemove.name
+  );
+
   setProfileData((prev) => ({
     ...prev,
-    skills: prev.skills.filter((s) => s.name !== skillToRemove.name),
+    skills: updatedSkills,
   }));
+
+  saveField("skills", updatedSkills);
 };
 
   const handleDeleteItem = (
-  type: DeletableSection,
-  id: string | number
-) => {
-  setProfileData((prev) => {
-    if (!prev) return prev;
+    type: DeletableSection,
+    id: string | number
+  ) => {
+    const updatedItems = (profileData[type] as WithId[]).filter(
+      (item) => item.id !== id
+    );
 
-    return {
+    setProfileData((prev) => ({
       ...prev,
-      [type]: (prev[type] as WithId[]).filter(
-        (item) => item.id !== id
-      ),
-    };
-  });
-};
+      [type]: updatedItems,
+    }));
+
+    // Auto Save
+    if (type === "experience") {
+      saveField("experiences", updatedItems);
+    }
+
+    if (type === "education") {
+      saveField("educations", updatedItems);
+    }
+
+    if (type === "certifications") {
+      saveField("certifications", updatedItems);
+    }
+  };
 
 
  const handleResumeUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -1468,7 +1561,7 @@ const getSelectedJobTitle = () => {
               fullName: data.full_name || "",
               email: data.email || "",
               gender: data.gender ? data.gender.toLowerCase() : "",
-              date_of_birth: data.date_of_birth || "", 
+              date_of_birth: data.date_of_birth || "",
               phone: data.phone || "",
               phoneCode: data.phone_code || "",
               countryId: data?.country?.id?.toString() ?? "",
@@ -1514,15 +1607,16 @@ const getSelectedJobTitle = () => {
       } catch (error) {
         console.error("Error fetching profile:", error);
       }
-      finally { 
-         setLoading(false);
+     finally {
+        setLoading(false);
+        setInitialLoad(false);
       }
     };
 
     fetchProfile();
   }, []);
 
- console.log("Profile Data ---->After Fetch", profileData);
+//  console.log("Profile Data ---->After Fetch", profileData);
 
   useEffect(() => {
     fetch(`${process.env.NEXT_PUBLIC_API_URL_MASTER}/currencies/`)
@@ -1875,7 +1969,6 @@ if (!dob) {
     );
     setIsProfileSubmitted(true);
   }
-    localStorage.setItem("full_name", profileData.personalInfo.fullName || "");
 
      if (type === "submit") {
         toast.success("Profile saved successfully!", {
@@ -2473,7 +2566,7 @@ const resumeUrl = profileData?.personalInfo?.resume
                         >
                           Full Name *
                         </Label>
-                        <Input
+                        {/* <Input
                           id="fullName"
                           value={profileData.personalInfo.fullName}
                           onChange={(e) =>
@@ -2487,7 +2580,23 @@ const resumeUrl = profileData?.personalInfo?.resume
                           }
                           className="mt-1 h-10 lg:h-11"
                           required={true}
-                        />
+                        /> */}
+                       <Input
+  id="fullName"
+  value={profileData.personalInfo.fullName}
+  onChange={(e) =>
+    setProfileData((prev) => ({
+      ...prev,
+      personalInfo: {
+        ...prev.personalInfo,
+        fullName: e.target.value,
+      },
+    }))
+  }
+   onBlur={() =>
+    saveField("full_name", profileData.personalInfo.fullName)
+  }
+/>
                       </div>
                       <div>
                         <Label htmlFor="email" className="text-sm font-medium">
@@ -2519,15 +2628,17 @@ const resumeUrl = profileData?.personalInfo?.resume
 
                         <Select
                           value={profileData.personalInfo.gender || ""}
-                          onValueChange={(value) =>
-                            setProfileData((prev) => ({
-                              ...prev,
-                              personalInfo: {
-                                ...prev.personalInfo,
-                                gender: value,
-                              },
-                            }))
-                          }
+                           onValueChange={(value) => {
+                              setProfileData((prev) => ({
+                                ...prev,
+                                personalInfo: {
+                                  ...prev.personalInfo,
+                                  gender: value,
+                                },
+                              }));
+
+                              saveField("gender", value);
+                            }}
                         >
                           <SelectTrigger className="mt-1 h-10 lg:h-11">
                             <SelectValue placeholder="Select gender" />
@@ -2630,6 +2741,17 @@ const resumeUrl = profileData?.personalInfo?.resume
                                   },
                                 }));
                               }}
+                               onBlur={() => {
+                                  if (
+                                    profileData.personalInfo.date_of_birth &&
+                                    !dobError
+                                  ) {
+                                    saveField(
+                                      "date_of_birth",
+                                      profileData.personalInfo.date_of_birth
+                                    );
+                                  }
+                                }}
                               className={`w-full h-[44px] px-3 pr-12 text-sm border rounded-md outline-none
                                 ${dobError ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:ring-blue-500"}
                               `}
@@ -2669,7 +2791,7 @@ const resumeUrl = profileData?.personalInfo?.resume
                                           date_of_birth: formatted,
                                         },
                                       }));
-
+                                      saveField("date_of_birth", formatted);
                                       setOpen(false);
                                     }}
                                   />
@@ -2740,6 +2862,9 @@ const resumeUrl = profileData?.personalInfo?.resume
                                 }));
                               }
                             }}
+                             onBlur={() =>
+                              saveField("phone", profileData.personalInfo.phone)
+                            }
                             onKeyDown={(e) => {
                               if (e.key === "e" || e.key === "E" || e.key === "+" || e.key === "-") {
                                 e.preventDefault();
@@ -2775,6 +2900,7 @@ const resumeUrl = profileData?.personalInfo?.resume
                               phoneCode: selected?.phonecode || "",
                             },
                           }));
+                           saveField("country_id", selected?.value);
                         }}
                         placeholder="Search Country..."
                       />
@@ -2800,6 +2926,7 @@ const resumeUrl = profileData?.personalInfo?.resume
                                 cityId: "",
                               },
                             }));
+                             saveField("state_id", selected?.value);
                           }}
                           placeholder="Search State..."
                           isDisabled={!profileData.personalInfo.countryId}
@@ -2828,6 +2955,7 @@ const resumeUrl = profileData?.personalInfo?.resume
                                 cityId: selected?.value || "",
                               },
                             }));
+                              saveField("city_id", selected?.value);
                           }}
                           placeholder="Search City..."
                           isDisabled={!profileData.personalInfo.stateId}
@@ -2852,6 +2980,7 @@ const resumeUrl = profileData?.personalInfo?.resume
                               experience: selected?.value || "",
                             },
                           }));
+                          saveField("experience", selected?.value);
                         }}
                         placeholder="Search Experience..."
                       />
@@ -2874,6 +3003,7 @@ const resumeUrl = profileData?.personalInfo?.resume
                                 noticePeriod: selected?.value || "",
                               },
                             }));
+                            saveField("noticePeriod", selected?.value);
                           }}
                           placeholder="Search Notice Period..."
                         />
@@ -2902,6 +3032,10 @@ const resumeUrl = profileData?.personalInfo?.resume
                                   expectedCurrency: selectedOption?.value || "",
                                 },
                               }));
+                                saveField(
+                                  "current_currency_id",
+                                  selectedOption?.value
+                                );
                             }}
                             menuPortalTarget={typeof window !== "undefined" ? document.body : null}
                             styles={{
@@ -2928,6 +3062,22 @@ const resumeUrl = profileData?.personalInfo?.resume
                                 },
                               }));
                             }}
+                              onBlur={() => {
+                                const currentSalary = Number(profileData.personalInfo.currentSalary || 0);
+                                const expectedSalary = Number(profileData.personalInfo.expectedSalary || 0);
+
+                                if (expectedSalary && currentSalary > expectedSalary) {
+                                  toast.error(
+                                    "Current Salary cannot be greater than Expected Salary"
+                                  );
+                                  return;
+                                }
+
+                                saveField(
+                                  "current_salary",
+                                  profileData.personalInfo.currentSalary
+                                );
+                              }}
                             className="flex-1 h-10 lg:h-11"
                             placeholder="Enter amount"
                           />
@@ -2986,6 +3136,22 @@ const resumeUrl = profileData?.personalInfo?.resume
                                 },
                               }));
                             }}
+                            onBlur={() => {
+                              const currentSalary = Number(profileData.personalInfo.currentSalary || 0);
+                              const expectedSalary = Number(profileData.personalInfo.expectedSalary || 0);
+
+                              if (currentSalary && expectedSalary < currentSalary) {
+                                toast.error(
+                                  "Expected Salary cannot be less than Current Salary"
+                                );
+                                return;
+                              }
+
+                              saveField(
+                                "expected_salary",
+                                profileData.personalInfo.expectedSalary
+                              );
+                            }}
                             className="flex-1 h-10 lg:h-11"
                             placeholder="Enter amount"
                           />
@@ -3005,29 +3171,25 @@ const resumeUrl = profileData?.personalInfo?.resume
                     </p>
                     <TiptapEditor
                         value={profileData.personalInfo.professional_summary || ""}
-                        onChange={(value) => handleSummaryChange(value)} // ✅ FIX
+                        onChange={(value) => handleSummaryChange(value)}
+                         onBlur={() =>
+                            saveField(
+                              "professional_summary",
+                              profileData.personalInfo.professional_summary
+                            )
+                          }
                         placeholder="Example: Senior Oracle Fusion Cloud ERP Consultant with 5+ years’ experience in Financials, SQL and Reporting"
                       />
-                    {/* Footer */}
-                    {/* <div className="flex justify-between items-center mt-2 text-xs text-gray-400">
-                      <span>
-                        {(profileData.personalInfo.professional_summary || "").length}/250
-                      </span>
-                    </div> */}
 
                   </div>
                   <div className="flex flex-col sm:flex-row justify-end gap-3 mt-6">
                      <Button
                         onClick={async () => {
-                        const isSaved = await handleSaveProfile();
-
-                        if (isSaved) {
-                          handleNext();
-                        }
+                        handleNext();
                       }}
                       className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-10 lg:h-11"
                     >
-                      Save & Next
+                      Next
                     </Button>
                   </div>
                   </CardContent>
@@ -3523,12 +3685,11 @@ const resumeUrl = profileData?.personalInfo?.resume
 
                      <Button
                       onClick={async () => {
-                        await handleSaveProfile();
                             handleNext();
                       }}
                       className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-10 lg:h-11"
                     >
-                      Save & Next
+                      Next
                     </Button>
 
                   </div>
@@ -4026,12 +4187,11 @@ const resumeUrl = profileData?.personalInfo?.resume
 
                      <Button
                       onClick={async () => {
-                        await handleSaveProfile();
                             handleNext();
                       }}
                       className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-10 lg:h-11"
                     >
-                      Save & Next
+                      Next
                     </Button>
 
                   </div>
@@ -4101,12 +4261,11 @@ const resumeUrl = profileData?.personalInfo?.resume
 
                        <Button
                       onClick={async () => {
-                          await handleSaveProfile();
                             handleNext();
                       }}
                       className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-10 lg:h-11"
                     >
-                        Save & Next
+                        Next
                       </Button>
 
                     </div>
@@ -4330,14 +4489,6 @@ const resumeUrl = profileData?.personalInfo?.resume
                        </Dialog>
                       {/* )} */}
                     </div>
-                   <div className="flex justify-end">
-                    <Button
-                      onClick={() => handleSaveProfile("submit")}
-                      className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-10 lg:h-11 mt-6"
-                    >
-                      SUBMIT
-                    </Button>
-                  </div>
                   </CardContent>
                 </Card>
               )}

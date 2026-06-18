@@ -1,7 +1,4 @@
 "use client";
-
-import { Mail, Phone, MapPin, Clock } from "lucide-react";
-
 interface ProfilePDFTemplateProps {
   profileData: any;
 }
