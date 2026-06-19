@@ -365,7 +365,7 @@ const formatNumber = (
                       {isPDF ? '📍' : <MapPin className="w-4 h-4" />}
                       <span>{profileData.personalInfo.location}</span>
                     </div>
-                    <div className="flex items-center space-x-2 text-gray-600">
+                    <div className="flex items-center space-x-2 text-gray-600 capitalize">
                       {isPDF ? '💼' : <Briefcase className="w-4 h-4" />}
                       <span>Experience: {profileData.personalInfo.experience}</span>
                     </div>

@@ -475,66 +475,43 @@ const updateProfile = async (payload: any) => {
 };
 
 const saveField = (field: string, value: any) => {
-   // REQUIRED FIELD VALIDATION
-  if (!profileData.personalInfo.fullName?.trim()) {
+  if (field === "full_name" && !value?.trim()) {
     toast.error("Full Name is required");
-     return false;
-  }
- const phone = profileData.personalInfo.phone?.trim();
-
-if (phone) {
-  if (!/^\d+$/.test(phone)) {
-    toast.error("Phone number must contain only digits");
-    return false;
-  }
-  if (phone.length !== 10) {
-    toast.error("Phone number must be 10 digits");
-    return false;
-  }
-}
-
-  if (!profileData.personalInfo.email?.trim()) {
-     toast.error("Email is required");
-      return false;
+    return;
   }
 
-  if (!profileData.personalInfo.phone?.trim()) {
-    toast.error("Phone number is required");
-    return false;
+  // Phone
+  if (field === "phone") {
+    if (!/^\d+$/.test(value)) {
+      toast.error("Phone number must contain only digits");
+      return;
+    }
+
+    if (value.length !== 10) {
+      toast.error("Phone number must be 10 digits");
+      return;
+    }
   }
 
-  if (!profileData.personalInfo.currentSalary) {
-     toast.error("Current salary is required");
-      return false;
-  }
-  if(!profileData.personalInfo.expectedSalary) {
-     toast.error("Expected salary is required");
-      return false;
-  }
-
-
-  // DOB validation
-    const dob = profileData.personalInfo.date_of_birth;
-  if (!dob) {
+ if (field === "date_of_birth") {
+  if (!value) {
     toast.error("Date of Birth is required");
-    return false;
+    return;
   }
 
-  const dobCheck = formatDOB(dob);
+  const dobCheck = formatDOB(value);
 
   if (dobCheck.error || !dobCheck.parsed.isValid()) {
     toast.error(dobCheck.error || "Invalid Date of Birth");
-    return false;
+    return;
   }
 
   if (dobCheck.parsed.isAfter(dayjs())) {
     toast.error("Future date not allowed");
-    return false;
+    return;
   }
-if (!dob) {
-    toast.error("Date of Birth is required");
-    return false;
-  }
+}
+
     if (field === "full_name") {
     localStorage.setItem("full_name", value || "");
     window.dispatchEvent(new Event("fullNameUpdated"));
@@ -2901,6 +2878,7 @@ const resumeUrl = profileData?.personalInfo?.resume
                             },
                           }));
                            saveField("country_id", selected?.value);
+                           saveField("phone_code", selected?.phonecode);
                         }}
                         placeholder="Search Country..."
                       />
@@ -3003,7 +2981,7 @@ const resumeUrl = profileData?.personalInfo?.resume
                                 noticePeriod: selected?.value || "",
                               },
                             }));
-                            saveField("noticePeriod", selected?.value);
+                            saveField("notice_period", selected?.value);
                           }}
                           placeholder="Search Notice Period..."
                         />
@@ -3034,6 +3012,10 @@ const resumeUrl = profileData?.personalInfo?.resume
                               }));
                                 saveField(
                                   "current_currency_id",
+                                  selectedOption?.value
+                                );
+                                saveField(
+                                  "expected_currency_id",
                                   selectedOption?.value
                                 );
                             }}
