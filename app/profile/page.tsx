@@ -1961,55 +1961,55 @@ if (!dob) {
   };
 
   // Fetch User Data for Profile Name, Email, Phone or country
-  useEffect(() => {
-    const fetchUserProfile = async () => {
-      try {
-        const token = localStorage.getItem("user_token");
-        if (!token) {
-          console.warn("No auth token found");
-          return;
-        }
+  // useEffect(() => {
+  //   const fetchUserProfile = async () => {
+  //     try {
+  //       const token = localStorage.getItem("user_token");
+  //       if (!token) {
+  //         console.warn("No auth token found");
+  //         return;
+  //       }
 
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL_APP}/register/`,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+  //       const res = await fetch(
+  //         `${process.env.NEXT_PUBLIC_API_URL_APP}/register/`,
+  //         {
+  //           headers: {
+  //             "Content-Type": "application/json",
+  //             Authorization: `Bearer ${token}`,
+  //           },
+  //         }
+  //       );
 
-        if (!res.ok) {
-          console.error("Failed to fetch user data");
-          return;
-        }
+  //       if (!res.ok) {
+  //         console.error("Failed to fetch user data");
+  //         return;
+  //       }
 
-        const data = await res.json();
-        console.log("Register API data:", data);
+  //       const data = await res.json();
+  //       console.log("Register API data:", data);
 
-        // ✅ Handle both single object or array API responses
-        const user = Array.isArray(data) ? data[0] : data;
+  //       // ✅ Handle both single object or array API responses
+  //       const user = Array.isArray(data) ? data[0] : data;
 
-        setProfileData((prev) => ({
-          ...prev,
-          personalInfo: {
-            ...prev.personalInfo,
-            fullName: user.full_name || user.name || "",
-            email: user.email || "",
-            phone: user.phone || user.number || "",
-            phoneCode: user.phone_code || "",
-            country_id: user.country?.id?.toString() || "",
-            countryId: user.country?.id?.toString() || "",
-          },
-        }));
-      } catch (error) {
-        console.error("Error fetching user data:", error);
-      }
-    };
+  //       setProfileData((prev) => ({
+  //         ...prev,
+  //         personalInfo: {
+  //           ...prev.personalInfo,
+  //           fullName: user.full_name || user.name || "",
+  //           email: user.email || "",
+  //           phone: user.phone || user.number || "",
+  //           phoneCode: user.phone_code || "", //register phoneCode
+  //           country_id: user.country?.id?.toString() || "",
+  //           countryId: user.country?.id?.toString() || "",
+  //         },
+  //       }));
+  //     } catch (error) {
+  //       console.error("Error fetching user data:", error);
+  //     }
+  //   };
 
-    fetchUserProfile();
-  }, []);
+  //   fetchUserProfile();
+  // }, []);
 
 
 const BASE_URL = "https://jobseeker-backend-jy1y.onrender.com";
@@ -2559,21 +2559,21 @@ const resumeUrl = profileData?.personalInfo?.resume
                           required={true}
                         /> */}
                        <Input
-  id="fullName"
-  value={profileData.personalInfo.fullName}
-  onChange={(e) =>
-    setProfileData((prev) => ({
-      ...prev,
-      personalInfo: {
-        ...prev.personalInfo,
-        fullName: e.target.value,
-      },
-    }))
-  }
-   onBlur={() =>
-    saveField("full_name", profileData.personalInfo.fullName)
-  }
-/>
+                        id="fullName"
+                        value={profileData.personalInfo.fullName}
+                        onChange={(e) =>
+                          setProfileData((prev) => ({
+                            ...prev,
+                            personalInfo: {
+                              ...prev.personalInfo,
+                              fullName: e.target.value,
+                            },
+                          }))
+                        }
+                        onBlur={() =>
+                          saveField("full_name", profileData.personalInfo.fullName)
+                        }
+                      />
                       </div>
                       <div>
                         <Label htmlFor="email" className="text-sm font-medium">

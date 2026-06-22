@@ -299,7 +299,7 @@ const handleResendOTP = async () => {
     formData.append("email", email);
     formData.append("password", password);
     formData.append("mobile_number", profileData.personalInfo.phone);
-    formData.append("phone_code", phoneCode);
+    formData.append("mobile_code", phoneCode);
     formData.append("work_status", workStatus);
     formData.append("receive_promotions", String(receivePromotions));
     formData.append("country_id", String(profileData.personalInfo.countryId));
