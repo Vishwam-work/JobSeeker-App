@@ -300,8 +300,10 @@ const submitApplication = async () => {
 
         const rawCompanyData = await companyRes.json();
 
-        const companies = rawCompanyData.data || rawCompanyData;
-
+        const companies =
+          rawCompanyData.data ||
+          rawCompanyData.results ||
+          [];
         const companyData = companies.find(
           (c: any) => String(c.id) === String(id)
         );
@@ -309,29 +311,19 @@ const submitApplication = async () => {
         if (!companyData) {
           setCompany(null);
           setJobs([]);
-  return;
-}
+          return;
+        }
 
-// Fetch jobs using company name
-const jobsRes = await fetch(
-  `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/companies/${id}/${encodeURIComponent(
-    companyData.company?.company_name
-  )}/jobs/`,
-  { headers }
-);
+        // Fetch jobs using company name
+        const jobsRes = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/companies/${id}/${encodeURIComponent(
+            companyData.company?.company_name
+          )}/jobs/`,
+          { headers }
+        );
 
-const jobsData = await jobsRes.json();
-console.log("Jobs Data:", jobsData);
-
-        // const rawCompanyData = await companyRes.json();
-
-        // const companies = rawCompanyData.data || rawCompanyData;
-
-        // const companyData = companies.find(
-        //   (c: any) => String(c.id) === String(id)
-        // );
-
-        // console.log("Matched Company:", companyData);
+        const jobsData = await jobsRes.json();
+        console.log("Jobs Data:", jobsData);
 
         if (!companyData) {
           setCompany(null);
@@ -629,7 +621,7 @@ console.log("Jobs Data:", jobsData);
                           )}`} -
                       </span>
                     )}
-
+                       {job.currency?.symbol_native}{" "}
                       {job.salary_max && (
                       <span className="flex items-center gap-1">
                           {`${formatNumber(
