@@ -50,7 +50,6 @@ import {
 
 export default function JobListings() {
   const [jobs, setJobs] = useState<Job[]>([]);
-  const [filteredJobs, setFilteredJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [isJobDetailOpen, setIsJobDetailOpen] = useState(false);
@@ -73,7 +72,7 @@ export default function JobListings() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   // Filter states
-  const [filters, setFilters] = useState({
+  const defaultFilters = {
     search: "",
     location: "",
     max_experience: "",
@@ -85,7 +84,9 @@ export default function JobListings() {
     companies: [] as string[],
     skills: [] as string[],
     postedWithin: [] as string[],
-  });
+  };
+  const [filters, setFilters] = useState(defaultFilters);
+  const [appliedFilters, setAppliedFilters] = useState(defaultFilters);
 
   // Sample job data - in real app, this would come from API
   const [companies, setCompanies] = useState<string[]>([]);
@@ -129,7 +130,7 @@ export default function JobListings() {
   ];
 const now = new Date();
 
-const sortedJobs = [...filteredJobs]
+const sortedJobs = [...jobs]
   .filter((job) => {
     if (!job.created_at || dateFilter === "all") return true;
 
@@ -210,15 +211,7 @@ const sortedJobs = [...filteredJobs]
         : prev.companies.filter((c) => c !== company),
     }));
   };
-  // const sortedJobs = [...filteredJobs].sort((a, b) => {
-  //   if (sortBy === "date") {
-  //     const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
-  //     const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
 
-  //     return dateB - dateA;
-  //   }
-  //   return 0;
-  // });
 
   interface Location {
     id: string | number;
@@ -371,42 +364,38 @@ const sortedJobs = [...filteredJobs]
 
   useEffect(() => {
     fetchJobs(page);
-  }, [page, filters]);
+  }, [page, appliedFilters,searchFromUrl]);
 
   const fetchJobs = async (page : number) => {
     try {
       setLoading(true);
-      console.log("Fetching jobs with filters:", filters);
+      console.log("Fetching jobs with filters:", appliedFilters);
       const params = new URLSearchParams();
 
       params.append("page", page.toString());
-
-      if (filters.search && searchFromUrl) params.append("search", searchFromUrl);
-      if (filters.location) params.append("location", filters.location);
-
-      filters.jobType.forEach(j => params.append("job_type", j));
-      filters.workMode.forEach(w => params.append("work_mode", w.toLowerCase()));
-      filters.salaryRange.forEach(s => params.append("salary_range", s.split(" ")[0]));
-      if (filters.postedWithin.length > 0) {
-        filters.postedWithin.forEach(p => params.append("posted_within", p));
+      if (searchFromUrl) {
+        params.append("search", searchFromUrl);
       }
 
-      if (filters.companies.length > 0) {
-        filters.companies.forEach(company => params.append("company", company));
-      }
-      // if (filters.experience?.[0]) {
-      //   params.append("min_experience", filters.experience[0]);
-      // }
+      if (appliedFilters.location) params.append("location", appliedFilters.location);
 
-      // if (filters.experience?.[1]) {
-      //   params.append("max_experience", filters.experience[1]);
-      // }
-      if (filters.min_experience) {
-        params.append("min_experience", filters.min_experience);
+      appliedFilters.jobType.forEach(j => params.append("job_type", j));
+      appliedFilters.workMode.forEach(w => params.append("work_mode", w));
+      appliedFilters.salaryRange.forEach(s => params.append("salary_range", s.split(" ")[0]));
+      if (appliedFilters.postedWithin.length > 0) {
+        appliedFilters.postedWithin.forEach(p => params.append("posted_within", p));
       }
 
-      if (filters.max_experience) {
-        params.append("max_experience", filters.max_experience);
+      if (appliedFilters.companies.length > 0) {
+        appliedFilters.companies.forEach(company => params.append("company", company));
+      }
+
+      if (appliedFilters.min_experience) {
+        params.append("min_experience", appliedFilters.min_experience);
+      }
+
+      if (appliedFilters.max_experience) {
+        params.append("max_experience", appliedFilters.max_experience);
       }
 
       const response = await fetch(
@@ -445,7 +434,6 @@ const sortedJobs = [...filteredJobs]
 
       console.log("Jobs data:", results);
       setJobs(results);
-      setFilteredJobs(results);
       setAllLocations((prev) => {
         const merged = [...prev, ...uniqueLocations];
 
@@ -467,7 +455,6 @@ const sortedJobs = [...filteredJobs]
     } catch (error) {
       console.error("Error fetching jobs:", error);
       setJobs([]);
-      setFilteredJobs([]);
     } finally {
       setLoading(false);
     }
@@ -498,114 +485,7 @@ const sortedJobs = [...filteredJobs]
   useEffect(() => {
     setPage(1);
   }, [filters]);
-  useEffect(() => {
-    let filtered = jobs;
 
-    // Search filter
-    if (filters.search) {
-      filtered = filtered.filter(
-        (job) =>
-          job.title.toLowerCase().includes(filters.search.toLowerCase()) ||
-          job.company.toLowerCase().includes(filters.search.toLowerCase()) ||
-          job.skills.some((skill) =>
-            skill.toLowerCase().includes(filters.search.toLowerCase()),
-          ),
-      );
-    }
-
-    // Location filter
-    if (filters.location && filters.location !== "All") {
-      filtered = filtered.filter(
-        (job) =>
-          job.location &&
-            job.location.toLowerCase()
-            .includes(filters.location.toLowerCase()),
-      );
-    }
-
-    // Work Mode filter
-    if (filters.workMode && filters.workMode.length > 0) {
-      filtered = filtered.filter(
-        (job) =>
-          job.work_mode &&
-          filters.workMode.some((mode) =>
-            (job.work_mode as string)
-              .toLowerCase()
-              .includes(mode.toLowerCase()),
-          ),
-      );
-    }
-
-    // Job Type filter
-    const normalize = (str: string) =>
-  str.toLowerCase().replace(/[\s-]+/g, "");
-
-if (filters.jobType && filters.jobType.length > 0) {
-  filtered = filtered.filter((job) => {
-    if (!job.job_type) return false;
-
-    const jobTypes = Array.isArray(job.job_type)
-      ? job.job_type
-      : [job.job_type];
-
-    return jobTypes.some((jt) =>
-      filters.jobType.some(
-        (type) => normalize(jt) === normalize(type)
-      )
-    );
-  });
-}
-
-    // Skills filter
-    if (filters.skills && filters.skills.length > 0) {
-      filtered = filtered.filter(
-        (job) =>
-          Array.isArray(job.skills) &&
-          filters.skills.every((skill) =>
-            job.skills.some((jobSkill) =>
-              jobSkill.toLowerCase().includes(skill.toLowerCase()),
-            ),
-          ),
-      );
-    }
-
-    // Company filter
-    if (filters.companies && filters.companies.length > 0) {
-      filtered = filtered.filter((job) => {
-        const companyName = job.company?.toLowerCase().trim();
-        return filters.companies.some(
-          (selected) => selected.toLowerCase().trim() === companyName,
-        );
-      });
-    }
-
-    // Posted within filter
-    if (filters.postedWithin && filters.postedWithin.length > 0) {
-      const now = new Date();
-      filtered = filtered.filter((job) => {
-        const postedDate = new Date(job.created_at ?? "");
-        const diffTime = Math.abs(now.getTime() - postedDate.getTime());
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-        return filters.postedWithin.some((timeValue) => {
-          switch (timeValue) {
-            case "1":
-              return diffDays <= 1;
-            case "3":
-              return diffDays <= 3;
-            case "7":
-              return diffDays <= 7;
-            case "30":
-              return diffDays <= 30;
-            default:
-              return true;
-          }
-        });
-      });
-    }
-
-    setFilteredJobs(filtered);
-  }, [jobs, filters]);
 
 useEffect(() => {
   if (searchFromUrl) {
@@ -625,20 +505,14 @@ useEffect(() => {
 
 
   const clearAllFilters = () => {
-    setFilters({
-      search: "",
-      location: "",
-      min_experience: "",
-      max_experience: "",
-      experience: [] as string[],
-      jobType: [] as string[],
-      workMode: [] as string[],
-      salaryRange: [] as string[],
-      companies: [],
-      skills: [],
-      postedWithin: [] as string[],
-    });
-  };
+  setFilters(defaultFilters);
+  setAppliedFilters(defaultFilters);
+
+  setSearchLocation("");
+  setSearchCompany("");
+
+  setPage(1);
+};
 
   const saveJob = async (jobId: number) => {
     const token = localStorage.getItem("user_token");
@@ -1338,44 +1212,44 @@ setUserData({
 
                         {/* Salary Range */}
                         <div>
-        <Label className="text-sm font-medium text-gray-700 mb-2 block">
-          Salary Range
-        </Label>
+                        <Label className="text-sm font-medium text-gray-700 mb-2 block">
+                          Salary Range
+                        </Label>
 
-        {salaryRanges
-          .sort((a, b) => {
-            const aSelected = filters.salaryRange.includes(a);
-            const bSelected = filters.salaryRange.includes(b);
-            return aSelected === bSelected ? 0 : aSelected ? -1 : 1;
-          })
-          .slice(0, showMoreSalary ? salaryRanges.length : 4)
-          .map((range) => (
-            <div
-              key={range}
-              className="flex items-center space-x-2 mb-2"
-            >
-              <input
-                type="checkbox"
-                checked={filters.salaryRange.includes(range)}
-                onChange={(e) =>
-                  handleSalaryFilter(range, e.target.checked)
-                }
-              />
-              <label className="text-sm text-gray-600">
-                {range}
-              </label>
-            </div>
-          ))}
+                        {salaryRanges
+                          .sort((a, b) => {
+                            const aSelected = filters.salaryRange.includes(a);
+                            const bSelected = filters.salaryRange.includes(b);
+                            return aSelected === bSelected ? 0 : aSelected ? -1 : 1;
+                          })
+                          .slice(0, showMoreSalary ? salaryRanges.length : 4)
+                          .map((range) => (
+                            <div
+                              key={range}
+                              className="flex items-center space-x-2 mb-2"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={filters.salaryRange.includes(range)}
+                                onChange={(e) =>
+                                  handleSalaryFilter(range, e.target.checked)
+                                }
+                              />
+                              <label className="text-sm text-gray-600">
+                                {range}
+                              </label>
+                            </div>
+                          ))}
 
-        {salaryRanges.length > 4 && (
-          <button
-            onClick={() => setShowMoreSalary(!showMoreSalary)}
-            className="text-blue-600 text-sm mt-1"
-          >
-            {showMoreSalary ? "Less" : "More"}
-          </button>
-        )}
-      </div>
+                        {salaryRanges.length > 4 && (
+                          <button
+                            onClick={() => setShowMoreSalary(!showMoreSalary)}
+                            className="text-blue-600 text-sm mt-1"
+                          >
+                            {showMoreSalary ? "Less" : "More"}
+                          </button>
+                        )}
+                      </div>
 
                         {/* Posted Within */}
                         <div>
@@ -1548,6 +1422,17 @@ setUserData({
                           </Select>
                         </div> */}
                       </div>
+                    <div className="mt-6 flex gap-2">
+                    <Button
+                      className="flex-1"
+                      onClick={() => {
+                        setAppliedFilters(filters);
+                        setShowFilters(false);
+                      }}
+                    >
+                      Apply Filters
+                    </Button>
+                  </div>
                     </div>
                   </Card>
                 </div>
@@ -1557,7 +1442,7 @@ setUserData({
           <div className="lg:col-span-4">
             <div className="mb-4 flex items-center justify-between">
               <p className="text-gray-600">
-                Showing {filteredJobs.length} jobs
+                Showing {jobs.length} jobs
               </p>
               <Button
                 variant="outline"
@@ -2056,7 +1941,7 @@ setUserData({
         </div>
 
         {/* Job Details Modal */}
-        <Dialog open={isJobDetailOpen} onOpenChange={setIsJobDetailOpen}>
+        {/* <Dialog open={isJobDetailOpen} onOpenChange={setIsJobDetailOpen}>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             {selectedJob && (
               <>
@@ -2066,7 +1951,6 @@ setUserData({
                   </DialogTitle>
                 </DialogHeader>
                 <div className="space-y-6">
-                  {/* Company Info */}
                   <div className="flex items-start space-x-4 p-4 bg-gray-50 rounded-lg">
                      <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
                        {selectedJob.company_user?.company_logo ? (
@@ -2094,7 +1978,6 @@ setUserData({
                     </div>
                   </div>
 
-                  {/* Job Details */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <div className="flex items-center text-gray-600">
@@ -2182,7 +2065,6 @@ setUserData({
                     </div>
                   </div>
 
-                  {/* Job Description */}
                   <div>
                     <h4 className="text-lg font-semibold text-gray-900 mb-3">
                       Job Description
@@ -2196,7 +2078,6 @@ setUserData({
                     />
                   </div>
 
-                  {/* Requirements */}
                   <div>
                     <h4 className="text-lg font-semibold text-gray-900 mb-3">
                       Requirements
@@ -2214,7 +2095,6 @@ setUserData({
                     />
                   </div>
 
-                  {/* Benefits */}
                   <div>
                     <h4 className="text-lg font-semibold text-gray-900 mb-3">
                       Benefits
@@ -2232,7 +2112,6 @@ setUserData({
                     />
                   </div>
 
-                  {/* Skills */}
                   <div>
                     <h4 className="text-lg font-semibold text-gray-900 mb-3">
                       Required Skills
@@ -2254,7 +2133,6 @@ setUserData({
                     </div>
                   </div>
 
-                  {/* Action Buttons */}
                   <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t">
                     <Button
                       variant="outline"
@@ -2281,20 +2159,20 @@ setUserData({
                         : "Save Job"}
                     </Button>
 
-                    {/* <Button
+                     <Button
                       variant="outline"
                       onClick={() => handleShare(selectedJob)}
                       className="flex-1"
                     >
                       <Share2 className="w-4 h-4 mr-2" />
                       Share
-                    </Button> */}
+                    </Button>
                   </div>
                 </div>
               </>
             )}
           </DialogContent>
-        </Dialog>
+        </Dialog> */}
 
         {/* Apply Modal */}
         <Dialog open={isApplyModalOpen} onOpenChange={setIsApplyModalOpen}>
