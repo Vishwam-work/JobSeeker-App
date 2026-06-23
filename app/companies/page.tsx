@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Header from "@/components/Header";
@@ -14,14 +16,18 @@ import AsyncSelect from "react-select/async";
 export default function CompaniesPage() {
   const [allCompanies, setAllCompanies] = useState<CompanyListItem[]>([]);
   const [page, setPage] = useState(1);
-  const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
   const [selectedState, setSelectedState] = useState("");
   const [states, setStates] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
-  const [selectedCompanyType, setSelectedCompanyType] = useState("");
-  const [selectedIndustry, setSelectedIndustry] = useState("");
-  const [selectedCompanySize, setSelectedCompanySize] = useState("");
+  const [selectedCompanyTypes, setSelectedCompanyTypes] = useState<string[]>([]);
+  const [showMoreCompanyType, setShowMoreCompanyType] = useState(false);
+  const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
+  const [selectedCompanySizes, setSelectedCompanySizes] = useState<string[]>([]);
+  const [showMoreIndustry, setShowMoreIndustry] = useState(false);
+  const [showMoreCompanySize, setShowMoreCompanySize] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalcount, setTotalcount] = useState("");
@@ -71,6 +77,43 @@ export default function CompaniesPage() {
     founded: number | null;
     company_logo: string;
   };
+
+  const handleCompanyTypeFilter = (
+  companyType: string,
+  checked: boolean
+) => {
+  if (checked) {
+    setSelectedCompanyTypes((prev) => [...prev, companyType]);
+  } else {
+    setSelectedCompanyTypes((prev) =>
+      prev.filter((item) => item !== companyType)
+    );
+  }
+};
+const handleIndustryFilter = (
+  industry: string,
+  checked: boolean
+) => {
+  if (checked) {
+    setSelectedIndustries((prev) => [...prev, industry]);
+  } else {
+    setSelectedIndustries((prev) =>
+      prev.filter((item) => item !== industry)
+    );
+  }
+};
+const handleCompanySizeFilter = (
+  size: string,
+  checked: boolean
+) => {
+  if (checked) {
+    setSelectedCompanySizes((prev) => [...prev, size]);
+  } else {
+    setSelectedCompanySizes((prev) =>
+      prev.filter((item) => item !== size)
+    );
+  }
+};
   // Fetch states and categories for filters
   useEffect(() => {
     const loadFilters = async () => {
@@ -109,30 +152,14 @@ export default function CompaniesPage() {
 
     loadFilters();
   }, []);
-  const companyTypeOptions = companyTypes.map((item) => ({
-    value: item,
-    label: item,
-  }));
 
-  const industryOptions = industries.map((item) => ({
-    value: item,
-    label: item,
-  }));
-
-  const companySizeOptions = companySizes.map((item) => ({
-    value: item,
-    label: item,
-  }));
-  const loadCompanyTypes = async () => companyTypeOptions;
-  const loadIndustries = async () => industryOptions;
-  const loadCompanySizes = async () => companySizeOptions;
   const fetchCompanies = async (
     searchValue = "",
     stateValue = "",
-    companyTypeValue = "",
-    industryValue = "",
-    companySizeValue = "",
-     pageNumber = 1
+    companyTypeValues: string[] = [],
+    industryValues : string[] = [],
+    companySizeValues : string[] = [],
+    pageNumber = 1
   ) => {
     try {
       setLoading(true);
@@ -155,17 +182,19 @@ export default function CompaniesPage() {
 
       if (stateValue) params.append("state", stateValue);
 
-      if (companyTypeValue) {
-        params.append("company_type", companyTypeValue);
+      if (companyTypeValues.length > 0) {
+        companyTypeValues.forEach((type) => {
+          params.append("company_type", type);
+        });
       }
 
-      if (industryValue) {
-        params.append("industry", industryValue);
-      }
+      selectedIndustries.forEach((industry) => {
+        params.append("industry", industry);
+      });
 
-      if (companySizeValue) {
-        params.append("company_size", companySizeValue);
-      }
+      selectedCompanySizes.forEach((size) => {
+        params.append("company_size", size);
+      });
 
       params.append("page", pageNumber.toString());
 
@@ -262,13 +291,40 @@ export default function CompaniesPage() {
       setAllCompanies([]);
     } finally {
       setLoading(false);
+      setInitialLoading(false);
     }
   };
+  // useEffect(() => {
+  //   fetchCompanies();
+  // }, []);
   useEffect(() => {
-    fetchCompanies();
-  }, []);
+  fetchCompanies(
+    search,
+    selectedState,
+    selectedCompanyTypes,
+    selectedIndustries,
+    selectedCompanySizes,
+    currentPage
+  );
+}, [
+  search,
+  selectedState,
+  selectedCompanyTypes,
+  selectedIndustries,
+  selectedCompanySizes,
+  currentPage,
+]);
+useEffect(() => {
+  setCurrentPage(1);
+}, [
+  search,
+  selectedState,
+  selectedCompanyTypes,
+  selectedIndustries,
+  selectedCompanySizes,
+]);
 
-  if (loading)
+  if (initialLoading)
     return (
       <div className="p-6 max-w-5xl mx-auto space-y-6 animate-pulse">
         <div className="space-y-3">
@@ -306,26 +362,29 @@ export default function CompaniesPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Sidebar filters */}
           <div className="lg:col-span-3 bg-white border rounded-lg p-4 h-fit">
-          <div className="flex gap-2">
-            <h3 className="font-semibold mb-4">All Filters</h3>
-            <Button
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold text-lg text-gray-800">
+                All Filters
+              </h3>
+
+              <Button
                 variant="outline"
+                size="sm"
                 onClick={() => {
                   setSearch("");
                   setSelectedState("");
-                  setSelectedCompanyType("");
-                  setSelectedIndustry("");
-                  setSelectedCompanySize("");
-
-                  fetchCompanies();
+                  setSelectedCompanyTypes([]);
+                  setSelectedIndustries([]);
+                  setSelectedCompanySizes([]);
+                  setCurrentPage(1);
                 }}
+                className="h-8 px-3"
               >
-                Reset
+                Clear All
               </Button>
-              </div>
+            </div>
 
             {/* Search */}
-
             <div className="mb-5">
               <label className="text-sm font-medium">Search</label>
 
@@ -338,74 +397,135 @@ export default function CompaniesPage() {
             </div>
 
             {/* Company Type */}
-            <div className="mb-5">
-              <label className="text-sm font-medium">Company Type</label>
-              <AsyncSelect
-                cacheOptions
-                defaultOptions
-                loadOptions={loadCompanyTypes}
-                value={
-                  selectedCompanyType
-                    ? {
-                        value: selectedCompanyType,
-                        label: selectedCompanyType,
+            <div>
+              <Label className="text-sm font-medium text-gray-700 mb-2 mt-3 block">
+                Company Type
+              </Label>
+
+              {companyTypes
+                .sort((a, b) => {
+                  const aSelected = selectedCompanyTypes.includes(a);
+                  const bSelected = selectedCompanyTypes.includes(b);
+                  return aSelected === bSelected ? 0 : aSelected ? -1 : 1;
+                })
+                .slice(0, showMoreCompanyType ? companyTypes.length : 4)
+                .map((type) => (
+                  <div
+                    key={type}
+                    className="flex items-center space-x-2 mb-2"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedCompanyTypes.includes(type)}
+                      onChange={(e) =>
+                        handleCompanyTypeFilter(type, e.target.checked)
                       }
-                    : null
-                }
-                onChange={(selected: any) =>
-                  setSelectedCompanyType(selected?.value || "")
-                }
-                placeholder="Company Type"
-              />
+                    />
+                    <label className="text-sm text-gray-600">
+                      {type}
+                    </label>
+                  </div>
+                ))}
+
+              {companyTypes.length > 4 && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    setShowMoreCompanyType(!showMoreCompanyType)
+                  }
+                  className="text-blue-600 text-sm mt-1"
+                >
+                  {showMoreCompanyType ? "Less" : "More"}
+                </button>
+              )}
             </div>
 
-            {/* Industry */}
-            <div className="mb-5">
-              <label className="text-sm font-medium">Industry</label>
-              <AsyncSelect
-                cacheOptions
-                defaultOptions
-                loadOptions={loadIndustries}
-                value={
-                  selectedIndustry
-                    ? {
-                        value: selectedIndustry,
-                        label: selectedIndustry,
+            <div>
+              <Label className="text-sm font-medium text-gray-700 mb-2 mt-3 block">
+                Industry
+              </Label>
+
+              {industries
+                .sort((a, b) => {
+                  const aSelected = selectedIndustries.includes(a);
+                  const bSelected = selectedIndustries.includes(b);
+                  return aSelected === bSelected ? 0 : aSelected ? -1 : 1;
+                })
+                .slice(0, showMoreIndustry ? industries.length : 4)
+                .map((industry) => (
+                  <div
+                    key={industry}
+                    className="flex items-center space-x-2 mb-2"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedIndustries.includes(industry)}
+                      onChange={(e) =>
+                        handleIndustryFilter(industry, e.target.checked)
                       }
-                    : null
-                }
-                onChange={(selected: any) =>
-                  setSelectedIndustry(selected?.value || "")
-                }
-                placeholder="Industry"
-              />
+                    />
+                    <label className="text-sm text-gray-600">
+                      {industry}
+                    </label>
+                  </div>
+                ))}
+
+              {industries.length > 4 && (
+                <button
+                  type="button"
+                  onClick={() => setShowMoreIndustry(!showMoreIndustry)}
+                  className="text-blue-600 text-sm mt-1"
+                >
+                  {showMoreIndustry ? "Less" : "More"}
+                </button>
+              )}
             </div>
 
-            {/* Company Size */}
-            <div className="mb-5">
-              <label className="text-sm font-medium">Company Size</label>
-              <AsyncSelect
-                cacheOptions
-                defaultOptions
-                loadOptions={loadCompanySizes}
-                value={
-                  selectedCompanySize
-                    ? {
-                        value: selectedCompanySize,
-                        label: selectedCompanySize,
+            <div>
+              <Label className="text-sm font-medium text-gray-700 mt-3 mb-2 block">
+                Company Size
+              </Label>
+
+              {companySizes
+                .sort((a, b) => {
+                  const aSelected = selectedCompanySizes.includes(a);
+                  const bSelected = selectedCompanySizes.includes(b);
+                  return aSelected === bSelected ? 0 : aSelected ? -1 : 1;
+                })
+                .slice(0, showMoreCompanySize ? companySizes.length : 4)
+                .map((size) => (
+                  <div
+                    key={size}
+                    className="flex items-center space-x-2 mb-2"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedCompanySizes.includes(size)}
+                      onChange={(e) =>
+                        handleCompanySizeFilter(size, e.target.checked)
                       }
-                    : null
-                }
-                onChange={(selected: any) =>
-                  setSelectedCompanySize(selected?.value || "")
-                }
-                placeholder="Company Size"
-              />
+                    />
+                    <label className="text-sm text-gray-600">
+                      {size}
+                    </label>
+                  </div>
+                ))}
+
+              {companySizes.length > 4 && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    setShowMoreCompanySize(!showMoreCompanySize)
+                  }
+                  className="text-blue-600 text-sm mt-1"
+                >
+                  {showMoreCompanySize ? "Less" : "More"}
+                </button>
+              )}
             </div>
 
             {/* State */}
-
-            <div className="mb-5">
+            <div className="mb-5 mt-3">
               <label className="text-sm font-medium">State</label>
 
               <AsyncSelect
@@ -441,41 +561,6 @@ export default function CompaniesPage() {
               />
             </div>
 
-            {/* Buttons */}
-
-              <Button
-                className="flex-1"
-                onClick={() => {
-                  setPage(1);
-
-                  fetchCompanies(
-                    search,
-                    selectedState,
-                    selectedCompanyType,
-                    selectedIndustry,
-                    selectedCompanySize,
-                    1
-                  );
-                }}
-              >
-                Apply Filters
-              </Button>
-
-              {/* <Button
-                variant="outline"
-                onClick={() => {
-                  setSearch("");
-                  setSelectedState("");
-                  setSelectedCompanyType("");
-                  setSelectedIndustry("");
-                  setSelectedCompanySize("");
-
-                  fetchCompanies();
-                }}
-              >
-                Reset
-              </Button>
-            </div> */}
           </div>
 
           {allCompanies.length === 0 ? (
@@ -513,9 +598,9 @@ export default function CompaniesPage() {
                   onClick={() => {
                     setSearch("");
                     setSelectedState("");
-                    setSelectedCompanyType("");
-                    setSelectedIndustry("");
-                    setSelectedCompanySize("");
+                    setSelectedCompanyTypes([]);
+                    setSelectedIndustries([]);
+                    setSelectedCompanySizes([]);
                     setPage(1);
                     fetchCompanies();
                   }}
@@ -589,16 +674,7 @@ export default function CompaniesPage() {
               {/* Previous */}
               <button
                 disabled={currentPage === 1}
-                onClick={() =>
-                  fetchCompanies(
-                    search,
-                    selectedState,
-                    selectedCompanyType,
-                    selectedIndustry,
-                    selectedCompanySize,
-                    currentPage - 1
-                  )
-                }
+                onClick={() => setCurrentPage(currentPage - 1)}
                 className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-700 shadow-sm hover:bg-gray-50 transition disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 ‹
@@ -612,16 +688,7 @@ export default function CompaniesPage() {
               {/* Next */}
               <button
                 disabled={currentPage === totalPages}
-                onClick={() =>
-                  fetchCompanies(
-                    search,
-                    selectedState,
-                    selectedCompanyType,
-                    selectedIndustry,
-                    selectedCompanySize,
-                    currentPage + 1
-                  )
-                }
+                onClick={() => setCurrentPage(currentPage + 1)}
                 className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-700 shadow-sm hover:bg-gray-50 transition disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 ›
