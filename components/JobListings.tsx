@@ -793,7 +793,7 @@ useEffect(() => {
 
     if (openModal) {
       setSelectedJob(job);
-      setIsJobDetailOpen(true);
+      // setIsJobDetailOpen(true);
     }
 
     const storageKey = `job_request_id_${job.id}`;
@@ -1109,1010 +1109,9 @@ setUserData({
         </div>
         <div className="grid lg:grid-cols-4 gap-6">
           {/* Sidebar Filters */}
-          <div className="hidden lg:block lg:col-span-1">
-            <Card className="sticky top-4">
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900">
-                    Filters
-                  </h3>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={clearAllFilters}
-                    className="text-purple-600 hover:text-purple-700"
-                  >
-                    Clear All
-                  </Button>
-                </div>
-
-                <div className="space-y-6">
-                  {/* Location */}
-                  <div>
-                    <Label className="text-sm font-medium text-gray-700 mb-2 block">
-                      Location
-                    </Label>
-
-                    <Select
-                      value={filters.location || undefined}
-                      onValueChange={(location) =>
-                        setFilters((prev) => ({
-                          ...prev,
-                          location,
-                        }))
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select location" />
-                      </SelectTrigger>
-
-                      <SelectContent className="max-h-60">
-                        {/* Search input */}
-                        <div className="sticky top-0 z-20 bg-white p-2 border-b">
-                          <input
-                            type="text"
-                            placeholder="Search location..."
-                            value={searchLocation}
-                            onChange={(e) => setSearchLocation(e.target.value)}
-                            onKeyDown={(e) => e.stopPropagation()}
-                            className="w-full h-10 text-sm border rounded px-2 placeholder-gray-400 appearance-none focus:outline-none"
-                          />
-                        </div>
-
-                        {/* Loading */}
-                        {loading && (
-                          <p className="text-sm text-gray-500 p-2">
-                            Loading locations...
-                          </p>
-                        )}
-
-                        {/* Location list */}
-                        {allLocations
-                          .filter(
-                            (location) =>
-                              typeof location.name === "string" &&
-                              location.name
-                                .toLowerCase()
-                                .startsWith(searchLocation.toLowerCase()),
-                          )
-                          .map((location) => {
-                            const isSelected =
-                              filters.location === location.name;
-
-                            return (
-                              <SelectItem
-                                key={location.id}
-                                value={location.name}
-                                className={`text-sm cursor-pointer
-                                 ${
-                                   isSelected
-                                     ? "bg-blue-100 text-blue-700 font-medium"
-                                     : "text-gray-700 hover:bg-gray-100"
-                                 }`}
-                              >
-                                {location.name}
-                              </SelectItem>
-                            );
-                          })}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Experience */}
-                  {/* <div>
-                    <Label className="text-sm font-medium text-gray-700 mb-2 block">
-                      Experience
-                    </Label>
-
-                    <div className="flex items-center gap-2">
-                      <select
-                        value={filters.experience?.[0] || ""}
-                        onChange={(e) => {
-                          const min = e.target.value;
-                          const max = filters.experience?.[1] || "";
-
-                          setFilters((prev) => ({
-                            ...prev,
-                            experience: [min, max],
-                          }));
-                        }}
-                        className="w-full border rounded-lg px-3 py-2 text-sm"
-                      >
-                        <option value="">Min Exp</option>
-
-                        {[...Array(21)].map((_, i) => (
-                          <option key={i} value={i}>
-                            {i} Year{i !== 1 ? "s" : ""}
-                          </option>
-                        ))}
-                      </select>
-
-                      <span>-</span>
-                      <select
-                        value={filters.experience?.[1] || ""}
-                        onChange={(e) => {
-                          const min = filters.experience?.[0] || "";
-                          const max = e.target.value;
-
-                          setFilters((prev) => ({
-                            ...prev,
-                            experience: [min, max],
-                          }));
-                        }}
-                        className="w-full border rounded-lg px-3 py-2 text-sm"
-                      >
-                        <option value="">Max Exp</option>
-
-                        {[...Array(21)].map((_, i) => (
-                          <option key={i} value={i}>
-                            {i} Year{i !== 1 ? "s" : ""}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    {filters.experience?.[0] &&
-                      filters.experience?.[1] &&
-                      Number(filters.experience[0]) >
-                        Number(filters.experience[1]) && (
-                        <p className="text-red-500 text-xs mt-1">
-                          Min experience cannot be greater than max experience
-                        </p>
-                      )}
-                  </div> */}
-                  {/* Experience */}
-                  <div>
-                    <Label className="text-sm font-medium text-gray-700 mb-2 block">
-                      Experience
-                    </Label>
-
-                    <div className="flex items-center gap-2">
-                      {/* Min Experience */}
-                      <select
-                        value={filters.min_experience || ""}
-                        onChange={(e) => {
-                          setFilters((prev) => ({
-                            ...prev,
-                            min_experience: e.target.value,
-                            max_experience: "", // reset max when min changes
-                          }));
-                        }}
-                        className="w-full border rounded-lg px-3 py-2 text-sm"
-                      >
-                        <option value="">Min Exp</option>
-
-                        {[...Array(21)].map((_, i) => (
-                          <option key={i} value={i}>
-                            {i === 0 ? "Fresher" : `${i} Year${i !== 1 ? "s" : ""}`}
-                          </option>
-                        ))}
-
-                        <option value="20+">20+ Years</option>
-                      </select>
-
-                      <span>-</span>
-
-                      {/* Max Experience */}
-                      <select
-                        value={filters.max_experience || ""}
-                        onChange={(e) => {
-                          setFilters((prev) => ({
-                            ...prev,
-                            max_experience: e.target.value,
-                          }));
-                        }}
-                        className="w-full border rounded-lg px-3 py-2 text-sm"
-                        disabled={!filters.min_experience}
-                      >
-                        <option value="">Max Exp</option>
-
-                        {[
-                          ...Array(21)
-                            .fill(0)
-                            .map((_, i) => i.toString()),
-                          "20+",
-                        ]
-                          .filter((exp) => {
-                            if (!filters.min_experience) return true;
-
-                            if (filters.min_experience === "20+") {
-                              return exp === "20+";
-                            }
-
-                            if (exp === "20+") return true;
-
-                            return Number(exp) >= Number(filters.min_experience);
-                          })
-                          .map((exp) => (
-                            <option key={exp} value={exp}>
-                              {exp === "0"
-                                ? "Fresher"
-                                : exp === "20+"
-                                ? "20+ Years"
-                                : `${exp} Year${Number(exp) !== 1 ? "s" : ""}`}
-                            </option>
-                          ))}
-                      </select>
-                    </div>
-
-                    {/* Validation */}
-                    {filters.min_experience &&
-                      filters.max_experience &&
-                      filters.min_experience !== "20+" &&
-                      filters.max_experience !== "20+" &&
-                      Number(filters.min_experience) >
-                        Number(filters.max_experience) && (
-                        <p className="text-red-500 text-xs mt-1">
-                          Min experience cannot be greater than max experience
-                        </p>
-                      )}
-                  </div>
-
-                  {/* Job Type */}
-                  <div>
-                    <Label className="text-sm font-medium text-gray-700 mb-2 block">
-                      Job Type
-                    </Label>
-
-                    {jobTypes
-                      .sort((a, b) => {
-                        const aSelected = filters.jobType.includes(a);
-                        const bSelected = filters.jobType.includes(b);
-                        return aSelected === bSelected ? 0 : aSelected ? -1 : 1;
-                      })
-                      .slice(0, showMoreJobType ? jobTypes.length : 4)
-                      .map((type) => (
-                        <div
-                          key={type}
-                          className="flex items-center space-x-2 mb-2"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={filters.jobType.includes(type)}
-                            onChange={(e) =>
-                              handleJobTypeFilter(type, e.target.checked)
-                            }
-                          />
-                          <label className="text-sm text-gray-600">
-                            {type}
-                          </label>
-                        </div>
-                      ))}
-
-                    {jobTypes.length > 4 && (
-                      <button
-                        onClick={() => setShowMoreJobType(!showMoreJobType)}
-                        className="text-blue-600 text-sm mt-1"
-                      >
-                        {showMoreJobType ? "Less" : "More"}
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Work Mode */}
-                  <div>
-                    <Label className="text-sm font-medium text-gray-700 mb-2 block">
-                      Work Mode
-                    </Label>
-
-                    {workModes
-                      .sort((a, b) => {
-                        const aSelected = filters.workMode.includes(a);
-                        const bSelected = filters.workMode.includes(b);
-                        return aSelected === bSelected ? 0 : aSelected ? -1 : 1;
-                      })
-                      .slice(0, showMoreWorkMode ? workModes.length : 4)
-                      .map((mode) => (
-                        <div
-                          key={mode}
-                          className="flex items-center space-x-2 mb-2"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={filters.workMode.includes(mode)}
-                            onChange={(e) =>
-                              handleWorkModeFilter(mode, e.target.checked)
-                            }
-                          />
-                          <label className="text-sm text-gray-600">
-                            {mode}
-                          </label>
-                        </div>
-                      ))}
-
-                    {workModes.length > 4 && (
-                      <button
-                        onClick={() => setShowMoreWorkMode(!showMoreWorkMode)}
-                        className="text-blue-600 text-sm mt-1"
-                      >
-                        {showMoreWorkMode ? "Less" : "More"}
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Salary Range */}
-                  <div>
-  <Label className="text-sm font-medium text-gray-700 mb-2 block">
-    Salary Range
-  </Label>
-
-  {salaryRanges
-    .sort((a, b) => {
-      const aSelected = filters.salaryRange.includes(a);
-      const bSelected = filters.salaryRange.includes(b);
-      return aSelected === bSelected ? 0 : aSelected ? -1 : 1;
-    })
-    .slice(0, showMoreSalary ? salaryRanges.length : 4)
-    .map((range) => (
-      <div
-        key={range}
-        className="flex items-center space-x-2 mb-2"
-      >
-        <input
-          type="checkbox"
-          checked={filters.salaryRange.includes(range)}
-          onChange={(e) =>
-            handleSalaryFilter(range, e.target.checked)
-          }
-        />
-        <label className="text-sm text-gray-600">
-          {range}
-        </label>
-      </div>
-    ))}
-
-  {salaryRanges.length > 4 && (
-    <button
-      onClick={() => setShowMoreSalary(!showMoreSalary)}
-      className="text-blue-600 text-sm mt-1"
-    >
-      {showMoreSalary ? "Less" : "More"}
-    </button>
-  )}
-</div>
-
-                  {/* Posted Within */}
-                  <div>
-                    <Label className="text-sm font-medium text-gray-700 mb-2 block">
-                      Posted Within
-                    </Label>
-
-                    {postedOptions
-                      .sort((a, b) => {
-                        const aSelected = filters.postedWithin.includes(
-                          a.value,
-                        );
-                        const bSelected = filters.postedWithin.includes(
-                          b.value,
-                        );
-                        return aSelected === bSelected ? 0 : aSelected ? -1 : 1;
-                      })
-                      .slice(0, showMorePosted ? postedOptions.length : 4)
-                      .map((option) => (
-                        <div
-                          key={option.value}
-                          className="flex items-center space-x-2 mb-2"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={filters.postedWithin.includes(
-                              option.value,
-                            )}
-                            onChange={(e) =>
-                              handlePostedFilter(option.value, e.target.checked)
-                            }
-                          />
-                          <label className="text-sm text-gray-600">
-                            {option.label}
-                          </label>
-                        </div>
-                      ))}
-
-                    {postedOptions.length > 4 && (
-                      <button
-                        onClick={() => setShowMorePosted(!showMorePosted)}
-                        className="text-blue-600 text-sm mt-1"
-                      >
-                        {showMorePosted ? "Less" : "More"}
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Companies */}
-                  <div className="mb-4">
-                    <Label className="text-sm font-medium text-gray-700 mb-2 block">
-                      Companies
-                    </Label>
-
-                    {/* Search */}
-                    <input
-                      type="text"
-                      placeholder="Search company..."
-                      value={searchCompany}
-                      onChange={(e) => setSearchCompany(e.target.value)}
-                      className="w-full h-9 text-sm border rounded px-2 mb-2"
-                    />
-
-                    {companies
-                      .filter((company) =>
-                        company
-                          .toLowerCase()
-                          .includes(searchCompany.toLowerCase()),
-                      )
-                      .sort((a, b) => {
-                        const aSelected = filters.companies.includes(a);
-                        const bSelected = filters.companies.includes(b);
-                        return aSelected === bSelected ? 0 : aSelected ? -1 : 1;
-                      })
-                      .slice(0, showMoreCompanies ? companies.length : 4)
-                      .map((company) => (
-                        <div
-                          key={company}
-                          className="flex items-center space-x-2 mb-2"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={filters.companies.includes(company)}
-                            onChange={(e) =>
-                              handleCompanyFilter(company, e.target.checked)
-                            }
-                          />
-                          <label className="text-sm text-gray-600">
-                            {company}
-                          </label>
-                        </div>
-                      ))}
-
-                    {companies.length > 4 && (
-                      <button
-                        onClick={() => setShowMoreCompanies(!showMoreCompanies)}
-                        className="text-blue-600 text-sm mt-1"
-                      >
-                        {showMoreCompanies ? "Less" : "More"}
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Skills */}
-                  {/* <div>
-                    <Label className="text-sm font-medium text-gray-700 mb-2 block">
-                      Skills
-                    </Label>
-
-                     <Select
-                       open={open} 
-                       onOpenChange={setOpen}
-                       value="" 
-                       onValueChange={() => {}}
-                     >
-                       <SelectTrigger>
-                         <SelectValue
-                           placeholder={
-                             filters.skills.length > 0
-                               ? `${filters.skills.length} skills selected`
-                               : "Select skills"
-                           }
-                         />
-                       </SelectTrigger>
-
-                      <SelectContent className="max-h-60">
-                        <div className="sticky top-0 bg-white z-10 p-2 border-b">
-                          <input
-                            type="text"
-                            placeholder="Search skills..."
-                            value={searchSkill}
-                            onChange={(e) => setSearchSkill(e.target.value)}
-                            onKeyDown={(e) => e.stopPropagation()}
-                            className="w-full h-8 text-sm border rounded px-2"
-                          />
-                        </div>
-
-                        {skillsList
-                          .filter((skill) =>
-                            skill.toLowerCase().startsWith(searchSkill.toLowerCase())
-                          )
-                          .map((skill) => {
-                            const isSelected = filters.skills.includes(skill);
-
-                             return (
-                               <div
-                                 key={skill}
-                                 className={`px-3 py-2 text-sm cursor-pointer flex justify-between items-center
-                                   ${
-                                     isSelected
-                                       ? "bg-blue-100 text-blue-700 font-medium"
-                                       : "text-gray-700 hover:bg-gray-100"
-                                   }`}
-                                 onClick={() => {
-                                   setFilters((prev) => ({
-                                     ...prev,
-                                     skills: isSelected
-                                       ? prev.skills.filter((s) => s !== skill)
-                                       : [...prev.skills, skill],
-                                   }));
-                                   setOpen(false);
-                                 }}
-                               >
-                                 <span>{skill}</span>
-                                 {isSelected && <span>✓</span>}
-                               </div>
-                             );
-                           })}
-                      </SelectContent>
-                    </Select>
-                  </div> */}
-                </div>
-              </div>
-            </Card>
-          </div>
-          {/* mobile filters */}
-          <div
-            className={`fixed inset-0 z-50 md:hidden ${
-              showFilters ? "block" : "hidden"
-            }`}
-          >
-            {/* Overlay */}
-            <div
-              className="absolute inset-0 bg-black/40"
-              onClick={() => setShowFilters(false)}
-            />
-
-            {/* Drawer */}
-            <div
-              className={`absolute right-0 top-0 h-full w-3/4 max-w-sm bg-white overflow-y-auto transition-transform duration-300 ${
-                showFilters ? "translate-x-0" : "translate-x-full"
-              }`}
-            >
-              {/* Header */}
-              <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-white z-10">
-                <h3 className="font-semibold">Filters</h3>
-
-                <button
-                  onClick={() => setShowFilters(false)}
-                  className="text-gray-500"
-                >
-                  ✕
-                </button>
-              </div>
-
-              <div className="p-6">
-                          <div className="flex items-center justify-between mb-6">
-                            <h3 className="text-lg font-semibold text-gray-900">
-                            </h3>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={clearAllFilters}
-                              className="text-purple-600 hover:text-purple-700"
-                            >
-                              Clear All
-                            </Button>
-                          </div>
-
-                          <div className="space-y-6">
-                            {/* Search */}
-                            <div>
-                              <Label className="text-sm font-medium text-gray-700 mb-2 block">
-                                Search Jobs
-                              </Label>
-                              <div className="relative">
-                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                <Input
-                                  placeholder="Job title, skills, company..."
-                                  value={filters.search}
-                                  onChange={(e) =>
-                                    handleFilterChange("search", e.target.value)
-                                  }
-                                  className="pl-10"
-                                />
-                              </div>
-                            </div>
-
-                            {/* Location */}
-                            <div>
-                              <Label className="text-sm font-medium text-gray-700 mb-2 block">
-                                Location
-                              </Label>
-
-                              <Select
-                                value={filters.location || undefined}
-                                onValueChange={(location) =>
-                                  setFilters((prev) => ({
-                                    ...prev,
-                                    location,
-                                  }))
-                                }
-                              >
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select location" />
-                                </SelectTrigger>
-
-                                <SelectContent className="max-h-60">
-                                  {/* Search input */}
-                                  <div className="sticky top-0 z-20 bg-white p-2 border-b">
-                                    <input
-                                      type="text"
-                                      placeholder="Search location..."
-                                      value={searchLocation}
-                                      onChange={(e) => setSearchLocation(e.target.value)}
-                                      onKeyDown={(e) => e.stopPropagation()}
-                                      className="w-full h-10 text-sm border rounded px-2 placeholder-gray-400 appearance-none focus:outline-none"
-                                    />
-                                  </div>
-
-                                  {/* Loading */}
-                                  {loading && (
-                                    <p className="text-sm text-gray-500 p-2">
-                                      Loading locations...
-                                    </p>
-                                  )}
-
-                                  {/* Location list */}
-                                  {allLocations
-                                    .filter(
-                                      (location) =>
-                                        typeof location.name === "string" &&
-                                        location.name
-                                          .toLowerCase()
-                                          .startsWith(searchLocation.toLowerCase()),
-                                    )
-                                    .map((location) => {
-                                      const isSelected =
-                                        filters.location === location.name;
-
-                                      return (
-                                        <SelectItem
-                                          key={location.id}
-                                          value={location.name}
-                                          className={`text-sm cursor-pointer
-                                          ${
-                                            isSelected
-                                              ? "bg-blue-100 text-blue-700 font-medium"
-                                              : "text-gray-700 hover:bg-gray-100"
-                                          }`}
-                                        >
-                                          {location.name}
-                                        </SelectItem>
-                                      );
-                                    })}
-                                </SelectContent>
-                              </Select>
-                            </div>
-
-                            {/* Experience */}
-                            <div>
-                              <Label className="text-sm font-medium text-gray-700 mb-2 block">
-                                Experience
-                              </Label>
-
-                              {visibleExperience.map((exp) => (
-                                <div className="flex items-center space-x-2">
-                                  <Checkbox
-                                    id={exp}
-                                    checked={filters.experience.includes(exp)}
-                                    onCheckedChange={(checked) =>
-                                      handleExperienceFilter(exp, checked as boolean)
-                                    }
-                                  />
-                                  <label
-                                    htmlFor={exp}
-                                    className="text-sm text-gray-600 cursor-pointer"
-                                  >
-                                    {exp}
-                                  </label>
-                                </div>
-                              ))}
-
-                              {experienceList.length > 4 && (
-                                <button
-                                  onClick={() =>
-                                    setShowMoreExperience(!showMoreExperience)
-                                  }
-                                  className="text-purple-600 text-sm mt-2"
-                                >
-                                  {showMoreExperience ? "View Less" : "View More"}
-                                </button>
-                              )}
-                            </div>
-
-                            {/* Job Type */}
-                            <div>
-                              <Label className="text-sm font-medium text-gray-700 mb-2 block">
-                                Job Type
-                              </Label>
-
-                              {jobTypes
-                                .sort((a, b) => {
-                                  const aSelected = filters.jobType.includes(a);
-                                  const bSelected = filters.jobType.includes(b);
-                                  return aSelected === bSelected ? 0 : aSelected ? -1 : 1;
-                                })
-                                .slice(0, showMoreJobType ? jobTypes.length : 4)
-                                .map((type) => (
-                                  <div
-                                    key={type}
-                                    className="flex items-center space-x-2 mb-2"
-                                  >
-                                    <input
-                                      type="checkbox"
-                                      checked={filters.jobType.includes(type)}
-                                      onChange={(e) =>
-                                        handleJobTypeFilter(type, e.target.checked)
-                                      }
-                                    />
-                                    <label className="text-sm text-gray-600">
-                                      {type}
-                                    </label>
-                                  </div>
-                                ))}
-
-                              {jobTypes.length > 4 && (
-                                <button
-                                  onClick={() => setShowMoreJobType(!showMoreJobType)}
-                                  className="text-blue-600 text-sm mt-1"
-                                >
-                                  {showMoreJobType ? "Less" : "More"}
-                                </button>
-                              )}
-                            </div>
-
-                            {/* Work Mode */}
-                            <div>
-                              <Label className="text-sm font-medium text-gray-700 mb-2 block">
-                                Work Mode
-                              </Label>
-
-                              {workModes
-                                .sort((a, b) => {
-                                  const aSelected = filters.workMode.includes(a);
-                                  const bSelected = filters.workMode.includes(b);
-                                  return aSelected === bSelected ? 0 : aSelected ? -1 : 1;
-                                })
-                                .slice(0, showMoreWorkMode ? workModes.length : 4)
-                                .map((mode) => (
-                                  <div
-                                    key={mode}
-                                    className="flex items-center space-x-2 mb-2"
-                                  >
-                                    <input
-                                      type="checkbox"
-                                      checked={filters.workMode.includes(mode)}
-                                      onChange={(e) =>
-                                        handleWorkModeFilter(mode, e.target.checked)
-                                      }
-                                    />
-                                    <label className="text-sm text-gray-600">
-                                      {mode}
-                                    </label>
-                                  </div>
-                                ))}
-
-                              {workModes.length > 4 && (
-                                <button
-                                  onClick={() => setShowMoreWorkMode(!showMoreWorkMode)}
-                                  className="text-blue-600 text-sm mt-1"
-                                >
-                                  {showMoreWorkMode ? "Less" : "More"}
-                                </button>
-                              )}
-                            </div>
-
-                            {/* Salary Range */}
-                            <div>
-                              <Label className="text-sm font-medium text-gray-700 mb-2 block">
-                                Salary Range
-                              </Label>
-
-                              {salaryRanges
-                                .sort((a, b) => {
-                                  const aSelected = filters.salaryRange.includes(a);
-                                  const bSelected = filters.salaryRange.includes(b);
-                                  return aSelected === bSelected ? 0 : aSelected ? -1 : 1;
-                                })
-                                .slice(0, showMoreSalary ? salaryRanges.length : 4)
-                                .map((range) => (
-                                  <div
-                                    key={range}
-                                    className="flex items-center space-x-2 mb-2"
-                                  >
-                                    <input
-                                      type="checkbox"
-                                      checked={filters.salaryRange.includes(range)}
-                                      onChange={(e) =>
-                                        handleSalaryFilter(range, e.target.checked)
-                                      }
-                                    />
-                                    <label className="text-sm text-gray-600">
-                                      {range}
-                                    </label>
-                                  </div>
-                                ))}
-
-                              {salaryRanges.length > 4 && (
-                                <button
-                                  onClick={() => setShowMoreSalary(!showMoreSalary)}
-                                  className="text-blue-600 text-sm mt-1"
-                                >
-                                  {showMoreSalary ? "Less" : "More"}
-                                </button>
-                              )}
-                            </div>
-
-                            {/* Posted Within */}
-                            <div>
-                              <Label className="text-sm font-medium text-gray-700 mb-2 block">
-                                Posted Within
-                              </Label>
-
-                              {postedOptions
-                                .sort((a, b) => {
-                                  const aSelected = filters.postedWithin.includes(
-                                    a.value,
-                                  );
-                                  const bSelected = filters.postedWithin.includes(
-                                    b.value,
-                                  );
-                                  return aSelected === bSelected ? 0 : aSelected ? -1 : 1;
-                                })
-                                .slice(0, showMorePosted ? postedOptions.length : 4)
-                                .map((option) => (
-                                  <div
-                                    key={option.value}
-                                    className="flex items-center space-x-2 mb-2"
-                                  >
-                                    <input
-                                      type="checkbox"
-                                      checked={filters.postedWithin.includes(
-                                        option.value,
-                                      )}
-                                      onChange={(e) =>
-                                        handlePostedFilter(option.value, e.target.checked)
-                                      }
-                                    />
-                                    <label className="text-sm text-gray-600">
-                                      {option.label}
-                                    </label>
-                                  </div>
-                                ))}
-
-                              {postedOptions.length > 4 && (
-                                <button
-                                  onClick={() => setShowMorePosted(!showMorePosted)}
-                                  className="text-blue-600 text-sm mt-1"
-                                >
-                                  {showMorePosted ? "Less" : "More"}
-                                </button>
-                              )}
-                            </div>
-
-                            {/* Companies */}
-                            <div>
-                              <Label className="text-sm font-medium text-gray-700 mb-2 block">
-                                Companies
-                              </Label>
-
-                              {/* Search */}
-                              <input
-                                type="text"
-                                placeholder="Search company..."
-                                value={searchCompany}
-                                onChange={(e) => setSearchCompany(e.target.value)}
-                                className="w-full h-9 text-sm border rounded px-2 mb-2"
-                              />
-
-                              {companies
-                                .filter((company) =>
-                                  company
-                                    .toLowerCase()
-                                    .includes(searchCompany.toLowerCase()),
-                                )
-                                .sort((a, b) => {
-                                  const aSelected = filters.companies.includes(a);
-                                  const bSelected = filters.companies.includes(b);
-                                  return aSelected === bSelected ? 0 : aSelected ? -1 : 1;
-                                })
-                                .slice(0, showMoreCompanies ? companies.length : 4)
-                                .map((company) => (
-                                  <div
-                                    key={company}
-                                    className="flex items-center space-x-2 mb-2"
-                                  >
-                                    <input
-                                      type="checkbox"
-                                      checked={filters.companies.includes(company)}
-                                      onChange={(e) =>
-                                        handleCompanyFilter(company, e.target.checked)
-                                      }
-                                    />
-                                    <label className="text-sm text-gray-600">
-                                      {company}
-                                    </label>
-                                  </div>
-                                ))}
-
-                              {companies.length > 4 && (
-                                <button
-                                  onClick={() => setShowMoreCompanies(!showMoreCompanies)}
-                                  className="text-blue-600 text-sm mt-1"
-                                >
-                                  {showMoreCompanies ? "Less" : "More"}
-                                </button>
-                              )}
-                            </div>
-
-                            {/* Skills */}
-                            {/* <div>
-                              <Label className="text-sm font-medium text-gray-700 mb-2 block">
-                                Skills
-                              </Label>
-
-                              <Select
-                                open={open} 
-                                onOpenChange={setOpen}
-                                value="" 
-                                onValueChange={() => {}}
-                              >
-                                <SelectTrigger>
-                                  <SelectValue
-                                    placeholder={
-                                      filters.skills.length > 0
-                                        ? `${filters.skills.length} skills selected`
-                                        : "Select skills"
-                                    }
-                                  />
-                                </SelectTrigger>
-
-                                <SelectContent className="max-h-60">
-                                  <div className="sticky top-0 bg-white z-10 p-2 border-b">
-                                    <input
-                                      type="text"
-                                      placeholder="Search skills..."
-                                      value={searchSkill}
-                                      onChange={(e) => setSearchSkill(e.target.value)}
-                                      onKeyDown={(e) => e.stopPropagation()}
-                                      className="w-full h-8 text-sm border rounded px-2"
-                                    />
-                                  </div>
-
-                                  {skillsList
-                                    .filter((skill) =>
-                                      skill.toLowerCase().startsWith(searchSkill.toLowerCase())
-                                    )
-                                    .map((skill) => {
-                                      const isSelected = filters.skills.includes(skill);
-
-                                      return (
-                                        <div
-                                          key={skill}
-                                          className={`px-3 py-2 text-sm cursor-pointer flex justify-between items-center
-                                            ${
-                                              isSelected
-                                                ? "bg-blue-100 text-blue-700 font-medium"
-                                                : "text-gray-700 hover:bg-gray-100"
-                                            }`}
-                                          onClick={() => {
-                                            setFilters((prev) => ({
-                                              ...prev,
-                                              skills: isSelected
-                                                ? prev.skills.filter((s) => s !== skill)
-                                                : [...prev.skills, skill],
-                                            }));
-                                            setOpen(false);
-                                          }}
-                                        >
-                                          <span>{skill}</span>
-                                          {isSelected && <span>✓</span>}
-                                        </div>
-                                      );
-                                    })}
-                                </SelectContent>
-                              </Select>
-                            </div> */}
-                          </div>
-                        </div>
-            </div>
-          </div>
+         
           {/* Job Listings */}
-          <div className="lg:col-span-3">
+          <div className="lg:col-span-4">
             <div className="mb-4 flex items-center justify-between">
               <p className="text-gray-600">
                 Showing {filteredJobs.length} jobs
@@ -2130,7 +1129,12 @@ setUserData({
                 </div>
             </div>
 
-            <div className="space-y-4 md:space-y-6">
+
+
+            <div className="grid grid-cols-4 xl:grid-cols-12 gap-6">
+
+            {/* Left Side - Job List */}
+            <div className="xl:col-span-5 max-h-[85vh] overflow-y-auto pr-2">
               {sortedJobs.length === 0 ? (
                 <div className="text-center py-12">
                   <Briefcase className="w-16 h-16 text-gray-300 mx-auto mb-4" />
@@ -2145,178 +1149,472 @@ setUserData({
               ) : (
                 sortedJobs.map((job) => (
                   <Card
-                    key={job.id}
-                    className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-transparent hover:border-l-purple-500"
-                  >
-                    <CardContent className="p-4 md:p-6">
-                      <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
-                        {/* Job Info */}
-                        <div className="flex-1">
-                          <div className="flex items-start justify-between mb-3">
-                            <div className="flex items-start space-x-3">
-                              <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                                  {job.company_user?.company_logo ? (
-                                    <Image
-                                      src={job.company_user.company_logo}
-                                      alt="company logo"
-                                      width={32}
-                                      height={25}
-                                      className="w-12 h-12 rounded-full object-cover border"
-                                    />
-                                  ) : (
-                                    <User className="w-6 h-6 text-gray-700 hover:text-purple-600" />
-                                  )}
-                                </div>
-                              <div className="min-w-0 flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                  <h3 className="text-lg md:text-xl font-semibold text-gray-900 hover:text-purple-600 transition-colors">
-                                    <a
-                                      href={`/job-details?id=${job.id}`}
-                                      onClick={() => {
-                                        handleViewDetails(job, false);
-                                      }}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="hover:underline"
-                                    >
-                                      {job.title}
-                                    </a>
-                                  </h3>
-                                    {appliedJobs.includes(Number(job.id)) && (
-                                     <Badge
-                                       onClick={() => window.location.assign("/applied-jobs")}
-                                       className="bg-green-100 text-green-700 text-xs cursor-pointer hover:bg-green-200"
-                                     >
-                                       Applied
-                                     </Badge>
+                      key={job.id}
+                      onClick={() => setSelectedJob(job)}
+                      className={`cursor-pointer hover:shadow-lg transition-all duration-300 border-l-4
+                        ${
+                          selectedJob?.id === job.id
+                            ? "border-l-purple-500 bg-purple-50"
+                            : "border-l-transparent hover:border-l-purple-500"
+                        }`}
+                    >
+                      <CardContent className="p-4 md:p-6">
+                        <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+                          {/* Job Info */}
+                          <div className="flex-1">
+                            <div className="flex items-start justify-between mb-3">
+                              <div className="flex items-start space-x-3">
+                                <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                    {job.company_user?.company_logo ? (
+                                      <Image
+                                        src={job.company_user.company_logo}
+                                        alt="company logo"
+                                        width={32}
+                                        height={25}
+                                        className="w-12 h-12 rounded-full object-cover border"
+                                      />
+                                    ) : (
+                                      <User className="w-6 h-6 text-gray-700 hover:text-purple-600" />
                                     )}
-                                  {job.urgentHiring && (
-                                    <Badge className="bg-red-100 text-red-800 text-xs">
-                                      Urgent
-                                    </Badge>
-                                  )}
-                                </div>
-                                <p className="text-purple-600 font-medium text-base md:text-lg mb-2">
-                                  {job.company}
-                                </p>
-                                <div className="flex flex-wrap items-center gap-3 md:gap-4 text-sm text-gray-600 mb-3">
-                                  <div className="flex items-center">
-                                    <MapPin className="w-4 h-4 mr-1 flex-shrink-0" />
-                                    <span>{job.location ?? "N/A"}</span>
                                   </div>
-                                  <div className="flex items-center">
-                                    <Briefcase className="w-4 h-4 mr-1 flex-shrink-0" />
-                                    <span>
-                                      {job.min_experience === "0" && job.max_experience === "0"
-                                        ? "Fresher"
-                                        : `${job.min_experience} - ${job.max_experience} ${
-                                            job.min_experience === job.max_experience &&
-                                            job.min_experience === "1"
-                                              ? "Year"
-                                              : "Years"
-                                          }`}
-                                    </span>
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <h3 className="text-lg md:text-xl font-semibold text-gray-900 hover:text-purple-600 transition-colors">
+                                      <a
+                                        // href={`/job-details?id=${job.id}`}
+                                        onClick={() => {
+                                          handleViewDetails(job, false);
+                                        }}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="hover:underline"
+                                      >
+                                        {job.title}
+                                      </a>
+                                    </h3>
+                                      {appliedJobs.includes(Number(job.id)) && (
+                                      <Badge
+                                        onClick={() => window.location.assign("/applied-jobs")}
+                                        className="bg-green-100 text-green-700 text-xs cursor-pointer hover:bg-green-200"
+                                      >
+                                        Applied
+                                      </Badge>
+                                      )}
+                                    {job.urgentHiring && (
+                                      <Badge className="bg-red-100 text-red-800 text-xs">
+                                        Urgent
+                                      </Badge>
+                                    )}
                                   </div>
-                                 <div className="flex items-center gap-1">
+                                  <p className="text-purple-600 font-medium text-base md:text-lg mb-2">
+                                    {job.company}
+                                  </p>
+                                  <div className="flex flex-wrap items-center gap-3 md:gap-4 text-sm text-gray-600 mb-3">
+                                    <div className="flex items-center">
+                                      <MapPin className="w-4 h-4 mr-1 flex-shrink-0" />
+                                      <span>{job.location ?? "N/A"}</span>
+                                    </div>
+                                    <div className="flex items-center">
+                                      <Briefcase className="w-4 h-4 mr-1 flex-shrink-0" />
+                                      <span>
+                                        {job.min_experience === "0" && job.max_experience === "0"
+                                          ? "Fresher"
+                                          : `${job.min_experience} - ${job.max_experience} ${
+                                              job.min_experience === job.max_experience &&
+                                              job.min_experience === "1"
+                                                ? "Year"
+                                                : "Years"
+                                            }`}
+                                      </span>
+                                    </div>
+                                  <div className="flex items-center gap-1">
+                                      <span>{job.currency?.symbol_native}</span>
 
-                                    <span>
-                                      {job.currency?.symbol_native}
-                                      {job.salary
-                                        ? new Intl.NumberFormat(
-                                            job.currency?.code === "INR" ? "en-IN" : "en-US"
-                                          ).format(Number(job.salary))
+                                      <span>
+                                        {job.salary
+                                          ? new Intl.NumberFormat(
+                                              job.currency?.code === "INR" ? "en-IN" : "en-US"
+                                            ).format(Number(job.salary))
+                                          : ""}
+                                        {" - "}
+                                        {job.salary_max
+                                          ? new Intl.NumberFormat(
+                                              job.currency?.code === "INR" ? "en-IN" : "en-US"
+                                            ).format(Number(job.salary_max))
+                                          : ""} / yr
+                                      </span>
+                                    </div>
+                                    <Badge
+                                      className={getWorkModeColor(job.work_mode ?? "")}
+                                    >
+                                      {job.work_mode
+                                        ? job.work_mode.charAt(0).toUpperCase() +
+                                          job.work_mode.slice(1).toLowerCase()
                                         : ""}
-                                      {" - "}
-                                      {job.currency?.symbol_native}
-                                      {job.salary_max
-                                        ? new Intl.NumberFormat(
-                                            job.currency?.code === "INR" ? "en-IN" : "en-US"
-                                          ).format(Number(job.salary_max))
-                                        : ""} / yr
-                                    </span>
+                                    </Badge>
                                   </div>
-                                  <Badge
-                                    className={getWorkModeColor(job.work_mode ?? "")}
-                                  >
-                                    {job.work_mode
-                                      ? job.work_mode.charAt(0).toUpperCase() +
-                                        job.work_mode.slice(1).toLowerCase()
-                                      : ""}
-                                  </Badge>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Job Description */}
+                            {/* <div
+                              className="text-gray-700 text-sm md:text-base leading-relaxed mb-4 line-clamp-2 overflow-hidden
+                              [&_ul]:list-disc [&_ul]:pl-6
+                              [&_ol]:list-decimal [&_ol]:pl-6
+                              [&_li]:mb-1"
+                              dangerouslySetInnerHTML={{
+                                __html: job.description || "",
+                              }}
+                            /> */}
+
+                            {/* Skills */}
+                            <div className="flex flex-wrap gap-2 mb-4">
+                              {job.skills.slice(0, 5).map((skill, index) => (
+                                <Badge
+                                  key={index}
+                                  variant="secondary"
+                                  className="text-xs bg-gray-100 text-gray-700"
+                                >
+                                  {skill}
+                                </Badge>
+                              ))}
+                              {job.skills.length > 5 && (
+                                <Badge
+                                  variant="secondary"
+                                  className="text-xs bg-gray-100 text-gray-700"
+                                >
+                                  +{job.skills.length - 5} more
+                                </Badge>
+                              )}
+                            </div>
+
+                            {/* Footer Info */}
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-xs md:text-sm text-gray-500">
+                              <div className="flex items-center space-x-4">
+                                <div className="flex items-center">
+                                  <Clock className="w-4 h-4 mr-1" />
+                                  <span>
+                                    {getTimeSincePosted(job.created_at ?? "")}
+                                  </span>
+                                </div>
+                                <div className="flex items-center">
+                                  <Users className="w-4 h-4 mr-1" />
+                                  <span>{job.vacancies} Vacancies</span>
                                 </div>
                               </div>
                             </div>
                           </div>
 
-                          {/* Job Description */}
-                          <div
-                            className="text-gray-700 text-sm md:text-base leading-relaxed mb-4 line-clamp-2 overflow-hidden
-                             [&_ul]:list-disc [&_ul]:pl-6
-                             [&_ol]:list-decimal [&_ol]:pl-6
-                             [&_li]:mb-1"
-                            dangerouslySetInnerHTML={{
-                              __html: job.description || "",
-                            }}
-                          />
+                          {/* Action Buttons */}
+                          {/* <div className="flex flex-col sm:flex-row lg:flex-col gap-3 w-full lg:w-44 min-h-auto lg:min-h-[260px]">
 
-                          {/* Skills */}
-                          <div className="flex flex-wrap gap-2 mb-4">
-                            {job.skills.slice(0, 5).map((skill, index) => (
-                              <Badge
-                                key={index}
-                                variant="secondary"
-                                className="text-xs bg-gray-100 text-gray-700"
-                              >
-                                {skill}
-                              </Badge>
-                            ))}
-                            {job.skills.length > 5 && (
-                              <Badge
-                                variant="secondary"
-                                className="text-xs bg-gray-100 text-gray-700"
-                              >
-                                +{job.skills.length - 5} more
-                              </Badge>
-                            )}
-                          </div>
+                            {(() => {
+                              const token = localStorage.getItem("user_token");
+                              const jobIdNum = Number(job.id);
+                              const appliedList = appliedJobs.map(Number);
 
-                          {/* Footer Info */}
-                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-xs md:text-sm text-gray-500">
-                            <div className="flex items-center space-x-4">
-                              <div className="flex items-center">
-                                <Clock className="w-4 h-4 mr-1" />
-                                <span>
-                                  {getTimeSincePosted(job.created_at ?? "")}
+                              const buttonClass =
+                                "w-full h-11 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200";
+
+                              if (job.website_apply) {
+                                return (
+                                  <a
+                                    href={job.website_apply}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="w-full"
+                                    onClick={() => {
+                                    handleViewDetails(job, false);
+                                  }}
+                                  >
+                                    <Button className={buttonClass}>
+                                      Apply Now
+                                    </Button>
+                                  </a>
+                                );
+                              }
+
+                              if (token && appliedList.includes(jobIdNum)) {
+                                return null;
+                              }
+
+                              return (
+                                <Button
+                                  onClick={() => {
+                                    handleViewDetails(job, false);
+                                    handleApply(job);
+                                  }}
+                                  className={buttonClass}
+                                >
+                                  Apply Now
+                                </Button>
+                              );
+                            })()}
+
+                            
+                            <Button
+                              variant="outline"
+                              className="w-full h-11 border-purple-200 text-purple-600 hover:bg-purple-50"
+                              onClick={() => handleViewDetails(job)}
+                            >
+                              <Eye className="w-4 h-4 mr-2" />
+                              View Details
+                            </Button>
+
+                            
+                            <div className="lg:mt-auto flex items-center lg:justify-end">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() =>
+                                  savedJobIds.includes(Number(job.id))
+                                    ? unsaveJob(Number(job.id))
+                                    : saveJob(Number(job.id))
+                                }
+                                className={`w-full sm:w-auto flex items-center justify-center gap-2 ${
+                                  savedJobIds.includes(Number(job.id))
+                                    ? "text-green-600"
+                                    : "text-gray-400 hover:text-green-500"
+                                }`}
+                              >
+                                <Bookmark
+                                  className={`w-4 h-4 transition-all duration-300 ${
+                                    savedJobIds.includes(Number(job.id))
+                                      ? "fill-green-500 drop-shadow-[0_0_6px_rgba(34,197,94,0.8)]"
+                                      : ""
+                                  }`}
+                                />
+
+                                <span className="text-sm font-medium">
+                                  {savedJobIds.includes(Number(job.id))
+                                    ? "Saved"
+                                    : "Save"}
                                 </span>
-                              </div>
-                              <div className="flex items-center">
-                                <Users className="w-4 h-4 mr-1" />
-                                <span>{job.vacancies} Vacancies</span>
-                              </div>
+                              </Button>
                             </div>
-                          </div>
+                          </div> */}
                         </div>
+                      </CardContent>
+                  </Card>
+                ))
+              )}
+           </div>
 
-                        {/* Action Buttons */}
-                        <div className="flex flex-col sm:flex-row lg:flex-col gap-3 w-full lg:w-44 min-h-auto lg:min-h-[260px]">
+                {/* Right Side - Job Details */}
+                <div className="xl:col-span-7">
+                  {selectedJob ? (
+                    <Card className="sticky top-4 shadow-lg border-0">
+                <CardContent className="p-8 max-h-[85vh] overflow-y-auto space-y-6">
+                {/* Company Info */}
+                <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                  {selectedJob.title}
+                </h2>
+                  <div className="flex items-start space-x-4 p-4 bg-gray-50 rounded-lg">
+                     <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                       {selectedJob.company_user?.company_logo ? (
+                        <Image
+                           src={selectedJob.company_user.company_logo}
+                          alt="company logo"
+                           width={32}
+                          height={25}
+                           className="w-12 h-12 rounded-full object-cover border"
+                         />
+                       ) : (
+                         <User className="w-6 h-6 text-gray-700 hover:text-purple-600" />
+                       )}
+                     </div>
+                    <div className="flex-1">
+                      <h3 className="text-xl font-semibold text-purple-600 mb-1">
+                        {selectedJob.company}
+                      </h3>
+                      <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                        <div className="flex items-center">
+                          <Users className="w-4 h-4 mr-1" />
+                          <span>openings : {selectedJob.vacancies}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
 
-                          {(() => {
+                  {/* Job Details */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <div className="flex items-center text-gray-600">
+                        <MapPin className="w-4 h-4 mr-2" />
+                        <span>{selectedJob.location ?? "N/A"}</span>
+                      </div>
+                         <div className="flex items-center text-gray-600">
+                        <Briefcase className="w-4 h-4 mr-1" />
+                        <span>
+                          {selectedJob.min_experience === "0" && selectedJob.max_experience === "0"
+                            ? "Fresher"
+                            : `${selectedJob.min_experience} - ${selectedJob.max_experience} ${
+                                selectedJob.min_experience === selectedJob.max_experience &&
+                                selectedJob.min_experience === "1"
+                                  ? "Year"
+                                  : "Years"
+                              }`}
+                        </span>
+                      </div>
+                      <div className="flex items-center text-gray-600">
+                        <span className="w-4 h-6 ">{selectedJob.currency?.symbol_native}</span>
+                        <span>
+                          {selectedJob.salary
+                            ? new Intl.NumberFormat(
+                                selectedJob.currency?.code === "INR" ? "en-IN" : "en-US"
+                              ).format(Number(selectedJob.salary))
+                            : ""}
+                          {" - "}
+                          {selectedJob.salary_max
+                            ? new Intl.NumberFormat(
+                                selectedJob.currency?.code === "INR" ? "en-IN" : "en-US"
+                              ).format(Number(selectedJob.salary_max))
+                            : ""} / yr
+                        </span>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex items-center text-gray-600">
+                        <Clock className="w-4 h-4 mr-2" />
+
+                        <span>
+                          {Array.isArray(selectedJob.job_type)
+                            ? selectedJob.job_type
+                                .map(
+                                  (type: string) =>
+                                    type
+                                      .split("-")
+                                      .map(
+                                        (word) =>
+                                          word.charAt(0).toUpperCase() +
+                                          word.slice(1).toLowerCase()
+                                      )
+                                      .join(" ")
+                                )
+                                .join(", ")
+                            : selectedJob.job_type
+                                ?.split("-")
+                                .map(
+                                  (word: string) =>
+                                    word.charAt(0).toUpperCase() +
+                                    word.slice(1).toLowerCase()
+                                )
+                                .join(" ")}
+                        </span>
+                      </div>
+                      <div className="flex items-center text-gray-600">
+                        <Building2 className="w-4 h-4 mr-2" />
+                        <Badge
+                          className={getWorkModeColor(selectedJob.work_mode ?? "")}
+                        >
+                          {selectedJob.work_mode
+                            ? selectedJob.work_mode.charAt(0).toUpperCase() +
+                              selectedJob.work_mode.slice(1).toLowerCase()
+                            : ""}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center text-gray-600">
+                        <Calendar className="w-4 h-4 mr-2" />
+                        <span>
+                          Posted{" "}
+                          {getTimeSincePosted(selectedJob.created_at ?? "")}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Job Description */}
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-900 mb-3">
+                      Job Description
+                    </h4>
+                     <div
+                      className="text-gray-700 leading-relaxed prose max-w-none
+                      [&_ul]:list-disc [&_ul]:pl-6
+                      [&_ol]:list-decimal [&_ol]:pl-6
+                      [&_li]:mb-1"
+                      dangerouslySetInnerHTML={{ __html: selectedJob.description ?? "",}}
+                    />
+                  </div>
+
+                  {/* Requirements */}
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-900 mb-3">
+                      Requirements
+                    </h4>
+                    <div
+                      className="prose text-gray-700 max-w-none
+                      [&_ul]:list-disc [&_ul]:pl-6
+                      [&_ol]:list-decimal [&_ol]:pl-6
+                      [&_li]:mb-1"
+                      dangerouslySetInnerHTML={{
+                        __html: Array.isArray(selectedJob.requirements)
+                          ? selectedJob.requirements.join("<br/>")
+                          : selectedJob.requirements || "",
+                      }}
+                    />
+                  </div>
+
+                  {/* Benefits */}
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-900 mb-3">
+                      Benefits
+                    </h4>
+                    <div
+                      className="prose text-gray-700 max-w-none
+                      [&_ul]:list-disc [&_ul]:pl-6
+                      [&_ol]:list-decimal [&_ol]:pl-6
+                      [&_li]:mb-1"
+                      dangerouslySetInnerHTML={{
+                        __html: Array.isArray(selectedJob.benefits)
+                          ? selectedJob.benefits.join("<br/>")
+                          : selectedJob.benefits || "",
+                      }}
+                    />
+                  </div>
+
+                  {/* Skills */}
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-900 mb-3">
+                      Required Skills
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {Array.isArray(selectedJob?.skills) &&
+                      selectedJob.skills.length > 0 ? (
+                        selectedJob.skills.map((req, index) => (
+                          <li key={index} className="flex items-start">
+                            <CheckCircle className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                            <span className="text-gray-700">{req}</span>
+                          </li>
+                        ))
+                      ) : (
+                        <p className="text-gray-500 italic">
+                          {selectedJob.skills}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t">
+                     {(() => {
                             const token = localStorage.getItem("user_token");
-                            const jobIdNum = Number(job.id);
+                            const jobIdNum = Number(selectedJob.id);
                             const appliedList = appliedJobs.map(Number);
 
                             const buttonClass =
                               "w-full h-11 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200";
 
-                            if (job.website_apply) {
+                            if (selectedJob.website_apply) {
                               return (
                                 <a
-                                  href={job.website_apply}
+                                  href={selectedJob.website_apply}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="w-full"
                                   onClick={() => {
-                                  handleViewDetails(job, false);
+                                  handleViewDetails(selectedJob, false);
                                 }}
                                 >
                                   <Button className={buttonClass}>
@@ -2333,8 +1631,8 @@ setUserData({
                             return (
                               <Button
                                 onClick={() => {
-                                  handleViewDetails(job, false);
-                                  handleApply(job);
+                                  handleViewDetails(selectedJob, false);
+                                  handleApply(selectedJob);
                                 }}
                                 className={buttonClass}
                               >
@@ -2343,54 +1641,58 @@ setUserData({
                             );
                           })()}
 
-                          {/* View Details */}
-                          <Button
-                            variant="outline"
-                            className="w-full h-11 border-purple-200 text-purple-600 hover:bg-purple-50"
-                            onClick={() => handleViewDetails(job)}
-                          >
-                            <Eye className="w-4 h-4 mr-2" />
-                            View Details
-                          </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() =>
+                        savedJobIds.includes(Number(selectedJob.id))
+                          ? unsaveJob(Number(selectedJob.id))
+                          : saveJob(Number(selectedJob.id))
+                      }
+                      className={`flex-1 ${
+                        savedJobIds.includes(Number(selectedJob.id))
+                          ? "border-purple-600 text-purple-600"
+                          : ""
+                      }`}
+                    >
+                      <Bookmark
+                        className={`w-4 h-4 mr-2 ${
+                          savedJobIds.includes(Number(selectedJob.id))
+                            ? "fill-current"
+                            : ""
+                        }`}
+                      />
+                      {savedJobIds.includes(Number(selectedJob.id))
+                        ? "Saved"
+                        : "Save Job"}
+                    </Button>
 
-                          {/* Save Button */}
-                          <div className="lg:mt-auto flex items-center lg:justify-end">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() =>
-                                savedJobIds.includes(Number(job.id))
-                                  ? unsaveJob(Number(job.id))
-                                  : saveJob(Number(job.id))
-                              }
-                              className={`w-full sm:w-auto flex items-center justify-center gap-2 ${
-                                savedJobIds.includes(Number(job.id))
-                                  ? "text-green-600"
-                                  : "text-gray-400 hover:text-green-500"
-                              }`}
-                            >
-                              <Bookmark
-                                className={`w-4 h-4 transition-all duration-300 ${
-                                  savedJobIds.includes(Number(job.id))
-                                    ? "fill-green-500 drop-shadow-[0_0_6px_rgba(34,197,94,0.8)]"
-                                    : ""
-                                }`}
-                              />
+                    {/* <Button
+                      variant="outline"
+                      onClick={() => handleShare(selectedJob)}
+                      className="flex-1"
+                    >
+                      <Share2 className="w-4 h-4 mr-2" />
+                      Share
+                    </Button> */}
+                  </div>
+        </CardContent>
+      </Card>
+    ) : (
+      <Card>
+        <CardContent className="p-10 text-center">
+          <Briefcase className="w-12 h-12 mx-auto text-gray-300 mb-4" />
+          <h3 className="text-lg font-semibold">
+            Select a Job
+          </h3>
+          <p className="text-gray-500">
+            Click any job from the left side to view details.
+          </p>
+        </CardContent>
+      </Card>
+    )}
+  </div>
 
-                              <span className="text-sm font-medium">
-                                {savedJobIds.includes(Number(job.id))
-                                  ? "Saved"
-                                  : "Save"}
-                              </span>
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))
-              )}
-            </div>
+</div>
 
            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-8 border-t pt-6">
 
