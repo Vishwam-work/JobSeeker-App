@@ -45,7 +45,8 @@ import {
   Send,
   ChevronLeft,
   ChevronRight,
-  User
+  User,
+  Share2
 } from "lucide-react";
 
 export default function JobListings() {
@@ -459,7 +460,15 @@ const sortedJobs = [...jobs]
       setLoading(false);
     }
   };
-
+  // Selected job cleanup on list change
+  useEffect(() => {
+    if (
+      selectedJob &&
+      !jobs.some((job: any) => job.id === selectedJob.id)
+    ) {
+      setSelectedJob(null);
+    }
+  }, [jobs, selectedJob]);
   // Load applied jobs per user
   useEffect(() => {
     const email = localStorage.getItem("user_email");
@@ -1941,7 +1950,7 @@ setUserData({
         </div>
 
         {/* Job Details Modal */}
-        {/* <Dialog open={isJobDetailOpen} onOpenChange={setIsJobDetailOpen}>
+        <Dialog open={isJobDetailOpen} onOpenChange={setIsJobDetailOpen}>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             {selectedJob && (
               <>
@@ -2006,7 +2015,7 @@ setUserData({
                               ).format(Number(selectedJob.salary))
                             : ""}
                           {" - "}
-                          {/* {selectedJob.currency?.symbol_native} */}
+                          {/* {/* {selectedJob.currency?.symbol_native} */}
                           {selectedJob.salary_max
                             ? new Intl.NumberFormat(
                                 selectedJob.currency?.code === "INR" ? "en-IN" : "en-US"
@@ -2172,7 +2181,7 @@ setUserData({
               </>
             )}
           </DialogContent>
-        </Dialog> */}
+        </Dialog>
 
         {/* Apply Modal */}
         <Dialog open={isApplyModalOpen} onOpenChange={setIsApplyModalOpen}>
