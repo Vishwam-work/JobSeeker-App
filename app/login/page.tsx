@@ -173,13 +173,13 @@ export default function Login() {
               {isEmployerDropdownOpen && (
                 <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
                   <Link
-                    href="/employer/home"
+                    href="https://nvglobaltechtestemployerv10.vercel.app/login"
                     className="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-colors"
                   >
                     Employer Login
                   </Link>
                   <Link
-                    href="/employer/home"
+                    href="https://nvglobaltechtestemployerv10.vercel.app/register"
                     className="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-colors"
                   >
                     Register as Employer
@@ -307,8 +307,8 @@ export default function Login() {
                     }}
                       />
                       {passwordError && (
-  <p className="text-red-500 text-xs mt-1">{passwordError}</p>
-)}
+                        <p className="text-red-500 text-xs mt-1">{passwordError}</p>
+                      )}
                       <button
                         type="button"
                         className="absolute inset-y-0 right-0 pr-3 flex items-center"
