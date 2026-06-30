@@ -76,6 +76,7 @@ interface Certification {
 }
 
 interface ProfileData {
+  id?: string | number;
   personalInfo: {
     profile_image?: string | null;
     fullName: string;
@@ -160,6 +161,7 @@ const formatNumber = (
 
 
         setProfileData({
+          id: data.id,
           personalInfo: {
             profile_image: data.profile_image || null,
             fullName: data.full_name,
@@ -216,6 +218,34 @@ const formatNumber = (
     loadProfile();
   }, []);
 
+  const downloadResume = async () => {
+    const profileId = profileData?.id;
+
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL_APP}/download-resume/${profileId}/`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("user_token")}`,
+        },
+        body: JSON.stringify({
+          id: profileId,
+        }),
+      }
+    );
+
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "resume";
+    a.click();
+
+    window.URL.revokeObjectURL(url);
+  };
+
   if (!profileData) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -262,12 +292,15 @@ const formatNumber = (
                 </Button>
               </Link>
             </div>
-            <div className="flex flex-col sm:flex-row gap-2">
-             <DownloadProfilePDF
-              setIsPDF={setIsPDF}
-               setIsDownloading={setIsDownloading}
-            />
-            </div>
+           <div className="flex justify-end">
+           <Button
+            onClick={downloadResume}
+            className="w-full sm:w-auto min-w-[180px] bg-white text-black border border-gray-300 hover:bg-gray-100 flex items-center gap-2"
+          >
+            <Download className="h-4 w-4" />
+            Download Resume
+          </Button>
+          </div>
           </div>
         </div>
 

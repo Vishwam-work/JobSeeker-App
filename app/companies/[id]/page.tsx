@@ -710,7 +710,7 @@ const submitApplication = async () => {
         open={isApplyModalOpen}
         onOpenChange={setIsApplyModalOpen}
       >
-        <DialogContent className="max-w-2xl w-full h-[90vh] overflow-y-auto p-6">
+        <DialogContent className="max-w-2xl w-full max-h-[80vh] overflow-y-auto p-6">
           {selectedJob && (
             <>
               <DialogHeader>
@@ -764,17 +764,63 @@ const submitApplication = async () => {
                   </>
                 )}
 
-                {selectedJob.questions &&
+
+                  {selectedJob.description && (
+                    <div className="space-y-4">
+                      <h4 className="font-semibold">Job Description</h4>
+                       <div
+                          className="text-gray-700 leading-relaxed prose max-w-none
+                          [&_ul]:list-disc [&_ul]:pl-6
+                          [&_ol]:list-decimal [&_ol]:pl-6
+                          [&_li]:mb-1"
+                          dangerouslySetInnerHTML={{
+                            __html: selectedJob.description || "",
+                          }}
+                        />
+                    </div>
+                  )}
+
+                  {selectedJob.requirements && (
+                    <div className="space-y-4">
+                      <h4 className="font-semibold">Job Requirements</h4>
+                      <div
+                          className="text-gray-700 leading-relaxed prose max-w-none
+                          [&_ul]:list-disc [&_ul]:pl-6
+                          [&_ol]:list-decimal [&_ol]:pl-6
+                          [&_li]:mb-1"
+                          dangerouslySetInnerHTML={{
+                            __html: selectedJob.requirements || "",
+                          }}
+                        />
+                    </div>
+                  )}
+
+                  {selectedJob.benefits && (
+                    <div className="space-y-4">
+                      <h4 className="font-semibold">Job Benefits</h4>
+                      <div
+                          className="text-gray-700 leading-relaxed prose max-w-none
+                          [&_ul]:list-disc [&_ul]:pl-6
+                          [&_ol]:list-decimal [&_ol]:pl-6
+                          [&_li]:mb-1"
+                          dangerouslySetInnerHTML={{
+                            __html: selectedJob.benefits|| "",
+                          }}
+                        />
+                    </div>
+                  )}
+
+                  {selectedJob.questions &&
                   selectedJob.questions.length > 0 && (
                     <div className="space-y-4">
-                      <h4 className="font-semibold">
+                      <h4 className="font-semibold ">
                         Additional Questions
                       </h4>
 
                       {selectedJob.questions.map(
                         (question: string, index: number) => (
                           <div key={index}>
-                            <Label>
+                            <Label className="mb-4">
                               {index + 1}. {question}
                             </Label>
 
@@ -793,6 +839,7 @@ const submitApplication = async () => {
                       )}
                     </div>
                   )}
+
 
                 <div className="flex gap-3 pt-4">
                   <Button
