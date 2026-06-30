@@ -293,13 +293,18 @@ const formatNumber = (
               </Link>
             </div>
            <div className="flex justify-end">
-           <Button
+           {/* <Button
             onClick={downloadResume}
             className="w-full sm:w-auto min-w-[180px] bg-white text-black border border-gray-300 hover:bg-gray-100 flex items-center gap-2"
           >
             <Download className="h-4 w-4" />
             Download Resume
-          </Button>
+          </Button> */}
+          {/* forntend pdf */}
+          <DownloadProfilePDF 
+            setIsPDF={setIsPDF}
+            setIsDownloading={setIsDownloading}
+          />
           </div>
           </div>
         </div>
