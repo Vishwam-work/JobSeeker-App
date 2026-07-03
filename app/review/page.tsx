@@ -301,10 +301,6 @@ const formatNumber = (
             Download Resume
           </Button> */}
           {/* forntend pdf */}
-          <DownloadProfilePDF 
-            setIsPDF={setIsPDF}
-            setIsDownloading={setIsDownloading}
-          />
           </div>
           </div>
         </div>
